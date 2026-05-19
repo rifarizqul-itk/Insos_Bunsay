@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
 
 function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
-    namaLengkap: '',
     email: '',
-    nomorKios: '',
-    nomorTelepon: '',
     kataSandi: ''
   });
 
@@ -17,11 +13,7 @@ function AuthPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isLogin) {
-      console.log('Memproses masuk log dengan:', formData.email, formData.kataSandi);
-    } else {
-      console.log('Memproses pendaftaran akun tenant baru:', formData);
-    }
+    console.log('Memproses masuk log dengan:', formData.email, formData.kataSandi);
   };
 
   const handleLupaPassword = () => {
@@ -43,7 +35,6 @@ function AuthPage() {
         backgroundColor: '#ffffff', 
         borderRadius: 'var(--radius-lg)', 
         border: '1px solid var(--border)', 
-        /* boxShadow: 'var(--shadow-sm)', */
         padding: '40px 32px'
       }}>
         {/* Header Identitas Aplikasi */}
@@ -56,54 +47,9 @@ function AuthPage() {
           </p>
         </div>
 
-        {/* Form Navigasi Tab */}
-        <div style={{ display: 'flex', borderBottom: '2px solid var(--warm-gray)', marginBottom: '24px' }}>
-          <button 
-            onClick={() => setIsLogin(true)}
-            style={{ 
-              flex: 1, 
-              backgroundColor: 'transparent', 
-              color: isLogin ? 'var(--red)' : 'var(--text-3)', 
-              borderRadius: '0', 
-              borderBottom: isLogin ? '2px solid var(--red)' : '2px solid transparent',
-              marginBottom: '-2px',
-              fontWeight: '700'
-            }}
-          >
-            Masuk
-          </button>
-          <button 
-            onClick={() => setIsLogin(false)}
-            style={{ 
-              flex: 1, 
-              backgroundColor: 'transparent', 
-              color: !isLogin ? 'var(--red)' : 'var(--text-3)', 
-              borderRadius: '0', 
-              borderBottom: !isLogin ? '2px solid var(--red)' : '2px solid transparent',
-              marginBottom: '-2px',
-              fontWeight: '700'
-            }}
-          >
-            Daftar Tenant
-          </button>
-        </div>
-
-        {/* Komponen Form Utama */}
+        {/* Komponen Form Utama Masuk Log Tunggal */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {!isLogin && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nama Lengkap</label>
-              <input 
-                type="text" 
-                name="namaLengkap"
-                placeholder="Contoh: Hj. Yuliana" 
-                value={formData.namaLengkap}
-                onChange={handleInputChange}
-                required 
-              />
-            </div>
-          )}
-
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
             <input 
@@ -115,33 +61,6 @@ function AuthPage() {
               required 
             />
           </div>
-
-          {!isLogin && (
-            <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor Kios</label>
-                <input 
-                  type="text" 
-                  name="nomorKios"
-                  placeholder="Contoh: B-1001" 
-                  value={formData.nomorKios}
-                  onChange={handleInputChange}
-                  required 
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor Telepon</label>
-                <input 
-                  type="tel" 
-                  name="nomorTelepon"
-                  placeholder="Contoh: 0812-5564-593" 
-                  value={formData.nomorTelepon}
-                  onChange={handleInputChange}
-                  required 
-                />
-              </div>
-            </>
-          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Kata Sandi</label>
@@ -155,24 +74,24 @@ function AuthPage() {
             />
           </div>
 
-          {isLogin && (
-            <div style={{ textAlign: 'right' }}>
-              <button 
-                type="button" 
-                onClick={handleLupaPassword}
-                style={{ 
-                  backgroundColor: 'transparent', 
-                  color: 'var(--red)', 
-                  fontSize: '14px', 
-                  fontWeight: '500',
-                  padding: '0',
-                  minHeight: 'auto'
-                }}
-              >
-                Lupa Kata Sandi?
-              </button>
-            </div>
-          )}
+          <div style={{ textAlign: 'right' }}>
+            <button 
+              type="button" 
+              onClick={handleLupaPassword}
+              style={{ 
+                backgroundColor: 'transparent', 
+                color: 'var(--red)', 
+                fontSize: '14px', 
+                fontWeight: '500',
+                padding: '0',
+                minHeight: 'auto',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Lupa Kata Sandi?
+            </button>
+          </div>
 
           <button 
             type="submit" 
@@ -182,12 +101,14 @@ function AuthPage() {
               padding: '12px', 
               fontSize: '15px', 
               fontWeight: '700', 
-              marginTop: '8px' 
+              marginTop: '8px',
+              border: 'none',
+              cursor: 'pointer'
             }}
             onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--red-dark)'}
             onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--red)'}
           >
-            {isLogin ? 'Masuk ke Aplikasi' : 'Daftarkan Akun Baru'}
+            Masuk ke Aplikasi
           </button>
         </form>
       </div>

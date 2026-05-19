@@ -3,7 +3,6 @@ import React from 'react';
 function SidebarAdmin({ activeMenu, setActiveMenu, onLogout }) {
   const menuItems = [
     { id: 'dashboard_admin', label: 'Dashboard Admin' },
-    { id: 'daftar_tenant', label: 'Daftar Tenant Utama' },
     { id: 'verifikasi_pembayaran', label: 'Verifikasi Pembayaran' },
     { id: 'ketersediaan_kios', label: 'Tabel Ketersediaan Kios' },
     { id: 'ekspor_data', label: 'Ekspor Rekap Data' }
@@ -27,10 +26,16 @@ function SidebarAdmin({ activeMenu, setActiveMenu, onLogout }) {
         display: 'flex', 
         alignItems: 'center', 
         paddingLeft: '24px', 
-        borderBottom: '1px solid var(--border)' 
+        borderBottom: '1px solid var(--border)', 
+        gap: '12px'
       }}>
-        <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: '800', fontSize: '20px', color: 'var(--red)', letterSpacing: '-0.5px' }}>
-          Bunsay Admin
+        <img 
+            src="/assets/main_logo_transparent_for_light_bg.png" 
+            alt="Logo Resmi Plaza Kebun Sayur" 
+            style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
+        />
+        <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
+            Admin
         </span>
       </div>
 
