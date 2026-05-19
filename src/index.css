@@ -27,7 +27,7 @@
   --radius-lg: 18px;
   
   /* Aturan Batas Shadow Tunggal (Anti Soft-Glow Berlapis) */
-  --shadow-sm: 0 2px 12px rgba(139, 26, 26, 0.08);
+  /* --shadow-sm: 0 2px 12px rgba(139, 26, 26, 0.08); */
 }
 
 /* CSS RESET & ATURAN FORMAL */
