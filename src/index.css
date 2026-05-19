@@ -1,0 +1,95 @@
+/* DESIGN SYSTEM TOKENS - PLAZA KEBUN SAYUR BALIKPAPAN */
+:root {
+  /* Identitas Warna Utama & Derivat */
+  --red: #8B1A1A;
+  --red-dark: #6B1414;
+  --red-50: #FDF2F2;
+  --red-100: #FADADD;
+  
+  /* Warna Latar & Kontainer */
+  --cream: #FBF7F2;
+  --warm-gray: #F5F0EB;
+  --border: #E8E0D8;
+  
+  /* Pola Warna Teks Mediterania Hangat */
+  --text: #1A1410;
+  --text-2: #5C4F46;
+  --text-3: #9E8E82;
+  
+  /* Status Warna Semantik */
+  --green: #1A6B3A;
+  --green-bg: #E8F5EE;
+  --orange: #C05C00;
+  --orange-bg: #FEF3E6;
+
+  /* Aturan Geometri Kontainer */
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  
+  /* Aturan Batas Shadow Tunggal (Anti Soft-Glow Berlapis) */
+  --shadow-sm: 0 2px 12px rgba(139, 26, 26, 0.08);
+}
+
+/* CSS RESET & ATURAN FORMAL */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px; /* Aksesibilitas: Kenyamanan baca usia 40+ */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ATURAN TIPOGRAFI JUDUL */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* KOMPONEN DASAR FORMAL (REUSABLE UTILITY) */
+button {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+input, select, textarea {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background-color: var(--warm-gray);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--red);
+}
+
+/* AREA KLIK AKSESIBILITAS (TOUCH TARGET MINIMAL 44PX) */
+button, input, select, .menu-item {
+  min-height: 44px;
+}
+
+/* TRANSISI HALAMAN FORMAL (ANTI-BOUNCE/SLIDE BERLEBIHAN) */
+.page-fade-in {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
