@@ -230,8 +230,8 @@ Fitur ini merupakan permintaan langsung dari mitra Plaza Kebun Sayur untuk membe
 | `--orange-bg` | `#FEF3E6` | Background badge oranye |
 
 ### 6.2 Tipografi
-* **Heading / Judul:** *Playfair Display* (semibold/bold) — memberikan kesan formal, hangat, dan tradisional.
-* **Body / Label / Navigasi:** *Source Sans 3* (regular/semibold/bold) — bersih, modern, dan mudah dibaca.
+* **Heading / Judul:** *Plus Jakarta Sans* (semibold/bold) — memberikan kesan formal, hangat, dan tradisional.
+* **Body / Label / Navigasi:** *Plus Jakarta Sans* (regular/semibold/bold) — bersih, modern, dan mudah dibaca.
 * **Ukuran Font Minimum Body:** `15px` (untuk kenyamanan pengguna usia 40 tahun ke atas).
 * **Label Navigasi Sidebar:** Minimal `15px` dengan penempatan ikon di sebelah kiri.
 * **Line Height Body:** `1.6` guna menjaga kenyamanan baca.
