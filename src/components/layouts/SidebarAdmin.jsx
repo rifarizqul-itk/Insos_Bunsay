@@ -1,6 +1,6 @@
 import React from 'react';
 
-function SidebarAdmin({ activeMenu, setActiveMenu, onLogout }) {
+function SidebarAdmin({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) {
   const menuItems = [
     { id: 'dashboard_admin', label: 'Dashboard Admin' },
     { id: 'verifikasi_pembayaran', label: 'Verifikasi Pembayaran' },
@@ -9,34 +9,50 @@ function SidebarAdmin({ activeMenu, setActiveMenu, onLogout }) {
   ];
 
   return (
-    <aside style={{
-      width: '240px',
-      height: '100vh',
-      backgroundColor: '#ffffff',
-      borderRight: '1px solid var(--border)',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 100
-    }}>
+    <aside 
+      className={`sidebar-container ${isOpen ? 'mobile-open' : ''}`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      {/* Logo + Penutup Silang */}
       <div style={{ 
         height: '64px', 
         display: 'flex', 
         alignItems: 'center', 
+        justifyContent: 'space-between',
         paddingLeft: '24px', 
+        paddingRight: '16px',
         borderBottom: '1px solid var(--border)', 
         gap: '12px'
       }}>
-        <img 
-            src="/assets/main_logo_transparent_for_light_bg.png" 
-            alt="Logo Resmi Plaza Kebun Sayur" 
-            style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
-        />
-        <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
-            Admin
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+              src="/assets/main_logo_transparent_for_light_bg.png" 
+              alt="Logo Resmi Plaza Kebun Sayur" 
+              style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
+          />
+          <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
+              Admin
+          </span>
+        </div>
+        
+        <button
+          onClick={onClose}
+          className="sidebar-close-btn"
+          style={{
+            display: 'none',
+            backgroundColor: 'transparent',
+            color: 'var(--text-2)',
+            fontSize: '22px',
+            padding: '4px',
+            minHeight: 'auto',
+            cursor: 'pointer'
+          }}
+        >
+          ✕
+        </button>
       </div>
 
       <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>

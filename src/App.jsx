@@ -16,13 +16,15 @@ import KetersediaanKios from './pages/admin/KetersediaanKios';
 import EksporData from './pages/admin/EksporData';
 
 function App() {
-  const [currentView, setCurrentView] = useState('landing'); // Alur utama: 'landing', 'auth', 'app'
+  const [currentView, setCurrentView] = useState('landing'); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState('tenant'); 
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [selectedTenant, setSelectedTenant] = useState(null);
+  
+  // State baru untuk penanganan buka/tutup Drawer Sidebar di Mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // State bantuan untuk oper data cepat antar-halaman tenant
   const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Sewa Gedung' });
 
   const handleFakeLogin = (e) => {
@@ -39,31 +41,29 @@ function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentView('landing');
+    setIsSidebarOpen(false);
   };
 
-  // 1. KONDISI TAMPILAN: BERANDA PUBLIK UTAMA (TANPA LOGIN)
   if (currentView === 'landing') {
     return (
       <LandingPage onNavigasiMasuk={() => setCurrentView('auth')} />
     );
   }
 
-  // 2. KONDISI TAMPILAN: HALAMAN FORM MASUK / DAFTAR (AUTH)
   if (currentView === 'auth') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--cream)' }}>
-        {/* Bilah Toolbar Simulasi Peran Sisi Atas Layar untuk Pengujian Frontend */}
-        <div style={{ backgroundColor: 'var(--warm-gray)', padding: '10px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+        <div className="auth-simulation-bar">
           <button 
             onClick={() => setCurrentView('landing')}
-            style={{ padding: '4px 12px', backgroundColor: '#ffffff', color: 'var(--text)', marginRight: '24px', minHeight: 'auto', fontWeight: '700', border: '1px solid var(--border)' }}
+            style={{ padding: '4px 12px', backgroundColor: '#ffffff', color: 'var(--text)', marginRight: '8px', minHeight: 'auto', fontWeight: '700', border: '1px solid var(--border)' }}
           >
             ← Kembali ke Beranda Utama
           </button>
-          <span style={{ fontSize: '13px', fontWeight: '600', marginRight: '12px' }}>Simulasi Akun Target Masuk:</span>
+          <span style={{ fontSize: '13px', fontWeight: '600' }}>Simulasi Akun Target Masuk:</span>
           <button 
             onClick={() => { setRole('tenant'); setActiveMenu('dashboard'); }}
-            style={{ padding: '4px 12px', backgroundColor: role === 'tenant' ? 'var(--red)' : '#ffffff', color: role === 'tenant' ? '#ffffff' : 'var(--text)', marginRight: '8px', minHeight: 'auto' }}
+            style={{ padding: '4px 12px', backgroundColor: role === 'tenant' ? 'var(--red)' : '#ffffff', color: role === 'tenant' ? '#ffffff' : 'var(--text)', marginRight: '4px', minHeight: 'auto' }}
           >
             Sebagai Tenant (Hj. Yuliana)
           </button>
@@ -86,19 +86,50 @@ function App() {
     );
   }
 
-  // 3. KONDISI TAMPILAN: INTERNAL PANEL SESUAI HAK AKSES PERAN (LOGGED IN)
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--cream)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--cream)', position: 'relative', overflowX: 'hidden' }}>
+      
+      {/* Operasikan properti status drawer ke masing-masing komponen aside */}
       {role === 'admin' ? (
-        <SidebarAdmin activeMenu={activeMenu} setActiveMenu={(menu) => { setActiveMenu(menu); setSelectedTenant(null); }} onLogout={handleLogout} />
+        <SidebarAdmin 
+          activeMenu={activeMenu} 
+          setActiveMenu={(menu) => { 
+            setActiveMenu(menu); 
+            setSelectedTenant(null); 
+            setIsSidebarOpen(false); // Tutup drawer otomatis pas ganti menu
+          }} 
+          onLogout={handleLogout} 
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
       ) : (
-        <Sidebar activeMenu={activeMenu} setActiveMenu={(menu) => { setActiveMenu(menu); setBayarProps({ nominal: '', jenis: 'Sewa Gedung' }); }} onLogout={handleLogout} />
+        <Sidebar 
+          activeMenu={activeMenu} 
+          setActiveMenu={(menu) => { 
+            setActiveMenu(menu); 
+            setBayarProps({ nominal: '', jenis: 'Sewa Gedung' }); 
+            setIsSidebarOpen(false); // Tutup drawer otomatis pas ganti menu
+          }} 
+          onLogout={handleLogout} 
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
       )}
 
-      <Topbar userTitle={role === 'admin' ? "Administrator Utama" : "Hj. Yuliana (Kios B-1001)"} />
+      {/* Kirim pemicu toggle ke komponen topbar */}
+      <Topbar 
+        userTitle={role === 'admin' ? "Administrator Utama" : "Hj. Yuliana (Kios B-1001)"} 
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
-      <main style={{ marginLeft: '24px', paddingLeft: '240px', paddingTop: '64px' }}>
-        <div style={{ padding: '40px 32px' }}>
+      {/* Tampilkan overlay transparan tipis pembantu penutupan saat mengklik ruang luar */}
+      {isSidebarOpen && (
+        <div className="sidebar-mobile-overlay" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      {/* Gunakan class CSS murni untuk fleksibilitas perpindahan viewport desktop/mobile */}
+      <main className="main-layout">
+        <div className="main-content-inner">
           
           {/* ================= ROUTING ALUR SISI TENANT ================= */}
           {role === 'tenant' && activeMenu === 'dashboard' && <DashboardTenant onPemicuBayar={handlePemicuBayarCepat} />}

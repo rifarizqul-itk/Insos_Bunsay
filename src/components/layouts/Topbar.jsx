@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-function Topbar({ userTitle }) {
+function Topbar({ userTitle, onToggleSidebar }) {
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Memasang jangkar referensi (Ref) pada kontainer dropdown notifikasi
   const notifikasiRef = useRef(null);
 
   const daftarNotifikasi = [
@@ -11,49 +9,62 @@ function Topbar({ userTitle }) {
     { id: 2, teks: 'Pembayaran Service Charge bulan April 2026 telah tervalidasi lunas.', waktu: '2 hari lalu', tipe: 'sukses' }
   ];
 
-  // LOGIKA UTAMA: Mendeteksi klik di luar area komponen untuk menutup dropdown secara otomatis
   useEffect(() => {
     function handleKlikLuar(event) {
       if (notifikasiRef.current && !notifikasiRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     }
-
-    // Mendaftarkan event listener ke sistem dokumen peramban
     document.addEventListener('mousedown', handleKlikLuar);
-    
-    // Membersihkan event listener saat komponen tidak lagi digunakan (unmount)
     return () => {
       document.removeEventListener('mousedown', handleKlikLuar);
     };
   }, []);
 
   return (
-    <header style={{
-      height: '64px',
-      backgroundColor: '#ffffff',
-      borderBottom: '1px solid #D6C8BC',
-      position: 'fixed',
-      top: 0,
-      left: '240px',
-      right: 0,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '0 32px',
-      zIndex: 90
-    }}>
-      {/* Sisi Kiri: Sapaan Identitas Sesi Aktif */}
-      <div style={{ fontSize: '16px', fontWeight: '700', color: '#4A3F35' }}>
-        Sesi Aktif: <span style={{ color: '#8B1A1A' }}>{userTitle}</span>
+    <header 
+      className="topbar-container"
+      style={{
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #D6C8BC',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}
+    >
+      {/* Sisi Kiri: Tombol Hamburger (Khusus Mobile) + Sapaan Identitas */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <button
+          onClick={onToggleSidebar}
+          className="topbar-hamburger"
+          style={{
+            display: 'none', /* Muncul via CSS murni di layar < 992px */
+            backgroundColor: 'transparent',
+            border: '1px solid #D6C8BC',
+            borderRadius: '8px',
+            padding: '0 12px',
+            cursor: 'pointer',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '42px',
+            fontSize: '20px',
+            color: 'var(--text)'
+          }}
+        >
+          ☰
+        </button>
+        
+        <div style={{ fontSize: '15px', fontWeight: '700', color: '#4A3F35' }}>
+          Sesi Aktif: <span style={{ color: '#8B1A1A' }}>{userTitle}</span>
+        </div>
       </div>
 
-      {/* Sisi Kanan: Menu Dropdown Notifikasi dengan Jangkar Ref */}
+      {/* Sisi Kanan: Dropdown Notifikasi */}
       <div ref={notifikasiRef} style={{ position: 'relative' }}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           style={{
-            height: '48px', // Target klik minimal 48px presisi sesuai WCAG 2.2 AA
+            height: '48px', 
             backgroundColor: isOpen ? '#F5F0EB' : 'transparent',
             color: '#1A1410',
             border: '1px solid #D6C8BC',
@@ -85,21 +96,25 @@ function Topbar({ userTitle }) {
 
         {/* Kotak Kontainer Lembar Dropdown Menu */}
         {isOpen && (
-          <div style={{
-            position: 'absolute',
-            top: '56px',
-            right: 0,
-            width: '360px',
-            backgroundColor: '#ffffff',
-            border: '1px solid #D6C8BC',
-            borderRadius: '12px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)', // Micro-shadow tipis halus
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            animation: 'fadeIn 0.15s ease-out'
-          }}>
+          <div 
+            className="topbar-dropdown"
+            style={{
+              position: 'absolute',
+              top: '56px',
+              right: 0,
+              width: '360px',
+              backgroundColor: '#ffffff',
+              border: '1px solid #D6C8BC',
+              borderRadius: '12px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)', 
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              animation: 'fadeIn 0.15s ease-out',
+              zIndex: 110
+            }}
+          >
             <div style={{
               fontSize: '15px',
               fontWeight: '800',
@@ -119,7 +134,7 @@ function Topbar({ userTitle }) {
                     padding: '12px',
                     borderRadius: '8px',
                     backgroundColor: notif.tipe === 'penting' ? '#FFF5F5' : '#F9F6F0',
-                    border: notif.tipe === 'penting' ? '1px solid #FADADD' : '1px solid #E6DBCF', // Full border halus sesuai panduan premium
+                    border: notif.tipe === 'penting' ? '1px solid #FADADD' : '1px solid #E6DBCF',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '4px'

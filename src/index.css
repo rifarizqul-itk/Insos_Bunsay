@@ -25,9 +25,6 @@
   /* Aturan Geometri Kontainer */
   --radius-md: 10px;
   --radius-lg: 18px;
-  
-  /* Aturan Batas Shadow Tunggal (Anti Soft-Glow Berlapis) */
-  /* --shadow-sm: 0 2px 12px rgba(139, 26, 26, 0.08); */
 }
 
 /* CSS RESET & ATURAN FORMAL */
@@ -41,19 +38,17 @@ body {
   background-color: var(--cream);
   color: var(--text);
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 15px; /* Aksesibilitas: Kenyamanan baca usia 40+ */
+  font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ATURAN TIPOGRAFI JUDUL */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
   color: var(--text);
 }
 
-/* KOMPONEN DASAR FORMAL (REUSABLE UTILITY) */
 button {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
@@ -79,12 +74,10 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--red);
 }
 
-/* AREA KLIK AKSESIBILITAS (TOUCH TARGET MINIMAL 44PX) */
 button, input, select, .menu-item {
   min-height: 44px;
 }
 
-/* TRANSISI HALAMAN FORMAL (ANTI-BOUNCE/SLIDE BERLEBIHAN) */
 .page-fade-in {
   animation: fadeIn 0.2s ease;
 }
@@ -92,4 +85,195 @@ button, input, select, .menu-item {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+
+/* ==========================================================================
+   SYSTEM SKELETON RESPONSIVE ARSITEKTUR LAYOUT (PROPER FIX UNTUK MOBILE)
+   ========================================================================== */
+
+.sidebar-container {
+  width: 240px;
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.topbar-container {
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #D6C8BC;
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+  z-index: 90;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+}
+
+.main-layout {
+  margin-left: 0 !important;
+  padding-left: 240px !important;
+  padding-top: 64px !important;
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content-inner {
+  padding: 40px 32px;
+  transition: padding 0.3s ease;
+}
+
+/* Latar belakang redup saat sidebar mobile terbuka */
+.sidebar-mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(26, 20, 16, 0.4);
+  z-index: 95;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Kontainer Simulasi Login Role */
+.auth-simulation-bar {
+  background-color: var(--warm-gray);
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* BREAKPOINT UTAMA: LAYAR TABLET & MOBILE VIEWPORTS */
+@media (max-width: 992px) {
+  .sidebar-container {
+    transform: translateX(-100%); /* Sembunyikan sidebar ke kiri luar layar */
+  }
+  
+  .sidebar-container.mobile-open {
+    transform: translateX(0); /* Geser masuk ke dalam layar */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+  
+  .topbar-container {
+    left: 0 !important;
+    padding: 0 16px !important;
+  }
+  
+  .main-layout {
+    padding-left: 0 !important; /* Hilangkan margin desktop agar tidak mendorong konten */
+  }
+  
+  .main-content-inner {
+    padding: 24px 16px !important;
+  }
+  
+  .auth-simulation-bar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 12px;
+  }
+  
+  .topbar-hamburger {
+    display: flex !important; /* Tampilkan tombol hamburger menu */
+  }
+  
+  .sidebar-close-btn {
+    display: block !important; /* Tampilkan tombol tutup silang di dalam laci */
+  }
+
+  /* CRITICAL FIX 4: Otomatisasi pembungkusan tabel agar scrollable horizontal tanpa merusak markup */
+  table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* CRITICAL FIX 2: Menangkap inline-style Grid 2-kolom hardcoded di halaman anak & mengubahnya menjadi 1 kolom vertical stack */
+  div[style*="grid-template-columns"],
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* Modifikasi kotak popup notifikasi di layar sangat sempit */
+@media (max-width: 480px) {
+  .topbar-dropdown {
+    width: calc(100vw - 32px) !important;
+    right: -16px !important;
+  }
+}
+
+/* ==========================================================================
+   PERBAIKAN SPESIFIK LANDING PAGE UNTUK MOBILE VIEWPORT (< 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Navbar: Persempit padding kiri-kanan agar teks judul tidak terpotong */
+  .landing-navbar {
+    padding: 0 16px !important;
+    justify-content: center !important; /* Buat Logo dan Nama berada di tengah layar */
+  }
+
+  /* 2. Menu Navigasi Tengah: Sembunyikan total sesuai request Anda */
+  .landing-nav-menu {
+    display: none !important;
+  }
+
+  /* 3. Hero Section Card: Ubah susunan 2-kolom menjadi 1-kolom tumpuk */
+  .landing-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  /* Perkecil padding teks hero agar proporsional di layar HP */
+  .landing-hero-grid > div:first-child {
+    padding: 24px 20px !important;
+  }
+
+  /* Perkecil ukuran judul utama banner agar muat */
+  .landing-hero-grid h1 {
+    font-size: 26px !important;
+  }
+
+  /* Atur tinggi gambar gedung pasar di bawah teks card */
+  .landing-hero-grid > div:last-child {
+    min-height: 220px !important;
+    height: 220px !important;
+    width: 100% !important;
+  }
+
+  /* Memaksa tombol masuk portal melebar penuh agar mudah ditekan jempol */
+  .landing-hero-grid button {
+    width: 100% !important;
+  }
+
+  /* 4. Grid Jam & Kontak Operasional: Ubah menjadi stack vertikal */
+  .landing-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .landing-info-grid > div {
+    padding: 24px 16px !important;
+  }
 }

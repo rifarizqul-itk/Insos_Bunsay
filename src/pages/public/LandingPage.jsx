@@ -7,9 +7,9 @@ function LandingPage({ onNavigasiMasuk }) {
   return (
     <div className="page-fade-in" style={{ backgroundColor: '#FDFBFA', minHeight: '100vh', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
       
-      {/* Top Navbar Publik - Konsisten Kontras Tinggi & Target Sentuh Lebat */}
-      <nav style={{
-        height: '72px', // Sedikit diperlonggar untuk kenyamanan visual lansia
+      {/* Top Navbar Publik - Diberi class landing-navbar */}
+      <nav className="landing-navbar" style={{
+        height: '72px', 
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #D6C8BC',
         position: 'sticky',
@@ -33,8 +33,8 @@ function LandingPage({ onNavigasiMasuk }) {
           </span>
         </div>
         
-        {/* Tengah: Navigasi Menu Utama - Memenuhi Target Tinggi Sentuh 48px */}
-        <div style={{ display: 'flex', gap: '16px' }}>
+        {/* Tengah: Navigasi Menu Utama - Diberi class landing-nav-menu agar bisa disembunyikan di mobile */}
+        <div className="landing-nav-menu" style={{ display: 'flex', gap: '16px' }}>
           <button 
             onClick={() => setSubMenu('informasi')}
             style={{ 
@@ -76,8 +76,8 @@ function LandingPage({ onNavigasiMasuk }) {
         {subMenu === 'informasi' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }} className="page-fade-in">
             
-            {/* Hero Section Banner - Harmonisasi Grid dan Tombol Utama */}
-            <div style={{ 
+            {/* Hero Section Banner - Diberi class landing-hero-grid */}
+            <div className="landing-hero-grid" style={{ 
               display: 'grid', 
               gridTemplateColumns: '1fr 1fr', 
               gap: '32px', 
@@ -99,7 +99,7 @@ function LandingPage({ onNavigasiMasuk }) {
                   Silakan masuk ke portal log administrasi untuk mengelola pelaporan pembayaran sewa gedung dan biaya service charge kios Anda secara mandiri.
                 </p>
                 
-                {/* Baris Tombol Aksi - Konsisten Tinggi 52px untuk Aksesibilitas Jari Lansia */}
+                {/* Baris Tombol Aksi */}
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
                   <button 
                     onClick={onNavigasiMasuk}
@@ -147,8 +147,8 @@ function LandingPage({ onNavigasiMasuk }) {
               </div>
             </div>
 
-            {/* Grid Informasi Jam Operasional & Kontak Pengelola */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            {/* Grid Informasi Jam Operasional & Kontak Pengelola - Diberi class landing-info-grid */}
+            <div className="landing-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
               
               {/* Card Kiri: Jam Operasional Gedung */}
               <div style={{ 
@@ -196,7 +196,6 @@ function LandingPage({ onNavigasiMasuk }) {
                   <div><strong>Nomor Kontak Kantor:</strong> 0542-776 8882 / 0811-5901-119</div>
                 </div>
 
-                {/* Perbaikan Tautan Peta Baru Lokasi Resmi Bunsay */}
                 <div style={{ width: '100%', height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #D6C8BC' }}>
                   <iframe 
                     title="Peta Lokasi Resmi Plaza Kebun Sayur Balikpapan"
@@ -210,7 +209,6 @@ function LandingPage({ onNavigasiMasuk }) {
                   ></iframe>
                 </div>
 
-                {/* Tombol Hubungi WhatsApp Pengelola */}
                 <a 
                   href="https://wa.me/628115901119" 
                   target="_blank" 
@@ -240,7 +238,6 @@ function LandingPage({ onNavigasiMasuk }) {
             </div>
           </div>
         ) : (
-          /* Tampilan Peta Pencarian Kios Kosong Publik */
           <div style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '14px', border: '1px solid #D6C8BC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} className="page-fade-in">
             <KetersediaanKios isAdmin={false} />
           </div>
