@@ -37,12 +37,21 @@ function AuthPage() {
         border: '1px solid var(--border)', 
         padding: '40px 32px'
       }}>
-        {/* Header Identitas Aplikasi */}
+        {/* Header Identitas Aplikasi dengan Penambahan Logo Baru */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ color: 'var(--red)', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-            Bunsay
+          <img 
+            src="/assets/main_logo_transparent_for_light_bg.png" 
+            alt="Logo Resmi Plaza Kebun Sayur" 
+            style={{ 
+              height: '128px', // Ukuran proporsional di dalam kartu login
+              width: 'auto', 
+              objectFit: 'contain', 
+            }} 
+          />
+          <h1 style={{ color: 'var(--red)', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0 }}>
+            Login
           </h1>
-          <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '6px' }}>
+          <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '6px', marginBottom: 0 }}>
             Sistem Pembayaran Sewa Kios Plaza Kebun Sayur
           </p>
         </div>
