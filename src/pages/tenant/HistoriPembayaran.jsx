@@ -6,10 +6,11 @@ function HistoriPembayaran() {
   const dataTransaksi = [
     { id: 'TX-4001', tanggal: '10 Mei 2026', tipe: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', status: 'Lunas' },
     { id: 'TX-4002', tanggal: '02 Mei 2026', tipe: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank', status: 'Lunas' },
-    { id: 'TX-4003', tanggal: '19 Mei 2026', tipe: 'Cicilan Tunggakan AR', nominal: 'Rp 2.000.000', metode: 'Transfer Bank', status: 'Menunggu Verifikasi' }
+    { id: 'TX-4003', tanggal: '19 Mei 2026', tipe: 'Cicilan Tunggakan (Piutang)', nominal: 'Rp 2.000.000', metode: 'Transfer Bank', status: 'Menunggu Verifikasi' }
   ];
 
-  const filteredTransaksi = dataTransaksi.filter(item => {
+  // PERBAIKAN LOGIKA: Menyaring data transaksi berdasarkan pilihan menu dropdown
+  const transaksiDifilter = dataTransaksi.filter((item) => {
     if (filterStatus === 'Semua') return true;
     return item.status === filterStatus;
   });
@@ -18,51 +19,64 @@ function HistoriPembayaran() {
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Arsip Riwayat Pembayaran</h2>
-          <p style={{ color: 'var(--text-2)', fontSize: '15px' }}>Daftar pelaporan transaksi digital Anda yang terekam di dalam sistem pengelola plaza.</p>
+          <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#1A1410' }}>Arsip Riwayat Pembayaran</h2>
+          <p style={{ color: '#4A3F35', fontSize: '15px', fontWeight: '600', marginTop: '4px' }}>Daftar pelaporan transaksi digital Anda yang terekam di dalam sistem pengelola plaza.</p>
         </div>
         
-        {/* Bilah Saringan */}
-        <div>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ minWidth: '180px' }}>
-            <option value="Semua">Semua Riwayat</option>
-            <option value="Lunas">Status Lunas</option>
-            <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-          </select>
-        </div>
+        {/* Dropdown status filter dengan area klik tinggi 48px untuk kemudahan motorik lansia */}
+        <select 
+          value={filterStatus} 
+          onChange={(e) => setFilterStatus(e.target.value)} 
+          style={{ minWidth: '220px', height: '48px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', color: '#1A1410', border: '1px solid #D6C8BC', padding: '0 12px', backgroundColor: '#ffffff' }}
+        >
+          <option value="Semua">Semua Riwayat</option>
+          <option value="Lunas">Status Lunas</option>
+          <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+        </select>
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #D6C8BC', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ backgroundColor: 'var(--warm-gray)', borderBottom: '2px solid var(--border)' }}>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>ID Transaksi</th>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>Tanggal Pembayaran</th>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>Jenis Tagihan</th>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>Nominal Setoran</th>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>Kanal Metode</th>
-              <th style={{ padding: '14px 16px', fontSize: '14px', color: 'var(--text-2)', fontWeight: '700' }}>Status Akhir</th>
+            <tr style={{ backgroundColor: '#F5F0EB', borderBottom: '3px solid #1A1410' }}>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>ID Transaksi</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>Tanggal Pembayaran</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>Jenis Tagihan</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>Nominal Setoran</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>Kanal Metode</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>Status Akhir</th>
             </tr>
           </thead>
           <tbody>
-            {filteredTransaksi.map((item, index) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--cream)' }}>
-                <td style={{ padding: '14px 16px', fontWeight: '700' }}>{item.id}</td>
-                <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tanggal}</td>
-                <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tipe}</td>
-                <td style={{ padding: '14px 16px', fontWeight: '700' }}>{item.nominal}</td>
-                <td style={{ padding: '14px 16px', color: 'var(--text-3)', fontWeight: '600' }}>{item.metode}</td>
-                <td style={{ padding: '14px 16px' }}>
-                  <span style={{ 
-                    backgroundColor: item.status === 'Lunas' ? 'var(--green-bg)' : 'var(--orange-bg)', 
-                    color: item.status === 'Lunas' ? 'var(--green)' : 'var(--orange)', 
-                    padding: '4px 10px', borderRadius: '4px', fontWeight: '700', fontSize: '12px' 
-                  }}>
-                    {item.status}
-                  </span>
+            {/* PENANGANAN EMPTY STATE: Menampilkan baris pemberitahuan ramah jika data filter kosong */}
+            {transaksiDifilter.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ padding: '32px 16px', textAlign: 'center', color: '#1A1410', fontWeight: '700', fontSize: '16px' }}>
+                  Tidak ada data laporan transaksi dengan status "{filterStatus}".
                 </td>
               </tr>
-            ))}
+            ) : (
+              transaksiDifilter.map((item, index) => (
+                <tr key={item.id} style={{ borderBottom: '1px solid #C4B9AF', backgroundColor: index % 2 === 0 ? '#ffffff' : '#F9F6F0' }}>
+                  <td style={{ padding: '18px 16px', fontWeight: '800', color: '#1A1410' }}>{item.id}</td>
+                  <td style={{ padding: '18px 16px', color: '#1A1410', fontWeight: '700' }}>{item.tanggal}</td>
+                  <td style={{ padding: '18px 16px', color: '#1A1410', fontWeight: '700' }}>{item.tipe}</td>
+                  <td style={{ padding: '18px 16px', fontWeight: '800', color: '#1A1410' }}>{item.nominal}</td>
+                  <td style={{ padding: '18px 16px', color: '#4A3F35', fontWeight: '700' }}>{item.metode}</td>
+                  <td style={{ padding: '18px 16px' }}>
+                    <span style={{ 
+                      backgroundColor: item.status === 'Lunas' ? '#E8F5EE' : '#FEF3E6', 
+                      color: item.status === 'Lunas' ? '#1A6B3A' : '#C05C00', 
+                      padding: '6px 14px', borderRadius: '4px', fontWeight: '800', fontSize: '13px',
+                      border: item.status === 'Lunas' ? '2px solid #1A6B3A' : '2px solid #C05C00',
+                      display: 'inline-block'
+                    }}>
+                      {item.status === 'Lunas' ? '✓ Lunas' : '⏳ Pending'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -5,7 +5,7 @@ function Sidebar({ activeMenu, setActiveMenu, onLogout }) {
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'pembayaran', label: 'Bayar Sekarang' },
     { id: 'histori', label: 'Histori Pembayaran' },
-    { id: 'tunggakan', label: 'Tunggakan AR' },
+    { id: 'tunggakan', label: 'Tunggakan (Piutang)' },
     { id: 'akun', label: 'Akun Tenant' }
   ];
 

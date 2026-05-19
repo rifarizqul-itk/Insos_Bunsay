@@ -24,7 +24,7 @@ function LandingPage({ onNavigasiMasuk }) {
           Plaza Kebun Sayur
         </div>
         
-        <div style={{ display: 'flex', gap: '24px' }}>
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '24px' }}>
           <button 
             onClick={() => setSubMenu('informasi')}
             style={{ backgroundColor: 'transparent', color: subMenu === 'informasi' ? 'var(--red)' : 'var(--text-2)', fontWeight: subMenu === 'informasi' ? '700' : '500', minHeight: 'auto' }}
@@ -39,14 +39,6 @@ function LandingPage({ onNavigasiMasuk }) {
           </button>
         </div>
 
-        <button 
-          onClick={onNavigasiMasuk}
-          style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '8px 20px', fontSize: '14px', fontWeight: '700' }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--red-dark)'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--red)'}
-        >
-          Portal Tenant & Admin →
-        </button>
       </nav>
 
       {/* Konten Utama Berdasarkan Menu Terpilih */}
@@ -68,17 +60,33 @@ function LandingPage({ onNavigasiMasuk }) {
               <div style={{ padding: '48px' }}>
                 <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '1px' }}>Informasi Resmi Pelayanan</span>
                 <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 20px 0', letterSpacing: '-1px' }}>
-                  Selamat Datang di Portal Digital Perwalian Kios Bunsay
+                  Selamat Datang di Portal Kios Bunsay
                 </h1>
-                <p style={{ color: 'var(--text-2)', fontSize: '15px', marginBottom: '24px' }}>
-                  Sistem integrasi transparansi data ketersediaan unit properti pasar, rekap administrasi, serta standardisasi loket pelaporan transaksi bagi seluruh pedagang Plaza Kebun Sayur Balikpapan.
-                </p>
                 <button 
                   onClick={() => setSubMenu('direktori')}
                   style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '12px 24px', fontWeight: '700' }}
                 >
-                  Lihat Tabel Ketersediaan Unit Kios
+                  Lihat Ketersediaan Unit Kios
                 </button>
+                <button
+                    onClick={onNavigasiMasuk}
+                    style={{
+                        backgroundColor: '#8B1A1A',
+                        color: '#ffffff',
+                        padding: '0 32px',
+                        marginTop: '24px',
+                        fontSize: '16px',
+                        fontWeight: '800',
+                        border: '2px solid #6B1414',
+                        height: '52px',
+                        borderRadius: '8px',
+                        cursor: 'pointer'
+                    }}
+                    onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
+                    onBlur={(e) => e.target.style.outline = 'none'}
+                    >
+                        MASUK KE PORTAL →
+                    </button>
               </div>
               <div style={{ height: '100%', minHeight: '380px', overflow: 'hidden' }}>
                 <img 

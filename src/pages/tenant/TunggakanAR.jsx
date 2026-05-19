@@ -9,7 +9,7 @@ function TunggakanAR({ onPemicuBayar }) {
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Informasi Tunggakan Historis (AR)</h2>
+        <h2 style={{ fontSize: '26px', fontWeight: '800' }}>Informasi Tunggakan (Piutang) Historis</h2>
         <p style={{ color: 'var(--text-2)', fontSize: '15px' }}>Arsip pelacakan nilai tunggakan pembukuan lama masa gedung terhitung hingga September 2024.</p>
       </div>
 
@@ -33,8 +33,8 @@ function TunggakanAR({ onPemicuBayar }) {
           </div>
 
           <button 
-            onClick={() => onPemicuBayar('10219998', 'Cicilan Tunggakan AR')}
-            style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '12px', fontSize: '15px', fontWeight: '700', marginTop: '8px' }}
+            onClick={() => onPemicuBayar('10219998', 'Cicilan Tunggakan (Piutang)')}
+            style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '12px', fontSize: '15px', fontWeight: '700', marginTop: '8px', height: '44px', cursor: 'pointer' }}
           >
             Angsur Tunggakan Sekarang
           </button>
@@ -43,7 +43,6 @@ function TunggakanAR({ onPemicuBayar }) {
         {/* Tabel Rekap Cicilan Sebelah Kanan */}
         <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>Riwayat Setoran Angsuran</h3>
-          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {riwayatCicilan.map((cicil) => (
               <div key={cicil.ke} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '14px', backgroundColor: 'var(--warm-gray)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

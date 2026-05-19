@@ -8,9 +8,12 @@ import DashboardTenant from './pages/tenant/DashboardTenant';
 import BayarSekarang from './pages/tenant/BayarSekarang';
 import HistoriPembayaran from './pages/tenant/HistoriPembayaran';
 import TunggakanAR from './pages/tenant/TunggakanAR';
+import AkunTenant from './pages/tenant/AkunTenant';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import VerifikasiPembayaran from './pages/admin/VerifikasiPembayaran';
 import DetailTenantAdmin from './pages/admin/DetailTenantAdmin';
+import KetersediaanKios from './pages/admin/KetersediaanKios';
+import EksporData from './pages/admin/EksporData';
 
 function App() {
   const [currentView, setCurrentView] = useState('landing'); // Alur utama: 'landing', 'auth', 'app'
@@ -98,7 +101,7 @@ function App() {
         <div style={{ padding: '40px 32px' }}>
           
           {/* ================= ROUTING ALUR SISI TENANT ================= */}
-          {role === 'tenant' && activeMenu === 'dashboard' && <DashboardTenant />}
+          {role === 'tenant' && activeMenu === 'dashboard' && <DashboardTenant onPemicuBayar={handlePemicuBayarCepat} />}
           {role === 'tenant' && activeMenu === 'pembayaran' && (
             <BayarSekarang 
               nominalAwal={bayarProps.nominal} 
@@ -110,6 +113,7 @@ function App() {
           {role === 'tenant' && activeMenu === 'tunggakan' && (
             <TunggakanAR onPemicuBayar={handlePemicuBayarCepat} />
           )}
+          {role === 'tenant' && activeMenu === 'akun' && <AkunTenant onLogout={handleLogout} />}
           
           {/* ================= ROUTING ALUR SISI ADMIN ================= */}
           {role === 'admin' && activeMenu === 'dashboard_admin' && !selectedTenant && (
@@ -119,15 +123,9 @@ function App() {
             <DetailTenantAdmin tenantName={selectedTenant} onBack={() => setSelectedTenant(null)} />
           )}
           {role === 'admin' && activeMenu === 'verifikasi_pembayaran' && <VerifikasiPembayaran />}
+          {role === 'admin' && activeMenu === 'ketersediaan_kios' && <KetersediaanKios isAdmin={true} />}
+          {role === 'admin' && activeMenu === 'ekspor_data' && <EksporData />}
           
-          {/* Penanganan Halaman Menu Cadangan yang Menunggu Sinkronisasi Backend Lanjutan */}
-          {((role === 'tenant' && activeMenu === 'akun') || 
-            (role === 'admin' && activeMenu === 'ketersediaan_kios' || activeMenu === 'ekspor_data')) && (
-            <div style={{ padding: '40px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-3)' }}>Halaman "{activeMenu}" sedang bersiap dalam antrean pengerjaan MVP berikutnya.</p>
-            </div>
-          )}
-
         </div>
       </main>
     </div>
