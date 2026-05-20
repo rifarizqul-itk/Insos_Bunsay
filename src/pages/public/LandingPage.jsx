@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
-import KetersediaanKios from '../admin/KetersediaanKios';
+import React from 'react';
 
 function LandingPage({ onNavigasiMasuk }) {
-  const [subMenu, setSubMenu] = useState('informasi');
-
   return (
     <div className="page-fade-in" style={{ backgroundColor: '#FDFBFA', minHeight: '100vh', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
       
@@ -32,217 +29,157 @@ function LandingPage({ onNavigasiMasuk }) {
             Plaza Kebun Sayur
           </span>
         </div>
-        
-        {/* Tengah: Navigasi Menu Utama - Diberi class landing-nav-menu agar bisa disembunyikan di mobile */}
-        <div className="landing-nav-menu" style={{ display: 'flex', gap: '16px' }}>
-          <button 
-            onClick={() => setSubMenu('informasi')}
-            style={{ 
-              backgroundColor: subMenu === 'informasi' ? '#FDF2F2' : 'transparent', 
-              color: subMenu === 'informasi' ? '#8B1A1A' : '#4A3F35', 
-              fontWeight: '800', 
-              fontSize: '16px',
-              border: subMenu === 'informasi' ? '1px solid #FADADD' : '1px solid transparent',
-              borderRadius: '8px',
-              height: '48px',
-              padding: '0 20px',
-              cursor: 'pointer'
-            }}
-          >
-            Informasi Umum
-          </button>
-          <button 
-            onClick={() => setSubMenu('direktori')}
-            style={{ 
-              backgroundColor: subMenu === 'direktori' ? '#FDF2F2' : 'transparent', 
-              color: subMenu === 'direktori' ? '#8B1A1A' : '#4A3F35', 
-              fontWeight: '800', 
-              fontSize: '16px',
-              border: subMenu === 'direktori' ? '1px solid #FADADD' : '1px solid transparent',
-              borderRadius: '8px',
-              height: '48px',
-              padding: '0 20px',
-              cursor: 'pointer'
-            }}
-          >
-            Cari Kios Kosong
-          </button>
-        </div>
       </nav>
 
-      {/* Konten Utama Berdasarkan Menu Terpilih */}
+      {/* Konten Utama */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-        
-        {subMenu === 'informasi' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }} className="page-fade-in">
-            
-            {/* Hero Section Banner - Diberi class landing-hero-grid */}
-            <div className="landing-hero-grid" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px', 
-              backgroundColor: '#ffffff', 
-              borderRadius: '14px', 
-              border: '1px solid #D6C8BC',
-              overflow: 'hidden',
-              alignItems: 'center',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
-            }}>
-              <div style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  Informasi Resmi Pelayanan
-                </span>
-                <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
-                  Selamat Datang di Portal Kios Bunsay
-                </h1>
-                <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', marginBottom: '28px', lineHeight: '1.6' }}>
-                  Silakan masuk ke portal log administrasi untuk mengelola pelaporan pembayaran sewa gedung dan biaya service charge kios Anda secara mandiri.
-                </p>
-                
-                {/* Baris Tombol Aksi */}
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
-                  <button 
-                    onClick={onNavigasiMasuk}
-                    style={{
-                      backgroundColor: '#8B1A1A',
-                      color: '#ffffff',
-                      padding: '0 32px',
-                      fontSize: '16px',
-                      fontWeight: '800',
-                      border: '2px solid #6B1414',
-                      height: '52px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                    onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
-                    onBlur={(e) => e.target.style.outline = 'none'}
-                  >
-                    MASUK KE PORTAL →
-                  </button>
-                  <button 
-                    onClick={() => setSubMenu('direktori')}
-                    style={{ 
-                      backgroundColor: '#F5F0EB', 
-                      color: '#1A1410', 
-                      padding: '0 24px', 
-                      fontSize: '16px',
-                      fontWeight: '800', 
-                      border: '1px solid #D6C8BC',
-                      height: '52px',
-                      borderRadius: '8px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Lihat Peta Kios Kosong
-                  </button>
-                </div>
-              </div>
-              <div style={{ height: '100%', minHeight: '400px', overflow: 'hidden' }}>
-                <img 
-                  src="/assets/Photograph_of_plaza_building.jpg" 
-                  alt="Gedung Plaza Kebun Sayur Balikpapan" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-            </div>
-
-            {/* Grid Informasi Jam Operasional & Kontak Pengelola - Diberi class landing-info-grid */}
-            <div className="landing-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }} className="page-fade-in">
+          
+          {/* Hero Section Banner - Diberi class landing-hero-grid */}
+          <div className="landing-hero-grid" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '32px', 
+            backgroundColor: '#ffffff', 
+            borderRadius: '14px', 
+            border: '1px solid #D6C8BC',
+            overflow: 'hidden',
+            alignItems: 'center',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Informasi Resmi Pelayanan
+              </span>
+              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
+                Selamat Datang di Portal Kios Bunsay
+              </h1>
+              <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', marginBottom: '28px', lineHeight: '1.6' }}>
+                Silakan masuk ke portal log administrasi untuk mengelola pelaporan pembayaran sewa gedung dan biaya service charge kios Anda secara mandiri.
+              </p>
               
-              {/* Card Kiri: Jam Operasional Gedung */}
-              <div style={{ 
-                backgroundColor: '#ffffff', 
-                padding: '32px', 
-                borderRadius: '14px', 
-                border: '1px solid #D6C8BC',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-              }}>
-                <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '12px', color: '#1A1410' }}>
-                  Jam Operasional Gedung
-                </h3>
-                <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', lineHeight: '1.5' }}>
-                  Plaza Kebun Sayur terbuka secara aktif melayani aktivitas perdagangan masyarakat umum pada waktu berikut:
-                </p>
-                <div style={{ fontSize: '32px', fontWeight: '800', color: '#8B1A1A', marginTop: '20px', marginBottom: '6px' }}>
-                  09.00 - 21.00 WITA
-                </div>
-                <span style={{ fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>
-                  Hari Senin s/d Hari Minggu (Buka Setiap Hari)
-                </span>
-              </div>
-
-              {/* Card Kanan: Informasi Kontak Kantor Pengelola */}
-              <div style={{ 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #D6C8BC', 
-                padding: '32px', 
-                borderRadius: '14px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '24px'
-              }}>
-                <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1A1410', margin: 0 }}>
-                  Informasi Kontak Kantor Pengelola
-                </h3>
-                
-                <div style={{ fontSize: '16px', color: '#1A1410', fontWeight: '600', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div><strong>Alamat Fisik:</strong> Jl. Letjen Suprapto, Baru Ilir, Kec. Balikpapan Barat, Kota Balikpapan, Kalimantan Timur 76123</div>
-                  <div><strong>Jam Pelayanan Kantor:</strong> 09.00 - 21.00 WITA</div>
-                  <div><strong>Nomor Kontak Kantor:</strong> 0542-776 8882 / 0811-5901-119</div>
-                </div>
-
-                <div style={{ width: '100%', height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #D6C8BC' }}>
-                  <iframe 
-                    title="Peta Lokasi Resmi Plaza Kebun Sayur Balikpapan"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8925621789695!2d116.82155707448267!3d-1.2342929355704761!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x55155145b04a009%3A0xd023fb431afb2027!2sPlaza%20Kebun%20Sayur!5e0!3m2!1sen!2sus!4v1779193878240!5m2!1sen!2sus"
-                    width="100%" 
-                    height="100%" 
-                    style={{ border: 0 }} 
-                    allowFullScreen="" 
-                    loading="lazy" 
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
-                </div>
-
-                <a 
-                  href="https://wa.me/628115901119" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#E8F5EE', 
-                    color: '#1A6B3A', 
-                    fontSize: '16px', 
-                    fontWeight: '800', 
-                    border: '2px solid #1A6B3A', 
-                    height: '52px', 
+              {/* Baris Tombol Aksi */}
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
+                <button 
+                  onClick={onNavigasiMasuk}
+                  style={{
+                    backgroundColor: '#8B1A1A',
+                    color: '#ffffff',
+                    padding: '0 32px',
+                    fontSize: '16px',
+                    fontWeight: '800',
+                    border: '2px solid #6B1414',
+                    height: '52px',
                     borderRadius: '8px',
-                    textDecoration: 'none',
-                    textAlign: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                   }}
                   onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
                   onBlur={(e) => e.target.style.outline = 'none'}
                 >
-                  Hubungi Kantor Pengelola melalui WhatsApp
-                </a>
+                  MASUK KE PORTAL →
+                </button>
               </div>
-
+            </div>
+            <div style={{ height: '100%', minHeight: '400px', overflow: 'hidden' }}>
+              <img 
+                src="/assets/Photograph_of_plaza_building.jpg" 
+                alt="Gedung Plaza Kebun Sayur Balikpapan" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
           </div>
-        ) : (
-          <div style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '14px', border: '1px solid #D6C8BC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }} className="page-fade-in">
-            <KetersediaanKios isAdmin={false} />
-          </div>
-        )}
 
+          {/* Grid Informasi Jam Operasional & Kontak Pengelola - Diberi class landing-info-grid */}
+          <div className="landing-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            
+            {/* Card Kiri: Jam Operasional Gedung */}
+            <div style={{ 
+              backgroundColor: '#ffffff', 
+              padding: '32px', 
+              borderRadius: '14px', 
+              border: '1px solid #D6C8BC',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '12px', color: '#1A1410' }}>
+                Jam Operasional Gedung
+              </h3>
+              <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', lineHeight: '1.5' }}>
+                Plaza Kebun Sayur terbuka secara aktif melayani aktivitas perdagangan masyarakat umum pada waktu berikut:
+              </p>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#8B1A1A', marginTop: '20px', marginBottom: '6px' }}>
+                09.00 - 21.00 WITA
+              </div>
+              <span style={{ fontSize: '15px', color: '#1A1410', fontWeight: '800' }}>
+                Hari Senin s/d Hari Minggu (Buka Setiap Hari)
+              </span>
+            </div>
+
+            {/* Card Kanan: Informasi Kontak Kontak Kantor Pengelola */}
+            <div style={{ 
+              backgroundColor: '#ffffff', 
+              border: '1px solid #D6C8BC', 
+              padding: '32px', 
+              borderRadius: '14px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '24px'
+            }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1A1410', margin: 0 }}>
+                Informasi Kontak Kantor Pengelola
+              </h3>
+              
+              <div style={{ fontSize: '16px', color: '#1A1410', fontWeight: '600', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div><strong>Alamat Fisik:</strong> Jl. Letjen Suprapto, Baru Ilir, Kec. Balikpapan Barat, Kota Balikpapan, Kalimantan Timur 76123</div>
+                <div><strong>Jam Pelayanan Kantor:</strong> 09.00 - 21.00 WITA</div>
+                <div><strong>Nomor Kontak Kantor:</strong> 0542-776 8882 / 0811-5901-119</div>
+              </div>
+
+              <div style={{ width: '100%', height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #D6C8BC' }}>
+                <iframe 
+                  title="Peta Lokasi Resmi Plaza Kebun Sayur Balikpapan"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8925621789695!2d116.82155707448267!3d-1.2342929355704761!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x55155145b04a009%3A0xd023fb431afb2027!2sPlaza%20Kebun%20Sayur!5e0!3m2!1sen!2sus!4v1779193878240!5m2!1sen!2sus"
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen="" 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+
+              <a 
+                href="https://wa.me/628115901119" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#E8F5EE', 
+                  color: '#1A6B3A', 
+                  fontSize: '16px', 
+                  fontWeight: '800', 
+                  border: '2px solid #1A6B3A', 
+                  height: '52px', 
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
+                onBlur={(e) => e.target.style.outline = 'none'}
+              >
+                Hubungi Kantor Pengelola melalui WhatsApp
+              </a>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   );

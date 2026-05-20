@@ -11,6 +11,7 @@ import TunggakanAR from './pages/tenant/TunggakanAR';
 import AkunTenant from './pages/tenant/AkunTenant';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import VerifikasiPembayaran from './pages/admin/VerifikasiPembayaran';
+import RiwayatTransaksiAdmin from './pages/admin/RiwayatTransaksiAdmin';
 import DetailTenantAdmin from './pages/admin/DetailTenantAdmin';
 import KetersediaanKios from './pages/admin/KetersediaanKios';
 import EksporData from './pages/admin/EksporData';
@@ -21,11 +22,25 @@ function App() {
   const [role, setRole] = useState('tenant'); 
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [selectedTenant, setSelectedTenant] = useState(null);
-  
-  // State baru untuk penanganan buka/tutup Drawer Sidebar di Mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Sewa Gedung' });
+
+  // State Global Simulasi Alur Transaksi Admin
+  const [antreanAdmin, setAntreanAdmin] = useState([
+    { id: 'TRX-1092', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (BNI)', waktu: '19 Mei 2026, 14:20 WITA' },
+    { id: 'TRX-1093', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', waktu: '19 Mei 2026, 15:05 WITA' }
+  ]);
+
+  const [riwayatAdmin, setRiwayatAdmin] = useState([
+    { id: 'TRX-1090', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', waktu: '18 Mei 2026, 09:15 WITA', status: 'Lunas' },
+    { id: 'TRX-1091', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (Mandiri)', waktu: '18 Mei 2026, 11:45 WITA', status: 'Tertolak', alasan: 'Bukti transfer tidak valid/rekayasa' }
+  ]);
+
+  const handleProsesVerifikasi = (transaksiSelesai) => {
+    // Pindahkan dari antrean ke riwayat berkas
+    setRiwayatAdmin(prev => [transaksiSelesai, ...prev]);
+    setAntreanAdmin(prev => prev.filter(item => item.id !== transaksiSelesai.id));
+  };
 
   const handleFakeLogin = (e) => {
     e.preventDefault();
@@ -89,14 +104,13 @@ function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--cream)', position: 'relative', overflowX: 'hidden' }}>
       
-      {/* Operasikan properti status drawer ke masing-masing komponen aside */}
       {role === 'admin' ? (
         <SidebarAdmin 
           activeMenu={activeMenu} 
           setActiveMenu={(menu) => { 
             setActiveMenu(menu); 
             setSelectedTenant(null); 
-            setIsSidebarOpen(false); // Tutup drawer otomatis pas ganti menu
+            setIsSidebarOpen(false);
           }} 
           onLogout={handleLogout} 
           isOpen={isSidebarOpen}
@@ -108,7 +122,7 @@ function App() {
           setActiveMenu={(menu) => { 
             setActiveMenu(menu); 
             setBayarProps({ nominal: '', jenis: 'Sewa Gedung' }); 
-            setIsSidebarOpen(false); // Tutup drawer otomatis pas ganti menu
+            setIsSidebarOpen(false);
           }} 
           onLogout={handleLogout} 
           isOpen={isSidebarOpen}
@@ -116,18 +130,15 @@ function App() {
         />
       )}
 
-      {/* Kirim pemicu toggle ke komponen topbar */}
       <Topbar 
         userTitle={role === 'admin' ? "Administrator Utama" : "Hj. Yuliana (Kios B-1001)"} 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      {/* Tampilkan overlay transparan tipis pembantu penutupan saat mengklik ruang luar */}
       {isSidebarOpen && (
         <div className="sidebar-mobile-overlay" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* Gunakan class CSS murni untuk fleksibilitas perpindahan viewport desktop/mobile */}
       <main className="main-layout">
         <div className="main-content-inner">
           
@@ -153,7 +164,15 @@ function App() {
           {role === 'admin' && selectedTenant && (
             <DetailTenantAdmin tenantName={selectedTenant} onBack={() => setSelectedTenant(null)} />
           )}
-          {role === 'admin' && activeMenu === 'verifikasi_pembayaran' && <VerifikasiPembayaran />}
+          {role === 'admin' && activeMenu === 'verifikasi_pembayaran' && (
+            <VerifikasiPembayaran 
+              antrean={antreanAdmin} 
+              onProsesVerifikasi={handleProsesVerifikasi} 
+            />
+          )}
+          {role === 'admin' && activeMenu === 'riwayat_transaksi_admin' && (
+            <RiwayatTransaksiAdmin riwayat={riwayatAdmin} />
+          )}
           {role === 'admin' && activeMenu === 'ketersediaan_kios' && <KetersediaanKios isAdmin={true} />}
           {role === 'admin' && activeMenu === 'ekspor_data' && <EksporData />}
           

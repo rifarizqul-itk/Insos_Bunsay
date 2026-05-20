@@ -4,6 +4,7 @@ function SidebarAdmin({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) 
   const menuItems = [
     { id: 'dashboard_admin', label: 'Dashboard Admin' },
     { id: 'verifikasi_pembayaran', label: 'Verifikasi Pembayaran' },
+    { id: 'riwayat_transaksi_admin', label: 'Riwayat Transaksi Admin' },
     { id: 'ketersediaan_kios', label: 'Tabel Ketersediaan Kios' },
     { id: 'ekspor_data', label: 'Ekspor Rekap Data' }
   ];

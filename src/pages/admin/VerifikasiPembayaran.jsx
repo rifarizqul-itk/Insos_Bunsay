@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 
-function VerifikasiPembayaran() {
-  // Simulasi antrean data pending masuk
-  const [antrean, setAntrean] = useState([
-    { id: 'TRX-1092', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (BNI)', waktu: '19 Mei 2026, 14:20 WITA' },
-    { id: 'TRX-1093', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', waktu: '19 Mei 2026, 15:05 WITA' }
-  ]);
-
+function VerifikasiPembayaran({ antrean, onProsesVerifikasi }) {
   const [previewItem, setPreviewItem] = useState(null);
 
-  const handleAksi = (id, status) => {
-    alert(`Pembayaran dengan ID ${id} berhasil di-${status === 'konfirmasi' ? 'setujui' : 'tolak'}.`);
-    setAntrean(prev => prev.filter(item => item.id !== id));
+  const handleAksi = (id, statusKonfirmasi) => {
+    const itemTarget = antrean.find(item => item.id === id);
+    if (!itemTarget) return;
+
+    const statusFinal = statusKonfirmasi === 'konfirmasi' ? 'Lunas' : 'Tertolak';
+    const alasanFinal = statusKonfirmasi === 'konfirmasi' ? null : 'Bukti transfer tidak sesuai / buram';
+
+    alert(`Pembayaran dengan ID ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak (Tertolak)'}.`);
+    
+    // Kirim data ke state global App.jsx untuk diarsipkan di riwayat
+    onProsesVerifikasi({
+      ...itemTarget,
+      status: statusFinal,
+      alasan: alasanFinal
+    });
+
     setPreviewItem(null);
   };
 

@@ -83,8 +83,6 @@ Menjalankan ESLint untuk mengecek kualitas struktur penulisan kode pada berkas `
 * **`npm run preview`**
 Membuka server lokal mandiri untuk meninjau hasil build produksi secara lokal sebelum diunggah ke hosting.
 
-Tentu, ini potongan teks (snippet) khusus panduan untuk developer backend yang bisa langsung Anda sisipkan ke dalam file `README.md` Anda:
-
 ## 🔌 Panduan untuk Developer Backend
 
 Repositori ini merupakan aplikasi **Frontend (SPA)** mandiri. Bagi developer backend yang bertugas menyediakan API atau melakukan integrasi endpoint, berikut adalah beberapa poin penting yang perlu diperhatikan:
