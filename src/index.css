@@ -1,4 +1,28 @@
-/* DESIGN SYSTEM TOKENS - PLAZA KEBUN SAYUR BALIKPAPAN */
+/* ==========================================================================
+   1. REGISTRASI PLUS JAKARTA SANS (VARIABLE FONT LOKAL)
+   Memuat langsung file dari folder src/fonts/ agar seragam di semua device
+   ========================================================================== */
+
+/* Versi Tegak (Normal) */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800; /* Mengaktifkan dynamic range dari ExtraLight (200) sampai ExtraBold (800) */
+  font-style: normal;
+}
+
+/* Versi Miring (Italic) */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/PlusJakartaSans-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: italic;
+}
+
+
+/* ==========================================================================
+   2. DESIGN SYSTEM TOKENS - PLAZA KEBUN SAYUR BALIKPAPAN
+   ========================================================================== */
 :root {
   /* Identitas Warna Utama & Derivat */
   --red: #8B1A1A;
@@ -164,11 +188,11 @@ button, input, select, .menu-item {
 /* BREAKPOINT UTAMA: LAYAR TABLET & MOBILE VIEWPORTS */
 @media (max-width: 992px) {
   .sidebar-container {
-    transform: translateX(-100%); /* Sembunyikan sidebar ke kiri luar layar */
+    transform: translateX(-100%);
   }
   
   .sidebar-container.mobile-open {
-    transform: translateX(0); /* Geser masuk ke dalam layar */
+    transform: translateX(0);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   }
   
@@ -178,7 +202,7 @@ button, input, select, .menu-item {
   }
   
   .main-layout {
-    padding-left: 0 !important; /* Hilangkan margin desktop agar tidak mendorong konten */
+    padding-left: 0 !important;
   }
   
   .main-content-inner {
@@ -192,14 +216,13 @@ button, input, select, .menu-item {
   }
   
   .topbar-hamburger {
-    display: flex !important; /* Tampilkan tombol hamburger menu */
+    display: flex !important;
   }
   
   .sidebar-close-btn {
-    display: block !important; /* Tampilkan tombol tutup silang di dalam laci */
+    display: block !important;
   }
 
-  /* CRITICAL FIX 4: Otomatisasi pembungkusan tabel agar scrollable horizontal tanpa merusak markup */
   table {
     display: block !important;
     width: 100% !important;
@@ -208,7 +231,6 @@ button, input, select, .menu-item {
     -webkit-overflow-scrolling: touch;
   }
   
-  /* CRITICAL FIX 2: Menangkap inline-style Grid 2-kolom hardcoded di halaman anak & mengubahnya menjadi 1 kolom vertical stack */
   div[style*="grid-template-columns"],
   div[style*="gridTemplateColumns"] {
     grid-template-columns: 1fr !important;
@@ -228,46 +250,38 @@ button, input, select, .menu-item {
    PERBAIKAN SPESIFIK LANDING PAGE UNTUK MOBILE VIEWPORT (< 768px)
    ========================================================================== */
 @media (max-width: 768px) {
-  /* 1. Navbar: Persempit padding kiri-kanan agar teks judul tidak terpotong */
   .landing-navbar {
     padding: 0 16px !important;
-    justify-content: center !important; /* Buat Logo dan Nama berada di tengah layar */
+    justify-content: center !important;
   }
 
-  /* 2. Menu Navigasi Tengah: Sembunyikan total sesuai request Anda */
   .landing-nav-menu {
     display: none !important;
   }
 
-  /* 3. Hero Section Card: Ubah susunan 2-kolom menjadi 1-kolom tumpuk */
   .landing-hero-grid {
     grid-template-columns: 1fr !important;
     gap: 0 !important;
   }
 
-  /* Perkecil padding teks hero agar proporsional di layar HP */
   .landing-hero-grid > div:first-child {
     padding: 24px 20px !important;
   }
 
-  /* Perkecil ukuran judul utama banner agar muat */
   .landing-hero-grid h1 {
     font-size: 26px !important;
   }
 
-  /* Atur tinggi gambar gedung pasar di bawah teks card */
   .landing-hero-grid > div:last-child {
     min-height: 220px !important;
     height: 220px !important;
     width: 100% !important;
   }
 
-  /* Memaksa tombol masuk portal melebar penuh agar mudah ditekan jempol */
   .landing-hero-grid button {
     width: 100% !important;
   }
 
-  /* 4. Grid Jam & Kontak Operasional: Ubah menjadi stack vertikal */
   .landing-info-grid {
     grid-template-columns: 1fr !important;
     gap: 24px !important;

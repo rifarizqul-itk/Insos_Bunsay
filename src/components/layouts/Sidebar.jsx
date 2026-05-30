@@ -1,6 +1,9 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // 1. Masukkan pustaka router
 
-function Sidebar({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) {
+function Sidebar({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapus prop activeMenu karena sudah pakai URL
+  const location = useLocation(); // 3. Ambil data URL aktif saat ini
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'pembayaran', label: 'Bayar Sekarang' },
@@ -43,7 +46,7 @@ function Sidebar({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) {
           onClick={onClose}
           className="sidebar-close-btn"
           style={{
-            display: 'none', // dikontrol media-query css
+            display: 'none',
             backgroundColor: 'transparent',
             color: 'var(--text-2)',
             fontSize: '22px',
@@ -59,11 +62,15 @@ function Sidebar({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) {
       {/* Daftar Menu Navigasi */}
       <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {menuItems.map((item) => {
-          const isActive = activeMenu === item.id;
+          // 4. Deteksi status aktif murni dari kecocokan alamat URL browser
+          const isActive = location.pathname === `/tenant/${item.id}`;
           return (
             <button
               key={item.id}
-              onClick={() => setActiveMenu(item.id)}
+              onClick={() => {
+                setActiveMenu(item.id);
+                onClose(); // 5. Tutup sidebar otomatis di mobile setelah klik menu
+              }}
               style={{
                 width: '100%',
                 backgroundColor: isActive ? 'var(--red-50)' : 'transparent',

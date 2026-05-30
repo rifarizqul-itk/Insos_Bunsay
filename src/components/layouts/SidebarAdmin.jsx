@@ -1,12 +1,16 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // 1. Masukkan pustaka router
 
-function SidebarAdmin({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) {
+function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapus prop activeMenu
+  const location = useLocation(); // 3. Ambil data URL aktif saat ini
+
+  // 4. Ringkas nilai ID agar cocok dengan routing sub-path di App.jsx
   const menuItems = [
-    { id: 'dashboard_admin', label: 'Dashboard Admin' },
-    { id: 'verifikasi_pembayaran', label: 'Verifikasi Pembayaran' },
-    { id: 'riwayat_transaksi_admin', label: 'Riwayat Transaksi Admin' },
-    { id: 'ketersediaan_kios', label: 'Tabel Ketersediaan Kios' },
-    { id: 'ekspor_data', label: 'Ekspor Rekap Data' }
+    { id: 'dashboard', label: 'Dashboard Admin' },
+    { id: 'verifikasi', label: 'Verifikasi Pembayaran' },
+    { id: 'riwayat', label: 'Riwayat Transaksi Admin' },
+    { id: 'kios', label: 'Tabel Ketersediaan Kios' },
+    { id: 'ekspor', label: 'Ekspor Rekap Data' }
   ];
 
   return (
@@ -58,11 +62,15 @@ function SidebarAdmin({ activeMenu, setActiveMenu, onLogout, isOpen, onClose }) 
 
       <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {menuItems.map((item) => {
-          const isActive = activeMenu === item.id;
+          // 5. Cek status aktif berdasarkan URL Admin saat ini
+          const isActive = location.pathname === `/admin/${item.id}`;
           return (
             <button
               key={item.id}
-              onClick={() => setActiveMenu(item.id)}
+              onClick={() => {
+                setActiveMenu(item.id);
+                onClose(); // 6. Tutup otomatis setelah klik menu di tampilan HP
+              }}
               style={{
                 width: '100%',
                 backgroundColor: isActive ? 'var(--red-50)' : 'transparent',
