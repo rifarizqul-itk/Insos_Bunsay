@@ -108,7 +108,7 @@ function LandingPage({ onNavigasiMasuk }) {
                 Jam Operasional Gedung
               </h3>
               <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', lineHeight: '1.5' }}>
-                Plaza Kebun Sayur terbuka secara aktif melayani aktivitas perdagangan masyarakat umum pada waktu berikut:
+                Plaza Kebun Sayur terbuka secara aktif melayani aktivitas perdagangan pada waktu berikut:
               </p>
               <div style={{ fontSize: '32px', fontWeight: '800', color: '#8B1A1A', marginTop: '20px', marginBottom: '6px' }}>
                 09.00 - 21.00 WITA
