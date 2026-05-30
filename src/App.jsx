@@ -90,13 +90,13 @@ function App() {
             onClick={() => { setRole('tenant'); setActiveMenu('dashboard'); }}
             style={{ padding: '6px 12px', backgroundColor: role === 'tenant' ? '#8B1A1A' : '#ffffff', color: role === 'tenant' ? '#ffffff' : '#1A1410', marginRight: '6px', borderRadius: '6px', cursor: 'pointer', height: '44px' }}
           >
-            Sebagai Tenant (Hj. Yuliana)
+            Sebagai Tenant
           </button>
           <button 
             onClick={() => { setRole('admin'); setActiveMenu('dashboard_admin'); setSelectedTenant(null); }}
             style={{ padding: '6px 12px', backgroundColor: role === 'admin' ? '#8B1A1A' : '#ffffff', color: role === 'admin' ? '#ffffff' : '#1A1410', borderRadius: '6px', cursor: 'pointer', height: '44px' }}
           >
-            Sebagai Pengelola / Admin Plaza
+            Sebagai Admin
           </button>
         </div>
         
