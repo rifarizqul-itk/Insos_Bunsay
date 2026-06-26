@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'; // Pustaka baru
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import LandingPage from './pages/public/LandingPage';
 import AuthPage from './pages/public/AuthPage';
 import Sidebar from './components/layouts/Sidebar';
@@ -11,30 +11,28 @@ import HistoriPembayaran from './pages/tenant/HistoriPembayaran';
 import TunggakanAR from './pages/tenant/TunggakanAR';
 import AkunTenant from './pages/tenant/AkunTenant';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
-import VerifikasiPembayaran from './pages/admin/VerifikasiPembayaran';
+import VerifikasiBuktiTransfer from './pages/admin/VerifikasiBuktiTransfer';
+import SetoranTunai from './pages/admin/SetoranTunai';
 import RiwayatTransaksiAdmin from './pages/admin/RiwayatTransaksiAdmin';
-import DetailTenantAdmin from './pages/admin/DetailTenantAdmin';
 import KetersediaanKios from './pages/admin/KetersediaanKios';
+import DetailAdministrasiKios from './pages/admin/DetailAdministrasiKios';
 import EksporData from './pages/admin/EksporData';
 
 function App() {
-  const navigate = useNavigate(); // Fungsi untuk pindah halaman via kode
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState('tenant'); 
-  const [selectedTenant, setSelectedTenant] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Sewa Gedung' });
+  const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Service Charge' });
 
-  // Antrean khusus pembayaran manual (data sampel tetap dipertahankan)
   const [antreanAdmin, setAntreanAdmin] = useState([
-    { id: 'TRX-1092', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (BNI) Manual', waktu: '19 Mei 2026, 14:20 WITA' },
-    { id: 'TRX-1093', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS Manual', waktu: '19 Mei 2026, 15:05 WITA' }
+    { id: 'TRX-1092', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (BNI)', waktu: '19 Mei 2026, 14:20 WITA' }
   ]);
 
-  // Riwayat akhir seluruh transaksi
   const [riwayatAdmin, setRiwayatAdmin] = useState([
     { id: 'TRX-1090', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS Manual', waktu: '18 Mei 2026, 09:15 WITA', status: 'Lunas' },
-    { id: 'TRX-1091', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Sewa Gedung', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (Mandiri)', waktu: '18 Mei 2026, 11:45 WITA', status: 'Tertolak', alasan: 'Bukti transfer tidak valid/rekayasa' }
+    { id: 'TRX-1091', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (Mandiri)', waktu: '18 Mei 2026, 11:45 WITA', status: 'Tertolak', alasan: 'Bukti transfer tidak valid/rekayasa' }
   ]);
 
   const handleTambahTransaksiBaru = (transaksiBaru) => {
@@ -43,7 +41,7 @@ function App() {
     } else {
       setAntreanAdmin(prev => [transaksiBaru, ...prev]);
     }
-    navigate('/tenant/histori'); // Berpindah alamat secara otomatis setelah bayar
+    navigate('/tenant/histori');
   };
 
   const handleProsesVerifikasi = (transaksiSelesai) => {
@@ -63,20 +61,19 @@ function App() {
 
   const handlePemicuBayarCepat = (nominal, jenis) => {
     setBayarProps({ nominal, jenis });
-    navigate('/tenant/pembayaran'); // Arahkan langsung ke menu pembayaran
+    navigate('/tenant/pembayaran');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setIsSidebarOpen(false);
-    navigate('/'); // Kembali ke landing page utama
+    navigate('/');
   };
 
   return (
     <Routes>
-      {/* ================= ALUR RUTE PUBLIK ================= */}
+      {/* Public */}
       <Route path="/" element={<LandingPage onNavigasiMasuk={() => navigate('/auth')} />} />
-      
       <Route path="/auth" element={
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FBF7F2' }}>
           <div className="auth-simulation-bar" style={{ display: 'flex', alignItems: 'center', padding: '10px', backgroundColor: '#F5F0EB', borderBottom: '1px solid #E8E0D8' }}>
@@ -107,7 +104,7 @@ function App() {
         </div>
       } />
 
-      {/* ================= ALUR RUTE SISI TENANT ================= */}
+      {/* Tenant */}
       <Route path="/tenant/*" element={
         <div style={{ minHeight: '100vh', backgroundColor: '#FBF7F2', position: 'relative', overflowX: 'hidden' }}>
           <Sidebar activeMenu="" setActiveMenu={(menu) => navigate(`/tenant/${menu}`)} onLogout={handleLogout} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -129,26 +126,28 @@ function App() {
         </div>
       } />
 
-      {/* ================= ALUR RUTE SISI ADMIN ================= */}
+      {/* Admin */}
       <Route path="/admin/*" element={
         <div style={{ minHeight: '100vh', backgroundColor: '#FBF7F2', position: 'relative', overflowX: 'hidden' }}>
-          <SidebarAdmin activeMenu="" setActiveMenu={(menu) => { navigate(`/admin/${menu}`); setSelectedTenant(null); }} onLogout={handleLogout} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          <SidebarAdmin activeMenu="" setActiveMenu={(menu) => { navigate(`/admin/${menu}`); }} onLogout={handleLogout} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
           <Topbar userTitle="Administrator Utama" onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
           {isSidebarOpen && <div className="sidebar-mobile-overlay" onClick={() => setIsSidebarOpen(false)} />}
           
           <main className="main-layout" style={{ padding: '32px' }}>
             <div className="main-content-inner">
               <Routes>
-                <Route path="dashboard" element={
-                  selectedTenant ? (
-                    <DetailTenantAdmin tenantName={selectedTenant} onBack={() => setSelectedTenant(null)} />
-                  ) : (
-                    <DashboardAdmin onSelectTenant={(name) => setSelectedTenant(name)} />
-                  )
+                <Route path="dashboard" element={<DashboardAdmin />} />
+                <Route path="verifikasi-bukti" element={
+                  <VerifikasiBuktiTransfer 
+                    antrean={antreanAdmin} 
+                    onProsesVerifikasi={handleProsesVerifikasi} 
+                    selectedTenant={location.state?.selectedTenant || null}
+                  />
                 } />
-                <Route path="verifikasi" element={<VerifikasiPembayaran antrean={antreanAdmin} onProsesVerifikasi={handleProsesVerifikasi} />} />
+                <Route path="setoran-tunai" element={<SetoranTunai />} />
                 <Route path="riwayat" element={<RiwayatTransaksiAdmin riwayat={riwayatAdmin} />} />
                 <Route path="kios" element={<KetersediaanKios isAdmin={true} />} />
+                <Route path="detail-administrasi" element={<DetailAdministrasiKios />} />
                 <Route path="ekspor" element={<EksporData />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
               </Routes>
@@ -157,7 +156,6 @@ function App() {
         </div>
       } />
 
-      {/* Rute default jika URL tidak ditemukan, lempar kembali ke Beranda */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

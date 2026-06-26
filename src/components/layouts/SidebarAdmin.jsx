@@ -1,13 +1,13 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom'; // 1. Masukkan pustaka router
+import { useLocation } from 'react-router-dom';
 
-function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapus prop activeMenu
-  const location = useLocation(); // 3. Ambil data URL aktif saat ini
+function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) {
+  const location = useLocation();
 
-  // 4. Ringkas nilai ID agar cocok dengan routing sub-path di App.jsx
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard Admin' },
-    { id: 'verifikasi', label: 'Verifikasi Pembayaran' },
+    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer' },
+    { id: 'setoran-tunai', label: 'Setoran Tunai' },
     { id: 'riwayat', label: 'Riwayat Transaksi Admin' },
     { id: 'kios', label: 'Tabel Ketersediaan Kios' },
     { id: 'ekspor', label: 'Ekspor Rekap Data' }
@@ -21,7 +21,6 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapu
         flexDirection: 'column'
       }}
     >
-      {/* Logo + Penutup Silang */}
       <div style={{ 
         height: '64px', 
         display: 'flex', 
@@ -62,14 +61,13 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapu
 
       <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {menuItems.map((item) => {
-          // 5. Cek status aktif berdasarkan URL Admin saat ini
           const isActive = location.pathname === `/admin/${item.id}`;
           return (
             <button
               key={item.id}
               onClick={() => {
                 setActiveMenu(item.id);
-                onClose(); // 6. Tutup otomatis setelah klik menu di tampilan HP
+                onClose();
               }}
               style={{
                 width: '100%',
@@ -108,7 +106,10 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) { // 2. Hapu
             padding: '10px',
             fontSize: '14px',
             fontWeight: '600',
-            textAlign: 'center'
+            textAlign: 'center',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer'
           }}
           onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--red-100)'}
           onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--warm-gray)'}

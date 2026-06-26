@@ -4,13 +4,12 @@ const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 const MIDTRANS_SERVER_KEY = import.meta.env.VITE_MIDTRANS_SERVER_KEY;
 
 function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSuksesKirim }) {
-  const [metode, setMetode] = useState('tunai_kasir'); 
+  const [metode, setMetode] = useState('transfer_manual');
   const [jenisTagihan, setJenisTagihan] = useState(jenisAwal);
   const [nominal, setNominal] = useState(nominalAwal);
   const [berkasDipilih, setBerkasDipilih] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Memuat script Midtrans Snap secara dinamis saat komponen aktif
   useEffect(() => {
     const scriptSnap = document.createElement('script');
     scriptSnap.src = "https://app.sandbox.midtrans.com/snap/snap.js";
@@ -99,7 +98,7 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSukse
 
     } else {
       if (!berkasDipilih) {
-        alert(metode === 'tunai_kasir' ? 'Mohon unggah dokumen bukti Slip Pembayaran dari kasir terlebih dahulu.' : 'Mohon unggah dokumen bukti transfer terlebih dahulu.');
+        alert('Mohon unggah dokumen bukti transfer terlebih dahulu.');
         return;
       }
       
@@ -110,7 +109,7 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSukse
         kios: 'B-1001',
         tagihan: jenisTagihan,
         nominal: `Rp ${parseInt(nominal).toLocaleString('id-ID')}`,
-        metode: metode === 'tunai_kasir' ? 'Bayar di Kasir (Tunai)' : 'Transfer Bank Manual',
+        metode: 'Transfer Bank Manual',
         waktu: new Date().toLocaleString('id-ID') + ' WITA',
         status: 'Pending'
       });
@@ -149,14 +148,9 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSukse
             <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Pilih Metode Pembayaran</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="button" onClick={() => { setMetode('tunai_kasir'); setBerkasDipilih(false); }} style={{ flex: 1, height: '44px', backgroundColor: metode === 'tunai_kasir' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'tunai_kasir' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
-                  Bayar di Kasir (Tunai)
-                </button>
-                <button type="button" onClick={() => { setMetode('transfer_manual'); setBerkasDipilih(false); }} style={{ flex: 1, height: '44px', backgroundColor: metode === 'transfer_manual' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'transfer_manual' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
-                  Transfer Bank (Manual)
-                </button>
-              </div>
+              <button type="button" onClick={() => { setMetode('transfer_manual'); setBerkasDipilih(false); }} style={{ width: '100%', height: '48px', backgroundColor: metode === 'transfer_manual' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'transfer_manual' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
+                Transfer Bank (Manual) + Unggah Bukti
+              </button>
               
               <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'midtrans_gateway' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'midtrans_gateway' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
                 Pembayaran Instan Otomatis
@@ -165,14 +159,12 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSukse
             </div>
           </div>
 
-          {metode !== 'midtrans_gateway' && (
+          {metode === 'transfer_manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="page-fade-in">
-              <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>
-                {metode === 'tunai_kasir' ? 'Unggah Slip Pembayaran' : 'Unggah Bukti Transfer'}
-              </label>
+              <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Unggah Bukti Transfer</label>
               <div onClick={() => setBerkasDipilih(true)} style={{ width: '100%', padding: '24px', border: '2px dashed #E8E0D8', borderRadius: '8px', backgroundColor: '#FBF7F2', textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ fontSize: '14px', color: berkasDipilih ? '#1A6B3A' : '#1A1410', fontWeight: '800' }}>
-                  {berkasDipilih ? '✓ Dokumen Bukti Transaksi Berhasil Dilampirkan' : metode === 'tunai_kasir' ? 'Klik untuk mengunggah foto Slip Pembayaran dari Kasir' : 'Klik untuk mengunggah foto struk transfer Anda'}
+                  {berkasDipilih ? '✓ Dokumen Bukti Transaksi Berhasil Dilampirkan' : 'Klik untuk mengunggah foto struk transfer Anda'}
                 </span>
               </div>
             </div>
@@ -187,22 +179,6 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSukse
         <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #000000', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '800', borderBottom: '1px solid #E8E0D8', paddingBottom: '10px', color: '#1A1410' }}>Panduan Pembayaran</h3>
           
-          {metode === 'tunai_kasir' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '15px', color: '#1A1410' }}>
-              <p style={{ fontWeight: '600', color: '#5C4F46', lineHeight: '1.6' }}>
-                Silakan lakukan pembayaran tunai secara langsung melalui Loket Kasir resmi Pengelola Plaza Kebun Sayur.
-              </p>
-              <div style={{ backgroundColor: '#F5F0EB', padding: '16px', borderRadius: '8px', border: '1px solid #E8E0D8', lineHeight: '1.5' }}>
-                <div style={{ color: '#8B1A1A', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>ALUR KONFIRMASI:</div>
-                <ul style={{ paddingLeft: '18px', margin: 0, color: '#5C4F46', fontWeight: '600', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <li>Selesaikan transaksi di meja kasir pengelola.</li>
-                  <li>Mintalah dokumen <strong>Slip Pembayaran resmi</strong> cetak.</li>
-                  <li>Foto dokumen tersebut dan unggah di panel formulir laporan sebelah kiri.</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
           {metode === 'transfer_manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '15px', color: '#1A1410' }}>
               <p style={{ fontWeight: '600', color: '#5C4F46' }}>Kirimkan dana transfer Anda ke rekening penampungan resmi pihak pengelola:</p>

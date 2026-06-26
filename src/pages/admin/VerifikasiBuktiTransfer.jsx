@@ -1,0 +1,143 @@
+import React, { useState, useEffect } from 'react';
+
+function VerifikasiBuktiTransfer({ antrean, onProsesVerifikasi, selectedTenant }) {
+  const [previewItem, setPreviewItem] = useState(null);
+
+  // Filter antrean berdasarkan tenant terpilih (jika ada)
+  const filteredAntrean = selectedTenant
+    ? antrean.filter(item => item.nama === selectedTenant)
+    : antrean;
+
+  useEffect(() => {
+    // Jika ada tenant terpilih dan ada antrean untuk tenant itu, langsung tampilkan preview pertama
+    if (selectedTenant && filteredAntrean.length > 0) {
+      setPreviewItem(filteredAntrean[0]);
+    }
+  }, [selectedTenant]);
+
+  const handleAksi = (id, statusKonfirmasi) => {
+    const itemTarget = antrean.find(item => item.id === id);
+    if (!itemTarget) return;
+
+    const statusFinal = statusKonfirmasi === 'konfirmasi' ? 'Lunas' : 'Tertolak';
+    const alasanFinal = statusKonfirmasi === 'konfirmasi' ? null : 'Bukti transfer tidak sesuai / buram';
+
+    alert(`Pembayaran ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak'}.`);
+    
+    onProsesVerifikasi({
+      ...itemTarget,
+      status: statusFinal,
+      alasan: alasanFinal
+    });
+
+    setPreviewItem(null);
+  };
+
+  return (
+    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <div>
+        <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+          Verifikasi Bukti Transfer
+        </h2>
+        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
+          {selectedTenant 
+            ? `Menampilkan antrean bukti transfer untuk: ${selectedTenant}`
+            : 'Periksa keaslian bukti transfer yang dikirimkan oleh tenant.'}
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {/* Daftar Antrean */}
+        <div style={{ flex: '2', minWidth: '400px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
+                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Tenant & Kios</th>
+                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Jenis Tagihan</th>
+                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Nominal</th>
+                <th style={{ padding: '14px 16px', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAntrean.length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-3)' }}>
+                    {selectedTenant 
+                      ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.`
+                      : 'Tidak ada antrean pembayaran yang menunggu verifikasi.'}
+                  </td>
+                </tr>
+              ) : (
+                filteredAntrean.map((item, index) => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ fontWeight: '600' }}>{item.nama}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700' }}>Kios {item.kios}</div>
+                    </td>
+                    <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
+                    <td style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <button 
+                        onClick={() => setPreviewItem(item)}
+                        style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '6px 12px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                      >
+                        Periksa Bukti
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Panel Preview Bukti */}
+        <div style={{ flex: '1', minWidth: '300px' }}>
+          {previewItem ? (
+            <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="page-fade-in">
+              <h3 style={{ fontSize: '16px', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                Detail Transaksi {previewItem.id}
+              </h3>
+              <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} ({previewItem.kios})</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Tagihan:</span> <strong>{previewItem.tagihan}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong>{previewItem.nominal}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Metode:</span> <strong>{previewItem.metode}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Waktu Kirim:</span> <strong>{previewItem.waktu}</strong></div>
+              </div>
+
+              <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-3)', fontStyle: 'italic' }}>
+                  [Simulasi Lampiran Bukti_Transfer_{previewItem.id}.jpg]
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button 
+                  onClick={() => handleAksi(previewItem.id, 'konfirmasi')}
+                  style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '10px', fontSize: '14px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                >
+                  Konfirmasi Lunas
+                </button>
+                <button 
+                  onClick={() => handleAksi(previewItem.id, 'tolak')}
+                  style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '10px', fontSize: '14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                >
+                  Tolak Bukti
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
+              {filteredAntrean.length > 0 
+                ? 'Pilih salah satu antrean untuk memeriksa bukti transfer.'
+                : 'Tidak ada bukti transfer yang perlu diverifikasi.'}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default VerifikasiBuktiTransfer;

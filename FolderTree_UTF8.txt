@@ -1,0 +1,74 @@
+=== SRC ===  
+Folder PATH listing for volume DATA
+Volume serial number is 00000246 8024:8CA7
+D:\ITK\SEMESTER 5\INOVASI SOSIAL\PLAZA-KEBUN-SAYUR-PAYMENT\SRC
+¦   App.jsx
+¦   index.css
+¦   main.jsx
+¦   
++---components
+¦   +---common
+¦   +---layouts
+¦           Sidebar.jsx
+¦           SidebarAdmin.jsx
+¦           Topbar.jsx
+¦           
++---context
++---data
++---hooks
++---pages
+¦   +---admin
+¦   ¦       DashboardAdmin.jsx
+¦   ¦       DetailTenantAdmin.jsx
+¦   ¦       EksporData.jsx
+¦   ¦       KetersediaanKios.jsx
+¦   ¦       RiwayatTransaksiAdmin.jsx
+¦   ¦       VerifikasiPembayaran.jsx
+¦   ¦       
+¦   +---public
+¦   ¦       AuthPage.jsx
+¦   ¦       LandingPage.jsx
+¦   ¦       
+¦   +---tenant
+¦           AkunTenant.jsx
+¦           BayarSekarang.jsx
+¦           DashboardTenant.jsx
+¦           HistoriPembayaran.jsx
+¦           TunggakanAR.jsx
+¦           
++---styles
+=== PUBLIC ===  
+Folder PATH listing for volume DATA
+Volume serial number is 0000024E 8024:8CA7
+D:\ITK\SEMESTER 5\INOVASI SOSIAL\PLAZA-KEBUN-SAYUR-PAYMENT\PUBLIC
+¦   _redirects
+¦   
++---assets
+¦       main_logo_transparent_for_light_bg.png
+¦       Photograph_of_plaza_building.jpg
+¦       
++---fonts
+        PlusJakartaSans-Italic-VariableFont_wght.ttf
+        PlusJakartaSans-VariableFont_wght.ttf
+        
+=== CONTEXT ===  
+Folder PATH listing for volume DATA
+Volume serial number is 00000187 8024:8CA7
+D:\ITK\SEMESTER 5\INOVASI SOSIAL\PLAZA-KEBUN-SAYUR-PAYMENT\CONTEXT
+    Data_Kios_BY_LEGAL.md
+    HANDOVER.md
+    Notul rapat 11 april 2026.md
+    PROPOSAL INOVASI SOSIAL.docx.md
+    
+No subfolders exist 
+
+=== ROOT FILES ===  
+.env
+.gitignore
+FileList.txt
+FolderTree.txt
+index.html
+package-lock.json
+package.json
+README.md
+vite.config.js
