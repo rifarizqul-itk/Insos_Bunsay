@@ -35,7 +35,7 @@ function HistoriPembayaran() {
         </select>
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #D6C8BC', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #000000', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ backgroundColor: '#F5F0EB', borderBottom: '3px solid #1A1410' }}>

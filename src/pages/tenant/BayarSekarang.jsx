@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY; 
 const MIDTRANS_SERVER_KEY = import.meta.env.VITE_MIDTRANS_SERVER_KEY;
 
-function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKirim }) {
-  const [metode, setMetode] = useState('qris_manual'); 
+function BayarSekarang({ nominalAwal = '', jenisAwal = 'Service Charge', onSuksesKirim }) {
+  const [metode, setMetode] = useState('tunai_kasir'); 
   const [jenisTagihan, setJenisTagihan] = useState(jenisAwal);
   const [nominal, setNominal] = useState(nominalAwal);
   const [berkasDipilih, setBerkasDipilih] = useState(false);
@@ -99,7 +99,7 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKi
 
     } else {
       if (!berkasDipilih) {
-        alert('Mohon unggah dokumen bukti transfer terlebih dahulu.');
+        alert(metode === 'tunai_kasir' ? 'Mohon unggah dokumen bukti Slip Pembayaran dari kasir terlebih dahulu.' : 'Mohon unggah dokumen bukti transfer terlebih dahulu.');
         return;
       }
       
@@ -110,7 +110,7 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKi
         kios: 'B-1001',
         tagihan: jenisTagihan,
         nominal: `Rp ${parseInt(nominal).toLocaleString('id-ID')}`,
-        metode: metode === 'qris_manual' ? 'QRIS Manual' : 'Transfer Bank Manual',
+        metode: metode === 'tunai_kasir' ? 'Bayar di Kasir (Tunai)' : 'Transfer Bank Manual',
         waktu: new Date().toLocaleString('id-ID') + ' WITA',
         status: 'Pending'
       });
@@ -123,19 +123,18 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKi
       <div>
         <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#1A1410' }}>Formulir Pembayaran Tagihan Properti</h2>
         <p style={{ color: '#5C4F46', fontSize: '15px', marginTop: '4px', lineHeight: '1.6' }}>
-          Silakan pilih metode pembayaran yang tersedia untuk menyelesaikan kewajiban sewa atau service charge kios Anda.
+          Silakan pilih metode pembayaran yang tersedia untuk menyelesaikan kewajiban service charge kios Anda.
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '28px', alignItems: 'flex-start' }}>
         
         {/* PANEL KIRI: FORMULIR UTAMA */}
-        <form onSubmit={handleProsesPembayaran} style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #E8E0D8', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 12px rgba(139,26,26,0.04)' }}>
+        <form onSubmit={handleProsesPembayaran} style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #000000', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Jenis Kewajiban Tagihan</label>
             <select value={jenisTagihan} onChange={(e) => setJenisTagihan(e.target.value)} style={{ height: '48px', borderRadius: '8px', border: '1px solid #E8E0D8', padding: '0 12px', fontSize: '15px', fontWeight: '600', color: '#1A1410', backgroundColor: '#F5F0EB' }}>
-              <option value="Sewa Gedung">Sewa Gedung (Bulanan)</option>
               <option value="Service Charge">Service Charge Plaza</option>
               <option value="Cicilan Tunggakan (Piutang)">Cicilan Tunggakan (Piutang) Historis</option>
             </select>
@@ -143,24 +142,22 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKi
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Nominal Pembayaran (Rp)</label>
-            <input type="number" placeholder="Contioh: 1500000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: '8px', border: '1px solid #E8E0D8', padding: '0 14px', fontSize: '15px', fontWeight: '600', color: '#1A1410', backgroundColor: '#F5F0EB' }} required />
+            <input type="number" placeholder="Contoh: 350000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: '8px', border: '1px solid #E8E0D8', padding: '0 14px', fontSize: '15px', fontWeight: '600', color: '#1A1410', backgroundColor: '#F5F0EB' }} required />
           </div>
 
-          {/* BAGIAN UTAMA SELEKSI METODE: DESAIN DISERAGAMKAN SOURCING BERDASARKAN KRITIK */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Pilih Metode Pembayaran</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="button" onClick={() => setMetode('qris_manual')} style={{ flex: 1, height: '44px', backgroundColor: metode === 'qris_manual' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'qris_manual' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
-                  QRIS (Manual)
+                <button type="button" onClick={() => { setMetode('tunai_kasir'); setBerkasDipilih(false); }} style={{ flex: 1, height: '44px', backgroundColor: metode === 'tunai_kasir' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'tunai_kasir' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
+                  Bayar di Kasir (Tunai)
                 </button>
-                <button type="button" onClick={() => setMetode('transfer_manual')} style={{ flex: 1, height: '44px', backgroundColor: metode === 'transfer_manual' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'transfer_manual' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
+                <button type="button" onClick={() => { setMetode('transfer_manual'); setBerkasDipilih(false); }} style={{ flex: 1, height: '44px', backgroundColor: metode === 'transfer_manual' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'transfer_manual' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
                   Transfer Bank (Manual)
                 </button>
               </div>
               
-              {/* Tombol Midtrans Sekaran Menggunakan Struktur CSS Outline yang Identik */}
               <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'midtrans_gateway' ? '#FDF2F2' : '#F5F0EB', color: '#8B1A1A', border: metode === 'midtrans_gateway' ? '2px solid #8B1A1A' : '1px solid #E8E0D8', borderRadius: '8px', fontSize: '14px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.15s ease' }}>
                 Pembayaran Instan Otomatis
               </button>
@@ -170,30 +167,38 @@ function BayarSekarang({ nominalAwal = '', jenisAwal = 'Sewa Gedung', onSuksesKi
 
           {metode !== 'midtrans_gateway' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="page-fade-in">
-              <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>Unggah Bukti Transfer</label>
+              <label style={{ fontSize: '15px', fontWeight: '800', color: '#1A1410' }}>
+                {metode === 'tunai_kasir' ? 'Unggah Slip Pembayaran' : 'Unggah Bukti Transfer'}
+              </label>
               <div onClick={() => setBerkasDipilih(true)} style={{ width: '100%', padding: '24px', border: '2px dashed #E8E0D8', borderRadius: '8px', backgroundColor: '#FBF7F2', textAlign: 'center', cursor: 'pointer' }}>
                 <span style={{ fontSize: '14px', color: berkasDipilih ? '#1A6B3A' : '#1A1410', fontWeight: '800' }}>
-                  {berkasDipilih ? '✓ Dokumen Bukti Transaksi Berhasil Dilampirkan' : 'Klik untuk mengunggah foto struk transaksi Anda'}
+                  {berkasDipilih ? '✓ Dokumen Bukti Transaksi Berhasil Dilampirkan' : metode === 'tunai_kasir' ? 'Klik untuk mengunggah foto Slip Pembayaran dari Kasir' : 'Klik untuk mengunggah foto struk transfer Anda'}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Tombol Submit Utama Eksklusif Menjadi Satu-satunya Elemen Berwarna Solid */}
-          <button type="submit" disabled={isLoading} style={{ backgroundColor: '#8B1A1A', color: '#ffffff', height: '48px', fontSize: '15px', fontWeight: '800', border: 'none', borderRadius: '8px', marginTop: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(139,26,26,0.15)' }}>
+          <button type="submit" disabled={isLoading} style={{ backgroundColor: '#8B1A1A', color: '#ffffff', height: '48px', fontSize: '15px', fontWeight: '800', border: 'none', borderRadius: '8px', marginTop: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>
             {isLoading ? 'Menghubungkan ke Server...' : metode === 'midtrans_gateway' ? 'Bayar Sekarang' : 'Kirim Bukti Pembayaran'}
           </button>
         </form>
 
         {/* PANEL KANAN: PANDUAN PENGGUNA */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #E8E0D8', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 12px rgba(139,26,26,0.04)' }}>
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #000000', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '800', borderBottom: '1px solid #E8E0D8', paddingBottom: '10px', color: '#1A1410' }}>Panduan Pembayaran</h3>
           
-          {metode === 'qris_manual' && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
-              <p style={{ fontSize: '15px', color: '#5C4F46', fontWeight: '600', lineHeight: '1.6' }}>Silakan pindai kode QRIS resmi Pengelola Plaza Kebun Sayur di bawah ini, kemudian unggah struk sukses Anda.</p>
-              <div style={{ width: '160px', height: '160px', backgroundColor: '#F5F0EB', border: '1px solid #E8E0D8', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: '#9E8E82', fontStyle: 'italic', fontWeight: '700' }}>[Barcode QRIS]</span>
+          {metode === 'tunai_kasir' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '15px', color: '#1A1410' }}>
+              <p style={{ fontWeight: '600', color: '#5C4F46', lineHeight: '1.6' }}>
+                Silakan lakukan pembayaran tunai secara langsung melalui Loket Kasir resmi Pengelola Plaza Kebun Sayur.
+              </p>
+              <div style={{ backgroundColor: '#F5F0EB', padding: '16px', borderRadius: '8px', border: '1px solid #E8E0D8', lineHeight: '1.5' }}>
+                <div style={{ color: '#8B1A1A', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>ALUR KONFIRMASI:</div>
+                <ul style={{ paddingLeft: '18px', margin: 0, color: '#5C4F46', fontWeight: '600', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li>Selesaikan transaksi di meja kasir pengelola.</li>
+                  <li>Mintalah dokumen <strong>Slip Pembayaran resmi</strong> cetak.</li>
+                  <li>Foto dokumen tersebut dan unggah di panel formulir laporan sebelah kiri.</li>
+                </ul>
               </div>
             </div>
           )}
