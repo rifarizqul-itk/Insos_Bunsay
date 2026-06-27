@@ -49,14 +49,11 @@ function LandingPage({ onNavigasiMasuk }) {
           }}>
             <div style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <span style={{ fontSize: '14px', fontWeight: '800', color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Informasi Resmi Pelayanan
+                Pelayanan Resmi
               </span>
-              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
-                Selamat Datang di Portal Kios Bunsay
+              <h1 style={{ fontSize: '42px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
+                Selamat Datang<br></br>di Portal Kios Bunsay
               </h1>
-              <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', marginBottom: '28px', lineHeight: '1.6' }}>
-                Silakan masuk ke portal log administrasi untuk mengelola pelaporan pembayaran sewa gedung dan biaya service charge kios Anda secara mandiri.
-              </p>
               
               {/* Baris Tombol Aksi */}
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
@@ -69,7 +66,6 @@ function LandingPage({ onNavigasiMasuk }) {
                     fontSize: '16px',
                     fontWeight: '800',
                     border: '2px solid #6B1414',
-                    height: '52px',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
@@ -77,7 +73,7 @@ function LandingPage({ onNavigasiMasuk }) {
                   onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
                   onBlur={(e) => e.target.style.outline = 'none'}
                 >
-                  MASUK KE PORTAL →
+                  LOGIN →
                 </button>
               </div>
             </div>
@@ -174,7 +170,7 @@ function LandingPage({ onNavigasiMasuk }) {
                 onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
                 onBlur={(e) => e.target.style.outline = 'none'}
               >
-                Hubungi Kantor Pengelola melalui WhatsApp
+                Hubungi Melalui WhatsApp
               </a>
             </div>
 
