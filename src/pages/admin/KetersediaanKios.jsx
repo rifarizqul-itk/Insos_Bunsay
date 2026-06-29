@@ -189,8 +189,8 @@ function KetersediaanKios({ isAdmin = false }) {
             ) : (
               filteredKios.map((kios, index) => (
                 <tr key={kios.id} style={{ 
-                  borderBottom: '1px solid var(--border)',
-                  backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)'
+                  borderBottom: '2px solid var(--border)',
+                  backgroundColor: '#ffffff'
                 }}>
                   <td style={{ padding: '14px 16px', fontWeight: '600' }}>{kios.lantai}</td>
                   <td style={{ padding: '14px 16px', fontWeight: '800', color: 'var(--text)' }}>{kios.nomorKios}</td>

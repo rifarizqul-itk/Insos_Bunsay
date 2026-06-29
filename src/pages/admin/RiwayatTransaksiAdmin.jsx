@@ -35,7 +35,7 @@ function RiwayatTransaksiAdmin({ riwayat }) {
               </tr>
             ) : (
               riwayat.map((item, index) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
+                <tr key={item.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
                   <td style={{ padding: '14px 16px', fontWeight: '700', color: 'var(--text-2)' }}>{item.id}</td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ fontWeight: '600' }}>{item.nama}</div>

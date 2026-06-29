@@ -1,10 +1,11 @@
 import React from 'react';
+import { Icon } from '@iconify/react';
 
 function LandingPage({ onNavigasiMasuk }) {
   return (
     <div className="page-fade-in" style={{ backgroundColor: '#FDFBFA', minHeight: '100vh', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
       
-      {/* Top Navbar Publik - Diberi class landing-navbar */}
+      {/* Top Navbar Publik */}
       <nav className="landing-navbar" style={{
         height: '72px', 
         backgroundColor: '#ffffff',
@@ -18,7 +19,6 @@ function LandingPage({ onNavigasiMasuk }) {
         zIndex: 200,
         boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
       }}>
-        {/* Sisi Kiri: Logo & Nama Pasar Resmi */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img 
             src="/assets/main_logo_transparent_for_light_bg.png" 
@@ -35,7 +35,7 @@ function LandingPage({ onNavigasiMasuk }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }} className="page-fade-in">
           
-          {/* Hero Section Banner - Diberi class landing-hero-grid */}
+          {/* Hero Section */}
           <div className="landing-hero-grid" style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr', 
@@ -51,11 +51,10 @@ function LandingPage({ onNavigasiMasuk }) {
               <span style={{ fontSize: '14px', fontWeight: '800', color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Pelayanan Resmi
               </span>
-              <h1 style={{ fontSize: '42px', fontWeight: '800', lineHeight: '1.2', margin: '12px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
+              <h1 style={{ fontSize: '42px', fontWeight: '725', lineHeight: '1.2', margin: '5px 0 16px 0', letterSpacing: '-1px', color: '#1A1410' }}>
                 Selamat Datang<br></br>di Portal Kios Bunsay
               </h1>
               
-              {/* Baris Tombol Aksi */}
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%' }}>
                 <button 
                   onClick={onNavigasiMasuk}
@@ -68,12 +67,18 @@ function LandingPage({ onNavigasiMasuk }) {
                     border: '2px solid #6B1414',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    height: '52px'
                   }}
                   onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
                   onBlur={(e) => e.target.style.outline = 'none'}
                 >
-                  LOGIN →
+                  LOGIN
+                  <Icon icon="material-symbols:login" width="22" height="22" />
                 </button>
               </div>
             </div>
@@ -86,10 +91,10 @@ function LandingPage({ onNavigasiMasuk }) {
             </div>
           </div>
 
-          {/* Grid Informasi Jam Operasional & Kontak Pengelola - Diberi class landing-info-grid */}
+          {/* Grid Informasi */}
           <div className="landing-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             
-            {/* Card Kiri: Jam Operasional Gedung */}
+            {/* Card Kiri: Jam Operasional */}
             <div style={{ 
               backgroundColor: '#ffffff', 
               padding: '32px', 
@@ -114,7 +119,7 @@ function LandingPage({ onNavigasiMasuk }) {
               </span>
             </div>
 
-            {/* Card Kanan: Informasi Kontak Kontak Kantor Pengelola */}
+            {/* Card Kanan: Kontak Pengelola */}
             <div style={{ 
               backgroundColor: '#ffffff', 
               border: '1px solid #D6C8BC', 
@@ -156,6 +161,7 @@ function LandingPage({ onNavigasiMasuk }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: '5px',
                   backgroundColor: '#E8F5EE', 
                   color: '#1A6B3A', 
                   fontSize: '16px', 
@@ -170,6 +176,7 @@ function LandingPage({ onNavigasiMasuk }) {
                 onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
                 onBlur={(e) => e.target.style.outline = 'none'}
               >
+                <Icon icon="ic:baseline-whatsapp" width="24" height="24" />
                 Hubungi Melalui WhatsApp
               </a>
             </div>
