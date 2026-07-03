@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useUI } from '../../context/UIContext';
 
 function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
+  const { addToast } = useUI();
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({
     statusPembayaran: tenant.statusPembayaran,
@@ -14,25 +17,32 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
   };
 
   const handleSaveEdit = () => {
-    const updated = { 
-      ...tenant, 
+    const updated = {
+      ...tenant,
       statusPembayaran: editData.statusPembayaran,
       tunggakan: editData.tunggakan,
       rincianTunggakan: editData.rincianTunggakan
     };
-    onUpdateTenant(updated);
+    if (onUpdateTenant) onUpdateTenant(updated);
     setShowEditModal(false);
-    alert('Data keuangan tenant berhasil diperbarui.');
+    addToast('Data keuangan tenant berhasil diperbarui.', 'success');
   };
 
   const getStatusBadgeStyle = (status) => {
     const styles = {
-      'Lunas': { bg: 'var(--green-bg)', color: 'var(--green)' },
-      'Belum Bayar': { bg: 'var(--red-100)', color: 'var(--red)' },
-      'Menunggu Verifikasi': { bg: 'var(--orange-bg)', color: 'var(--orange)' }
+      'Lunas': { bg: 'var(--green-bg)', color: 'var(--green)', label: 'Lunas (Bulan Ini)' },
+      'Belum Bayar': { bg: 'var(--red-100)', color: 'var(--red)', label: 'Belum Bayar' },
+      'Menunggu Verifikasi': { bg: 'var(--orange-bg)', color: 'var(--orange)', label: 'Menunggu Verifikasi' }
     };
     return styles[status] || styles['Belum Bayar'];
   };
+
+  const formatRupiah = (angka) => {
+    if (typeof angka === 'string') angka = parseInt(angka.replace(/[^0-9]/g, ''), 10) || 0;
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(angka);
+  };
+
+  const tunggakanValue = typeof tenant.tunggakan === 'number' ? tenant.tunggakan : parseInt(String(tenant.tunggakan).replace(/[^0-9]/g, ''), 10) || 0;
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -63,7 +73,6 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Status Keuangan */}
         <div
           style={{
             backgroundColor: '#ffffff',
@@ -94,10 +103,9 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
               Edit Data Keuangan
             </button>
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
             <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Status Pembayaran</span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Status Bulan Ini</span>
               <div style={{ marginTop: '6px' }}>
                 <span
                   style={{
@@ -109,24 +117,23 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                     fontSize: '13px'
                   }}
                 >
-                  {tenant.statusPembayaran}
+                  {getStatusBadgeStyle(tenant.statusPembayaran).label}
                 </span>
               </div>
             </div>
             <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Tunggakan AR</span>
-              <div style={{ fontSize: '16px', fontWeight: '800', marginTop: '6px', color: tenant.tunggakan !== 'Rp 0' ? 'var(--orange)' : 'var(--text)' }}>
-                {tenant.tunggakan}
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Tunggakan AR (Historis)</span>
+              <div style={{ fontSize: '16px', fontWeight: '800', marginTop: '6px', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--text)' }}>
+                {formatRupiah(tunggakanValue)}
               </div>
             </div>
           </div>
           <div>
-            <span style={{ color: 'var(--text-3)', fontSize: '13px', fontWeight: '600' }}>Rincian Tunggakan:</span>
+            <span style={{ color: 'var(--text-2)', fontSize: '13px', fontWeight: '600' }}>Rincian Tunggakan:</span>
             <div style={{ fontWeight: '600', fontSize: '14px', marginTop: '2px', color: 'var(--text-2)' }}>{tenant.rincianTunggakan || '—'}</div>
           </div>
         </div>
 
-        {/* Riwayat Transaksi */}
         <div
           style={{
             backgroundColor: '#ffffff',
@@ -158,7 +165,7 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                       <td style={{ padding: '12px 14px', fontWeight: '600' }}>{row.id}</td>
                       <td style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tanggal}</td>
                       <td style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tipe}</td>
-                      <td style={{ padding: '12px 14px', fontWeight: '600' }}>{row.nominal}</td>
+                      <td style={{ padding: '12px 14px', fontWeight: '600' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
                       <td style={{ padding: '12px 14px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
                       <td style={{ padding: '12px 14px' }}>
                         <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>
@@ -180,7 +187,6 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
         </div>
       </div>
 
-      {/* Modal Edit Keuangan */}
       {showEditModal && (
         <div
           style={{
@@ -226,7 +232,6 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                 ✕
               </button>
             </div>
-
             <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Status Pembayaran</label>
@@ -241,7 +246,6 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                   <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
                 </select>
               </div>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nilai Tunggakan AR (Rp)</label>
                 <input
@@ -249,11 +253,10 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                   name="tunggakan"
                   value={editData.tunggakan}
                   onChange={handleEditChange}
-                  placeholder="Contoh: Rp 5.500.000"
+                  placeholder="Contoh: 5500000"
                   style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
                 />
               </div>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Rincian Tunggakan</label>
                 <textarea
@@ -265,7 +268,6 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                   style={{ padding: '12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '15px', resize: 'none' }}
                 />
               </div>
-
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button
                   type="button"

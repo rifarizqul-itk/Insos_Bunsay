@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useTransactions } from '../../context/TransactionContext';
+import { useUI } from '../../context/UIContext';
 
-function VerifikasiBuktiTransfer({ antrean, onProsesVerifikasi, selectedTenant }) {
+function VerifikasiBuktiTransfer({ selectedTenant = null }) {
+  const { antrean, prosesVerifikasi } = useTransactions();
+  const { addToast } = useUI();
   const [previewItem, setPreviewItem] = useState(null);
 
-  // Filter antrean berdasarkan tenant terpilih (jika ada)
   const filteredAntrean = selectedTenant
     ? antrean.filter(item => item.nama === selectedTenant)
     : antrean;
 
   useEffect(() => {
-    // Jika ada tenant terpilih dan ada antrean untuk tenant itu, langsung tampilkan preview pertama
     if (selectedTenant && filteredAntrean.length > 0) {
       setPreviewItem(filteredAntrean[0]);
     }
@@ -20,16 +22,18 @@ function VerifikasiBuktiTransfer({ antrean, onProsesVerifikasi, selectedTenant }
     if (!itemTarget) return;
 
     const statusFinal = statusKonfirmasi === 'konfirmasi' ? 'Lunas' : 'Tertolak';
-    const alasanFinal = statusKonfirmasi === 'konfirmasi' ? null : 'Bukti transfer tidak sesuai / buram';
+    const alasan = statusKonfirmasi === 'konfirmasi' ? null : 'Bukti transfer tidak sesuai / buram';
 
-    alert(`Pembayaran ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak'}.`);
-    
-    onProsesVerifikasi({
+    prosesVerifikasi({
       ...itemTarget,
       status: statusFinal,
-      alasan: alasanFinal
+      alasan
     });
 
+    addToast(
+      `Pembayaran ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak'}.`,
+      statusKonfirmasi === 'konfirmasi' ? 'success' : 'error'
+    );
     setPreviewItem(null);
   };
 
@@ -47,7 +51,6 @@ function VerifikasiBuktiTransfer({ antrean, onProsesVerifikasi, selectedTenant }
       </div>
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        {/* Daftar Antrean */}
         <div style={{ flex: '2', minWidth: '400px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
@@ -91,7 +94,6 @@ function VerifikasiBuktiTransfer({ antrean, onProsesVerifikasi, selectedTenant }
           </table>
         </div>
 
-        {/* Panel Preview Bukti */}
         <div style={{ flex: '1', minWidth: '300px' }}>
           {previewItem ? (
             <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="page-fade-in">

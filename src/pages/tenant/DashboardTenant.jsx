@@ -1,64 +1,92 @@
 import React from 'react';
+import { useUI } from '../../context/UIContext';
+import { useApi } from '../../hooks/useApi';
+import { getTenantDashboard } from '../../api/tenant';
 
-function DashboardTenant({ onPemicuBayar }) {
-  // Data rekap status tagihan riil penyewa berjalan tanpa rancu sewa gedung
-  const dataTagihan = {
-    serviceCharge: { status: 'Lunas', nominal: '350.000' },
-    tunggakanPiutang: { status: 'Belum Lunas', nominal: '13.219.998', label: 'Tunggakan (Piutang) Historis s/d Sept 2024' }
+function DashboardTenant() {
+  const { setBayar, addToast } = useUI();
+  const { data, loading, error, refetch } = useApi(getTenantDashboard, [], true);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <div style={{ fontSize: '18px', color: 'var(--text-2)' }}>Memuat data dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <p style={{ color: 'var(--red)', fontWeight: '600' }}>Gagal memuat data. Silakan coba lagi.</p>
+        <button onClick={refetch} style={{ marginTop: '16px', backgroundColor: 'var(--red)', color: '#fff', padding: '0 24px', height: '44px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
+          Muat Ulang
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-3)' }}>Data tidak tersedia.</div>;
+  }
+
+  const { nama, kios, serviceCharge, tunggakan } = data;
+  const memilikiTagihan = tunggakan && tunggakan.nominal > 0;
+
+  const handleBayar = (nominal, jenis) => {
+    setBayar(String(nominal), jenis);
+    // Navigasi akan dilakukan oleh komponen yang menggunakan UI context
+    // Karena kita tidak punya navigate di sini, kita gunakan window.location atau via props
+    // Untuk demo, kita arahkan ke /tenant/pembayaran via event
+    window.location.href = '/tenant/pembayaran';
   };
-
-  const memilikiTagihan = parseInt(dataTagihan.tunggakanPiutang.nominal.replace(/\./g, '')) > 0;
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
-      
-      {/* Sapaan Utama - Hierarki Font Besar & Kontras Tinggi */}
       <div>
-        <h2 style={{ fontSize: '32px', fontWeight: '800', color: '#1A1410', letterSpacing: '-0.5px' }}>
-          Halo, Hj. Yuliana
+        <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)', letterSpacing: '-0.5px' }}>
+          Halo, {nama}
         </h2>
-        <p style={{ color: '#4A3F35', fontSize: '16px', fontWeight: '600', marginTop: '6px' }}>
-          Pemilik Sah Kios Blok B-1001 — Selamat datang di panel administrasi mandiri Anda.
+        <p style={{ color: 'var(--text-2)', fontSize: '16px', fontWeight: '600', marginTop: '6px' }}>
+          Pemilik Sah Kios {kios} — Selamat datang di panel administrasi mandiri Anda.
         </p>
       </div>
 
-      {/* BANNER NOTIFIKASI PEMBAYARAN */}
       {memilikiTagihan && (
-        <div style={{ 
-          backgroundColor: '#FFF5F5', 
-          border: '2px solid #D32F2F', 
-          padding: '28px', 
-          borderRadius: '12px',
+        <div style={{
+          backgroundColor: 'var(--red-50)',
+          border: '2px solid var(--red)',
+          padding: '28px',
+          borderRadius: 'var(--radius-lg)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '24px',
         }}>
-          <div style={{ flex: '1', minWidth: '300px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#D32F2F', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--red)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Pemberitahuan Tagihan Belum Lunas
             </h3>
-            <p style={{ fontSize: '16px', color: '#1A1410', fontWeight: '700', margin: '8px 0 0 0', lineHeight: '1.6' }}>
-              Sistem mendeteksi Anda masih memiliki kewajiban {dataTagihan.tunggakanPiutang.label} sebesar Rp {dataTagihan.tunggakanPiutang.nominal}. Silakan klik tombol untuk melangsungkan pelaporan bayar.
+            <p style={{ fontSize: '16px', color: 'var(--text)', fontWeight: '700', margin: '8px 0 0 0', lineHeight: '1.6' }}>
+              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar Rp {tunggakan.nominal.toLocaleString('id-ID')}. Silakan klik tombol untuk melangsungkan pelaporan bayar.
             </p>
           </div>
           <div>
-            <button 
-              onClick={() => onPemicuBayar(dataTagihan.tunggakanPiutang.nominal.replace(/\./g, ''), 'Cicilan Tunggakan (Piutang)')}
-              style={{ 
-                backgroundColor: '#8B1A1A', 
-                color: '#ffffff', 
-                padding: '0 32px', 
-                fontSize: '16px', 
-                fontWeight: '800', 
-                border: '2px solid #6B1414', 
-                height: '52px', 
+            <button
+              onClick={() => handleBayar(tunggakan.nominal, 'Cicilan Tunggakan (Piutang)')}
+              style={{
+                backgroundColor: 'var(--red)',
+                color: '#ffffff',
+                padding: '0 32px',
+                fontSize: '16px',
+                fontWeight: '800',
+                border: '2px solid var(--red-dark)',
+                height: '52px',
                 cursor: 'pointer',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
-              onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
-              onBlur={(e) => e.target.style.outline = 'none'}
             >
               Bayar Tagihan Sekarang
             </button>
@@ -66,37 +94,30 @@ function DashboardTenant({ onPemicuBayar }) {
         </div>
       )}
 
-      {/* STAT CARDS - Layout Sederhana Sesuai Permintaan Mitra */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
-        
-        {/* Kartu 1: Masa Service Charge Terintegrasi */}
-        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: '14px', border: '1px solid #000000' }}>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: '#4A3F35', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Masa Aktif Service Charge</span>
-          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: '#1A1410' }}>10 Juni 2026</div>
-          <span style={{ fontSize: '14px', color: '#1A1410', fontWeight: '700' }}>Tenggat biaya fasilitas & pengelolaan kios</span>
+        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Masa Aktif Service Charge</span>
+          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--text)' }}>{serviceCharge.dueDate}</div>
+          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Tenggat biaya fasilitas & pengelolaan kios</span>
         </div>
 
-        {/* Kartu 2: Status Tagihan Bulanan Service Charge */}
-        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: '14px', border: '1px solid #000000' }}>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: '#4A3F35', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Service Charge Bulan Ini</span>
+        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Service Charge Bulan Ini</span>
           <div style={{ margin: '12px 0 8px 0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-            <span style={{ backgroundColor: '#E8F5EE', color: '#1A6B3A', padding: '6px 14px', borderRadius: '6px', fontWeight: '800', fontSize: '14px', border: '2px solid #1A6B3A', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              ✓ Lunas
+            <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '6px 14px', borderRadius: 'var(--radius-md)', fontWeight: '800', fontSize: '14px', border: '2px solid var(--green)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              ✓ {serviceCharge.status}
             </span>
-            <div style={{ fontSize: '26px', fontWeight: '800', color: '#1A1410', lineHeight: '1.2' }}>Rp 350.000</div>
+            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>Rp {serviceCharge.nominal.toLocaleString('id-ID')}</div>
           </div>
-          <span style={{ fontSize: '14px', color: '#1A1410', fontWeight: '700' }}>Fasilitas & utilitas pasar</span>
+          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Fasilitas & utilitas pasar</span>
         </div>
 
-        {/* Kartu 3: Tunggakan (Piutang) Historis */}
-        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: '14px', border: '1px solid #000000' }}>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: '#4A3F35', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tunggakan (Piutang) Historis</span>
-          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: '#C05C00' }}>Rp 13.219.998</div>
-          <span style={{ fontSize: '14px', color: '#1A1410', fontWeight: '700' }}>Data terarsip s/d Sept 2024</span>
+        <div style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tunggakan Historis</span>
+          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--orange)' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</div>
+          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Data terarsip s/d Sept 2024</span>
         </div>
-
       </div>
-
     </div>
   );
 }

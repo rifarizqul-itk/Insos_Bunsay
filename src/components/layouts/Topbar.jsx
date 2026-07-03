@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-function Topbar({ userTitle, onToggleSidebar }) {
+function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   const [isOpen, setIsOpen] = useState(false);
   const notifikasiRef = useRef(null);
 
@@ -21,6 +21,8 @@ function Topbar({ userTitle, onToggleSidebar }) {
     };
   }, []);
 
+  const hamburgerClass = variant === 'admin' ? 'topbar-hamburger-admin' : 'topbar-hamburger-tenant';
+
   return (
     <header 
       className="topbar-container"
@@ -36,9 +38,9 @@ function Topbar({ userTitle, onToggleSidebar }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <button
           onClick={onToggleSidebar}
-          className="topbar-hamburger"
+          className={hamburgerClass}
           style={{
-            display: 'none', /* Muncul via CSS murni di layar < 992px */
+            display: 'none', /* default akan di-override oleh CSS */
             backgroundColor: 'transparent',
             border: '1px solid #D6C8BC',
             borderRadius: '8px',

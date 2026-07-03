@@ -1,26 +1,35 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) {
+function SidebarAdmin({ isOpen, onClose, onLogout }) {
+  const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard Admin' },
-    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer' },
-    { id: 'setoran-tunai', label: 'Setoran Tunai' },
-    { id: 'riwayat', label: 'Riwayat Transaksi Admin' },
-    { id: 'kios', label: 'Tabel Ketersediaan Kios' },
-    { id: 'ekspor', label: 'Ekspor Rekap Data' }
+    { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard' },
+    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti' },
+    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai' },
+    { id: 'riwayat', label: 'Riwayat Transaksi Admin', path: '/admin/riwayat' },
+    { id: 'kios', label: 'Tabel Ketersediaan Kios', path: '/admin/kios' },
+    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor' }
   ];
+
+  const handleNavigate = (path) => {
+    navigate(path);
+    onClose();
+  };
+
+  const isActive = (path) => location.pathname === path;
 
   return (
     <aside 
-      className={`sidebar-container ${isOpen ? 'mobile-open' : ''}`}
+      className={`sidebar-admin-container ${isOpen ? 'mobile-open' : ''}`}
       style={{
         display: 'flex',
         flexDirection: 'column'
       }}
     >
+      {/* Header Logo */}
       <div style={{ 
         height: '64px', 
         display: 'flex', 
@@ -28,20 +37,19 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) {
         justifyContent: 'space-between',
         paddingLeft: '24px', 
         paddingRight: '16px',
-        borderBottom: '1px solid var(--border)', 
+        borderBottom: '1px solid var(--border)',
         gap: '12px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img 
-              src="/assets/main_logo_transparent_for_light_bg.png" 
-              alt="Logo Resmi Plaza Kebun Sayur" 
-              style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
+            src="/assets/main_logo_transparent_for_light_bg.png" 
+            alt="Logo Plaza Kebun Sayur" 
+            style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
           />
           <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
-              Admin
+            Admin
           </span>
         </div>
-        
         <button
           onClick={onClose}
           className="sidebar-close-btn"
@@ -59,35 +67,35 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) {
         </button>
       </div>
 
+      {/* Menu */}
       <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {menuItems.map((item) => {
-          const isActive = location.pathname === `/admin/${item.id}`;
+          const active = isActive(item.path);
           return (
             <button
               key={item.id}
-              onClick={() => {
-                setActiveMenu(item.id);
-                onClose();
-              }}
+              onClick={() => handleNavigate(item.path)}
               style={{
                 width: '100%',
-                backgroundColor: isActive ? 'var(--red-50)' : 'transparent',
-                color: isActive ? 'var(--red)' : 'var(--text-2)',
+                backgroundColor: active ? 'var(--red-50)' : 'transparent',
+                color: active ? 'var(--red)' : 'var(--text-2)',
                 textAlign: 'left',
                 padding: '12px 24px',
                 borderRadius: '0',
-                fontWeight: isActive ? '700' : '500',
+                fontWeight: active ? '700' : '500',
                 fontSize: '15px',
                 display: 'flex',
                 alignItems: 'center',
-                borderLeft: isActive ? '4px solid var(--red)' : '4px solid transparent',
-                transition: 'all 0.2s ease'
+                border: 'none',
+                borderLeft: active ? '4px solid var(--red)' : '4px solid transparent',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
               }}
               onMouseEnter={(e) => {
-                if(!isActive) e.target.style.backgroundColor = 'var(--warm-gray)';
+                if(!active) e.target.style.backgroundColor = 'var(--warm-gray)';
               }}
               onMouseLeave={(e) => {
-                if(!isActive) e.target.style.backgroundColor = 'transparent';
+                if(!active) e.target.style.backgroundColor = 'transparent';
               }}
             >
               {item.label}
@@ -96,6 +104,7 @@ function SidebarAdmin({ setActiveMenu, onLogout, isOpen, onClose }) {
         })}
       </nav>
 
+      {/* Logout */}
       <div style={{ padding: '24px', borderTop: '1px solid var(--border)' }}>
         <button
           onClick={onLogout}

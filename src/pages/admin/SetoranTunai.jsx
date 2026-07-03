@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import { useUI } from '../../context/UIContext';
+import { recordCashPayment } from '../../api/transactions';
 
 function SetoranTunai() {
+  const { addToast } = useUI();
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [jenisTagihan, setJenisTagihan] = useState('Service Charge');
   const [nominalTunai, setNominalTunai] = useState('');
   const [buktiTunai, setBuktiTunai] = useState(null);
   const [previewBukti, setPreviewBukti] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const tenantData = [
     { id: 1, nama: 'Hj. Yuliana', kios: 'B-1001' },
@@ -19,31 +23,42 @@ function SetoranTunai() {
     if (file) {
       setBuktiTunai(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewBukti(reader.result);
-      };
+      reader.onloadend = () => setPreviewBukti(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSimpanTunai = (e) => {
+  const handleSimpanTunai = async (e) => {
     e.preventDefault();
     if (!selectedTenantId) {
-      alert('Silakan pilih tenant terlebih dahulu.');
+      addToast('Silakan pilih tenant terlebih dahulu.', 'error');
       return;
     }
     if (!buktiTunai) {
-      alert('Mohon unggah foto bukti pembayaran tunai.');
+      addToast('Mohon unggah foto bukti pembayaran tunai.', 'error');
       return;
     }
+
+    setIsSubmitting(true);
     const tenant = tenantData.find(t => String(t.id) === selectedTenantId);
-    alert(`Berhasil mencatat setoran tunai untuk ${tenant.nama} (${tenant.kios}) – ${jenisTagihan} sebesar Rp ${nominalTunai}. Bukti foto telah dilampirkan.`);
-    // Reset form
-    setNominalTunai('');
-    setBuktiTunai(null);
-    setPreviewBukti(null);
-    const fileInput = document.getElementById('upload-bukti-tunai');
-    if (fileInput) fileInput.value = '';
+    try {
+      await recordCashPayment({
+        tenantId: selectedTenantId,
+        jenisTagihan,
+        nominal: parseInt(nominalTunai),
+        bukti: buktiTunai.name
+      });
+      addToast(`Setoran tunai untuk ${tenant.nama} (${tenant.kios}) berhasil dicatat.`, 'success');
+      setNominalTunai('');
+      setBuktiTunai(null);
+      setPreviewBukti(null);
+      const fileInput = document.getElementById('upload-bukti-tunai');
+      if (fileInput) fileInput.value = '';
+    } catch (_) {
+      addToast('Gagal menyimpan setoran. Coba lagi.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,7 +114,7 @@ function SetoranTunai() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Unggah Foto Bukti Pembayaran</label>
+            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Unggah Foto Bukti</label>
             <input
               id="upload-bukti-tunai"
               type="file"
@@ -117,8 +132,9 @@ function SetoranTunai() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             style={{
-              backgroundColor: 'var(--red)',
+              backgroundColor: isSubmitting ? 'var(--text-3)' : 'var(--red)',
               color: '#ffffff',
               padding: '12px',
               fontSize: '15px',
@@ -127,11 +143,11 @@ function SetoranTunai() {
               height: '48px',
               border: 'none',
               borderRadius: 'var(--radius-md)',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               marginTop: '8px'
             }}
           >
-            Simpan Setoran Tunai
+            {isSubmitting ? 'Menyimpan...' : 'Simpan Setoran Tunai'}
           </button>
         </form>
       </div>
