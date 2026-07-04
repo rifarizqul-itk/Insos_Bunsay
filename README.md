@@ -1,111 +1,192 @@
-# Plaza Kebun Sayur Payment
-
-Aplikasi ini adalah platform sistem pembayaran digital untuk sewa kios di Plaza Kebun Sayur Balikpapan. Proyek frontend ini dibangun menggunakan **React 18** dan dibundel dengan **Vite** sebagai alat pengembangan lokal yang cepat.
+# Plaza Kebun Sayur — Sistem Pembayaran Sewa Kios
 
 ---
 
-## 📂 Informasi Folder `CONTEXT`
+## 📂 Struktur Kode (Frontend)
 
-Di dalam direktori utama (root) repositori ini terdapat folder khusus bernama `CONTEXT/`. Folder ini diperuntukkan sebagai **sumber konteks utama** bagi LLM (Large Language Model) seperti Gemini, Claude, atau ChatGPT saat membantu proses penulisan maupun pembuatan kode (*code generation*).
+Kode frontend dibangun dengan **React 18** + **Vite**. Folder `src/api/` berisi **mock API** yang digunakan untuk simulasi selama pengembangan. Semua fungsi di dalamnya (`admin.js`, `tenant.js`, `transactions.js`) adalah prototipe yang harus diganti dengan panggilan API nyata ke backend.
 
-Folder ini menyimpan file-file dokumentasi penting seperti:
-* `HANDOVER.md` [PANDUAN KHUSUS DEVELOPMENT FRONTEND] (Detail fitur dan aturan UI/UX)
-* `Data_Kios_BY_LEGAL.md` (Spesifikasi dan aturan data basis data kios)
-* Proposal dan Notulensi Rapat proyek
+- **`src/api/admin.js`** – endpoint untuk manajemen tenant & kios  
+- **`src/api/tenant.js`** – endpoint untuk dashboard, histori, tunggakan, pembayaran tenant  
+- **`src/api/transactions.js`** – endpoint verifikasi, setoran tunai, ekspor laporan  
 
-**Cara Penggunaan:** Sebelum Anda meminta AI menulis komponen atau memperbaiki *bug*, unggah atau berikan isi file dari folder `CONTEXT/` ini terlebih dahulu agar kode yang dihasilkan otomatis patuh terhadap aturan bisnis dan desain aplikasi.
-
----
-
-## 📥 Panduan Clone Repositori via GitHub Desktop
-
-Jika Anda ingin mengunduh proyek ini menggunakan antarmuka grafis **GitHub Desktop**, silakan ikuti langkah-langkah berikut:
-
-1. **Buka Aplikasi:** Pastikan Anda telah mengunduh, menginstal, dan masuk (*sign-in*) ke aplikasi [GitHub Desktop](https://desktop.github.com/) menggunakan akun GitHub Anda.
-2. **Mulai Kloning:** Klik menu **File** di pojok kiri atas aplikasi, lalu pilih opsi **Clone Repository...** (atau tekan tombol kombinasi `Ctrl + Shift + O`).
-3. **Pilih URL:** Masuk ke tab **URL** pada jendela pop-up yang muncul.
-4. **Masukkan Tautan:** Tempel (*paste*) URL repositori GitHub proyek ini pada kolom yang disediakan.
-5. **Tentukan Folder Penyimpanan:** Di bagian *Local Path*, klik **Choose...** untuk menentukan lokasi folder di komputer Anda tempat berkas proyek akan disimpan.
-6. **Eksekusi:** Klik tombol **Clone**. Tunggu hingga proses unduhan selesai, lalu buka folder tersebut di editor kode Anda (seperti VS Code).
+> 📌 *Dokumen ini akan fokus pada panduan untuk tim backend dan database.*
 
 ---
 
-## 💻 Panduan Menjalankan Web Secara Lokal (Local Development)
+## 🗄️ Panduan untuk Tim Database
 
-Pastikan Anda sudah menginstal [Node.js](https://nodejs.org/) (versi LTS yang direkomendasikan atau minimal versi 18) di perangkat komputer Anda sebelum memulai langkah di bawah ini.
+### Sumber Data
 
-### 1. Masuk ke Direktori Proyek
-Buka terminal, Git Bash, atau Command Prompt, lalu masuk ke folder hasil klon proyek:
+Data tenant, kios, dan tunggakan historis tersedia dalam file:
+
+- **`CONTEXT/Data_Kios_BY_LEGAL_versi_MARKDOWN.md`** atau **`CONTEXT/Data Kios BY LEGAL ( update 26 April 2025 ).xlsx`** – berisi semua data kios per lantai, nama pemilik, nomor KTP, alamat, kontak, nomor SP/PPJB, tanggal BAST, ukuran, jenis usaha, sertifikat, dan histori pengalihan hak. Total tenant aktif sekitar **250 unit** (data per 26 April 2025).
+
+### Skema Database yang Disarankan
+
+Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
+
+#### 1. Tabel `tenants`
+| Kolom           | Tipe        | Keterangan                           |
+|-----------------|-------------|--------------------------------------|
+| `id`            | INT / UUID  | Primary key                          |
+| `nama`          | VARCHAR     | Nama pemilik kios                    |
+| `email`         | VARCHAR     | Untuk login tenant                   |
+| `password_hash` | VARCHAR     | Hash kata sandi (bcrypt)             |
+| `no_ktp`        | VARCHAR     | Nomor KTP                            |
+| `alamat`        | TEXT        | Alamat lengkap                       |
+| `no_telepon`    | VARCHAR     | Nomor telepon                        |
+| `jenis_usaha`   | VARCHAR     | Jenis usaha (Kerajinan, Fashion, dll)|
+
+#### 2. Tabel `kios`
+| Kolom           | Tipe        | Keterangan                           |
+|-----------------|-------------|--------------------------------------|
+| `id`            | INT / UUID  | Primary key                          |
+| `nomor_kios`    | VARCHAR     | e.g. "B-1001"                        |
+| `lantai`        | VARCHAR     | "Lt. 1", "Lt. 2", "Lt. 3"            |
+| `status`        | ENUM        | `Terisi`, `Kosong`, `Perlu Validasi` |
+| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id` (nullable)|
+| `ukuran`        | VARCHAR     | e.g. "6M"                            |
+| `no_sp`         | VARCHAR     | Nomor SP / tanggal                   |
+| `no_ppjb`       | VARCHAR     | Nomor PPJB / tanggal                 |
+| `tgl_bast`      | DATE        | Tanggal BAST                         |
+| `no_sertifikat` | VARCHAR     | Nomor sertifikat / tanggal ambil     |
+| `catatan`       | TEXT        | Keterangan tambahan                  |
+
+#### 3. Tabel `transactions`
+| Kolom           | Tipe        | Keterangan                           |
+|-----------------|-------------|--------------------------------------|
+| `id`            | INT / UUID  | Primary key                          |
+| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id`          |
+| `jenis_tagihan` | ENUM        | `Service Charge`, `Tunggakan AR`     |
+| `nominal`       | DECIMAL     | Jumlah pembayaran                    |
+| `metode`        | ENUM        | `Transfer Manual`, `Midtrans`, `Tunai`|
+| `status`        | ENUM        | `Lunas`, `Pending`, `Tertolak`       |
+| `waktu`         | TIMESTAMP   | Waktu transaksi                      |
+| `bukti`         | VARCHAR     | Path/file name bukti (jika ada)      |
+| `alasan_tolak`  | TEXT        | Alasan jika status `Tertolak`        |
+
+> **⚠️ PENTING – Case-Sensitive ENUM:**  
+> Frontend menggunakan string status secara **case-sensitive** untuk menentukan tampilan warna dan ikon.  
+> Pastikan nilai yang dikembalikan API **persis sama** dengan nilai di atas, misalnya:  
+> `"Lunas"` (bukan `"lunas"` atau `"LUNAS"`), `"Terisi"`, `"Pending"`, dst.
+
+#### 4. Tabel `tunggakan_ar` (opsional, untuk historis)
+| Kolom           | Tipe        | Keterangan                           |
+|-----------------|-------------|--------------------------------------|
+| `id`            | INT / UUID  | Primary key                          |
+| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id`          |
+| `total_awal`    | DECIMAL     | Total tunggakan awal                 |
+| `terbayar`      | DECIMAL     | Total yang sudah dibayar             |
+| `sisa`          | DECIMAL     | Sisa tunggakan                       |
+| `riwayat_cicilan`| JSON       | Array objek cicilan                  |
+
+> **Catatan**: Data di `Data_Kios_BY_LEGAL` mencakup informasi kepemilikan, sertifikat, dan pengalihan hak yang dapat dijadikan acuan untuk mengisi tabel `tenants` dan `kios`.
+
+---
+
+## 🔌 Panduan untuk Tim Backend
+
+### Endpoint API yang Diperlukan
+
+Frontend saat ini menggunakan fungsi-fungsi di `src/api/` yang harus diimplementasikan sebagai endpoint nyata. Berikut daftar endpoint minimal:
+
+#### **Autentikasi**
+- `POST /auth/login` → menerima `email`, `password`, mengembalikan `token` (JWT) dan `role` (`tenant` / `admin`).
+- `POST /auth/logout` → (opsional, bisa handle di client)
+- `POST /auth/forgot-password` → kirim email reset.
+
+#### **Admin**
+- `GET /admin/tenants` → daftar semua tenant (dengan filter status pembayaran).
+- `GET /admin/kios` → daftar semua kios.
+- `GET /admin/kios/:id` → detail administrasi kios.
+- `PUT /admin/kios/:id` → update data kios.
+- `POST /admin/tenants` → tambah tenant baru.
+- `PUT /admin/tenants/:id/keuangan` → update status keuangan tenant.
+- `POST /admin/transactions/verify` → verifikasi bukti transfer (ubah status).
+- `POST /admin/transactions/cash` → catat setoran tunai.
+- `GET /admin/transactions` → riwayat transaksi (admin).
+- `GET /admin/export` → unduh laporan Excel (per bulan/tahun). **Wajib mengembalikan stream biner dengan header:**  
+  `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+#### **Tenant**
+- `GET /tenant/dashboard` → data dashboard (nama, kios, status service charge, tunggakan).
+- `GET /tenant/history` → riwayat pembayaran tenant.
+- `GET /tenant/tunggakan` → rincian tunggakan AR.
+- `POST /tenant/payment` → buat transaksi baru. **Payload berupa `multipart/form-data`** dengan field:
+  - `jenis_tagihan` (string)
+  - `nominal` (number)
+  - `metode` (string, salah satu: `transfer_manual` atau `midtrans_gateway`)
+  - `bukti_transfer` (file gambar, **wajib** jika `metode` = `transfer_manual`)
+- `PUT /tenant/profile` → update profil tenant.
+
+### Autentikasi & Autoritasi
+
+- Gunakan **JWT** dengan payload `{ userId, role }`.
+- Role: `tenant` dan `admin`.
+- Middleware untuk memvalidasi token dan role pada setiap endpoint yang dilindungi.
+
+### Integrasi dengan Midtrans
+
+Frontend mendukung pembayaran instan melalui **Midtrans Sandbox**. Untuk mengaktifkannya, backend perlu:
+
+1. Menyediakan endpoint `/payment/create` yang memanggil API Snap Midtrans dan mengembalikan `token` ke frontend.
+2. Menerima notifikasi webhook dari Midtrans untuk memperbarui status transaksi.
+
+Environment variables yang dibutuhkan frontend:
+- `VITE_API_BASE_URL` → base URL backend (misal `https://api.bunsay.com`)
+- `VITE_MIDTRANS_CLIENT_KEY` → client key dari dashboard Midtrans
+
+### 📋 Aturan Respons Error (Kepatuhan WCAG 2.2)
+
+Frontend menerapkan standar aksesibilitas tinggi (WCAG 2.2, kriteria 3.3.1 & 3.3.3). Untuk itu, setiap respons error (HTTP 400, 422, 500, dll.) **harus** mengembalikan objek JSON dengan struktur yang konsisten dan pesan kesalahan dalam bahasa Indonesia yang jelas, spesifik, dan dapat dipahami pengguna.
+
+**Format yang diharapkan:**
+```json
+{
+  "message": "Deskripsi error dalam bahasa Indonesia formal",
+  "field": "nama_field_terkait"  // opsional, untuk error validasi field tertentu
+}
+```
+
+**Contoh yang benar:**
+- `{ "message": "Nomor KTP harus berisi 16 digit angka" }`
+- `{ "message": "Format alamat email tidak valid" }`
+- `{ "message": "Kata sandi harus minimal 8 karakter" }`
+
+**Contoh yang TIDAK boleh:**
+- ❌ `{ "error": "ER_DUP_ENTRY: Duplicate entry '...' for key 'email'" }` (error mentah database)
+- ❌ `"Internal Server Error"` (terlalu umum, tidak informatif)
+- ❌ `{ "msg": "Invalid input" }` (tidak spesifik dan menggunakan bahasa Inggris)
+
+---
+
+## 🚀 Menjalankan Frontend (untuk Testing)
+
+Meskipun backend belum siap, frontend dapat dijalankan dengan mock API untuk keperluan pengujian UI.
+
 ```bash
+# Clone repositori
+git clone <repo-url>
 cd plaza-kebun-sayur-payment
-```
 
-### 2. Instalasi Dependensi / Pustaka
-
-Jalankan perintah berikut untuk mengunduh dan memasang semua paket pustaka yang terdaftar di dalam file `package.json`:
-
-```bash
+# Install dependensi
 npm install
-```
 
-*Tunggu beberapa saat hingga folder `node_modules` selesai dibuat.*
+# Buat file .env.local dan isi:
+VITE_API_BASE_URL=http://localhost:3000/api   # ganti dengan URL backend
+VITE_MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
 
-### 3. Menjalankan Server Pengembangan (Local Dev Server)
-
-Untuk menyalakan server lokal aplikasi, gunakan perintah:
-
-```bash
+# Jalankan dev server
 npm run dev
 ```
 
-### 4. Mengakses Aplikasi
-
-Setelah proses kompilasi awal selesai, Vite akan memberikan informasi alamat URL lokal di terminal Anda. Biasanya berupa:
-
-```text
-  ➜  Local:   http://localhost:5173/
-```
-
-Buka browser Anda dan akses tautan **http://localhost:5173/** untuk melihat tampilan web yang berjalan secara real-time.
+Akses `http://localhost:5173` untuk melihat aplikasi.
 
 ---
 
-## 🛠 Skrip Perintah yang Tersedia (Scripts)
+## 📎 Referensi Tambahan
 
-Di dalam file `package.json`, telah dikonfigurasi beberapa perintah otomatis untuk mempermudah manajemen proyek:
-
-* **`npm run dev`**
-Menjalankan aplikasi dalam lingkungan pengembangan lokal menggunakan fitur *Hot Module Replacement* (HMR) bawaan Vite.
-* **`npm run build`**
-Mengompilasi dan mengoptimalkan semua kode sumber menjadi file statis siap pakai untuk lingkungan produksi di dalam folder `dist/`.
-* **`npm run lint`**
-Menjalankan ESLint untuk mengecek kualitas struktur penulisan kode pada berkas `.js` dan `.jsx` guna menghindari kesalahan sintaks.
-* **`npm run preview`**
-Membuka server lokal mandiri untuk meninjau hasil build produksi secara lokal sebelum diunggah ke hosting.
-
-## 🔌 Panduan untuk Developer Backend
-
-Repositori ini merupakan aplikasi **Frontend (SPA)** mandiri. Bagi developer backend yang bertugas menyediakan API atau melakukan integrasi endpoint, berikut adalah beberapa poin penting yang perlu diperhatikan:
-
-### 1. Konfigurasi Environment Variables (API Base URL)
-Untuk menghubungkan komponen frontend dengan server backend (lokal/staging), buatlah file `.env` atau `.env.local` di root direktori proyek ini, kemudian tentukan alamat URL API Anda:
-```env
-VITE_API_BASE_URL=http://localhost:PORT_BACKEND_ANDA/api
-```
-
-*Catatan: Vite mengharuskan variabel lingkungan diawali dengan prefiks `VITE_` agar dapat diakses di dalam kode frontend.*
-
-### 2. Autentikasi & Authorization Header
-
-* Proses autentikasi pengguna dijembatani melalui halaman `AuthPage.jsx`.
-* Sistem menggunakan skema **Bearer Token (JWT)**. Setiap kali melakukan request ke endpoint yang dilindungi (*protected routes* seperti data tenant atau verifikasi admin), frontend akan menyisipkan token pada header request:
-```text
-Authorization: Bearer <token_jwt>
-```
-
-### 3. Sinkronisasi Aturan Bisnis & Skema Data
-
-Sebelum merancang skema database atau endpoint API, developer backend sangat direkomendasikan untuk meninjau dokumen di folder `CONTEXT/` agar selaras dengan kebutuhan sistem:
-
-* **`Data_Kios_BY_LEGAL.md`**: Gunakan sebagai acuan penanganan relasi data (seperti aturan *multi-kios* untuk satu tenant, format pencatatan tanggal, dan histori pengalihan kios).
-* **`HANDOVER.md`**: Gunakan sebagai acuan alur logika bisnis utama (meliputi total kisaran ~250 tenant aktif, validasi status pembayaran, serta kalkulasi tunggakan/AR).
+- **Data Kios**: `CONTEXT/Data_Kios_BY_LEGAL` – sumber utama untuk migrasi data.
+- **Notulensi Rapat**: `CONTEXT/Notul rapat 11 april 2026.md` – kesepakatan fitur dan alur bisnis.
+- **Proposal**: `CONTEXT/PROPOSAL INOVASI SOSIAL.docx.md` – latar belakang dan metodologi proyek.
