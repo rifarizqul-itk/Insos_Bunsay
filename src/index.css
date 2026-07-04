@@ -32,6 +32,11 @@
     padding: 0;
   }
 
+  html, body, #root {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
   body {
     background-color: #FBF7F2;
     color: #1A1410;
@@ -84,242 +89,232 @@
     animation: fadeIn 0.2s ease;
   }
 
-  /* ============================================
-     TENANT — MOBILE-FIRST (default untuk HP)
-     ============================================ */
-  .sidebar-tenant-container {
-    width: 240px;
-    height: 100vh;
-    background-color: #ffffff;
-    border-right: 1px solid #E8E0D8;
-    position: fixed;
-    top: 0;
-    left: 0;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .sidebar-tenant-container.mobile-open {
-    transform: translateX(0);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
-  }
-
-  .sidebar-tenant-container .sidebar-close-btn {
-    display: block !important;
-  }
-
-  .topbar-hamburger-tenant {
-    display: flex !important;
-  }
-
-  .main-layout-tenant {
-    padding-left: 0 !important;
-  }
-
-  /* Tenant: desktop (≥ 992px) */
-  @media (min-width: 992px) {
-    .sidebar-tenant-container {
-      transform: translateX(0);
-    }
-    .sidebar-tenant-container .sidebar-close-btn {
-      display: none !important;
-    }
-    .topbar-hamburger-tenant {
-      display: none !important;
-    }
-    .main-layout-tenant {
-      padding-left: 240px !important;
-    }
-    /* Geser Topbar mengikuti sidebar tenant */
-    .main-layout-tenant .topbar-container {
-      left: 240px !important;
-    }
-  }
-
-  /* ============================================
-     ADMIN — DESKTOP-FIRST (default untuk desktop)
-     ============================================ */
-  .sidebar-admin-container {
-    width: 240px;
-    height: 100vh;
-    background-color: #ffffff;
-    border-right: 1px solid #E8E0D8;
-    position: fixed;
-    top: 0;
-    left: 0;
-    transform: translateX(0);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .sidebar-admin-container.mobile-open {
-    transform: translateX(0);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
-  }
-
-  .sidebar-admin-container .sidebar-close-btn {
-    display: none !important;
-  }
-
+  /* Tombol hamburger muncul di mobile */
+  .topbar-hamburger-tenant,
   .topbar-hamburger-admin {
-    display: none !important;
+    @apply flex md:hidden items-center justify-center border border-border rounded-md px-3 h-[42px] text-2xl text-text bg-transparent;
   }
 
-  .main-layout-admin {
-    padding-left: 240px !important;
+  /* Topbar */
+  .topbar-container {
+    @apply h-16 bg-white border-b border-border sticky top-0 z-[90] flex items-center justify-between px-4 md:px-8;
   }
 
-  /* Admin: desktop — Topbar ikut bergeser ke kanan */
-  .main-layout-admin .topbar-container {
-    left: 240px !important;
+  /* Dropdown notifikasi */
+  .topbar-dropdown {
+    @apply absolute top-[56px] right-0 w-[90vw] max-w-[360px] bg-white border border-border rounded-xl shadow-md p-4 flex flex-col gap-3 z-[110] animate-[fadeIn_0.15s_ease-out];
   }
 
-  /* Admin: mobile (≤ 992px) */
-  @media (max-width: 992px) {
-    .sidebar-admin-container {
-      transform: translateX(-100%);
+  /* ============================================
+     TABEL → KARTU di mobile (≤ 768px)
+     ============================================ */
+  @media (max-width: 768px) {
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
     }
-    .sidebar-admin-container.mobile-open {
-      transform: translateX(0);
-      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+
+    thead {
+      display: none;
     }
-    .sidebar-admin-container .sidebar-close-btn {
-      display: block !important;
+
+    tr {
+      @apply bg-white border border-border rounded-xl mb-4 p-4 shadow-sm;
     }
-    .topbar-hamburger-admin {
-      display: flex !important;
+
+    td {
+      @apply flex justify-between items-center py-2 px-0 border-b border-border last:border-0;
     }
-    .main-layout-admin {
-      padding-left: 0 !important;
+
+    td::before {
+      content: attr(data-label);
+      @apply font-bold text-text-2 text-sm;
     }
-    /* Di mobile, Topbar kembali ke kiri */
-    .main-layout-admin .topbar-container {
-      left: 0 !important;
+
+    td:last-child {
+      @apply border-0 pb-0;
+    }
+
+    /* Penyesuaian aksi tombol di kartu */
+    td .table-action-btn {
+      @apply w-full justify-end;
     }
   }
 
   /* ============================================
-     GLOBAL
+     FIX GRID MOBILE — Ekspor & Tunggakan
      ============================================ */
-  .topbar-container {
-    height: 64px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #D6C8BC;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 32px;
-    z-index: 90;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  @media (max-width: 768px) {
+    .grid-2col-to-1col {
+      @apply flex flex-col w-full gap-4;
+    }
+    .grid-2col-to-1col > * {
+      @apply w-full;
+    }
   }
 
-  .main-content-inner {
-    padding: 40px 32px;
-    transition: padding 0.3s ease;
-  }
-
-  .sidebar-mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(26, 20, 16, 0.4);
-    z-index: 95;
-    backdrop-filter: blur(2px);
-    animation: fadeIn 0.2s ease;
-  }
-
-  .auth-simulation-bar {
-    background-color: #F5F0EB;
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #E8E0D8;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-  }
-
+  /* ============================================
+     ANIMASI
+     ============================================ */
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
 
-  /* Responsive umum untuk konten */
-  @media (max-width: 992px) {
-    .topbar-container {
-      padding: 0 16px !important;
-      left: 0 !important; /* Pastikan di mobile selalu di kiri */
-    }
+  /* ============================================
+     RESPONSIVE UTILITY OVERRIDE
+     ============================================ */
+  @media (max-width: 768px) {
     .main-content-inner {
-      padding: 24px 16px !important;
+      @apply p-4;
     }
     .auth-simulation-bar {
-      flex-direction: column;
-      gap: 10px;
-      padding: 16px 12px;
+      @apply flex-col gap-2 p-4;
     }
-    table {
-      display: block !important;
-      width: 100% !important;
-      overflow-x: auto !important;
-      white-space: nowrap !important;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
 
-  @media (max-width: 480px) {
-    .topbar-dropdown {
-      width: calc(100vw - 32px) !important;
-      right: -16px !important;
+    .landing-page-shell {
+      @apply px-4 py-6;
     }
-  }
 
-  /* Landing Page Mobile Fixes */
-  @media (max-width: 768px) {
     .landing-navbar {
-      padding: 0 16px !important;
+      @apply px-4 h-auto py-3;
       justify-content: center !important;
     }
-    .landing-nav-menu {
-      display: none !important;
+
+    .landing-navbar > div:first-child {
+      @apply gap-2;
+      justify-content: center;
+      width: 100%;
     }
-    .landing-hero-grid {
+
+    .landing-navbar img {
+      height: 32px !important;
+    }
+
+    .landing-navbar span {
+      line-height: 1.1;
+    }
+
+    .mobile-stack {
       grid-template-columns: 1fr !important;
+    }
+
+    .landing-hero-grid > div:first-child,
+    .landing-hero-grid > div:last-child,
+    .landing-info-grid > div,
+    .bayar-layout-grid > div,
+    .akun-layout-grid > div,
+    .tunggakan-layout-grid > div,
+    .ekspor-layout-grid > div {
+      min-width: 0;
+    }
+
+    .landing-hero-grid {
       gap: 0 !important;
     }
+
     .landing-hero-grid > div:first-child {
-      padding: 24px 20px !important;
+      @apply p-6;
     }
+
     .landing-hero-grid h1 {
-      font-size: 26px !important;
+      font-size: 34px !important;
     }
+
     .landing-hero-grid > div:last-child {
-      min-height: 220px !important;
-      height: 220px !important;
-      width: 100% !important;
+      min-height: 240px !important;
     }
-    .landing-hero-grid button {
-      width: 100% !important;
+
+    .landing-info-grid,
+    .bayar-layout-grid,
+    .akun-layout-grid,
+    .tunggakan-layout-grid,
+    .ekspor-layout-grid {
+      gap: 16px !important;
     }
-    .landing-info-grid {
+
+    .landing-info-grid > div,
+    .bayar-layout-grid > *,
+    .akun-layout-grid > *,
+    .tunggakan-layout-grid > *,
+    .ekspor-layout-grid > * {
+      padding: 20px !important;
+    }
+
+    .landing-info-grid h3,
+    .bayar-layout-grid h3,
+    .akun-layout-grid h3,
+    .tunggakan-layout-grid h3,
+    .ekspor-layout-grid h3 {
+      font-size: 18px !important;
+    }
+
+    .bayar-layout-grid p,
+    .akun-layout-grid p,
+    .tunggakan-layout-grid p,
+    .ekspor-layout-grid p {
+      font-size: 14px !important;
+    }
+
+    .landing-info-grid a {
+      width: 100%;
+    }
+
+    .landing-info-grid a,
+    .landing-hero-grid button,
+    .bayar-layout-grid button,
+    .akun-layout-grid button,
+    .tunggakan-layout-grid button,
+    .ekspor-layout-grid button {
+      width: 100%;
+    }
+
+    .bayar-layout-grid,
+    .akun-layout-grid,
+    .tunggakan-layout-grid,
+    .ekspor-layout-grid {
+      gap: 18px !important;
+    }
+
+    .akun-layout-grid input,
+    .akun-layout-grid textarea,
+    .bayar-layout-grid input,
+    .bayar-layout-grid select,
+    .ekspor-layout-grid select {
+      width: 100%;
+    }
+
+    .tunggakan-layout-grid > div:first-child {
+      order: 1;
+    }
+
+    .tunggakan-layout-grid > div:last-child {
+      order: 2;
+    }
+
+    .bayar-layout-grid {
       grid-template-columns: 1fr !important;
-      gap: 24px !important;
     }
-    .landing-info-grid > div {
-      padding: 24px 16px !important;
+
+    .akun-layout-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .tunggakan-layout-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .ekspor-layout-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .landing-navbar > div:last-child,
+    .landing-navbar > div:first-child {
+      max-width: 100%;
     }
   }
 }

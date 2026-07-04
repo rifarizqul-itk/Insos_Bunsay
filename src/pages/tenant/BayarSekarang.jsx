@@ -14,7 +14,8 @@ function BayarSekarang() {
   const [metode, setMetode] = useState('transfer_manual');
   const [jenisTagihan, setJenisTagihan] = useState(bayarProps.jenis || 'Service Charge');
   const [nominal, setNominal] = useState(bayarProps.nominal || '');
-  const [berkasDipilih, setBerkasDipilih] = useState(false);
+  const [buktiTransfer, setBuktiTransfer] = useState(null);
+  const [previewBukti, setPreviewBukti] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -25,6 +26,16 @@ function BayarSekarang() {
     document.body.appendChild(scriptSnap);
     return () => document.body.removeChild(scriptSnap);
   }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBuktiTransfer(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewBukti(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleProsesPembayaran = async (e) => {
     e.preventDefault();
@@ -65,7 +76,7 @@ function BayarSekarang() {
     }
 
     // Transfer manual
-    if (!berkasDipilih) {
+    if (!buktiTransfer) {
       addToast('Mohon unggah bukti transfer terlebih dahulu.', 'error');
       return;
     }
@@ -78,12 +89,15 @@ function BayarSekarang() {
       nominal: `Rp ${nominalAngka.toLocaleString('id-ID')}`,
       metode: 'Transfer Bank Manual',
       waktu: new Date().toLocaleString('id-ID') + ' WITA',
-      status: 'Pending'
+      status: 'Pending',
+      bukti: buktiTransfer.name
     };
 
     tambahAntrean(newTransaksi);
     addToast('Bukti terkirim! Menunggu verifikasi admin.', 'success');
     setBayar('', 'Service Charge');
+    setBuktiTransfer(null);
+    setPreviewBukti(null);
     navigate('/tenant/histori');
   };
 
@@ -113,7 +127,7 @@ function BayarSekarang() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '28px', alignItems: 'flex-start' }}>
+      <div className="bayar-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '28px', alignItems: 'flex-start' }}>
         <form onSubmit={handleProsesPembayaran} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Jenis Tagihan</label>
@@ -143,11 +157,19 @@ function BayarSekarang() {
           {metode === 'transfer_manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="page-fade-in">
               <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Unggah Bukti Transfer</label>
-              <div onClick={() => setBerkasDipilih(true)} style={{ width: '100%', padding: '24px', border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--cream)', textAlign: 'center', cursor: 'pointer' }}>
-                <span style={{ fontSize: '14px', color: berkasDipilih ? 'var(--green)' : 'var(--text)', fontWeight: '800' }}>
-                  {berkasDipilih ? '✓ Dokumen Bukti Transaksi Berhasil Dilampirkan' : 'Klik untuk mengunggah foto struk transfer Anda'}
-                </span>
-              </div>
+              <input
+                id="upload-bukti-transfer"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ padding: '8px 0', border: 'none', background: 'transparent' }}
+                required
+              />
+              {previewBukti && (
+                <div style={{ marginTop: '8px', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px', backgroundColor: 'var(--warm-gray)' }}>
+                  <img src={previewBukti} alt="Bukti Transfer" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }} />
+                </div>
+              )}
             </div>
           )}
 
@@ -173,7 +195,7 @@ function BayarSekarang() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', color: 'var(--text-2)', lineHeight: '1.6' }}>
               <p style={{ fontWeight: '700', color: 'var(--text)' }}>Sistem Verifikasi Otomatis Terintegrasi:</p>
               <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li>Anda tidak perlu mengunggah struk atau bukti foto transfer secara manual.</li>
+                <li>Anda mengunggah foto bukti transfer secara manual untuk diverifikasi admin.</li>
                 <li>Sistem admin akan langsung menerima konfirmasi pelunasan secara real-time.</li>
                 <li>Mendukung transaksi aman menggunakan jaringan Virtual Account bank besar nasional.</li>
               </ul>

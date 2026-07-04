@@ -73,13 +73,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               ) : (
                 filteredAntrean.map((item, index) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                    <td style={{ padding: '14px 16px' }}>
+                    <td data-label="Tenant & Kios" style={{ padding: '14px 16px' }}>
                       <div style={{ fontWeight: '600' }}>{item.nama}</div>
                       <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700' }}>Kios {item.kios}</div>
                     </td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                    <td style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td data-label="Jenis Tagihan" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
+                    <td data-label="Nominal" style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
+                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <button 
                         onClick={() => setPreviewItem(item)}
                         style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '6px 12px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}

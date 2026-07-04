@@ -41,7 +41,7 @@ function TunggakanAR() {
         <p style={{ color: 'var(--text-2)', fontSize: '15px' }}>Arsip pelacakan nilai tunggakan pembukuan lama hingga September 2024.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
+      <div className="tunggakan-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
         <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
           <div>
             <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-3)', textTransform: 'uppercase' }}>Total Tunggakan Awal</span>

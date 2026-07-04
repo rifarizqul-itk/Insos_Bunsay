@@ -31,7 +31,7 @@ function EksporData() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', alignItems: 'flex-start' }}>
+      <div className="ekspor-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', alignItems: 'flex-start' }}>
         <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '32px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text)' }}>Pilih Periode Laporan</h3>
           <form onSubmit={handleDownloadExcel} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -57,7 +57,7 @@ function EksporData() {
 
         <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
           <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)' }}>Komponen Lembar Excel</h4>
-          <ul style={{ fontSize: '13px', color: 'var(--text-2)', paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
+          <ul style={{ fontSize: '13px', color: 'var(--text-2)', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
             <li><strong>Sheet 1:</strong> Rekap Setoran Sewa Unit Gedung bulanan.</li>
             <li><strong>Sheet 2:</strong> Rekap Pembayaran Service Charge & Kebersihan.</li>
             <li><strong>Sheet 3:</strong> Sisa saldo akumulasi Tunggakan AR historis per tenant.</li>

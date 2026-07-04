@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { isMobile } from 'react-device-detect';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { UIProvider } from './context/UIContext';
@@ -36,14 +35,12 @@ import Toast from './components/Toast';
 function AppContent() {
   const { isLoggedIn, role, logout, user } = useAuth();
 
-  // Gunakan deteksi perangkat untuk menentukan status awal sidebar
-  // isMobile dari react-device-detect akan true di HP, false di desktop/tablet besar
-  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
+  // Sidebar default tertutup di mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  // Jika belum login
   if (!isLoggedIn) {
     return (
       <>
@@ -58,43 +55,46 @@ function AppContent() {
     );
   }
 
-  // Jika sudah login
   const isAdmin = role === 'admin';
   const SidebarComponent = isAdmin ? SidebarAdmin : Sidebar;
   const variant = isAdmin ? 'admin' : 'tenant';
-  const layoutClass = isAdmin ? 'main-layout-admin' : 'main-layout-tenant';
   const userTitle = isAdmin
     ? 'Administrator Utama'
     : `${user?.name || 'Tenant'} (${user?.kios || 'Kios'})`;
 
   return (
     <>
-      <div
-        className={layoutClass}
-        style={{
-          minHeight: '100vh',
-          backgroundColor: 'var(--cream)',
-          position: 'relative',
-          overflowX: 'hidden',
-        }}
-      >
+      {/* Sidebar – fixed di semua ukuran, di mobile tersembunyi dengan translate */}
+      <div className={`
+        fixed left-0 top-0 z-[100] h-screen w-[240px] bg-white border-r border-border
+        transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+      `}>
         <SidebarComponent
           isOpen={isSidebarOpen}
           onClose={closeSidebar}
           onLogout={logout}
         />
+      </div>
+
+      {/* Overlay mobile */}
+      {isSidebarOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/40 z-[95] backdrop-blur-sm" onClick={closeSidebar} />
+      )}
+
+      {/* Konten utama – diberi padding-left di desktop agar tidak tertutup sidebar */}
+      <div className="pl-0 md:pl-[240px] min-h-dvh flex flex-col bg-[#FBF7F2]">
         <Topbar
           userTitle={userTitle}
           onToggleSidebar={toggleSidebar}
           variant={variant}
         />
-        {isSidebarOpen && (
-          <div className="sidebar-mobile-overlay" onClick={closeSidebar} />
-        )}
-        <main style={{ padding: '32px', paddingTop: '64px' }}>
-          <div className="main-content-inner">
+
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+          <div className="max-w-7xl mx-auto">
             <Routes>
-              {/* Rute tenant */}
+              {/* Tenant */}
               <Route element={<ProtectedRoute allowedRoles={['tenant']} />}>
                 <Route path="/tenant/dashboard" element={<DashboardTenant />} />
                 <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
@@ -103,7 +103,7 @@ function AppContent() {
                 <Route path="/tenant/akun" element={<AkunTenant />} />
               </Route>
 
-              {/* Rute admin */}
+              {/* Admin */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route path="/admin/dashboard" element={<DashboardAdmin />} />
                 <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
@@ -114,13 +114,13 @@ function AppContent() {
                 <Route path="/admin/ekspor" element={<EksporData />} />
               </Route>
 
-              {/* Redirect default */}
               <Route path="/" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
               <Route path="*" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
             </Routes>
           </div>
         </main>
       </div>
+
       <Toast />
     </>
   );

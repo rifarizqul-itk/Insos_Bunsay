@@ -40,7 +40,6 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
           onClick={onToggleSidebar}
           className={hamburgerClass}
           style={{
-            display: 'none', /* default akan di-override oleh CSS */
             backgroundColor: 'transparent',
             border: '1px solid #D6C8BC',
             borderRadius: '8px',

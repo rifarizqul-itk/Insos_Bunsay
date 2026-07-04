@@ -37,18 +37,18 @@ function RiwayatTransaksiAdmin() {
             ) : (
               riwayat.map((item, index) => (
                 <tr key={item.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '700', color: 'var(--text-2)' }}>{item.id}</td>
-                  <td style={{ padding: '14px 16px' }}>
+                  <td data-label="ID TRX" style={{ padding: '14px 16px', fontWeight: '700', color: 'var(--text-2)' }}>{item.id}</td>
+                  <td data-label="Tenant & Kios" style={{ padding: '14px 16px' }}>
                     <div style={{ fontWeight: '600' }}>{item.nama}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700' }}>Kios {item.kios}</div>
                   </td>
-                  <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                  <td style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
-                  <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-2)' }}>
+                  <td data-label="Jenis Tagihan" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
+                  <td data-label="Nominal" style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
+                  <td data-label="Metode & Waktu" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-2)' }}>
                     <div>{item.metode}</div>
                     <div style={{ color: 'var(--text-3)', fontSize: '12px' }}>{item.waktu}</div>
                   </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                  <td data-label="Status" style={{ padding: '14px 16px', textAlign: 'center' }}>
                     <span style={{ 
                       backgroundColor: item.status === 'Lunas' ? '#E8F5EE' : '#FDF2F2', 
                       color: item.status === 'Lunas' ? '#1A6B3A' : '#8B1A1A', 
@@ -66,7 +66,7 @@ function RiwayatTransaksiAdmin() {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                  <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
                     <button 
                       onClick={() => setSelectedBukti(item)}
                       style={{ backgroundColor: 'transparent', color: 'var(--red)', border: '1px solid var(--red)', padding: '6px 12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', borderRadius: '4px' }}

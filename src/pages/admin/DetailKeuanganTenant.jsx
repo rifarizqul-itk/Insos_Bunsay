@@ -162,12 +162,12 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                 {tenant.riwayat && tenant.riwayat.length > 0 ? (
                   tenant.riwayat.map((row, idx) => (
                     <tr key={row.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                      <td style={{ padding: '12px 14px', fontWeight: '600' }}>{row.id}</td>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tanggal}</td>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tipe}</td>
-                      <td style={{ padding: '12px 14px', fontWeight: '600' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
-                      <td style={{ padding: '12px 14px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
-                      <td style={{ padding: '12px 14px' }}>
+                      <td data-label="ID" style={{ padding: '12px 14px', fontWeight: '600' }}>{row.id}</td>
+                      <td data-label="Tanggal" style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tanggal}</td>
+                      <td data-label="Jenis" style={{ padding: '12px 14px', color: 'var(--text-2)' }}>{row.tipe}</td>
+                      <td data-label="Nominal" style={{ padding: '12px 14px', fontWeight: '600' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
+                      <td data-label="Metode" style={{ padding: '12px 14px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
+                      <td data-label="Status" style={{ padding: '12px 14px' }}>
                         <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>
                           {row.status}
                         </span>

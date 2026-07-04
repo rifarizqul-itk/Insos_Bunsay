@@ -109,12 +109,12 @@ function DetailTenantAdmin({ tenantName, onBack }) {
                   ) : (
                     tenantData.riwayat.map((row, idx) => (
                       <tr key={row.id} className={`border-b border-border ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray'}`}>
-                        <td className="px-3 py-3 font-semibold text-sm">{row.id}</td>
-                        <td className="px-3 py-3 text-text-2 text-sm">{row.tanggal}</td>
-                        <td className="px-3 py-3 text-text-2 text-sm">{row.tipe}</td>
-                        <td className="px-3 py-3 font-semibold text-sm">{row.nominal}</td>
-                        <td className="px-3 py-3 text-text-3 font-semibold text-sm">{row.metode}</td>
-                        <td className="px-3 py-3"><span className="bg-green-bg text-green px-2 py-0.5 rounded font-bold text-[11px]">{row.status}</span></td>
+                        <td data-label="ID" className="px-3 py-3 font-semibold text-sm">{row.id}</td>
+                        <td data-label="Tanggal" className="px-3 py-3 text-text-2 text-sm">{row.tanggal}</td>
+                        <td data-label="Jenis" className="px-3 py-3 text-text-2 text-sm">{row.tipe}</td>
+                        <td data-label="Nominal" className="px-3 py-3 font-semibold text-sm">{row.nominal}</td>
+                        <td data-label="Metode" className="px-3 py-3 text-text-3 font-semibold text-sm">{row.metode}</td>
+                        <td data-label="Status" className="px-3 py-3"><span className="bg-green-bg text-green px-2 py-0.5 rounded font-bold text-[11px]">{row.status}</span></td>
                       </tr>
                     ))
                   )}

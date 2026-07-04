@@ -136,13 +136,13 @@ function DashboardAdmin() {
                 const badge = getStatusBadge(tenant.statusPembayaran);
                 return (
                   <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                    <td style={{ padding: '14px 16px', fontWeight: '600' }}>{tenant.nama}</td>
-                    <td style={{ padding: '14px 16px', fontWeight: '700' }}>{tenant.kios}</td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
-                    <td style={{ padding: '14px 16px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
+                    <td data-label="Nama Tenant" style={{ padding: '14px 16px', fontWeight: '600' }}>{tenant.nama}</td>
+                    <td data-label="No. Kios" style={{ padding: '14px 16px', fontWeight: '700' }}>{tenant.kios}</td>
+                    <td data-label="Jenis Usaha" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
+                    <td data-label="Tunggakan" style={{ padding: '14px 16px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
                       Rp {tenant.tunggakan.toLocaleString('id-ID')}
                     </td>
-                    <td style={{ padding: '14px 16px' }}>
+                    <td data-label="Status Bulan Ini" style={{ padding: '14px 16px' }}>
                       <span
                         onClick={() => { if (badge.clickable) handleOpenVerifikasi(tenant); }}
                         style={{
@@ -161,7 +161,7 @@ function DashboardAdmin() {
                         {badge.label}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <button onClick={() => handleDetailClick(tenant)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '6px 12px', fontSize: '13px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer' }}>Detail</button>
                     </td>
                   </tr>

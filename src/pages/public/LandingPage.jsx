@@ -34,13 +34,12 @@ function LandingPage() {
       </nav>
 
       {/* Konten Utama */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className="landing-page-shell" style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }} className="page-fade-in">
           {/* Hero Section */}
-          <div className="landing-hero-grid" style={{ 
+          <div className="landing-hero-grid mobile-stack" style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr', 
-            gap: '32px', 
             backgroundColor: '#ffffff', 
             borderRadius: 'var(--radius-lg)', 
             border: '1px solid var(--border)',
@@ -48,7 +47,7 @@ function LandingPage() {
             alignItems: 'center',
             boxShadow: '0 2px 12px rgba(139,26,26,0.08)'
           }}>
-            <div style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ padding: '32px',display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Pelayanan Resmi
               </span>
@@ -90,7 +89,7 @@ function LandingPage() {
           </div>
 
           {/* Grid Informasi */}
-          <div className="landing-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          <div className="landing-info-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             {/* Card Kiri: Jam Operasional */}
             <div style={{ 
               backgroundColor: '#ffffff', 
@@ -108,7 +107,7 @@ function LandingPage() {
               <p style={{ color: 'var(--text-2)', fontSize: '16px', fontWeight: '600', lineHeight: '1.5' }}>
                 Plaza Kebun Sayur terbuka melayani aktivitas perdagangan pada waktu berikut:
               </p>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginTop: '20px', marginBottom: '6px' }}>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginBottom: '6px' }}>
                 09.00 - 21.00 WITA
               </div>
               <span style={{ fontSize: '15px', color: 'var(--text)', fontWeight: '800' }}>
@@ -125,7 +124,7 @@ function LandingPage() {
               boxShadow: '0 2px 12px rgba(139,26,26,0.08)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '24px'
+              gap: '16px'
             }}>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text)', margin: 0 }}>
                 Informasi Kontak Kantor Pengelola

@@ -32,13 +32,13 @@ function HistoriPembayaran() {
       <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ backgroundColor: 'var(--warm-gray)', borderBottom: '3px solid var(--border)' }}>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>ID</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>Tanggal</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>Jenis</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>Nominal</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>Metode</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: 'var(--text-2)', fontWeight: '800' }}>Status</th>
+            <tr style={{ backgroundColor: 'var(--red)', borderBottom: '3px solid var(--border)' }}>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>ID</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Tanggal</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Jenis</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Nominal</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Metode</th>
+              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -50,13 +50,13 @@ function HistoriPembayaran() {
               </tr>
             ) : (
               transaksiDifilter.map((item, index) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                  <td style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.id}</td>
-                  <td style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.waktu?.split(',')[0] || item.tanggal || '—'}</td>
-                  <td style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.tagihan}</td>
-                  <td style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.nominal}</td>
-                  <td style={{ padding: '18px 16px', color: 'var(--text-2)', fontWeight: '700' }}>{item.metode}</td>
-                  <td style={{ padding: '18px 16px' }}>
+                <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
+                  <td data-label="ID" style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.id}</td>
+                  <td data-label="Tanggal" style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.waktu?.split(',')[0] || item.tanggal || '—'}</td>
+                  <td data-label="Jenis" style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.tagihan}</td>
+                  <td data-label="Nominal" style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.nominal}</td>
+                  <td data-label="Metode" style={{ padding: '18px 16px', color: 'var(--text-2)', fontWeight: '700' }}>{item.metode}</td>
+                  <td data-label="Status" style={{ padding: '18px 16px' }}>
                     <span style={{
                       backgroundColor: item.status === 'Lunas' ? 'var(--green-bg)' : item.status === 'Pending' ? 'var(--orange-bg)' : 'var(--red-100)',
                       color: item.status === 'Lunas' ? 'var(--green)' : item.status === 'Pending' ? 'var(--orange)' : 'var(--red)',

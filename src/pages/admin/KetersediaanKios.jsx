@@ -123,9 +123,9 @@ function KetersediaanKios({ isAdmin = false }) {
             ) : (
               filteredKios.map((kios, index) => (
                 <tr key={kios.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                  <td style={{ padding: '14px 16px', fontWeight: '600' }}>{kios.lantai}</td>
-                  <td style={{ padding: '14px 16px', fontWeight: '800', color: 'var(--text)' }}>{kios.nomorKios}</td>
-                  <td style={{ padding: '14px 16px' }}>
+                  <td data-label="Lantai" style={{ padding: '14px 16px', fontWeight: '600' }}>{kios.lantai}</td>
+                  <td data-label="No. Kios" style={{ padding: '14px 16px', fontWeight: '800', color: 'var(--text)' }}>{kios.nomorKios}</td>
+                  <td data-label="Status" style={{ padding: '14px 16px' }}>
                     <span style={{ 
                       backgroundColor: kios.statusKios === 'Terisi' ? 'var(--green-bg)' : kios.statusKios === 'Kosong' ? 'var(--red-100)' : 'var(--orange-bg)', 
                       color: kios.statusKios === 'Terisi' ? 'var(--green)' : kios.statusKios === 'Kosong' ? 'var(--red)' : 'var(--orange)', 
@@ -134,11 +134,11 @@ function KetersediaanKios({ isAdmin = false }) {
                       {kios.statusKios}
                     </span>
                   </td>
-                  {isAdmin && <td style={{ padding: '14px 16px', fontWeight: '600' }}>{kios.tenant}</td>}
-                  <td style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{kios.usaha}</td>
-                  {isAdmin && <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-2)' }}>{kios.catatan}</td>}
+                  {isAdmin && <td data-label="Nama Pemilik" style={{ padding: '14px 16px', fontWeight: '600' }}>{kios.tenant}</td>}
+                  <td data-label="Jenis Usaha" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{kios.usaha}</td>
+                  {isAdmin && <td data-label="Catatan" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-2)' }}>{kios.catatan}</td>}
                   {isAdmin && (
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <button onClick={() => handleDetailClick(kios)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '6px 12px', fontSize: '13px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer' }}>Detail</button>
                     </td>
                   )}
