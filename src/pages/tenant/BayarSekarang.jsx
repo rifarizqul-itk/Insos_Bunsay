@@ -145,7 +145,7 @@ function BayarSekarang() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Metode Pembayaran</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button type="button" onClick={() => { setMetode('transfer_manual'); setBerkasDipilih(false); }} style={{ width: '100%', height: '48px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setMetode('transfer_manual')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer' }}>
                 Transfer Bank (Manual) + Unggah Bukti
               </button>
               <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'midtrans_gateway' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'midtrans_gateway' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer' }}>
@@ -162,6 +162,7 @@ function BayarSekarang() {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
+                className="file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-warm-gray file:text-text file:text-sm file:font-semibold hover:file:bg-[#EBE3DB] file:cursor-pointer cursor-pointer text-text-2 text-sm"
                 style={{ padding: '8px 0', border: 'none', background: 'transparent' }}
                 required
               />

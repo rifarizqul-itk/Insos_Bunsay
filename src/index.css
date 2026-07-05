@@ -1,8 +1,67 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  /* Red Palette */
+  --color-red: #8B1A1A;
+  --color-red-dark: #6B1414;
+  --color-red-50: #FDF2F2;
+  --color-red-100: #FADADD;
+
+  /* Custom Solid Colors */
+  --color-cream: #FBF7F2;
+  --color-warm-gray: #F5F0EB;
+  --color-border: #E8E0D8;
+
+  /* Text Colors */
+  --color-text: #1A1410;
+  --color-text-2: #5C4F46;
+  --color-text-3: #9E8E82;
+
+  /* Green Palette */
+  --color-green: #1A6B3A;
+  --color-green-bg: #E8F5EE;
+
+  /* Orange Palette */
+  --color-orange: #C05C00;
+  --color-orange-bg: #FEF3E6;
+
+  /* Font Family */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+  /* Font Sizes dengan Suffix modifiers (didukung penuh di v4.0.0+) */
+  --text-3\.5xl: 32px;
+  --text-3\.5xl--line-height: 1.2;
+  --text-3\.5xl--font-weight: 800;
+
+  --text-2\.5xl: 26px;
+  --text-2\.5xl--line-height: 1.3;
+  --text-2\.5xl--font-weight: 800;
+
+  --text-4\.5xl: 42px;
+  --text-4\.5xl--line-height: 1.1;
+  --text-4\.5xl--font-weight: 725;
+
+  --text-sm: 15px;
+  --text-sm--line-height: 1.6;
+
+  --text-base: 15px;
+  --text-base--line-height: 1.6;
+
+  --text-xs: 13px;
+  --text-xs--line-height: 1.5;
+
+  /* Spacing Scale (4.5 -> 18px) */
+  --spacing-4\.5: 1.125rem;
+
+  /* Border Radius */
+  --radius-md: 10px;
+  --radius-lg: 18px;
+
+  /* Box Shadows */
+  --shadow-card: 0 2px 12px rgba(139, 26, 26, 0.08);
+}
+
+@import "tailwindcss";
 
 @layer base {
   :root {

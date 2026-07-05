@@ -120,6 +120,7 @@ function SetoranTunai() {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
+              className="file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-warm-gray file:text-text file:text-sm file:font-semibold hover:file:bg-[#EBE3DB] file:cursor-pointer cursor-pointer text-text-2 text-sm"
               style={{ padding: '8px 0', border: 'none', background: 'transparent' }}
               required
             />
