@@ -50,15 +50,15 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <div style={{ flex: '2', minWidth: '400px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        <div className="w-full md:flex-[2]" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
-                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Tenant & Kios</th>
-                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Jenis Tagihan</th>
-                <th style={{ padding: '14px 16px', fontSize: '14px' }}>Nominal</th>
-                <th style={{ padding: '14px 16px', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
+                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Tenant & Kios</th>
+                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Jenis Tagihan</th>
+                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Nominal</th>
+                <th style={{ padding: '8px 12px', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -73,16 +73,16 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               ) : (
                 filteredAntrean.map((item, index) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                    <td data-label="Tenant & Kios" style={{ padding: '14px 16px' }}>
+                    <td data-label="Tenant & Kios" style={{ padding: '8px 12px' }}>
                       <div style={{ fontWeight: '600' }}>{item.nama}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700' }}>Kios {item.kios}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700', fontFamily: 'monospace' }}>Kios {item.kios}</div>
                     </td>
-                    <td data-label="Jenis Tagihan" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                    <td data-label="Nominal" style={{ padding: '14px 16px', fontWeight: '600' }}>{item.nominal}</td>
-                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
+                    <td data-label="Nominal" style={{ padding: '8px 12px', fontWeight: '600', fontFamily: 'monospace' }}>{item.nominal}</td>
+                    <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
                       <button 
                         onClick={() => setPreviewItem(item)}
-                        style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '6px 12px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                        style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 14px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', height: '44px', minHeight: '44px' }}
                       >
                         Periksa Bukti
                       </button>
@@ -94,18 +94,18 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           </table>
         </div>
 
-        <div style={{ flex: '1', minWidth: '300px' }}>
+        <div className="w-full md:flex-1">
           {previewItem ? (
             <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="page-fade-in">
               <h3 style={{ fontSize: '16px', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-                Detail Transaksi {previewItem.id}
+                Detail Transaksi <span style={{ fontFamily: 'monospace' }}>{previewItem.id}</span>
               </h3>
               <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} ({previewItem.kios})</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} (<span style={{ fontFamily: 'monospace' }}>{previewItem.kios}</span>)</strong></div>
                 <div><span style={{ color: 'var(--text-3)' }}>Tagihan:</span> <strong>{previewItem.tagihan}</strong></div>
-                <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong>{previewItem.nominal}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong style={{ fontFamily: 'monospace' }}>{previewItem.nominal}</strong></div>
                 <div><span style={{ color: 'var(--text-3)' }}>Metode:</span> <strong>{previewItem.metode}</strong></div>
-                <div><span style={{ color: 'var(--text-3)' }}>Waktu Kirim:</span> <strong>{previewItem.waktu}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Waktu Kirim:</span> <strong style={{ fontFamily: 'monospace' }}>{previewItem.waktu}</strong></div>
               </div>
 
               <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
@@ -117,13 +117,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button 
                   onClick={() => handleAksi(previewItem.id, 'konfirmasi')}
-                  style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '10px', fontSize: '14px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                  style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '10px', fontSize: '14px', fontWeight: '700', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px' }}
                 >
                   Konfirmasi Lunas
                 </button>
                 <button 
                   onClick={() => handleAksi(previewItem.id, 'tolak')}
-                  style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '10px', fontSize: '14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                  style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '10px', fontSize: '14px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px' }}
                 >
                   Tolak Bukti
                 </button>

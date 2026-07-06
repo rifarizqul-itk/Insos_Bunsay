@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useTransactions } from '../../context/TransactionContext';
 import { createPayment } from '../../api/tenant';
+import { Icon } from '@iconify/react';
 
 const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 
@@ -128,10 +129,22 @@ function BayarSekarang() {
       </div>
 
       <div className="bayar-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '28px', alignItems: 'flex-start' }}>
-        <form onSubmit={handleProsesPembayaran} style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
+        <form 
+          onSubmit={handleProsesPembayaran} 
+          className="p-5 sm:p-6 md:p-7"
+          style={{ 
+            backgroundColor: '#ffffff', 
+            borderRadius: 'var(--radius-lg)', 
+            border: '1px solid var(--border)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '20px', 
+            boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
+          }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Jenis Tagihan</label>
-            <select value={jenisTagihan} onChange={(e) => setJenisTagihan(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }}>
+            <select value={jenisTagihan} onChange={(e) => setJenisTagihan(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 12px', fontSize: '16px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }}>
               <option value="Service Charge">Service Charge Plaza</option>
               <option value="Cicilan Tunggakan (Piutang)">Cicilan Tunggakan (Piutang) Historis</option>
             </select>
@@ -139,7 +152,7 @@ function BayarSekarang() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Nominal (Rp)</label>
-            <input type="number" placeholder="Contoh: 350000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '15px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }} required />
+            <input type="number" placeholder="Contoh: 350000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }} required />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -179,16 +192,55 @@ function BayarSekarang() {
           </button>
         </form>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
+        <div 
+          className="p-5 sm:p-6 md:p-7"
+          style={{ 
+            backgroundColor: '#ffffff', 
+            borderRadius: 'var(--radius-lg)', 
+            border: '1px solid var(--border)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '20px', 
+            boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
+          }}
+        >
           <h3 style={{ fontSize: '18px', fontWeight: '800', borderBottom: '1px solid var(--border)', paddingBottom: '10px', color: 'var(--text)' }}>Panduan Pembayaran</h3>
           {metode === 'transfer_manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '15px', color: 'var(--text)' }}>
               <p style={{ fontWeight: '600', color: 'var(--text-2)' }}>Kirimkan dana transfer Anda ke rekening resmi pengelola:</p>
-              <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                <div style={{ color: 'var(--text-2)', fontSize: '12px', fontWeight: '800' }}>BANK TUJUAN:</div>
-                <div style={{ fontWeight: '800', fontSize: '16px', margin: '2px 0 10px 0', color: 'var(--text)' }}>Bank Negara Indonesia (BNI)</div>
-                <div style={{ color: 'var(--text-2)', fontSize: '12px', fontWeight: '800' }}>NOMOR REKENING RESMI:</div>
-                <div style={{ fontWeight: '800', fontSize: '18px', color: 'var(--red)', letterSpacing: '0.5px' }}>0811-5901-119</div>
+              <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <div style={{ color: 'var(--text-2)', fontSize: '12px', fontWeight: '800' }}>BANK TUJUAN:</div>
+                  <div style={{ fontWeight: '800', fontSize: '16px', marginTop: '2px', color: 'var(--text)' }}>Bank Negara Indonesia (BNI)</div>
+                </div>
+                <div>
+                  <div style={{ color: 'var(--text-2)', fontSize: '12px', fontWeight: '800' }}>NOMOR REKENING RESMI:</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', backgroundColor: '#ffffff', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', gap: '8px' }}>
+                    <span style={{ fontWeight: '800', fontSize: '18px', color: 'var(--red)', letterSpacing: '0.5px', fontFamily: 'monospace' }}>0811-5901-119</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText('08115901119');
+                        addToast('Nomor rekening berhasil disalin!', 'success');
+                      }}
+                      className="bg-red hover:bg-red-dark text-white rounded font-bold transition-transform active:scale-95"
+                      style={{
+                        height: '40px',
+                        minHeight: '40px',
+                        padding: '0 14px',
+                        fontSize: '13px',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Icon icon="ic:baseline-content-copy" width="14" height="14" />
+                      <span>Salin</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

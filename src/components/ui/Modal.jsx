@@ -67,7 +67,7 @@ function Modal({
             </h3>
             <button
               onClick={onClose}
-              className="text-text-3 hover:text-text transition-colors p-1"
+              className="text-text-3 hover:text-text transition-colors flex items-center justify-center h-11 w-11 rounded-md -mr-2"
               aria-label="Tutup modal"
             >
               ✕

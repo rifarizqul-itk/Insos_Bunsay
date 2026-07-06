@@ -7,49 +7,26 @@ const Toast = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '24px',
-      right: '24px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      zIndex: 9999,
-      maxWidth: '400px',
-      width: '100%'
-    }}>
+    <div 
+      className="fixed z-[9999] flex flex-col gap-2 w-[calc(100%-32px)] md:w-auto md:max-w-[400px] left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px)+12px)] md:bottom-6"
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          style={{
-            backgroundColor: '#ffffff',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '16px 20px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            animation: 'fadeIn 0.2s ease'
-          }}
+          className="bg-white border border-border rounded-lg p-3.5 px-4.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex justify-between items-center animate-fadeIn"
+          style={{ animation: 'fadeIn 0.2s ease' }}
         >
-          <span style={{
-            fontSize: '14px',
-            fontWeight: '600',
-            color: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--text)'
-          }}>
+          <span 
+            className="text-sm font-semibold break-words flex-1 pr-2"
+            style={{
+              color: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--text)'
+            }}
+          >
             {toast.message}
           </span>
           <button
             onClick={() => removeToast(toast.id)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '18px',
-              cursor: 'pointer',
-              color: 'var(--text-3)',
-              padding: '0 4px'
-            }}
+            className="bg-transparent border-none text-lg cursor-pointer text-text-3 px-1 active:scale-90 transition-transform flex items-center justify-center h-6 w-6"
           >
             ✕
           </button>

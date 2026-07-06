@@ -51,15 +51,9 @@ function Sidebar({ isOpen, onClose, onLogout }) {
         </div>
         <button
           onClick={onClose}
-          className="sidebar-close-btn"
+          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform"
           style={{
-            display: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-2)',
-            fontSize: '22px',
-            padding: '4px',
-            minHeight: 'auto',
-            cursor: 'pointer'
+            minHeight: 'auto'
           }}
         >
           ✕

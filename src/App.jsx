@@ -31,12 +31,18 @@ import SidebarAdmin from './components/layouts/SidebarAdmin';
 import Topbar from './components/layouts/Topbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Toast from './components/Toast';
+import BottomNav from './components/layouts/BottomNav';
 
 function AppContent() {
   const { isLoggedIn, role, logout, user } = useAuth();
 
   // Sidebar default tertutup di mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Reset sidebar state saat status login berubah (mencegah kebocoran state)
+  React.useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [isLoggedIn]);
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -91,7 +97,7 @@ function AppContent() {
           variant={variant}
         />
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 main-content-wrapper">
           <div className="max-w-7xl mx-auto">
             <Routes>
               {/* Tenant */}
@@ -122,6 +128,7 @@ function AppContent() {
       </div>
 
       <Toast />
+      <BottomNav role={role} />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { useUI } from '../../context/UIContext';
 import { useApi } from '../../hooks/useApi';
 import { getAdminTenants } from '../../api/admin';
 import DetailKeuanganTenant from './DetailKeuanganTenant';
+import Modal from '../../components/ui/Modal';
 
 function DashboardAdmin() {
   const navigate = useNavigate();
@@ -102,7 +103,7 @@ function DashboardAdmin() {
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
           <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Dana Terkumpul (Bulan Ini)</span>
-          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '10px', color: 'var(--green)' }}>Rp 142.500.000</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '10px', color: 'var(--green)', fontFamily: 'monospace' }}>Rp 142.500.000</div>
         </div>
       </div>
 
@@ -120,12 +121,12 @@ function DashboardAdmin() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px' }}>Nama Tenant</th>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px' }}>No. Kios</th>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px' }}>Jenis Usaha</th>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px' }}>Tunggakan</th>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px' }}>Status Bulan Ini</th>
-              <th style={{ padding: '14px 16px', fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Nama Tenant</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>No. Kios</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Jenis Usaha</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Tunggakan</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Status Bulan Ini</th>
+              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -136,13 +137,13 @@ function DashboardAdmin() {
                 const badge = getStatusBadge(tenant.statusPembayaran);
                 return (
                   <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                    <td data-label="Nama Tenant" style={{ padding: '14px 16px', fontWeight: '600' }}>{tenant.nama}</td>
-                    <td data-label="No. Kios" style={{ padding: '14px 16px', fontWeight: '700' }}>{tenant.kios}</td>
-                    <td data-label="Jenis Usaha" style={{ padding: '14px 16px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
-                    <td data-label="Tunggakan" style={{ padding: '14px 16px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
+                    <td data-label="Nama Tenant" style={{ padding: '8px 12px', fontWeight: '600' }}>{tenant.nama}</td>
+                    <td data-label="No. Kios" style={{ padding: '8px 12px', fontWeight: '700', fontFamily: 'monospace' }}>{tenant.kios}</td>
+                    <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
+                    <td data-label="Tunggakan" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)', fontFamily: 'monospace' }}>
                       Rp {tenant.tunggakan.toLocaleString('id-ID')}
                     </td>
-                    <td data-label="Status Bulan Ini" style={{ padding: '14px 16px' }}>
+                    <td data-label="Status Bulan Ini" style={{ padding: '8px 12px' }}>
                       <span
                         onClick={() => { if (badge.clickable) handleOpenVerifikasi(tenant); }}
                         style={{
@@ -161,8 +162,26 @@ function DashboardAdmin() {
                         {badge.label}
                       </span>
                     </td>
-                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
-                      <button onClick={() => handleDetailClick(tenant)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '6px 12px', fontSize: '13px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer' }}>Detail</button>
+                    <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <button 
+                        onClick={() => handleDetailClick(tenant)} 
+                        style={{ 
+                          backgroundColor: 'var(--warm-gray)', 
+                          color: 'var(--text)', 
+                          padding: '10px 16px', 
+                          minHeight: '44px',
+                          fontSize: '13px', 
+                          fontWeight: '600', 
+                          border: '1px solid var(--border)', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        Detail
+                      </button>
                     </td>
                   </tr>
                 );
@@ -172,13 +191,56 @@ function DashboardAdmin() {
         </table>
       </div>
 
-      {showVerifikasiModal && verifikasiTarget && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}>
-          <div className="page-fade-in" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>Verifikasi Bukti Transfer</h3>
-              <button onClick={() => { setShowVerifikasiModal(false); setVerifikasiTarget(null); }} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--text-3)', padding: '4px' }}>✕</button>
-            </div>
+      <Modal
+        isOpen={showVerifikasiModal}
+        onClose={() => { setShowVerifikasiModal(false); setVerifikasiTarget(null); }}
+        title="Verifikasi Bukti Transfer"
+        size="md"
+        footer={
+          <>
+            <button 
+              onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')} 
+              style={{ 
+                backgroundColor: 'var(--warm-gray)', 
+                color: 'var(--red)', 
+                padding: '0 24px', 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                border: '1px solid var(--border)', 
+                borderRadius: 'var(--radius-md)', 
+                cursor: 'pointer',
+                height: '44px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              Tolak Bukti
+            </button>
+            <button 
+              onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')} 
+              style={{ 
+                backgroundColor: 'var(--green)', 
+                color: '#ffffff', 
+                padding: '0 24px', 
+                fontSize: '14px', 
+                fontWeight: '700', 
+                border: 'none', 
+                borderRadius: 'var(--radius-md)', 
+                cursor: 'pointer',
+                height: '44px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              Konfirmasi Lunas
+            </button>
+          </>
+        }
+      >
+        {verifikasiTarget && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div><span style={{ color: 'var(--text-2)' }}>Tenant:</span> <strong>{verifikasiTarget.tenant.nama} ({verifikasiTarget.tenant.kios})</strong></div>
               <div><span style={{ color: 'var(--text-2)' }}>Tagihan:</span> <strong>{verifikasiTarget.antrean.tagihan}</strong></div>
@@ -186,16 +248,12 @@ function DashboardAdmin() {
               <div><span style={{ color: 'var(--text-2)' }}>Metode:</span> <strong>{verifikasiTarget.antrean.metode}</strong></div>
               <div><span style={{ color: 'var(--text-2)' }}>Waktu:</span> <strong>{verifikasiTarget.antrean.waktu}</strong></div>
             </div>
-            <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px', margin: '16px 0' }}>
+            <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
               <span style={{ fontSize: '13px', color: 'var(--text-3)', fontStyle: 'italic' }}>[Simulasi Lampiran Bukti_Transfer_{verifikasiTarget.antrean.id}.jpg]</span>
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')} style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '12px', fontSize: '14px', fontWeight: '700', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Konfirmasi Lunas</button>
-              <button onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')} style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '12px', fontSize: '14px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Tolak Bukti</button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

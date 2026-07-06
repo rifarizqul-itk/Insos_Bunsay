@@ -31,11 +31,15 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         borderBottom: '1px solid #D6C8BC',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        minHeight: '64px',
+        height: 'auto',
+        paddingTop: '8px',
+        paddingBottom: '8px'
       }}
     >
       {/* Sisi Kiri: Tombol Hamburger (Khusus Mobile) + Sapaan Identitas */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '0', flex: '1', marginRight: '12px' }}>
         <button
           onClick={onToggleSidebar}
           className={hamburgerClass}
@@ -47,16 +51,21 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
             cursor: 'pointer',
             alignItems: 'center',
             justifyContent: 'center',
-            height: '42px',
+            height: '44px',
             fontSize: '20px',
-            color: 'var(--text)'
+            color: 'var(--text)',
+            flexShrink: 0
           }}
         >
           ☰
         </button>
         
-        <div style={{ fontSize: '15px', fontWeight: '700', color: '#4A3F35' }}>
-          Sesi Aktif: <span style={{ color: '#8B1A1A' }}>{userTitle}</span>
+        <div 
+          style={{ fontSize: '15px', fontWeight: '700', color: '#4A3F35', lineHeight: '1.25' }}
+          className="min-w-0 break-words"
+        >
+          <span className="hidden sm:inline">Sesi Aktif: </span>
+          <span style={{ color: '#8B1A1A' }}>{userTitle}</span>
         </div>
       </div>
 
@@ -102,8 +111,9 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
             style={{
               position: 'absolute',
               top: '56px',
-              right: 0,
-              width: '360px',
+              right: '-8px',
+              width: 'calc(100vw - 32px)',
+              maxWidth: '360px',
               backgroundColor: '#ffffff',
               border: '1px solid #D6C8BC',
               borderRadius: '12px',

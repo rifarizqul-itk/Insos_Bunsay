@@ -57,7 +57,7 @@ function DetailTenantAdmin({ tenantName, onBack }) {
     <div className="page-fade-in flex flex-col gap-8">
       <div>
         <Button variant="secondary" size="sm" onClick={onBack} className="mb-4">← Kembali ke Panel Kendali Admin</Button>
-        <h2 className="text-2.5xl font-extrabold text-text tracking-tight">Profil Lengkap Tenant: {tenantName}</h2>
+        <h2 className="text-2.5xl font-extrabold text-text tracking-tight">Profil Lengkap Tenant: {tenantName} (<span className="font-mono">Kios {tenantData.kios}</span>)</h2>
         <p className="text-sm text-text-2 mt-1">Informasi kepemilikan, status keuangan, dan riwayat transaksi.</p>
       </div>
 
@@ -83,7 +83,7 @@ function DetailTenantAdmin({ tenantName, onBack }) {
           <h3 className="text-lg font-bold text-text border-b border-border pb-3 mb-5">Status Rekapitulasi Keuangan Berjalan & Tunggakan AR</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
             <div className="bg-warm-gray p-4 rounded-md"><span className="text-text-3 text-xs font-bold uppercase tracking-wide">Status Service Charge</span><div className="mt-1.5"><span className={`inline-block px-3 py-1 rounded font-bold text-xs ${statusBadgeClasses[tenantData.statusTagihan] || 'bg-warm-gray text-text-2'}`}>{tenantData.statusTagihan}</span></div></div>
-            <div className="bg-warm-gray p-4 rounded-md"><span className="text-text-3 text-xs font-bold uppercase tracking-wide">Tunggakan AR</span><div className={`text-base font-extrabold mt-1.5 ${tenantData.tunggakan !== 'Rp 0' ? 'text-orange' : 'text-text'}`}>{tenantData.tunggakan}</div></div>
+            <div className="bg-warm-gray p-4 rounded-md"><span className="text-text-3 text-xs font-bold uppercase tracking-wide">Tunggakan AR</span><div className={`text-base font-extrabold mt-1.5 font-mono ${tenantData.tunggakan !== 'Rp 0' ? 'text-orange' : 'text-text'}`}>{tenantData.tunggakan}</div></div>
           </div>
           <div><span className="text-text-3 text-xs font-semibold">Rincian Tunggakan:</span><div className="font-semibold text-sm mt-0.5 text-text-2">{tenantData.rincianTunggakan}</div></div>
         </Card>
@@ -95,12 +95,12 @@ function DetailTenantAdmin({ tenantName, onBack }) {
               <table>
                 <thead>
                   <tr className="bg-warm-gray border-b-2 border-border">
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">ID</th>
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">Tanggal</th>
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">Jenis</th>
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">Nominal</th>
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">Metode</th>
-                    <th className="px-3 py-3 text-left text-xs font-bold text-text-2">Status</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">ID</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Tanggal</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Jenis</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Nominal</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Metode</th>
+                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -109,12 +109,12 @@ function DetailTenantAdmin({ tenantName, onBack }) {
                   ) : (
                     tenantData.riwayat.map((row, idx) => (
                       <tr key={row.id} className={`border-b border-border ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray'}`}>
-                        <td data-label="ID" className="px-3 py-3 font-semibold text-sm">{row.id}</td>
-                        <td data-label="Tanggal" className="px-3 py-3 text-text-2 text-sm">{row.tanggal}</td>
-                        <td data-label="Jenis" className="px-3 py-3 text-text-2 text-sm">{row.tipe}</td>
-                        <td data-label="Nominal" className="px-3 py-3 font-semibold text-sm">{row.nominal}</td>
-                        <td data-label="Metode" className="px-3 py-3 text-text-3 font-semibold text-sm">{row.metode}</td>
-                        <td data-label="Status" className="px-3 py-3"><span className="bg-green-bg text-green px-2 py-0.5 rounded font-bold text-[11px]">{row.status}</span></td>
+                        <td data-label="ID" className="px-3 py-2 font-semibold text-sm font-mono">{row.id}</td>
+                        <td data-label="Tanggal" className="px-3 py-2 text-text-2 text-sm">{row.tanggal}</td>
+                        <td data-label="Jenis" className="px-3 py-2 text-text-2 text-sm">{row.tipe}</td>
+                        <td data-label="Nominal" className="px-3 py-2 font-semibold text-sm font-mono">{row.nominal}</td>
+                        <td data-label="Metode" className="px-3 py-2 text-text-3 font-semibold text-sm">{row.metode}</td>
+                        <td data-label="Status" className="px-3 py-2"><span className="bg-green-bg text-green px-2 py-0.5 rounded font-bold text-[11px]">{row.status}</span></td>
                       </tr>
                     ))
                   )}

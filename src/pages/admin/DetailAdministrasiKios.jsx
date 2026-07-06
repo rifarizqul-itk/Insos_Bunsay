@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useApi } from '../../hooks/useApi';
 import { getAdminKiosDetail, updateKios } from '../../api/admin';
+import Modal from '../../components/ui/Modal';
 
 function DetailAdministrasiKios() {
   const location = useLocation();
@@ -83,10 +84,10 @@ function DetailAdministrasiKios() {
         <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: 'var(--text)' }}>Dokumen Kepemilikan</h3>
-            <button onClick={() => setShowEditModal(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 16px', fontSize: '13px', fontWeight: '600', height: '36px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Edit Data</button>
+            <button onClick={() => setShowEditModal(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 16px', fontSize: '13px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Edit Data</button>
           </div>
           {kios.detailAdministrasi ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 24px', fontSize: '15px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px 24px', fontSize: '15px' }}>
               <div><span style={{ color: 'var(--text-3)' }}>Nama Pemilik:</span> <div style={{ fontWeight: '600', marginTop: '2px' }}>{kios.tenant}</div></div>
               <div><span style={{ color: 'var(--text-3)' }}>Nomor KTP:</span> <div style={{ fontWeight: '600', marginTop: '2px' }}>{kios.detailAdministrasi.ktp}</div></div>
               <div><span style={{ color: 'var(--text-3)' }}>Alamat:</span> <div style={{ fontWeight: '600', marginTop: '2px' }}>{kios.detailAdministrasi.alamat}</div></div>
@@ -126,44 +127,122 @@ function DetailAdministrasiKios() {
         </div>
       </div>
 
-      {showEditModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}>
-          <div className="page-fade-in" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', padding: '28px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>Edit Data Kios: {kios.nomorKios}</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--text-3)', padding: '4px' }}>✕</button>
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={`Edit Data Kios: ${kios.nomorKios}`}
+        size="md"
+        footer={
+          <>
+            <button 
+              type="button" 
+              onClick={() => setShowEditModal(false)} 
+              style={{ 
+                flex: 1, 
+                backgroundColor: 'var(--warm-gray)', 
+                color: 'var(--text)', 
+                padding: '12px', 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                border: '1px solid var(--border)', 
+                borderRadius: 'var(--radius-md)', 
+                cursor: 'pointer',
+                height: '44px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              Batal
+            </button>
+            <button 
+              type="button" 
+              onClick={handleSaveEdit} 
+              disabled={isSubmitting} 
+              style={{ 
+                flex: 1, 
+                backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)', 
+                color: '#ffffff', 
+                padding: '12px', 
+                fontSize: '14px', 
+                fontWeight: '700', 
+                border: 'none', 
+                borderRadius: 'var(--radius-md)', 
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                height: '44px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            </button>
+          </>
+        }
+      >
+        <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px' }}>
+            <div>
+              <label htmlFor="edit-kios-tenant" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Nama Pemilik</label>
+              <input id="edit-kios-tenant" type="text" name="tenant" value={editData.tenant || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
             </div>
-            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Nama Pemilik</label><input type="text" name="tenant" value={editData.tenant || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor KTP</label><input type="text" name="ktp" value={editData.ktp || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              </div>
-              <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat</label><input type="text" name="alamat" value={editData.alamat || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Kontak</label><input type="text" name="kontak" value={editData.kontak || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Usaha</label><input type="text" name="usaha" value={editData.usaha || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>No. SP / Tgl</label><input type="text" name="sp" value={editData.sp || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>No. PPJB / Tgl</label><input type="text" name="ppjb" value={editData.ppjb || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Tgl BAST</label><input type="text" name="bast" value={editData.bast || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-                <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Ukuran</label><input type="text" name="ukuran" value={editData.ukuran || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              </div>
-              <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Sertifikat</label><input type="text" name="sertifikat" value={editData.sertifikat || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} /></div>
-              <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Keterangan</label><textarea name="keterangan" value={editData.keterangan || ''} onChange={handleEditChange} rows="2" style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '14px', resize: 'none', width: '100%' }} /></div>
-              <div><label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-2)' }}>Status Kios</label><select name="statusKios" value={editData.statusKios || 'Terisi'} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }}><option value="Terisi">Terisi</option><option value="Kosong">Kosong</option><option value="Perlu Validasi">Perlu Validasi</option></select></div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowEditModal(false)} style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '12px', fontSize: '14px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Batal</button>
-                <button type="submit" disabled={isSubmitting} style={{ flex: 1, backgroundColor: isSubmitting ? 'var(--text-3)' : 'var(--red)', color: '#ffffff', padding: '12px', fontSize: '14px', fontWeight: '700', border: 'none', borderRadius: 'var(--radius-md)', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
-                  {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-                </button>
-              </div>
-            </form>
+            <div>
+              <label htmlFor="edit-kios-ktp" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Nomor KTP</label>
+              <input id="edit-kios-ktp" type="text" name="ktp" value={editData.ktp || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
           </div>
-        </div>
-      )}
+          <div>
+            <label htmlFor="edit-kios-alamat" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Alamat</label>
+            <input id="edit-kios-alamat" type="text" name="alamat" value={editData.alamat || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px' }}>
+            <div>
+              <label htmlFor="edit-kios-kontak" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Kontak</label>
+              <input id="edit-kios-kontak" type="text" name="kontak" value={editData.kontak || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+            <div>
+              <label htmlFor="edit-kios-usaha" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Jenis Usaha</label>
+              <input id="edit-kios-usaha" type="text" name="usaha" value={editData.usaha || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px' }}>
+            <div>
+              <label htmlFor="edit-kios-sp" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>No. SP / Tgl</label>
+              <input id="edit-kios-sp" type="text" name="sp" value={editData.sp || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+            <div>
+              <label htmlFor="edit-kios-ppjb" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>No. PPJB / Tgl</label>
+              <input id="edit-kios-ppjb" type="text" name="ppjb" value={editData.ppjb || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px' }}>
+            <div>
+              <label htmlFor="edit-kios-bast" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Tgl BAST</label>
+              <input id="edit-kios-bast" type="text" name="bast" value={editData.bast || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+            <div>
+              <label htmlFor="edit-kios-ukuran" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Ukuran</label>
+              <input id="edit-kios-ukuran" type="text" name="ukuran" value={editData.ukuran || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="edit-kios-sertifikat" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Sertifikat</label>
+            <input id="edit-kios-sertifikat" type="text" name="sertifikat" value={editData.sertifikat || ''} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }} />
+          </div>
+          <div>
+            <label htmlFor="edit-kios-keterangan" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Keterangan</label>
+            <textarea id="edit-kios-keterangan" name="keterangan" value={editData.keterangan || ''} onChange={handleEditChange} rows="2" style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '14px', resize: 'none', width: '100%' }} />
+          </div>
+          <div>
+            <label htmlFor="edit-kios-status" style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-2)', marginBottom: '4px' }}>Status Kios</label>
+            <select id="edit-kios-status" name="statusKios" value={editData.statusKios || 'Terisi'} onChange={handleEditChange} style={{ height: '40px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', width: '100%' }}>
+              <option value="Terisi">Terisi</option>
+              <option value="Kosong">Kosong</option>
+              <option value="Perlu Validasi">Perlu Validasi</option>
+            </select>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

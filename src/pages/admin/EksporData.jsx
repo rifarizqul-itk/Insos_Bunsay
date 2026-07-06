@@ -49,7 +49,7 @@ function EksporData() {
                 </select>
               </div>
             </div>
-            <button type="submit" disabled={isDownloading} style={{ backgroundColor: isDownloading ? 'var(--text-3)' : 'var(--red)', color: '#ffffff', padding: '0 32px', fontSize: '15px', fontWeight: '700', height: '44px', border: 'none', cursor: isDownloading ? 'not-allowed' : 'pointer', width: 'auto' }}>
+            <button type="submit" disabled={isDownloading} style={{ backgroundColor: isDownloading ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 32px', fontSize: '15px', fontWeight: '700', height: '44px', border: 'none', cursor: isDownloading ? 'not-allowed' : 'pointer', width: 'auto' }}>
               {isDownloading ? 'Memproses...' : 'Unduh Excel (.xlsx)'}
             </button>
           </form>

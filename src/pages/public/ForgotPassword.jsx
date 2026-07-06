@@ -33,15 +33,17 @@ function ForgotPassword() {
       backgroundColor: 'var(--cream)',
       padding: '20px',
     }} className="page-fade-in">
-      <div style={{
-        width: '100%',
-        maxWidth: '440px',
-        backgroundColor: '#ffffff',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border)',
-        padding: '40px 32px',
-        boxShadow: '0 2px 12px rgba(139,26,26,0.08)',
-      }}>
+      <div 
+        className="px-5 py-8 sm:p-10"
+        style={{
+          width: '100%',
+          maxWidth: '440px',
+          backgroundColor: '#ffffff',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 2px 12px rgba(139,26,26,0.08)',
+        }}
+      >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
             <img
@@ -67,7 +69,7 @@ function ForgotPassword() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              style={{ height: '44px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '15px', backgroundColor: 'var(--warm-gray)' }}
+              style={{ height: '44px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', backgroundColor: 'var(--warm-gray)' }}
               required
             />
           </div>
@@ -76,7 +78,7 @@ function ForgotPassword() {
             type="submit"
             disabled={isSubmitting}
             style={{
-              backgroundColor: isSubmitting ? 'var(--text-3)' : 'var(--red)',
+              backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)',
               color: '#ffffff',
               padding: '12px',
               fontSize: '15px',
@@ -98,8 +100,8 @@ function ForgotPassword() {
               color: 'var(--text-2)',
               fontSize: '14px',
               fontWeight: '600',
-              padding: '0',
-              minHeight: 'auto',
+              padding: '12px 0',
+              display: 'block',
               border: 'none',
               cursor: 'pointer',
               textDecoration: 'none',

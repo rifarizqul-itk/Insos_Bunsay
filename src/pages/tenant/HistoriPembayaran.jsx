@@ -20,7 +20,7 @@ function HistoriPembayaran() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          style={{ minWidth: '220px', height: '48px', borderRadius: 'var(--radius-md)', fontSize: '15px', fontWeight: '700', color: 'var(--text)', border: '1px solid var(--border)', padding: '0 12px', backgroundColor: '#ffffff' }}
+          style={{ minWidth: '220px', height: '48px', borderRadius: 'var(--radius-md)', fontSize: '16px', fontWeight: '700', color: 'var(--text)', border: '1px solid var(--border)', padding: '0 12px', backgroundColor: '#ffffff' }}
         >
           <option value="Semua">Semua Riwayat</option>
           <option value="Lunas">Status Lunas</option>
@@ -33,30 +33,30 @@ function HistoriPembayaran() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--red)', borderBottom: '3px solid var(--border)' }}>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>ID</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Tanggal</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Jenis</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Nominal</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Metode</th>
-              <th style={{ padding: '16px', fontSize: '15px', color: '#ffffff', fontWeight: '800' }}>Status</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">ID</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">Tanggal</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">Jenis</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">Nominal</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">Metode</th>
+              <th className="py-2 px-0 md:px-3 text-[15px] text-white font-extrabold">Status</th>
             </tr>
           </thead>
           <tbody>
             {transaksiDifilter.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text)', fontWeight: '700', fontSize: '16px' }}>
+                <td colSpan="6" className="py-8 px-4 text-center text-text font-bold text-base">
                   Tidak ada riwayat dengan status "{filterStatus}".
                 </td>
               </tr>
             ) : (
               transaksiDifilter.map((item, index) => (
                 <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
-                  <td data-label="ID" style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.id}</td>
-                  <td data-label="Tanggal" style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.waktu?.split(',')[0] || item.tanggal || '—'}</td>
-                  <td data-label="Jenis" style={{ padding: '18px 16px', color: 'var(--text)', fontWeight: '700' }}>{item.tagihan}</td>
-                  <td data-label="Nominal" style={{ padding: '18px 16px', fontWeight: '800', color: 'var(--text)' }}>{item.nominal}</td>
-                  <td data-label="Metode" style={{ padding: '18px 16px', color: 'var(--text-2)', fontWeight: '700' }}>{item.metode}</td>
-                  <td data-label="Status" style={{ padding: '18px 16px' }}>
+                  <td data-label="ID" className="py-2 px-0 md:px-3 font-extrabold text-text font-mono">{item.id}</td>
+                  <td data-label="Tanggal" className="py-2 px-0 md:px-3 text-text font-bold">{item.waktu?.split(',')[0] || item.tanggal || '—'}</td>
+                  <td data-label="Jenis" className="py-2 px-0 md:px-3 text-text font-bold">{item.tagihan}</td>
+                  <td data-label="Nominal" className="py-2 px-0 md:px-3 font-extrabold text-text font-mono">{item.nominal}</td>
+                  <td data-label="Metode" className="py-2 px-0 md:px-3 text-text-2 font-bold">{item.metode}</td>
+                  <td data-label="Status" className="py-2 px-0 md:px-3">
                     <span style={{
                       backgroundColor: item.status === 'Lunas' ? 'var(--green-bg)' : item.status === 'Pending' ? 'var(--orange-bg)' : 'var(--red-100)',
                       color: item.status === 'Lunas' ? 'var(--green)' : item.status === 'Pending' ? 'var(--orange)' : 'var(--red)',

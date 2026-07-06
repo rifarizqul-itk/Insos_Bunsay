@@ -15,7 +15,7 @@
   /* Text Colors */
   --color-text: #1A1410;
   --color-text-2: #5C4F46;
-  --color-text-3: #9E8E82;
+  --color-text-3: #7B6A5E;
 
   /* Green Palette */
   --color-green: #1A6B3A;
@@ -78,7 +78,8 @@
     --radius-xl: 24px;
     --text: #1A1410;
     --text-2: #5C4F46;
-    --text-3: #9E8E82;
+    --text-3: #7B6A5E;
+    --disabled-bg: #9E8E82;
     --green: #1A6B3A;
     --green-bg: #E8F5EE;
     --orange: #C05C00;
@@ -121,9 +122,13 @@
     min-height: 44px;
   }
 
+  button:active {
+    transform: scale(0.97);
+  }
+
   input, select, textarea {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 15px;
+    font-size: 16px; /* Mencegah auto-zoom di iOS Safari */
     color: #1A1410;
     background-color: #F5F0EB;
     border: 1px solid #E8E0D8;
@@ -151,7 +156,7 @@
   /* Tombol hamburger muncul di mobile */
   .topbar-hamburger-tenant,
   .topbar-hamburger-admin {
-    @apply flex md:hidden items-center justify-center border border-border rounded-md px-3 h-[42px] text-2xl text-text bg-transparent;
+    @apply flex md:hidden items-center justify-center border border-border rounded-md px-3 h-[44px] text-2xl text-text bg-transparent;
   }
 
   /* Topbar */
@@ -374,6 +379,16 @@
     .landing-navbar > div:last-child,
     .landing-navbar > div:first-child {
       max-width: 100%;
+    }
+  }
+
+  .main-content-wrapper {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  @media (min-width: 768px) {
+    .main-content-wrapper {
+      padding-bottom: 2rem !important;
     }
   }
 }

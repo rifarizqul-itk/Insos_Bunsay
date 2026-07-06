@@ -141,6 +141,7 @@ function LandingPage() {
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
+                  className="pointer-events-none md:pointer-events-auto"
                   allowFullScreen="" 
                   loading="lazy" 
                   referrerPolicy="no-referrer-when-downgrade"

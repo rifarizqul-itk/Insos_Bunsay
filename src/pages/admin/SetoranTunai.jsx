@@ -73,14 +73,15 @@ function SetoranTunai() {
       <div style={{ maxWidth: '600px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '32px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
         <form onSubmit={handleSimpanTunai} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Pilih Tenant</label>
+            <label htmlFor="setoran-tenant" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Pilih Tenant</label>
             <select
+              id="setoran-tenant"
               value={selectedTenantId}
               onChange={(e) => setSelectedTenantId(e.target.value)}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
+              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px', fontFamily: 'monospace' }}
               required
             >
-              <option value="">-- Pilih Tenant --</option>
+              <option value="" style={{ fontFamily: 'var(--font-sans)' }}>-- Pilih Tenant --</option>
               {tenantData.map((t) => (
                 <option key={t.id} value={String(t.id)}>
                   {t.kios} - {t.nama}
@@ -90,8 +91,9 @@ function SetoranTunai() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Tagihan</label>
+            <label htmlFor="setoran-jenis" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Tagihan</label>
             <select
+              id="setoran-jenis"
               value={jenisTagihan}
               onChange={(e) => setJenisTagihan(e.target.value)}
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
@@ -102,19 +104,20 @@ function SetoranTunai() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nominal Tunai (Rp)</label>
+            <label htmlFor="setoran-nominal" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nominal Tunai (Rp)</label>
             <input
+              id="setoran-nominal"
               type="number"
               placeholder="Contoh: 1500000"
               value={nominalTunai}
               onChange={(e) => setNominalTunai(e.target.value)}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
+              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px', fontFamily: 'monospace' }}
               required
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Unggah Foto Bukti</label>
+            <label htmlFor="upload-bukti-tunai" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Unggah Foto Bukti</label>
             <input
               id="upload-bukti-tunai"
               type="file"
@@ -135,7 +138,7 @@ function SetoranTunai() {
             type="submit"
             disabled={isSubmitting}
             style={{
-              backgroundColor: isSubmitting ? 'var(--text-3)' : 'var(--red)',
+              backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)',
               color: '#ffffff',
               padding: '12px',
               fontSize: '15px',
