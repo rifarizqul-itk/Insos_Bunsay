@@ -61,7 +61,7 @@ Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
 | `jenis_tagihan` | ENUM        | `Service Charge`, `Tunggakan AR`     |
 | `nominal`       | DECIMAL     | Jumlah pembayaran                    |
 | `metode`        | ENUM        | `Transfer Manual`, `Midtrans`, `Tunai`|
-| `status`        | ENUM        | `Lunas`, `Pending`, `Tertolak`       |
+| `status`        | ENUM        | `Lunas`, `Menunggu Verifikasi`, `Tertolak` |
 | `waktu`         | TIMESTAMP   | Waktu transaksi                      |
 | `bukti`         | VARCHAR     | Path/file name bukti (jika ada)      |
 | `alasan_tolak`  | TEXT        | Alasan jika status `Tertolak`        |
@@ -69,7 +69,7 @@ Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
 > **⚠️ PENTING – Case-Sensitive ENUM:**  
 > Frontend menggunakan string status secara **case-sensitive** untuk menentukan tampilan warna dan ikon.  
 > Pastikan nilai yang dikembalikan API **persis sama** dengan nilai di atas, misalnya:  
-> `"Lunas"` (bukan `"lunas"` atau `"LUNAS"`), `"Terisi"`, `"Pending"`, dst.
+> `"Lunas"` (bukan `"lunas"` atau `"LUNAS"`), `"Menunggu Verifikasi"`, `"Terisi"`, dst.
 
 #### 4. Tabel `tunggakan_ar` (opsional, untuk historis)
 | Kolom           | Tipe        | Keterangan                           |
@@ -82,6 +82,17 @@ Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
 | `riwayat_cicilan`| JSON       | Array objek cicilan                  |
 
 > **Catatan**: Data di `Data_Kios_BY_LEGAL` mencakup informasi kepemilikan, sertifikat, dan pengalihan hak yang dapat dijadikan acuan untuk mengisi tabel `tenants` dan `kios`.
+
+---
+
+## 🎨 Standar Desain & Aksesibilitas Frontend
+
+Aplikasi frontend menerapkan pendekatan estetika **Modern Civic Precision** (DFII Score: 12.8 - *Excellent*) serta standar kepatuhan **WCAG 2.2 AA**:
+
+1. **Tipografi & Angka Tabular**: Font tunggal **Plus Jakarta Sans** dengan kelas `.font-tabular-nums` untuk perataan vertikal seluruh nilai finansial Rupiah dan nomor unit kios.
+2. **Touch Targets Seluler**: Setiap tombol interaktif memiliki ukuran sentuh minimum **44px x 44px**.
+3. **Bebas Emoji Mentah**: Seluruh ikon aksi menggunakan SVG terstruktur via `@iconify/react`.
+4. **Audit UX Pro Max**: Rincian evaluasi dan kepatuhan UI/UX Pro Max dapat dilihat di **[AUDIT_UI_UX_PRO_MAX.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/AUDIT_UI_UX_PRO_MAX.md)**.
 
 ---
 
@@ -187,6 +198,9 @@ Akses `http://localhost:5173` untuk melihat aplikasi.
 
 ## 📎 Referensi Tambahan
 
+- **Laporan Audit UI/UX Pro Max**: `AUDIT_UI_UX_PRO_MAX.md` – evaluasi kepatuhan UX & WCAG 2.2 AA.
+- **Logbook Walkthrough**: `WALKTHROUGH.md` – riwayat rincian perubahan kode repositori.
+- **Spesifikasi Handover**: `GEMINI.md` – dokumen spesifikasi handover pengembang.
 - **Data Kios**: `CONTEXT/Data_Kios_BY_LEGAL` – sumber utama untuk migrasi data.
 - **Notulensi Rapat**: `CONTEXT/Notul rapat 11 april 2026.md` – kesepakatan fitur dan alur bisnis.
 - **Proposal**: `CONTEXT/PROPOSAL INOVASI SOSIAL.docx.md` – latar belakang dan metodologi proyek.
