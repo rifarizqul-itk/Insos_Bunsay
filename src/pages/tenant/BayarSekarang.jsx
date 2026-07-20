@@ -158,10 +158,10 @@ function BayarSekarang() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Metode Pembayaran</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button type="button" onClick={() => setMetode('transfer_manual')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setMetode('transfer_manual')} style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Transfer Bank (Manual) + Unggah Bukti
               </button>
-              <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', height: '48px', backgroundColor: metode === 'midtrans_gateway' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'midtrans_gateway' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'midtrans_gateway' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'midtrans_gateway' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Pembayaran Instan Otomatis
               </button>
             </div>
@@ -175,10 +175,36 @@ function BayarSekarang() {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-warm-gray file:text-text file:text-sm file:font-semibold hover:file:bg-[#EBE3DB] file:cursor-pointer cursor-pointer text-text-2 text-sm"
-                style={{ padding: '8px 0', border: 'none', background: 'transparent' }}
-                required
+                style={{ display: 'none' }}
+                required={!previewBukti}
               />
+              <label
+                htmlFor="upload-bukti-transfer"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  backgroundColor: 'var(--warm-gray)',
+                  border: '2px dashed var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '24px 16px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  minHeight: '110px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                className="hover:border-red hover:bg-[#EBE3DB]/30 active-feedback"
+              >
+                <Icon icon="ic:baseline-cloud-upload" width="28" height="28" style={{ color: 'var(--red)' }} />
+                <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text)' }}>
+                  {buktiTransfer ? buktiTransfer.name : 'Pilih Foto Bukti Transfer'}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>
+                  Ketuk untuk mengambil atau memilih gambar
+                </span>
+              </label>
               {previewBukti && (
                 <div style={{ marginTop: '8px', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px', backgroundColor: 'var(--warm-gray)' }}>
                   <img src={previewBukti} alt="Bukti Transfer" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }} />

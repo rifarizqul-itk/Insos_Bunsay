@@ -98,7 +98,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           {previewItem ? (
             <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="page-fade-in">
               <h3 style={{ fontSize: '16px', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-                Detail Transaksi <span style={{ fontFamily: 'monospace' }}>{previewItem.id}</span>
+                Detail Transaksi <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>{previewItem.id}</span>
               </h3>
               <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} (<span style={{ fontFamily: 'monospace' }}>{previewItem.kios}</span>)</strong></div>

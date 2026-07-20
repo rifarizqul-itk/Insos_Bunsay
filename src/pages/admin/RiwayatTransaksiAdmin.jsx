@@ -70,6 +70,7 @@ function RiwayatTransaksiAdmin() {
                   <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
                     <button 
                       onClick={() => setSelectedBukti(item)}
+                      className="table-action-btn"
                       style={{ 
                         backgroundColor: 'transparent', 
                         color: 'var(--red)', 

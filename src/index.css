@@ -112,7 +112,7 @@
     color: #1A1410;
   }
 
-  button {
+  button, .active-feedback, .link-button {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 15px;
     font-weight: 600;
@@ -122,7 +122,10 @@
     min-height: 44px;
   }
 
-  button:active {
+  button:active,
+  a.btn-active:active,
+  .link-button:active,
+  .active-feedback:active {
     transform: scale(0.97);
   }
 
@@ -205,7 +208,7 @@
 
     /* Penyesuaian aksi tombol di kartu */
     td .table-action-btn {
-      @apply w-full justify-end;
+      @apply w-auto;
     }
   }
 
@@ -330,7 +333,6 @@
 
     .landing-info-grid a,
     .landing-hero-grid button,
-    .bayar-layout-grid button,
     .akun-layout-grid button,
     .tunggakan-layout-grid button,
     .ekspor-layout-grid button {

@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useApi } from '../../hooks/useApi';
 import { getTenantDashboard } from '../../api/tenant';
 
 function DashboardTenant() {
+  const navigate = useNavigate();
   const { setBayar, addToast } = useUI();
   const { data, loading, error, refetch } = useApi(getTenantDashboard, [], true);
 
@@ -35,10 +37,7 @@ function DashboardTenant() {
 
   const handleBayar = (nominal, jenis) => {
     setBayar(String(nominal), jenis);
-    // Navigasi akan dilakukan oleh komponen yang menggunakan UI context
-    // Karena kita tidak punya navigate di sini, kita gunakan window.location atau via props
-    // Untuk demo, kita arahkan ke /tenant/pembayaran via event
-    window.location.href = '/tenant/pembayaran';
+    navigate('/tenant/pembayaran');
   };
 
   return (
@@ -71,12 +70,13 @@ function DashboardTenant() {
               Pemberitahuan Tagihan Belum Lunas
             </h3>
             <p style={{ fontSize: '16px', color: 'var(--text)', fontWeight: '700', margin: '8px 0 0 0', lineHeight: '1.6' }}>
-              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar <span style={{ fontFamily: 'monospace' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</span>. Silakan klik tombol untuk melangsungkan pelaporan bayar.
+              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</span>. Silakan klik tombol untuk melangsungkan pelaporan bayar.
             </p>
           </div>
-          <div>
+          <div className="w-full md:w-auto">
             <button
               onClick={() => handleBayar(tunggakan.nominal, 'Cicilan Tunggakan (Piutang)')}
+              className="w-full md:w-auto"
               style={{
                 backgroundColor: 'var(--red)',
                 color: '#ffffff',

@@ -108,8 +108,8 @@ function DashboardAdmin() {
       </div>
 
       <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input type="text" placeholder="Cari nama tenant atau nomor kios..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ flex: 1, minWidth: '260px' }} />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ minWidth: '180px', height: '44px' }}>
+        <input type="text" className="w-full md:flex-1" placeholder="Cari nama tenant atau nomor kios..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ minWidth: '200px' }} />
+        <select value={statusFilter} className="w-full md:w-auto" onChange={(e) => setStatusFilter(e.target.value)} style={{ minWidth: '180px', height: '44px' }}>
           <option value="Semua">Semua Status</option>
           <option value="Lunas">Lunas</option>
           <option value="Belum Bayar">Belum Bayar</option>
@@ -165,6 +165,7 @@ function DashboardAdmin() {
                     <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
                       <button 
                         onClick={() => handleDetailClick(tenant)} 
+                        className="table-action-btn"
                         style={{ 
                           backgroundColor: 'var(--warm-gray)', 
                           color: 'var(--text)', 

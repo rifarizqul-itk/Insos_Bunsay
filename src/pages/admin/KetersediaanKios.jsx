@@ -90,14 +90,14 @@ function KetersediaanKios({ isAdmin = false }) {
       </div>
 
       <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        <input type="text" placeholder="Cari nomor kios atau nama tenant..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ flex: 2, minWidth: '240px' }} />
-        <select value={filterLantai} onChange={(e) => setFilterLantai(e.target.value)} style={{ flex: 1, minWidth: '140px' }}>
+        <input type="text" className="w-full md:flex-2" placeholder="Cari nomor kios atau nama tenant..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ minWidth: '200px' }} />
+        <select value={filterLantai} className="w-full md:w-auto" onChange={(e) => setFilterLantai(e.target.value)} style={{ minWidth: '140px', height: '44px' }}>
           <option value="Semua">Semua Lantai</option>
           <option value="Lt. 1">Lantai 1</option>
           <option value="Lt. 2">Lantai 2</option>
           <option value="Lt. 3">Lantai 3</option>
         </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ flex: 1, minWidth: '160px' }}>
+        <select value={filterStatus} className="w-full md:w-auto" onChange={(e) => setFilterStatus(e.target.value)} style={{ minWidth: '160px', height: '44px' }}>
           <option value="Semua">Semua Status</option>
           <option value="Terisi">Terisi</option>
           <option value="Kosong">Kosong</option>
@@ -142,6 +142,7 @@ function KetersediaanKios({ isAdmin = false }) {
                     <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <button 
                         onClick={() => handleDetailClick(kios)} 
+                        className="table-action-btn"
                         style={{ 
                           backgroundColor: 'var(--warm-gray)', 
                           color: 'var(--text)', 

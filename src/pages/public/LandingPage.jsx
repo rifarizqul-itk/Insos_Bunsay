@@ -151,6 +151,7 @@ function LandingPage() {
                 href="https://wa.me/628115901119"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="active-feedback"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

@@ -16,8 +16,10 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
       }
     }
     document.addEventListener('mousedown', handleKlikLuar);
+    document.addEventListener('touchstart', handleKlikLuar);
     return () => {
       document.removeEventListener('mousedown', handleKlikLuar);
+      document.removeEventListener('touchstart', handleKlikLuar);
     };
   }, []);
 

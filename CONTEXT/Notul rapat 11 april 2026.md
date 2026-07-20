@@ -15,9 +15,7 @@ Konsep Website
 3. Halaman daftar   
 4. Home / dashboard   
 * Informasi tenant (nama pemilik tenant, nomor kios) contoh : Hai Elsya, Kios 06\!  
-* Sisa masa (sisa hari pembayaran gedung)  
 * Sisa masa/jatuh tempo (sisa hari pembayaran service charge)  
-* Status pembayaran gedung (lunas / belum lunas dengan total pembayaran…)  
 * Status pembayaran service charge (lunas / belum lunas dengan total pembayaran…)  
 * Status tunggakan (lunas, ada tunggakan dengan total pembayaran)  
 5. Button   
@@ -29,7 +27,7 @@ Konsep Website
 1. Login  
 2. Dashboard  (buat list di kiri saja)  
 * Jumlah tenant yang aktif/tidak (halaman home) tambahkan filter data buat nyari yg sudah lunas, blm bayar, atau nunggak  
-* Data tenant menampilkan informasi singkat tunggakan sama pembayaran gedung, pembayaran service charge, tambahkan informasi lebih lanjut di sebelah kanannya untuk menampilkan informasi lengkap mitra, yang berisikan  
+* Data tenant menampilkan informasi singkat tunggakan sama pembayaran service charge, tambahkan informasi lebih lanjut di sebelah kanannya untuk menampilkan informasi lengkap mitra, yang berisikan  
 * Nama pemilik  
 * No kios  
 * Email  

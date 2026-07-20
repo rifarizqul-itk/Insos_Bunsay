@@ -146,7 +146,7 @@ function AuthPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--red)', cursor: 'pointer' }}
+                style={{ width: '18px', height: '18px', accentColor: 'var(--red)', cursor: 'pointer', transform: 'scale(1.15)', marginRight: '2px' }}
               />
               Ingat Saya
             </label>
@@ -157,7 +157,7 @@ function AuthPage() {
                 color: 'var(--red)',
                 fontSize: '14px',
                 fontWeight: '500',
-                padding: '10px 4px',
+                padding: '12px 6px',
                 display: 'inline-block',
                 border: 'none',
                 cursor: 'pointer',
