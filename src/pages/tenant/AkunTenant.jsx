@@ -82,11 +82,11 @@ function AkunTenant() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
               {isEditing ? (
                 <>
-                  <button type="button" onClick={() => { setFormData({ ...profileData }); setIsEditing(false); }} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>Batal</button>
-                  <button type="submit" style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 24px', fontSize: '14px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)' }}>Simpan</button>
+                  <button type="button" onClick={() => { setFormData({ ...profileData }); setIsEditing(false); }} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Batal</button>
+                  <button type="submit" style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 24px', fontSize: '14px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Simpan</button>
                 </>
               ) : (
-                <button type="button" onClick={() => setIsEditing(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>Ubah Data Profil</button>
+                <button type="button" onClick={() => setIsEditing(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Ubah Data Profil</button>
               )}
             </div>
           </form>

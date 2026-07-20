@@ -38,13 +38,13 @@ function RiwayatTransaksiAdmin() {
             ) : (
               riwayat.map((item, index) => (
                 <tr key={item.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                  <td data-label="ID TRX" style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)', fontFamily: 'monospace' }}>{item.id}</td>
+                  <td data-label="ID TRX" className="font-tabular-nums font-bold" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.id}</td>
                   <td data-label="Tenant & Kios" style={{ padding: '8px 12px' }}>
                     <div style={{ fontWeight: '600' }}>{item.nama}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700', fontFamily: 'monospace' }}>Kios {item.kios}</div>
+                    <div className="font-tabular-nums font-bold" style={{ fontSize: '13px', color: 'var(--text-3)' }}>Kios {item.kios}</div>
                   </td>
                   <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                  <td data-label="Nominal" style={{ padding: '8px 12px', fontWeight: '600', fontFamily: 'monospace' }}>{item.nominal}</td>
+                  <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{item.nominal}</td>
                   <td data-label="Metode & Waktu" style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--text-2)' }}>
                     <div>{item.metode}</div>
                     <div style={{ color: 'var(--text-3)', fontSize: '12px' }}>{item.waktu}</div>

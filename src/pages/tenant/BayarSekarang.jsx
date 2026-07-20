@@ -242,7 +242,7 @@ function BayarSekarang() {
                 <div>
                   <div style={{ color: 'var(--text-2)', fontSize: '12px', fontWeight: '800' }}>NOMOR REKENING RESMI:</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', backgroundColor: '#ffffff', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', gap: '8px' }}>
-                    <span style={{ fontWeight: '800', fontSize: '18px', color: 'var(--red)', letterSpacing: '0.5px', fontFamily: 'monospace' }}>0811-5901-119</span>
+                    <span className="font-tabular-nums" style={{ fontWeight: '800', fontSize: '18px', color: 'var(--red)', letterSpacing: '0.5px' }}>0811-5901-119</span>
                     <button
                       type="button"
                       onClick={() => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Icon } from '@iconify/react';
 
 function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,7 +31,7 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
       className="topbar-container"
       style={{
         backgroundColor: '#ffffff',
-        borderBottom: '1px solid #D6C8BC',
+        borderBottom: '1px solid var(--border)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -44,30 +45,30 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '0', flex: '1', marginRight: '12px' }}>
         <button
           onClick={onToggleSidebar}
+          aria-label="Buka menu navigasi"
           className={hamburgerClass}
           style={{
             backgroundColor: 'transparent',
-            border: '1px solid #D6C8BC',
-            borderRadius: '8px',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
             padding: '0 12px',
             cursor: 'pointer',
             alignItems: 'center',
             justifyContent: 'center',
             height: '44px',
-            fontSize: '20px',
             color: 'var(--text)',
             flexShrink: 0
           }}
         >
-          ☰
+          <Icon icon="ph:list-bold" width="22" height="22" />
         </button>
         
         <div 
-          style={{ fontSize: '15px', fontWeight: '700', color: '#4A3F35', lineHeight: '1.25' }}
+          style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-2)', lineHeight: '1.25' }}
           className="min-w-0 break-words"
         >
           <span className="hidden sm:inline">Sesi Aktif: </span>
-          <span style={{ color: '#8B1A1A' }}>{userTitle}</span>
+          <span style={{ color: 'var(--red)' }}>{userTitle}</span>
         </div>
       </div>
 
@@ -75,12 +76,13 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
       <div ref={notifikasiRef} style={{ position: 'relative' }}>
         <button
           onClick={() => setIsOpen(!isOpen)}
+          aria-label="Notifikasi"
           style={{
             height: '48px', 
-            backgroundColor: isOpen ? '#F5F0EB' : 'transparent',
-            color: '#1A1410',
-            border: '1px solid #D6C8BC',
-            borderRadius: '8px',
+            backgroundColor: isOpen ? 'var(--warm-gray)' : 'transparent',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
             padding: '0 16px',
             fontSize: '15px',
             fontWeight: '800',
@@ -89,12 +91,10 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
             alignItems: 'center',
             gap: '8px'
           }}
-          onFocus={(e) => e.target.style.outline = '3px solid #1A1410'}
-          onBlur={(e) => e.target.style.outline = 'none'}
         >
           <span>Notifikasi</span>
           <span style={{
-            backgroundColor: '#D32F2F',
+            backgroundColor: 'var(--red)',
             color: '#ffffff',
             fontSize: '12px',
             fontWeight: '800',
@@ -117,8 +117,8 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
               width: 'calc(100vw - 32px)',
               maxWidth: '360px',
               backgroundColor: '#ffffff',
-              border: '1px solid #D6C8BC',
-              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
               boxShadow: '0 4px 16px rgba(0,0,0,0.06)', 
               padding: '16px',
               display: 'flex',
@@ -131,8 +131,8 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
             <div style={{
               fontSize: '15px',
               fontWeight: '800',
-              color: '#1A1410',
-              borderBottom: '2px solid #F5F0EB',
+              color: 'var(--text)',
+              borderBottom: '2px solid var(--warm-gray)',
               paddingBottom: '8px',
               margin: 0
             }}>
@@ -145,9 +145,9 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
                   key={notif.id} 
                   style={{
                     padding: '12px',
-                    borderRadius: '8px',
-                    backgroundColor: notif.tipe === 'penting' ? '#FFF5F5' : '#F9F6F0',
-                    border: notif.tipe === 'penting' ? '1px solid #FADADD' : '1px solid #E6DBCF',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: notif.tipe === 'penting' ? 'var(--red-50)' : 'var(--cream)',
+                    border: notif.tipe === 'penting' ? '1px solid var(--red-100)' : '1px solid var(--border)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '4px'
@@ -156,16 +156,23 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
                   <div style={{ 
                     fontSize: '14px', 
                     fontWeight: '700', 
-                    color: '#1A1410', 
-                    lineHeight: '1.5' 
+                    color: 'var(--text)', 
+                    lineHeight: '1.5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}>
-                    {notif.tipe === 'penting' ? '⚠ ' : '✓ '} 
-                    {notif.teks}
+                    {notif.tipe === 'penting' ? (
+                      <Icon icon="ph:warning-circle-bold" className="text-orange flex-shrink-0" width="18" height="18" style={{ color: 'var(--orange)' }} />
+                    ) : (
+                      <Icon icon="ph:check-circle-bold" className="text-green flex-shrink-0" width="18" height="18" style={{ color: 'var(--green)' }} />
+                    )} 
+                    <span>{notif.teks}</span>
                   </div>
                   <span style={{ 
                     fontSize: '12px', 
                     fontWeight: '800', 
-                    color: '#4A3F35' 
+                    color: 'var(--text-3)' 
                   }}>
                     {notif.waktu}
                   </span>
@@ -180,3 +187,4 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
 }
 
 export default Topbar;
+

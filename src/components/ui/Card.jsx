@@ -7,14 +7,17 @@ function Card({
   padding = 'p-7',
   shadow = true,
   border = true,
+  onClick,
   ...props
 }) {
   return (
     <div
+      onClick={onClick}
       className={`
         bg-white rounded-lg
         ${border ? 'border border-border' : ''}
         ${shadow ? 'shadow-card' : ''}
+        ${onClick ? 'cursor-pointer hover:border-red-rich transition-colors' : ''}
         ${padding}
         ${className}
       `}

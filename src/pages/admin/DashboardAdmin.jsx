@@ -97,13 +97,13 @@ function DashboardAdmin() {
           <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Total Tenant Aktif</span>
           <div style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px' }}>{tenants?.length || 0}</div>
         </div>
-        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Menunggu Verifikasi</span>
-          <div style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px', color: 'var(--orange)' }}>{antrean.length}</div>
+        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
+          <span className="label-micro">Menunggu Verifikasi</span>
+          <div className="font-tabular-nums" style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px', color: 'var(--orange)' }}>{antrean.length}</div>
         </div>
-        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Dana Terkumpul (Bulan Ini)</span>
-          <div style={{ fontSize: '24px', fontWeight: '800', marginTop: '10px', color: 'var(--green)', fontFamily: 'monospace' }}>Rp 142.500.000</div>
+        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
+          <span className="label-micro">Dana Terkumpul (Bulan Ini)</span>
+          <div className="font-tabular-nums" style={{ fontSize: '24px', fontWeight: '800', marginTop: '10px', color: 'var(--green)' }}>Rp 142.500.000</div>
         </div>
       </div>
 
@@ -138,9 +138,9 @@ function DashboardAdmin() {
                 return (
                   <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
                     <td data-label="Nama Tenant" style={{ padding: '8px 12px', fontWeight: '600' }}>{tenant.nama}</td>
-                    <td data-label="No. Kios" style={{ padding: '8px 12px', fontWeight: '700', fontFamily: 'monospace' }}>{tenant.kios}</td>
+                    <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{tenant.kios}</td>
                     <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
-                    <td data-label="Tunggakan" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)', fontFamily: 'monospace' }}>
+                    <td data-label="Tunggakan" className="font-tabular-nums" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
                       Rp {tenant.tunggakan.toLocaleString('id-ID')}
                     </td>
                     <td data-label="Status Bulan Ini" style={{ padding: '8px 12px' }}>

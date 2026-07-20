@@ -52,11 +52,13 @@ function AuthPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-            <img
-              src="/assets/main_logo_transparent_for_light_bg.png"
-              alt="Logo Resmi Plaza Kebun Sayur"
-              style={{ height: '128px', width: 'auto', objectFit: 'contain', display: 'block' }}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <img 
+              src="/assets/main_logo_transparent_for_light_bg.png" 
+              alt="Logo Resmi Plaza Kebun Sayur Balikpapan" 
+              loading="lazy"
+              decoding="async"
+              style={{ height: '48px', objectFit: 'contain' }} 
             />
           </div>
           <h1 style={{ color: 'var(--red)', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0 }}>
@@ -69,8 +71,9 @@ function AuthPage() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
+            <label htmlFor="auth-email-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
             <input
+              id="auth-email-input"
               type="email"
               name="email"
               placeholder="nama@email.com"
@@ -83,8 +86,9 @@ function AuthPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Kata Sandi</label>
+            <label htmlFor="auth-password-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Kata Sandi</label>
             <input
+              id="auth-password-input"
               type="password"
               name="kataSandi"
               placeholder="Masukkan kata sandi Anda"

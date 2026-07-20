@@ -66,7 +66,7 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
           ← Kembali ke Dashboard Admin
         </button>
         <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-          Detail Keuangan: {tenant.nama} (<span style={{ fontFamily: 'monospace' }}>Kios {tenant.kios}</span>)
+          Detail Keuangan: {tenant.nama} (<span className="font-tabular-nums font-bold">Kios {tenant.kios}</span>)
         </h2>
         <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
           Status pembayaran, rincian tunggakan, dan riwayat transaksi.
@@ -80,7 +80,7 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border)',
             padding: '28px',
-            boxShadow: '0 2px 12px rgba(139,26,26,0.08)'
+            boxShadow: 'var(--shadow-card)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
@@ -106,7 +106,7 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
             <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Status Bulan Ini</span>
+              <span className="label-micro">Status Bulan Ini</span>
               <div style={{ marginTop: '6px' }}>
                 <span
                   style={{
@@ -123,8 +123,8 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
               </div>
             </div>
             <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Tunggakan AR (Historis)</span>
-              <div style={{ fontSize: '16px', fontWeight: '800', marginTop: '6px', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--text)', fontFamily: 'monospace' }}>
+              <span className="label-micro">Tunggakan AR (Historis)</span>
+              <div className="font-tabular-nums" style={{ fontSize: '16px', fontWeight: '800', marginTop: '6px', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--text)' }}>
                 {formatRupiah(tunggakanValue)}
               </div>
             </div>
@@ -141,7 +141,7 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border)',
             padding: '28px',
-            boxShadow: '0 2px 12px rgba(139,26,26,0.08)'
+            boxShadow: 'var(--shadow-card)'
           }}
         >
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: 'var(--text)' }}>
@@ -163,10 +163,10 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
                 {tenant.riwayat && tenant.riwayat.length > 0 ? (
                   tenant.riwayat.map((row, idx) => (
                     <tr key={row.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                      <td data-label="ID" style={{ padding: '8px 12px', fontWeight: '600', fontFamily: 'monospace' }}>{row.id}</td>
+                      <td data-label="ID" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{row.id}</td>
                       <td data-label="Tanggal" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tanggal}</td>
                       <td data-label="Jenis" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tipe}</td>
-                      <td data-label="Nominal" style={{ padding: '8px 12px', fontWeight: '600', fontFamily: 'monospace' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
+                      <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
                       <td data-label="Metode" style={{ padding: '8px 12px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
                       <td data-label="Status" style={{ padding: '8px 12px' }}>
                         <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>

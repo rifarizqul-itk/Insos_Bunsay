@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTransactions } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
+import { Icon } from '@iconify/react';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const { antrean, prosesVerifikasi } = useTransactions();
@@ -75,10 +76,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
                     <td data-label="Tenant & Kios" style={{ padding: '8px 12px' }}>
                       <div style={{ fontWeight: '600' }}>{item.nama}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-3)', fontWeight: '700', fontFamily: 'monospace' }}>Kios {item.kios}</div>
+                      <div className="font-tabular-nums font-bold" style={{ fontSize: '13px', color: 'var(--text-3)' }}>Kios {item.kios}</div>
                     </td>
                     <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                    <td data-label="Nominal" style={{ padding: '8px 12px', fontWeight: '600', fontFamily: 'monospace' }}>{item.nominal}</td>
+                    <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{item.nominal}</td>
                     <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
                       <button 
                         onClick={() => setPreviewItem(item)}
@@ -98,14 +99,14 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           {previewItem ? (
             <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="page-fade-in">
               <h3 style={{ fontSize: '16px', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-                Detail Transaksi <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>{previewItem.id}</span>
+                Detail Transaksi <span className="font-tabular-nums font-bold">{previewItem.id}</span>
               </h3>
               <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} (<span style={{ fontFamily: 'monospace' }}>{previewItem.kios}</span>)</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{previewItem.nama} (<span className="font-tabular-nums">{previewItem.kios}</span>)</strong></div>
                 <div><span style={{ color: 'var(--text-3)' }}>Tagihan:</span> <strong>{previewItem.tagihan}</strong></div>
-                <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong style={{ fontFamily: 'monospace' }}>{previewItem.nominal}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong className="font-tabular-nums">{previewItem.nominal}</strong></div>
                 <div><span style={{ color: 'var(--text-3)' }}>Metode:</span> <strong>{previewItem.metode}</strong></div>
-                <div><span style={{ color: 'var(--text-3)' }}>Waktu Kirim:</span> <strong style={{ fontFamily: 'monospace' }}>{previewItem.waktu}</strong></div>
+                <div><span style={{ color: 'var(--text-3)' }}>Waktu Kirim:</span> <strong className="font-tabular-nums">{previewItem.waktu}</strong></div>
               </div>
 
               <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
@@ -117,15 +118,17 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button 
                   onClick={() => handleAksi(previewItem.id, 'konfirmasi')}
-                  style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '10px', fontSize: '14px', fontWeight: '700', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px' }}
+                  style={{ flex: 1, backgroundColor: 'var(--green)', color: '#ffffff', padding: '10px', fontSize: '14px', fontWeight: '700', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  Konfirmasi Lunas
+                  <Icon icon="ph:check-bold" width="18" height="18" />
+                  <span>Konfirmasi Lunas</span>
                 </button>
                 <button 
                   onClick={() => handleAksi(previewItem.id, 'tolak')}
-                  style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '10px', fontSize: '14px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px' }}
+                  style={{ flex: 1, backgroundColor: 'var(--warm-gray)', color: 'var(--red)', padding: '10px', fontSize: '14px', fontWeight: '600', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  Tolak Bukti
+                  <Icon icon="ph:x-bold" width="18" height="18" />
+                  <span>Tolak Bukti</span>
                 </button>
               </div>
             </div>

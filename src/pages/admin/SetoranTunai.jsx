@@ -79,10 +79,11 @@ function SetoranTunai() {
               id="setoran-tenant"
               value={selectedTenantId}
               onChange={(e) => setSelectedTenantId(e.target.value)}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px', fontFamily: 'monospace' }}
+              className="font-tabular-nums"
+              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
               required
             >
-              <option value="" style={{ fontFamily: 'var(--font-sans)' }}>-- Pilih Tenant --</option>
+              <option value="">-- Pilih Tenant --</option>
               {tenantData.map((t) => (
                 <option key={t.id} value={String(t.id)}>
                   {t.kios} - {t.nama}
@@ -112,7 +113,8 @@ function SetoranTunai() {
               placeholder="Contoh: 1500000"
               value={nominalTunai}
               onChange={(e) => setNominalTunai(e.target.value)}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px', fontFamily: 'monospace' }}
+              className="font-tabular-nums"
+              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
               required
             />
           </div>

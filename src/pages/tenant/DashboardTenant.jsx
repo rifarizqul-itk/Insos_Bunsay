@@ -47,7 +47,7 @@ function DashboardTenant() {
           Halo, {nama}
         </h2>
         <p style={{ color: 'var(--text-2)', fontSize: '16px', fontWeight: '600', marginTop: '6px' }}>
-          Pemilik Sah Kios <span style={{ fontFamily: 'monospace' }}>{kios}</span> — Selamat datang di panel administrasi mandiri Anda.
+          Pemilik Sah Kios <span className="font-tabular-nums font-bold">{kios}</span> — Selamat datang di panel administrasi mandiri Anda.
         </p>
       </div>
 
@@ -66,11 +66,11 @@ function DashboardTenant() {
           }}
         >
           <div style={{ flex: 1, minWidth: '300px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--red)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <h3 className="label-micro" style={{ color: 'var(--red)', margin: 0, fontSize: '13px' }}>
               Pemberitahuan Tagihan Belum Lunas
             </h3>
             <p style={{ fontSize: '16px', color: 'var(--text)', fontWeight: '700', margin: '8px 0 0 0', lineHeight: '1.6' }}>
-              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</span>. Silakan klik tombol untuk melangsungkan pelaporan bayar.
+              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar <span className="font-tabular-nums font-bold">Rp {tunggakan.nominal.toLocaleString('id-ID')}</span>. Silakan klik tombol untuk melangsungkan pelaporan bayar.
             </p>
           </div>
           <div className="w-full md:w-auto">
@@ -99,34 +99,34 @@ function DashboardTenant() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
         <div 
           className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}
+          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
         >
-          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Masa Aktif Service Charge</span>
-          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--text)' }}>{serviceCharge.dueDate}</div>
-          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Tenggat biaya fasilitas & pengelolaan kios</span>
+          <span className="label-micro">Masa Aktif Service Charge</span>
+          <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--text)' }}>{serviceCharge.dueDate}</div>
+          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Tenggat biaya fasilitas & pengelolaan kios</span>
         </div>
 
         <div 
           className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}
+          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
         >
-          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Service Charge Bulan Ini</span>
+          <span className="label-micro">Service Charge Bulan Ini</span>
           <div style={{ margin: '12px 0 8px 0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
             <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '6px 14px', borderRadius: 'var(--radius-md)', fontWeight: '800', fontSize: '14px', border: '2px solid var(--green)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               ✓ {serviceCharge.status}
             </span>
-            <div style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2', fontFamily: 'monospace' }}>Rp {serviceCharge.nominal.toLocaleString('id-ID')}</div>
+            <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>Rp {serviceCharge.nominal.toLocaleString('id-ID')}</div>
           </div>
-          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Fasilitas & utilitas pasar</span>
+          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Fasilitas & utilitas pasar</span>
         </div>
 
         <div 
           className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}
+          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
         >
-          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tunggakan Historis</span>
-          <div style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--orange)', fontFamily: 'monospace' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</div>
-          <span style={{ fontSize: '14px', color: 'var(--text)', fontWeight: '700' }}>Data terarsip s/d Sept 2024</span>
+          <span className="label-micro">Tunggakan Historis</span>
+          <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--orange)' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</div>
+          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Data terarsip s/d Sept 2024</span>
         </div>
       </div>
     </div>

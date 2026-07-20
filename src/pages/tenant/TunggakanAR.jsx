@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useApi } from '../../hooks/useApi';
 import { getTunggakan } from '../../api/tenant';
+import { Icon } from '@iconify/react';
 
 function TunggakanAR() {
   const navigate = useNavigate();
@@ -55,10 +56,10 @@ function TunggakanAR() {
           }}
         >
           <div>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-3)', textTransform: 'uppercase' }}>Total Tunggakan Awal</span>
+            <span className="label-micro">Total Tunggakan Awal</span>
             <div 
-              className="text-2xl sm:text-3xl md:text-[32px] overflow-hidden text-ellipsis whitespace-nowrap"
-              style={{ fontWeight: '800', color: 'var(--orange)', marginTop: '4px', fontFamily: 'monospace' }}
+              className="text-2xl sm:text-3xl md:text-[32px] overflow-hidden text-ellipsis whitespace-nowrap font-tabular-nums"
+              style={{ fontWeight: '800', color: 'var(--orange)', marginTop: '4px' }}
             >
               Rp {totalAwal.toLocaleString('id-ID')}
             </div>
@@ -66,11 +67,21 @@ function TunggakanAR() {
           <div style={{ fontSize: '14px', borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-2)' }}>Total Terbayar Lewat Cicilan:</span>
-              <strong style={{ color: 'var(--green)', fontFamily: 'monospace' }}>Rp {totalTerbayar.toLocaleString('id-ID')}</strong>
+              <strong className="font-tabular-nums" style={{ color: 'var(--green)' }}>Rp {totalTerbayar.toLocaleString('id-ID')}</strong>
+            </div>
+            <div 
+              role="progressbar"
+              aria-valuenow={Math.min(100, Math.round((totalTerbayar / (totalAwal || 1)) * 100))}
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-label="Progres Pelunasan Tunggakan AR"
+              style={{ height: '10px', backgroundColor: 'var(--warm-gray)', borderRadius: '6px', overflow: 'hidden', margin: '4px 0 8px 0' }}
+            >
+              <div style={{ width: `${Math.min(100, Math.round((totalTerbayar / (totalAwal || 1)) * 100))}%`, backgroundColor: 'var(--green)', height: '100%', transition: 'width 0.3s ease' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: '700', borderTop: '1px dashed var(--border)', paddingTop: '8px' }}>
               <span>Sisa Kewajiban Bersih:</span>
-              <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>Rp {sisa.toLocaleString('id-ID')}</span>
+              <span className="font-tabular-nums font-bold">Rp {sisa.toLocaleString('id-ID')}</span>
             </div>
           </div>
           <button
@@ -87,10 +98,21 @@ function TunggakanAR() {
               cursor: sisa > 0 ? 'pointer' : 'not-allowed',
               borderRadius: 'var(--radius-md)',
               border: 'none',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            {sisa > 0 ? 'Angsur Tunggakan Sekarang' : '✅ Semua Lunas'}
+            {sisa > 0 ? (
+              'Angsur Tunggakan Sekarang'
+            ) : (
+              <>
+                <Icon icon="ph:check-circle-bold" width="18" height="18" />
+                <span>Semua Lunas</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -100,7 +122,7 @@ function TunggakanAR() {
             backgroundColor: '#ffffff', 
             borderRadius: 'var(--radius-lg)', 
             border: '1px solid var(--border)', 
-            boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
+            boxShadow: 'var(--shadow-card)' 
           }}
         >
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: 'var(--text)' }}>Riwayat Setoran Angsuran</h3>
@@ -111,11 +133,11 @@ function TunggakanAR() {
               riwayatCicilan.map((cicil) => (
                 <div key={cicil.ke} className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start sm:items-center" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '14px', backgroundColor: 'var(--warm-gray)' }}>
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text)' }}>Angsuran Ke-<span style={{ fontFamily: 'monospace' }}>{cicil.ke}</span></div>
+                    <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text)' }}>Angsuran Ke-<span className="font-tabular-nums">{cicil.ke}</span></div>
                     <div style={{ fontSize: '13px', color: 'var(--text-3)', marginTop: '2px' }}>Diterima: {cicil.tanggal}</div>
                   </div>
                   <div className="text-left sm:text-right">
-                    <div style={{ fontWeight: '700', color: 'var(--text)', fontFamily: 'monospace' }}>Rp {cicil.nominal.toLocaleString('id-ID')}</div>
+                    <div className="font-tabular-nums font-bold" style={{ color: 'var(--text)' }}>Rp {cicil.nominal.toLocaleString('id-ID')}</div>
                     <span style={{ fontSize: '11px', fontWeight: '700', color: cicil.status === 'Tervalidasi' ? 'var(--green)' : 'var(--orange)' }}>
                       {cicil.status}
                     </span>

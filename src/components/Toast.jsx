@@ -26,7 +26,8 @@ const Toast = () => {
           </span>
           <button
             onClick={() => removeToast(toast.id)}
-            className="bg-transparent border-none text-lg cursor-pointer text-text-3 px-1 active:scale-90 transition-transform flex items-center justify-center h-6 w-6"
+            aria-label="Tutup notifikasi"
+            className="bg-transparent border-none text-lg cursor-pointer text-text-3 hover:text-text transition-colors flex items-center justify-center h-11 w-11 rounded-md active:scale-90"
           >
             ✕
           </button>

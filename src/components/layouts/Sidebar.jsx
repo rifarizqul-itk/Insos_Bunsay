@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 
 function Sidebar({ isOpen, onClose, onLogout }) {
   const navigate = useNavigate();
@@ -43,6 +44,8 @@ function Sidebar({ isOpen, onClose, onLogout }) {
           <img 
             src="/assets/main_logo_transparent_for_light_bg.png" 
             alt="Logo Plaza Kebun Sayur" 
+            loading="lazy"
+            decoding="async"
             style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
           />
           <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
@@ -51,12 +54,10 @@ function Sidebar({ isOpen, onClose, onLogout }) {
         </div>
         <button
           onClick={onClose}
-          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform"
-          style={{
-            minHeight: 'auto'
-          }}
+          aria-label="Tutup menu navigasi"
+          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
-          ✕
+          <Icon icon="ph:x-bold" width="22" height="22" />
         </button>
       </div>
 

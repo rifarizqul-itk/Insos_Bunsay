@@ -125,7 +125,7 @@ function KetersediaanKios({ isAdmin = false }) {
               filteredKios.map((kios, index) => (
                 <tr key={kios.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
                   <td data-label="Lantai" style={{ padding: '8px 12px', fontWeight: '600' }}>{kios.lantai}</td>
-                  <td data-label="No. Kios" style={{ padding: '8px 12px', fontWeight: '800', color: 'var(--text)', fontFamily: 'monospace' }}>{kios.nomorKios}</td>
+                  <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px', color: 'var(--text)' }}>{kios.nomorKios}</td>
                   <td data-label="Status" style={{ padding: '8px 12px' }}>
                     <span style={{ 
                        backgroundColor: kios.statusKios === 'Terisi' ? 'var(--green-bg)' : kios.statusKios === 'Kosong' ? 'var(--red-100)' : 'var(--orange-bg)', 

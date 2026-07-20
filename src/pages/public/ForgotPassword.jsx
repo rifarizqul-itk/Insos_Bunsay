@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
+import { Icon } from '@iconify/react';
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -49,21 +50,24 @@ function ForgotPassword() {
             <img
               src="/assets/main_logo_transparent_for_light_bg.png"
               alt="Logo Resmi Plaza Kebun Sayur"
+              loading="lazy"
+              decoding="async"
               style={{ height: '100px', width: 'auto', objectFit: 'contain', display: 'block' }}
             />
           </div>
           <h1 style={{ color: 'var(--red)', fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px', margin: 0 }}>
             Lupa Kata Sandi
           </h1>
-          <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '6px', marginBottom: 0 }}>
+          <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '6px', marginBottom: 0, maxWidth: '65ch', lineHeight: '1.6' }}>
             Masukkan email Anda untuk menerima tautan reset.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
+            <label htmlFor="forgot-email-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
             <input
+              id="forgot-email-input"
               type="email"
               placeholder="nama@email.com"
               value={email}
@@ -87,9 +91,20 @@ function ForgotPassword() {
               border: 'none',
               borderRadius: 'var(--radius-md)',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}
           >
-            {isSubmitting ? 'Mengirim...' : 'Kirim Tautan Reset'}
+            {isSubmitting ? (
+              <>
+                <Icon icon="ph:spinner-gap-bold" className="animate-spin" width="20" height="20" />
+                <span>Mengirim...</span>
+              </>
+            ) : (
+              'Kirim Tautan Reset'
+            )}
           </button>
 
           <Link
@@ -101,13 +116,17 @@ function ForgotPassword() {
               fontSize: '14px',
               fontWeight: '600',
               padding: '12px 0',
-              display: 'block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
               border: 'none',
               cursor: 'pointer',
               textDecoration: 'none',
             }}
           >
-            ← Kembali ke Halaman Login
+            <Icon icon="ph:arrow-left-bold" width="16" height="16" />
+            <span>Kembali ke Halaman Login</span>
           </Link>
         </form>
       </div>

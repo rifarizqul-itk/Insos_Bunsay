@@ -22,7 +22,8 @@ Berikut adalah rangkuman resmi perubahan, penambahan fitur, serta penyempurnaan 
 
 1. **Pembaruan Tech Stack & Environment**:
    - Migrasi dan penyesuaian ke **React 18** (`^18.3.1`), **Vite 8** (`^8.1.0`), **Tailwind CSS v4** (`@tailwindcss/vite` & `@import "tailwindcss"`), **React Router v7** (`^7.16.0`), dan **@iconify/react** (`^6.0.2`).
-   - Font visual utama menggunakan **Plus Jakarta Sans** via Google Fonts dengan konfigurasi ukuran teks dasar minimum **15px** dan input **16px** (mencegah auto-zoom di iOS Safari).
+   - Pendekatan Arah Estetika Teradopsi: **Modern Civic Precision** (DFII Score: 12.8 - *Excellent*).
+   - Font visual utama menggunakan **Plus Jakarta Sans** via Google Fonts dengan konfigurasi hirarki ketat (*tight tracking* pada heading, *tabular-nums* pada data keuangan, *wide uppercase* pada label mikro), ukuran teks dasar minimum **15px** dan input **16px** (mencegah auto-zoom di iOS Safari).
 
 2. **Pengembangan Sistem Rute & Komponen Halaman (Total 17 Halaman)**:
    - **Public Zone**:
