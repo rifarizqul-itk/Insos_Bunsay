@@ -151,3 +151,15 @@ Setiap kali melakukan refactoring, penambahan fitur, atau perbaikan bug pada ses
 - [x] 100% API layer diisolasi di balik Port & Adapter tanpa dualisme state.
 - [x] Pengujian fungsional manual (registrasi tenant, edit profil, edit administrasi kios, verifikasi bukti transfer) berjalan lancar.
 
+---
+
+### **[ENTRY 07] — Fix BottomNav 5-Column Distribution & Visual Gap Shift on Mobile**
+* **Tanggal**: 2026-07-21
+* **Tujuan**: Memperbaiki celah visual (*visual gap*) antara tombol menu `Histori` dan `Akun` pada navigasi bawah seluler (`BottomNav.jsx`) yang disebabkan oleh perilaku default CSS Grid `1fr` (`minmax(auto, 1fr)`) di mana kata yang panjang (`Dashboard` & `Tunggakan` [9 huruf]) memperlebar kolom 1 & 3 dan mencuri ruang dari kata pendek (`Akun` [4 huruf]).
+
+#### **Perubahan Kode (`Changes Made`)**:
+- **[BottomNav.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/components/layouts/BottomNav.jsx)**: Mengganti layout ke CSS Flexbox presisi tinggi dengan menetapkan `flex: '0 0 20%'`, `width: '20%'`, `maxWidth: '20%'`, dan `minWidth: 0` pada setiap menu link. Hal ini mengunci setiap tombol menu ke dalam **20,000% lebar matematis** yang mutlak merata, tidak terpengaruh oleh panjang teks kata label.
+
+#### **Hasil Verifikasi (`Verification Results`)**:
+- [x] Ke-5 ikon menu (`Dashboard`, `Bayar`, `Tunggakan`, `Histori`, `Akun`) terbagi presisi 20.0% dari ujung kiri ke ujung kanan layar.
+- [x] Bebas dari pergeseran celah visual (*unequal gaps*) antar tombol menu.
