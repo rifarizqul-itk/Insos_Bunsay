@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { useApi } from '../../hooks/useApi';
-import { getAdminKios, createTenant } from '../../api/admin';
+import { useAdminKios, useTenantRegistration } from '../../hooks/useAdmin';
 import Modal from '../../components/ui/Modal';
 
 function KetersediaanKios({ isAdmin = false }) {
   const navigate = useNavigate();
   const { addToast } = useUI();
-  const { data: kiosData, loading, error, refetch } = useApi(getAdminKios, [], true);
+  const { data: kiosData, loading, error, refetch } = useAdminKios();
+  const { registerTenant } = useTenantRegistration();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLantai, setFilterLantai] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [showTambahModal, setShowTambahModal] = useState(false);
   const [formTenant, setFormTenant] = useState({ nama: '', kios: '', email: '', usaha: '' });
+  const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredKios = (kiosData || []).filter(kios => {
@@ -31,13 +32,21 @@ function KetersediaanKios({ isAdmin = false }) {
 
   const handleTambahTenant = async (e) => {
     e.preventDefault();
+    setFieldError(null);
     setIsSubmitting(true);
     try {
-      await createTenant(formTenant);
-      addToast(`Tenant ${formTenant.nama} berhasil didaftarkan!`, 'success');
-      setShowTambahModal(false);
-      setFormTenant({ nama: '', kios: '', email: '', usaha: '' });
-      refetch();
+      const result = await registerTenant(formTenant);
+      if (result && result.success) {
+        addToast(result.message || `Tenant ${formTenant.nama} berhasil didaftarkan!`, 'success');
+        setShowTambahModal(false);
+        setFormTenant({ nama: '', kios: '', email: '', usaha: '' });
+        refetch();
+      } else if (result && !result.success) {
+        addToast(result.message || 'Gagal mendaftarkan tenant.', 'error');
+        if (result.field) {
+          setFieldError({ field: result.field, message: result.message });
+        }
+      }
     } catch (_) {
       addToast('Gagal mendaftarkan tenant. Coba lagi.', 'error');
     } finally {
@@ -45,8 +54,26 @@ function KetersediaanKios({ isAdmin = false }) {
     }
   };
 
+
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Memuat data kios...</div>;
+    return (
+      <div className="page-fade-in flex flex-col gap-8">
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="space-y-2">
+            <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
+            <div className="h-5 w-80 bg-warm-gray/50 animate-pulse rounded-md"></div>
+          </div>
+          <div className="h-11 w-44 bg-warm-gray/60 animate-pulse rounded-md"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="h-24 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-24 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-24 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-24 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        </div>
+        <div className="h-64 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+      </div>
+    );
   }
 
   if (error) {

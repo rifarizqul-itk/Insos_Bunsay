@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
-import { recordCashPayment } from '../../api/transactions';
+import { useTransactionDomain } from '../../context/TransactionContext';
 import { Icon } from '@iconify/react';
 
 function SetoranTunai() {
   const { addToast } = useUI();
+  const { recordCashPayment, error: domainError } = useTransactionDomain();
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [jenisTagihan, setJenisTagihan] = useState('Service Charge');
   const [nominalTunai, setNominalTunai] = useState('');
@@ -43,24 +44,30 @@ function SetoranTunai() {
     setIsSubmitting(true);
     const tenant = tenantData.find(t => String(t.id) === selectedTenantId);
     try {
-      await recordCashPayment({
+      const result = await recordCashPayment({
         tenantId: selectedTenantId,
         jenisTagihan,
         nominal: parseInt(nominalTunai),
         bukti: buktiTunai.name
       });
-      addToast(`Setoran tunai untuk ${tenant.nama} (${tenant.kios}) berhasil dicatat.`, 'success');
-      setNominalTunai('');
-      setBuktiTunai(null);
-      setPreviewBukti(null);
-      const fileInput = document.getElementById('upload-bukti-tunai');
-      if (fileInput) fileInput.value = '';
-    } catch (_) {
-      addToast('Gagal menyimpan setoran. Coba lagi.', 'error');
+
+      if (result && result.success) {
+        addToast(result.message || `Setoran tunai untuk ${tenant?.nama || 'tenant'} berhasil dicatat.`, 'success');
+        setNominalTunai('');
+        setBuktiTunai(null);
+        setPreviewBukti(null);
+        const fileInput = document.getElementById('upload-bukti-tunai');
+        if (fileInput) fileInput.value = '';
+      } else {
+        addToast(result?.message || 'Gagal menyimpan setoran.', 'error');
+      }
+    } catch (err) {
+      addToast(domainError?.message || 'Gagal menyimpan setoran. Coba lagi.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>

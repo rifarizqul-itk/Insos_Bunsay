@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { useApi } from '../../hooks/useApi';
-import { getAdminKiosDetail, updateKios } from '../../api/admin';
+import { useAdminKiosDetail, useKiosUpdate } from '../../hooks/useAdmin';
 import Modal from '../../components/ui/Modal';
 
 function DetailAdministrasiKios() {
@@ -11,11 +10,8 @@ function DetailAdministrasiKios() {
   const { addToast } = useUI();
   const kiosId = location.state?.kiosId;
 
-  const { data: kios, loading, error, refetch } = useApi(
-    () => getAdminKiosDetail(kiosId),
-    [kiosId],
-    !!kiosId
-  );
+  const { data: kios, loading, error, refetch } = useAdminKiosDetail(kiosId);
+  const { updateKiosData } = useKiosUpdate();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({});
@@ -48,10 +44,14 @@ function DetailAdministrasiKios() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await updateKios(kiosId, editData);
-      addToast(`Data administrasi kios ${kios?.nomorKios} berhasil diperbarui.`, 'success');
-      setShowEditModal(false);
-      refetch();
+      const result = await updateKiosData(kiosId, editData);
+      if (result && result.success) {
+        addToast(result.message || `Data administrasi kios ${kios?.nomorKios} berhasil diperbarui.`, 'success');
+        setShowEditModal(false);
+        refetch();
+      } else {
+        addToast(result?.message || 'Gagal memperbarui data.', 'error');
+      }
     } catch (_) {
       addToast('Gagal memperbarui data. Coba lagi.', 'error');
     } finally {
@@ -59,8 +59,20 @@ function DetailAdministrasiKios() {
     }
   };
 
+
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Memuat data...</div>;
+    return (
+      <div className="page-fade-in flex flex-col gap-8">
+        <div className="space-y-2">
+          <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
+          <div className="h-5 w-80 bg-warm-gray/50 animate-pulse rounded-md"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="h-64 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="lg:col-span-2 h-96 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        </div>
+      </div>
+    );
   }
 
   if (error || !kios) {

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { useApi } from '../../hooks/useApi';
-import { getTunggakan } from '../../api/tenant';
+import { useTunggakanAR } from '../../hooks/useTenant';
 import { Icon } from '@iconify/react';
 
 function TunggakanAR() {
   const navigate = useNavigate();
   const { setBayar, addToast } = useUI();
-  const { data, loading, error, refetch } = useApi(getTunggakan, [], true);
+  const { data, loading, error, refetch } = useTunggakanAR();
+
 
   const handleBayar = () => {
     if (!data) return;
@@ -17,7 +17,20 @@ function TunggakanAR() {
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-2)' }}>Memuat data tunggakan...</div>;
+    return (
+      <div className="page-fade-in flex flex-col gap-8">
+        <div className="space-y-2">
+          <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
+          <div className="h-5 w-80 bg-warm-gray/50 animate-pulse rounded-md"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        </div>
+        <div className="h-48 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+      </div>
+    );
   }
 
   if (error) {

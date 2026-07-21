@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useTransactions } from '../../context/TransactionContext';
+import { useTransactionDomain } from '../../context/TransactionContext';
 
 function HistoriPembayaran() {
-  const { riwayat } = useTransactions();
+  const { riwayat } = useTransactionDomain();
   const [filterStatus, setFilterStatus] = useState('Semua');
+
 
   const transaksiDifilter = riwayat.filter((item) => {
     if (filterStatus === 'Semua') return true;

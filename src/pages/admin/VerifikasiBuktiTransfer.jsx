@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTransactions } from '../../context/TransactionContext';
+import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
 import { Icon } from '@iconify/react';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
-  const { antrean, prosesVerifikasi } = useTransactions();
+  const { antrean, verifyTransaction, isLoading, error } = useTransactionDomain();
   const { addToast } = useUI();
   const [previewItem, setPreviewItem] = useState(null);
 
@@ -18,25 +18,29 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     }
   }, [selectedTenant]);
 
-  const handleAksi = (id, statusKonfirmasi) => {
+  const handleAksi = async (id, statusKonfirmasi) => {
     const itemTarget = antrean.find(item => item.id === id);
     if (!itemTarget) return;
 
     const statusFinal = statusKonfirmasi === 'konfirmasi' ? 'Lunas' : 'Tertolak';
     const alasan = statusKonfirmasi === 'konfirmasi' ? null : 'Bukti transfer tidak sesuai / buram';
 
-    prosesVerifikasi({
-      ...itemTarget,
-      status: statusFinal,
-      alasan
-    });
-
-    addToast(
-      `Pembayaran ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak'}.`,
-      statusKonfirmasi === 'konfirmasi' ? 'success' : 'error'
-    );
+    try {
+      const result = await verifyTransaction(id, statusFinal, alasan);
+      if (result && result.success) {
+        addToast(
+          result.message || `Pembayaran ${id} berhasil di-${statusKonfirmasi === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak'}.`,
+          statusKonfirmasi === 'konfirmasi' ? 'success' : 'error'
+        );
+      } else {
+        addToast(result?.message || 'Gagal memproses verifikasi.', 'error');
+      }
+    } catch (_) {
+      addToast('Terjadi kesalahan saat memverifikasi transaksi.', 'error');
+    }
     setPreviewItem(null);
   };
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>

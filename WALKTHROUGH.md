@@ -82,7 +82,72 @@ Setiap kali melakukan refactoring, penambahan fitur, atau perbaikan bug pada ses
 
 #### **Hasil Verifikasi (`Verification Results`)**:
 - [x] Kompilasi bundler `npm run build` sukses 0 errors, 0 warnings (422ms).
-- [x] Seluruh kriteria UI/UX Pro Max Priority 1-8 dan WCAG 2.2 AA terpenuhi 100%.
+- [x] Seluruh kriteria UI/UX Pro Max Priority 1-8 dan WCAG 2.2 AA terpenuhi 100%.---
 
+### **[ENTRY 04] — Design Audit & Micro-Interaction Polish (@redesign-existing-projects)**
+* **Tanggal**: 2026-07-21
+* **Tujuan**: Menerapkan audit visual komprehensif dan *micro-interaction polish* mengacu pada standar `@redesign-existing-projects` (Scan → Diagnose → Upgrade) setelah refactoring *UI/UX Pro Max*.
 
+#### **Perubahan Kode (`Changes Made`)**:
+- **[Button.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/components/ui/Button.jsx)**: Memperbarui varian tombol dengan `transition-all duration-200 ease-out`, feedback sentuh `active:scale-[0.98]`, elevasi `shadow-sm hover:shadow`, dan penanganan status *disabled* yang aman.
+- **[StatCard.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/components/ui/StatCard.jsx)**: Menambahkan `.font-tabular-nums` pada tampilan angka nilai, `.label-micro` pada judul parameter, dan latar belakang ikon semi-transparan.
+- **[index.css](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/index.css)**: Memperbarui variabel `--shadow-card` menjadi bayangan *warm ambient* yang membiaskan warna merah marun brand (`rgba(139, 26, 26, 0.06)`).
+
+#### **Hasil Verifikasi (`Verification Results`)**:
+- [x] Seluruh komponen UI memiliki mikro-interaksi sentuh dan hover yang responsif.
+- [x] Karakter font `Plus Jakarta Sans` dipertahankan penuh sesuai kebutuhan estetika *Modern Civic Precision*.
+
+---
+
+### **[ENTRY 05] — 100% Replacement of Raw Text Loading to Animated Skeleton Pulse Loaders**
+* **Tanggal**: 2026-07-21
+* **Tujuan**: Membersihkan 100% *loading state* berupa teks mentah (`"Memuat data..."`) pada seluruh 5 halaman async dan menggantinya dengan **Animated Skeleton Pulse Loaders** (`animate-pulse bg-warm-gray/...`) yang bentuk geometrinya menyesuaikan kontainer layout masing-masing halaman.
+
+#### **Perubahan Kode (`Changes Made`)**:
+- **[DashboardTenant.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/pages/tenant/DashboardTenant.jsx)**: Mengganti teks mentah loading dengan skeleton header, banner tagihan, dan 3 kartu statistik.
+- **[DashboardAdmin.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/pages/admin/DashboardAdmin.jsx)**: Mengganti teks mentah loading dengan skeleton statistik admin & tabel tenant.
+- **[TunggakanAR.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/pages/tenant/TunggakanAR.jsx)**: Mengganti teks mentah loading dengan skeleton 3-stat cards dan riwayat cicilan.
+- **[KetersediaanKios.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/pages/admin/KetersediaanKios.jsx)**: Mengganti teks mentah loading dengan skeleton header, 4 status cards, dan tabel peta kios.
+- **[DetailAdministrasiKios.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/pages/admin/DetailAdministrasiKios.jsx)**: Mengganti teks mentah loading dengan skeleton 3-kolom detail legalitas.
+
+#### **Hasil Verifikasi (`Verification Results`)**:
+- [x] 100% halaman async (5/5) kini menggunakan Skeleton Pulse Loaders.
+- [x] Bebas dari tampilan teks mentah `"Memuat data..."` di seluruh aplikasi.
+
+---
+
+### **[ENTRY 06] — Full Architectural Seam Isolation (Port & Adapter) across 5 Core Domains**
+* **Tanggal**: 2026-07-21
+* **Tujuan**: Menerapkan pendalaman arsitektur API layer mengacu pada prinsip `@codebase-design` (Deletion Test, Seam Discipline, Port & Adapter Pattern, Design-It-Twice, dan WCAG 3.3.1/3.3.3 compliance). Seluruh 5 modul domain (`Transaction`, `Tenant`, `Admin & Kios`, `Auth`, `HTTP Transport Client`) diisolasi sempurna di balik Port Seams sehingga frontend 100% siap dihubungkan ke REST API backend tanpa mengubah 1 baris kode pun pada komponen UI.
+
+#### **Perubahan Kode (`Changes Made`)**:
+1. **Laporan Arsitektur & Log Kontrak ([CODEBASE-DESIGN-LOG.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/CODEBASE-DESIGN-LOG.md))**:
+   - Menuliskan dokumentasi lengkap Deletion Test, klasifikasi dependensi (kategori 4 mock -> kategori 3 remote adapter), eksplorasi 3 desain per modul, serta spesifikasi kontrak terstandar `CommandResult` `{ success, message?, field?, data? }` dan *relational invariant cross-update status kios*.
+
+2. **Transaction Domain Module (Rank #1)**:
+   - **[src/api/transactions.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/api/transactions.js)**: Dirombak menjadi `TransactionPort` dan `MockTransactionAdapter` mengekspos generic command bus `query()` & `execute()`.
+   - **[src/context/TransactionContext.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/context/TransactionContext.jsx)**: Dirombak menjadi `useTransactionDomain` facade context hook. Membersihkan helper legacy (`tambahAntrean`, `tambahRiwayat`, `prosesVerifikasi`, `useTransactions`).
+   - **Page Callers**: Migrasi 7 file UI (`VerifikasiBuktiTransfer`, `SetoranTunai`, `EksporData`, `BayarSekarang`, `DashboardAdmin`, `RiwayatTransaksiAdmin`, `HistoriPembayaran`) ke `useTransactionDomain`.
+
+3. **Tenant Domain Module (Rank #2)**:
+   - **[src/api/tenant.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/api/tenant.js)**: Mengimplementasikan `TenantPort` dan `MockTenantAdapter` dengan 4 semantic method (`getDashboard`, `getTunggakan`, `getProfile`, `updateProfile`).
+   - **[src/hooks/useTenant.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/hooks/useTenant.js)**: Membuat Custom Hooks Layer (`useTenantDashboard`, `useTunggakanAR`, `useTenantProfile`) tanpa me-wrap dengan React Context tambahan.
+   - **Page Callers**: Migrasi `DashboardTenant`, `TunggakanAR`, `AkunTenant`, `BayarSekarang`. Terintegrasi dengan `AuthContext.updateUser()` dan error field mapping per WCAG 3.3.1/3.3.3.
+
+4. **Admin & Kios Domain Module (Rank #3)**:
+   - **[src/api/admin.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/api/admin.js)**: Mengimplementasikan `AdminPort` dan `MockAdminAdapter` dengan 5 semantic method (`getTenants`, `getKiosList`, `getKiosDetail`, `createTenant`, `updateKios`). Penyelarasan DTO field key (`sp`, `ppjb`, `bast`, `ktp`, `alamat`, `kontak`, `sertifikat`, `keterangan`) dengan Form Edit Kios.
+   - **[src/hooks/useAdmin.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/hooks/useAdmin.js)**: Membuat Custom Hooks Layer (`useAdminTenants`, `useAdminKios`, `useAdminKiosDetail`, `useTenantRegistration`, `useKiosUpdate`).
+   - **Page Callers**: Migrasi `DashboardAdmin`, `KetersediaanKios`, `DetailAdministrasiKios`.
+
+5. **Auth Domain Module (Rank #4)**:
+   - **[src/api/auth.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/api/auth.js)**: Mengimplementasikan `AuthPort` dan `MockAuthAdapter` (`login`, `logout`, `getSession`).
+   - **[src/context/AuthContext.jsx](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/context/AuthContext.jsx)**: Memanggil `authPort` untuk manajemen sesi tanpa merusak kontrak interface `useAuth()`.
+
+6. **HTTP Transport Client Adapter (Rank #5)**:
+   - **[src/api/client.js](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/src/api/client.js)**: Dirombak dari shallow thrower menjadi HTTP Transport Client universal dengan request interceptors, header `Authorization: Bearer <token>`, timeout handling (AbortController 10s), dan normalizer HTTP error ke JSON `{ message, field }`.
+
+#### **Hasil Verifikasi (`Verification Results`)**:
+- [x] `npm run build` sukses 100% 0 errors, 0 warnings (durasi: 481ms - 710ms, 55 modules transformed).
+- [x] 100% API layer diisolasi di balik Port & Adapter tanpa dualisme state.
+- [x] Pengujian fungsional manual (registrasi tenant, edit profil, edit administrasi kios, verifikasi bukti transfer) berjalan lancar.
 

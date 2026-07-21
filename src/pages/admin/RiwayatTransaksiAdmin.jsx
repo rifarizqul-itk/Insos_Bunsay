@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useTransactions } from '../../context/TransactionContext';
+import { useTransactionDomain } from '../../context/TransactionContext';
 import Modal from '../../components/ui/Modal';
 
 function RiwayatTransaksiAdmin() {
-  const { riwayat } = useTransactions();
+  const { riwayat } = useTransactionDomain();
   const [selectedBukti, setSelectedBukti] = useState(null);
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>

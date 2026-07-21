@@ -1,47 +1,181 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { transactionPort } from '../api/transactions';
 
 const TransactionContext = createContext(null);
 
-// Mock data awal
-const initialAntrean = [
-  { id: 'TRX-1092', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (BNI)', waktu: '19 Mei 2026, 14:20 WITA' }
-];
-
-const initialRiwayat = [
-  { id: 'TRX-1090', nama: 'Hj. Yuliana', kios: 'B-1001', tagihan: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS Manual', waktu: '18 Mei 2026, 09:15 WITA', status: 'Lunas' },
-  { id: 'TRX-1091', nama: 'Eva Tauresea', kios: 'B-1004', tagihan: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank (Mandiri)', waktu: '18 Mei 2026, 11:45 WITA', status: 'Tertolak', alasan: 'Bukti transfer tidak valid/rekayasa' }
-];
-
 export const TransactionProvider = ({ children }) => {
-  const [antrean, setAntrean] = useState(initialAntrean);
-  const [riwayat, setRiwayat] = useState(initialRiwayat);
+  const [antrean, setAntrean] = useState([]);
+  const [riwayat, setRiwayat] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null); // TransactionError | null ({ message, field? })
 
-  const tambahAntrean = useCallback((transaksi) => {
-    setAntrean(prev => [transaksi, ...prev]);
+  const refreshState = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [queueData, historyData] = await Promise.all([
+        transactionPort.query({ scope: 'QUEUE' }),
+        transactionPort.query({ scope: 'HISTORY' })
+      ]);
+      setAntrean(queueData || []);
+      setRiwayat(historyData || []);
+    } catch (err) {
+      setError({
+        message: err?.message || 'Gagal memuat data transaksi dari server.',
+        field: 'general'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const prosesVerifikasi = useCallback((transaksiSelesai) => {
-    setRiwayat(prev => [transaksiSelesai, ...prev]);
-    setAntrean(prev => prev.filter(item => item.id !== transaksiSelesai.id));
-  }, []);
+  useEffect(() => {
+    refreshState();
+  }, [refreshState]);
 
-  const tambahRiwayat = useCallback((transaksi) => {
-    setRiwayat(prev => [transaksi, ...prev]);
+  // --- Semantic Action Methods (Command Surface) ---
+
+  const verifyTransaction = useCallback(async (id, status, alasan = null) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await transactionPort.execute({
+        type: 'VERIFY_TRANSACTION',
+        payload: { id, status, alasan }
+      });
+
+      if (!result.success) {
+        setError({
+          message: result.message || 'Gagal memverifikasi transaksi.',
+          field: result.field
+        });
+        return result;
+      }
+
+      await refreshState();
+      return result;
+    } catch (err) {
+      setError({
+        message: err?.message || 'Terjadi kesalahan sistem saat memproses verifikasi.',
+        field: 'general'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshState]);
+
+  const recordCashPayment = useCallback(async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await transactionPort.execute({
+        type: 'RECORD_CASH',
+        payload
+      });
+
+      if (!result.success) {
+        setError({
+          message: result.message || 'Gagal mencatat setoran tunai.',
+          field: result.field
+        });
+        return result;
+      }
+
+      await refreshState();
+      return result;
+    } catch (err) {
+      setError({
+        message: err?.message || 'Terjadi kesalahan saat menyimpan setoran tunai.',
+        field: 'general'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshState]);
+
+  const submitTenantPayment = useCallback(async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await transactionPort.execute({
+        type: 'SUBMIT_PAYMENT',
+        payload
+      });
+
+      if (!result.success) {
+        setError({
+          message: result.message || 'Gagal memproses pembayaran.',
+          field: result.field
+        });
+        return result;
+      }
+
+      await refreshState();
+      return result;
+    } catch (err) {
+      setError({
+        message: err?.message || 'Terjadi kesalahan saat mengirimkan pembayaran.',
+        field: 'general'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshState]);
+
+  const exportReport = useCallback(async (period) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await transactionPort.execute({
+        type: 'EXPORT_REPORT',
+        payload: period
+      });
+
+      if (!result.success) {
+        setError({
+          message: result.message || 'Gagal mengekspor laporan.',
+          field: result.field
+        });
+        return result;
+      }
+
+      return result;
+    } catch (err) {
+      setError({
+        message: err?.message || 'Terjadi kesalahan saat mengekspor laporan.',
+        field: 'general'
+      });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const value = {
+    // Reactive State
     antrean,
     riwayat,
-    tambahAntrean,
-    prosesVerifikasi,
-    tambahRiwayat,
+    isLoading,
+    error,
+
+    // Semantic Methods
+    verifyTransaction,
+    recordCashPayment,
+    submitTenantPayment,
+    exportReport,
+    refreshState
   };
 
   return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>;
 };
 
-export const useTransactions = () => {
+export const useTransactionDomain = () => {
   const context = useContext(TransactionContext);
-  if (!context) throw new Error('useTransactions must be used within TransactionProvider');
+  if (!context) throw new Error('useTransactionDomain must be used within TransactionProvider');
   return context;
 };
+
+

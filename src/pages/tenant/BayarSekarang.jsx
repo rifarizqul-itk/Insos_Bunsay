@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { useTransactions } from '../../context/TransactionContext';
-import { createPayment } from '../../api/tenant';
+import { useTransactionDomain } from '../../context/TransactionContext';
+import { tenantPort } from '../../api/tenant';
 import { Icon } from '@iconify/react';
 
 const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -10,7 +10,7 @@ const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 function BayarSekarang() {
   const navigate = useNavigate();
   const { bayarProps, setBayar, addToast } = useUI();
-  const { tambahAntrean, tambahRiwayat } = useTransactions();
+  const { submitTenantPayment } = useTransactionDomain();
 
   const [metode, setMetode] = useState('transfer_manual');
   const [jenisTagihan, setJenisTagihan] = useState(bayarProps.jenis || 'Service Charge');
@@ -20,6 +20,17 @@ function BayarSekarang() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Prefill default nominal jika belum ada dari bayarProps
+    if (!bayarProps.nominal) {
+      tenantPort.getDashboard().then(data => {
+        if (data?.serviceCharge?.nominal && !nominal) {
+          setNominal(String(data.serviceCharge.nominal));
+        }
+      }).catch(() => {});
+    }
+  }, [bayarProps.nominal]);
+
+  useEffect(() => {
     const scriptSnap = document.createElement('script');
     scriptSnap.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
     scriptSnap.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
@@ -27,6 +38,7 @@ function BayarSekarang() {
     document.body.appendChild(scriptSnap);
     return () => document.body.removeChild(scriptSnap);
   }, []);
+
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -49,25 +61,17 @@ function BayarSekarang() {
     if (metode === 'midtrans_gateway') {
       setIsLoading(true);
       try {
-        const result = await createPayment({
+        const result = await submitTenantPayment({
           jenisTagihan,
           nominal: nominalAngka,
           metode: 'midtrans_gateway'
         });
         setIsLoading(false);
-        if (result.success) {
-          tambahRiwayat({
-            id: result.id,
-            nama: 'Hj. Yuliana',
-            kios: 'B-1001',
-            tagihan: jenisTagihan,
-            nominal: `Rp ${nominalAngka.toLocaleString('id-ID')}`,
-            metode: 'Midtrans (Otomatis)',
-            waktu: new Date().toLocaleString('id-ID') + ' WITA',
-            status: 'Lunas'
-          });
-          addToast('Pembayaran berhasil! Status Anda langsung lunas.', 'success');
+        if (result && result.success) {
+          addToast(result.message || 'Pembayaran berhasil! Status Anda langsung lunas.', 'success');
           navigate('/tenant/histori');
+        } else {
+          addToast(result?.message || 'Gagal memproses pembayaran.', 'error');
         }
       } catch (_) {
         setIsLoading(false);
@@ -82,25 +86,30 @@ function BayarSekarang() {
       return;
     }
 
-    const newTransaksi = {
-      id: `TRX-${Math.floor(Math.random() * 9000) + 1000}`,
-      nama: 'Hj. Yuliana',
-      kios: 'B-1001',
-      tagihan: jenisTagihan,
-      nominal: `Rp ${nominalAngka.toLocaleString('id-ID')}`,
-      metode: 'Transfer Bank Manual',
-      waktu: new Date().toLocaleString('id-ID') + ' WITA',
-      status: 'Pending',
-      bukti: buktiTransfer.name
-    };
-
-    tambahAntrean(newTransaksi);
-    addToast('Bukti terkirim! Menunggu verifikasi admin.', 'success');
-    setBayar('', 'Service Charge');
-    setBuktiTransfer(null);
-    setPreviewBukti(null);
-    navigate('/tenant/histori');
+    setIsLoading(true);
+    try {
+      const result = await submitTenantPayment({
+        jenisTagihan,
+        nominal: nominalAngka,
+        metode: 'transfer_manual',
+        berkas: buktiTransfer.name
+      });
+      setIsLoading(false);
+      if (result && result.success) {
+        addToast(result.message || 'Bukti terkirim! Menunggu verifikasi admin.', 'success');
+        setBayar('', 'Service Charge');
+        setBuktiTransfer(null);
+        setPreviewBukti(null);
+        navigate('/tenant/histori');
+      } else {
+        addToast(result?.message || 'Gagal mengirimkan bukti transfer.', 'error');
+      }
+    } catch (_) {
+      setIsLoading(false);
+      addToast('Gagal memproses pembayaran.', 'error');
+    }
   };
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>

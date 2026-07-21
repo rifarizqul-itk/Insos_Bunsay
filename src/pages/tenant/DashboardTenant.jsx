@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { useApi } from '../../hooks/useApi';
-import { getTenantDashboard } from '../../api/tenant';
+import { useTenantDashboard } from '../../hooks/useTenant';
 
 function DashboardTenant() {
   const navigate = useNavigate();
   const { setBayar, addToast } = useUI();
-  const { data, loading, error, refetch } = useApi(getTenantDashboard, [], true);
+  const { data, loading, error, refetch } = useTenantDashboard();
+
 
   if (loading) {
     return (

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTransactions } from '../../context/TransactionContext';
+import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
-import { useApi } from '../../hooks/useApi';
-import { getAdminTenants } from '../../api/admin';
+import { useAdminTenants } from '../../hooks/useAdmin';
 import DetailKeuanganTenant from './DetailKeuanganTenant';
 import Modal from '../../components/ui/Modal';
 
 function DashboardAdmin() {
   const navigate = useNavigate();
-  const { antrean, prosesVerifikasi } = useTransactions();
+  const { antrean, verifyTransaction } = useTransactionDomain();
   const { addToast } = useUI();
-  const { data: tenants, loading, error, refetch } = useApi(getAdminTenants, [], true);
+  const { data: tenants, loading, error, refetch } = useAdminTenants();
+
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -36,22 +36,28 @@ function DashboardAdmin() {
     setShowVerifikasiModal(true);
   };
 
-  const handleProsesVerifikasi = (id, status) => {
+  const handleProsesVerifikasi = async (id, status) => {
     const statusFinal = status === 'konfirmasi' ? 'Lunas' : 'Tertolak';
     const alasan = status === 'konfirmasi' ? null : 'Bukti transfer tidak valid';
     const item = antrean.find(a => a.id === id);
     if (!item) return;
 
-    prosesVerifikasi({
-      ...item,
-      status: statusFinal,
-      alasan
-    });
-    addToast(`Pembayaran ${id} berhasil di-${status === 'konfirmasi' ? 'setujui' : 'tolak'}.`, status === 'konfirmasi' ? 'success' : 'error');
+    try {
+      const result = await verifyTransaction(id, statusFinal, alasan);
+      if (result && result.success) {
+        addToast(result.message || `Pembayaran ${id} berhasil di-${status === 'konfirmasi' ? 'setujui' : 'tolak'}.`, status === 'konfirmasi' ? 'success' : 'error');
+      } else {
+        addToast(result?.message || 'Gagal memverifikasi transaksi.', 'error');
+      }
+    } catch (_) {
+      addToast('Terjadi kesalahan saat memproses verifikasi.', 'error');
+    }
+
     setShowVerifikasiModal(false);
     setVerifikasiTarget(null);
     refetch();
   };
+
 
   const handleDetailClick = (tenant) => {
     setSelectedTenant(tenant);

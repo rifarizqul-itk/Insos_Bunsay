@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
-import { exportReport } from '../../api/transactions';
+import { useTransactionDomain } from '../../context/TransactionContext';
 
 function EksporData() {
   const { addToast } = useUI();
+  const { exportReport } = useTransactionDomain();
   const [bulanFilter, setBulanFilter] = useState('Mei');
   const [tahunFilter, setTahunFilter] = useState('2026');
   const [isDownloading, setIsDownloading] = useState(false);
@@ -12,15 +13,19 @@ function EksporData() {
     e.preventDefault();
     setIsDownloading(true);
     try {
-      const result = await exportReport(bulanFilter, tahunFilter);
-      addToast(`Berkas rekap ${bulanFilter} ${tahunFilter} berhasil diunduh.`, 'success');
-      // Simulasi download — nanti pake window.open(result.url)
+      const result = await exportReport({ bulan: bulanFilter, tahun: tahunFilter });
+      if (result && result.success) {
+        addToast(result.message || `Berkas rekap ${bulanFilter} ${tahunFilter} berhasil diunduh.`, 'success');
+      } else {
+        addToast(result?.message || 'Gagal mengunduh berkas. Coba lagi.', 'error');
+      }
     } catch (_) {
       addToast('Gagal mengunduh berkas. Coba lagi.', 'error');
     } finally {
       setIsDownloading(false);
     }
   };
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>

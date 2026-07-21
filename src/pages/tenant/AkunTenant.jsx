@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
+import { useTenantProfile } from '../../hooks/useTenant';
 
 function AkunTenant() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { addToast } = useUI();
+  const { data: profileFromApi, loading, updateProfile } = useTenantProfile();
 
   const [profileData, setProfileData] = useState({
-    nama: user?.name || 'Hj. Yuliana',
+    nama: user?.name || user?.nama || 'Hj. Yuliana',
     kios: user?.kios || 'B-1001',
     email: user?.email || 'yuliana.bunsay@email.com',
     telepon: '0812-5564-593',
@@ -17,18 +19,54 @@ function AkunTenant() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...profileData });
+  const [fieldError, setFieldError] = useState(null); // { field: string, message: string }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (profileFromApi) {
+      const merged = {
+        ...profileData,
+        ...profileFromApi
+      };
+      setProfileData(merged);
+      setFormData(merged);
+    }
+  }, [profileFromApi]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldError && fieldError.field === name) {
+      setFieldError(null);
+    }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setProfileData({ ...formData });
-    setIsEditing(false);
-    addToast('Profil berhasil diperbarui.', 'success');
+    setFieldError(null);
+    setIsSubmitting(true);
+
+    try {
+      const result = await updateProfile(formData);
+      if (result && result.success) {
+        const updated = result.data || formData;
+        setProfileData(updated);
+        updateUser({ name: updated.nama, nama: updated.nama, email: updated.email, telepon: updated.telepon, alamat: updated.alamat });
+        setIsEditing(false);
+        addToast(result.message || 'Profil berhasil diperbarui.', 'success');
+      } else if (result && !result.success) {
+        addToast(result.message || 'Gagal memperbarui profil.', 'error');
+        if (result.field) {
+          setFieldError({ field: result.field, message: result.message });
+        }
+      }
+    } catch (_) {
+      addToast('Terjadi kesalahan saat menyimpan profil.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -54,7 +92,27 @@ function AkunTenant() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label htmlFor="profile-nama" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nama Lengkap</label>
-                <input id="profile-nama" type="text" name="nama" value={formData.nama} onChange={handleInputChange} disabled={!isEditing} style={{ backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)', color: 'var(--text)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} required />
+                <input
+                  id="profile-nama"
+                  type="text"
+                  name="nama"
+                  value={formData.nama}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  style={{
+                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
+                    color: 'var(--text)',
+                    border: fieldError?.field === 'nama' ? '2px solid var(--red)' : '1px solid var(--border)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '16px',
+                    height: '44px'
+                  }}
+                  required
+                />
+                {fieldError?.field === 'nama' && (
+                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
+                )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label htmlFor="profile-kios" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor Kios</label>
@@ -64,11 +122,51 @@ function AkunTenant() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label htmlFor="profile-email" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Email</label>
-                <input id="profile-email" type="email" name="email" value={formData.email} onChange={handleInputChange} disabled={!isEditing} style={{ backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)', color: 'var(--text)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} required />
+                <input
+                  id="profile-email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  style={{
+                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
+                    color: 'var(--text)',
+                    border: fieldError?.field === 'email' ? '2px solid var(--red)' : '1px solid var(--border)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '16px',
+                    height: '44px'
+                  }}
+                  required
+                />
+                {fieldError?.field === 'email' && (
+                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
+                )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label htmlFor="profile-telepon" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Telepon</label>
-                <input id="profile-telepon" type="tel" name="telepon" value={formData.telepon} onChange={handleInputChange} disabled={!isEditing} style={{ backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)', color: 'var(--text)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} required />
+                <input
+                  id="profile-telepon"
+                  type="tel"
+                  name="telepon"
+                  value={formData.telepon}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  style={{
+                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
+                    color: 'var(--text)',
+                    border: fieldError?.field === 'telepon' ? '2px solid var(--red)' : '1px solid var(--border)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '16px',
+                    height: '44px'
+                  }}
+                  required
+                />
+                {fieldError?.field === 'telepon' && (
+                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -77,18 +175,40 @@ function AkunTenant() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label htmlFor="profile-alamat" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Lengkap</label>
-              <textarea id="profile-alamat" name="alamat" value={formData.alamat} onChange={handleInputChange} disabled={!isEditing} rows="3" style={{ backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)', color: 'var(--text)', border: '1px solid var(--border)', padding: '12px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', lineHeight: '1.6', resize: 'none' }} required />
+              <textarea
+                id="profile-alamat"
+                name="alamat"
+                value={formData.alamat}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                rows="3"
+                style={{
+                  backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
+                  color: 'var(--text)',
+                  border: fieldError?.field === 'alamat' ? '2px solid var(--red)' : '1px solid var(--border)',
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  resize: 'none'
+                }}
+                required
+              />
+              {fieldError?.field === 'alamat' && (
+                <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
+              )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
               {isEditing ? (
                 <>
-                  <button type="button" onClick={() => { setFormData({ ...profileData }); setIsEditing(false); }} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Batal</button>
-                  <button type="submit" style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 24px', fontSize: '14px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Simpan</button>
+                  <button type="button" onClick={() => { setFormData({ ...profileData }); setFieldError(null); setIsEditing(false); }} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Batal</button>
+                  <button type="submit" disabled={isSubmitting} style={{ backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 24px', fontSize: '14px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>{isSubmitting ? 'Menyimpan...' : 'Simpan'}</button>
                 </>
               ) : (
                 <button type="button" onClick={() => setIsEditing(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Ubah Data Profil</button>
               )}
             </div>
+
           </form>
         </div>
 
