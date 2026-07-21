@@ -11,8 +11,17 @@ function DashboardTenant() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-        <div style={{ fontSize: '18px', color: 'var(--text-2)' }}>Memuat data dashboard...</div>
+      <div className="page-fade-in flex flex-col gap-8">
+        <div className="space-y-2">
+          <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
+          <div className="h-5 w-96 max-w-full bg-warm-gray/50 animate-pulse rounded-md"></div>
+        </div>
+        <div className="h-32 w-full bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        </div>
       </div>
     );
   }

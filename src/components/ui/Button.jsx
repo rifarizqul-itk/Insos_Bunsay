@@ -1,14 +1,14 @@
-// Komponen Button reusable dengan Tailwind
+// Komponen Button reusable dengan Tailwind & CSS Variables
 // Mendukung varian: primary, secondary, outline, danger
 // Mendukung ukuran: sm, md, lg
 
 import React from 'react';
 
 const variantClasses = {
-  primary: 'bg-red text-white hover:bg-red-dark focus:ring-2 focus:ring-red focus:ring-offset-2',
-  secondary: 'bg-warm-gray text-text hover:bg-[#EBE3DB] focus:ring-2 focus:ring-border focus:ring-offset-2',
-  outline: 'bg-transparent text-red border-2 border-red hover:bg-red-50 focus:ring-2 focus:ring-red focus:ring-offset-2',
-  danger: 'bg-red-100 text-red hover:bg-red-200 focus:ring-2 focus:ring-red focus:ring-offset-2',
+  primary: 'bg-red text-white hover:bg-red-rich focus:ring-2 focus:ring-red focus:ring-offset-2 shadow-sm hover:shadow active:scale-[0.98]',
+  secondary: 'bg-warm-gray text-text border border-border hover:bg-[#E8DFC8] focus:ring-2 focus:ring-border focus:ring-offset-2 active:scale-[0.98]',
+  outline: 'bg-transparent text-red border-2 border-red hover:bg-red-50 focus:ring-2 focus:ring-red focus:ring-offset-2 active:scale-[0.98]',
+  danger: 'bg-red-50 text-red border border-red/30 hover:bg-red-100 focus:ring-2 focus:ring-red focus:ring-offset-2 active:scale-[0.98]',
 };
 
 const sizeClasses = {
@@ -31,9 +31,9 @@ function Button({
   const baseClasses = `
     inline-flex items-center justify-center
     font-bold rounded-md
-    transition-colors duration-200
+    transition-all duration-200 ease-out
     focus:outline-none
-    disabled:opacity-50 disabled:cursor-not-allowed
+    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
     ${variantClasses[variant]}
     ${sizeClasses[size]}
     ${fullWidth ? 'w-full' : ''}
