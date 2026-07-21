@@ -37,7 +37,7 @@ function BottomNav({ role }) {
         fontFamily: "'Plus Jakarta Sans', sans-serif"
       }}
     >
-      <div className="flex h-16 items-center justify-around px-2">
+      <div className="grid grid-cols-5 h-16 w-full items-center px-1">
         {menuItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -45,7 +45,7 @@ function BottomNav({ role }) {
               key={item.path}
               to={item.path}
               className={`
-                flex flex-col items-center justify-center flex-1 h-full py-2
+                flex flex-col items-center justify-center w-full h-full py-1.5
                 active:scale-95 transition-transform duration-100 ease-out cursor-pointer
                 ${active ? 'text-red font-bold' : 'text-text-3 font-semibold'}
               `}
@@ -61,7 +61,7 @@ function BottomNav({ role }) {
                 height="24" 
                 className="mb-1"
               />
-              <span className="text-[11px] leading-none truncate max-w-full px-1">
+              <span className="text-[11px] leading-none truncate max-w-full text-center px-0.5">
                 {item.label}
               </span>
             </Link>
