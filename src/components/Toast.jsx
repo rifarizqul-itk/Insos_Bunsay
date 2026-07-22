@@ -13,6 +13,8 @@ const Toast = () => {
       {toasts.map((toast) => (
         <div
           key={toast.id}
+          role={toast.type === 'error' ? 'alert' : 'status'}
+          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
           className="bg-white border border-border rounded-lg p-3.5 px-4.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex justify-between items-center animate-fadeIn"
           style={{ animation: 'fadeIn 0.2s ease' }}
         >

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import { tenantPort } from '../../api/tenant';
-import { Icon } from '@iconify/react';
+import Icon from '../../components/ui/Icon';
+import FormField from '../../components/ui/FormField';
 
 const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 
@@ -151,26 +152,42 @@ function BayarSekarang() {
             boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Jenis Tagihan</label>
+          <FormField label="Jenis Tagihan" id="select-jenis-tagihan">
             <select value={jenisTagihan} onChange={(e) => setJenisTagihan(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 12px', fontSize: '16px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }}>
               <option value="Service Charge">Service Charge Plaza</option>
               <option value="Cicilan Tunggakan (Piutang)">Cicilan Tunggakan (Piutang) Historis</option>
             </select>
-          </div>
+          </FormField>
+
+          <FormField label="Nominal (Rp)" id="input-nominal-pembayaran" required>
+            <input type="number" placeholder="Contoh: 350000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }} />
+          </FormField>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Nominal (Rp)</label>
-            <input type="number" placeholder="Contoh: 350000" value={nominal} onChange={(e) => setNominal(e.target.value)} style={{ height: '48px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', fontWeight: '600', color: 'var(--text)', backgroundColor: 'var(--warm-gray)' }} required />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>Metode Pembayaran</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button type="button" onClick={() => setMetode('transfer_manual')} style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span id="label-metode-pembayaran" style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-2)' }}>
+              Metode Pembayaran
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="label-metode-pembayaran"
+              style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={metode === 'transfer_manual'}
+                onClick={() => setMetode('transfer_manual')}
+                style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'transfer_manual' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'transfer_manual' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
                 Transfer Bank (Manual) + Unggah Bukti
               </button>
-              <button type="button" onClick={() => setMetode('midtrans_gateway')} style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'midtrans_gateway' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'midtrans_gateway' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={metode === 'midtrans_gateway'}
+                onClick={() => setMetode('midtrans_gateway')}
+                style={{ width: '100%', minHeight: '48px', padding: '12px 16px', backgroundColor: metode === 'midtrans_gateway' ? 'var(--red-50)' : 'var(--warm-gray)', color: 'var(--red)', border: metode === 'midtrans_gateway' ? '2px solid var(--red)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '14px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
                 Pembayaran Instan Otomatis
               </button>
             </div>

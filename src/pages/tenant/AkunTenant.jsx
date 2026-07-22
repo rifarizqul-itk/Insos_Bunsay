@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 import { useTenantProfile } from '../../hooks/useTenant';
 
+import FormField from '../../components/ui/FormField';
+
 function AkunTenant() {
   const { user, logout, updateUser } = useAuth();
   const { addToast } = useUI();
@@ -77,7 +79,7 @@ function AkunTenant() {
         </p>
       </div>
 
-      <div className="akun-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', alignItems: 'flex-start' }}>
+      <div className="akun-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', items: 'flex-start' }}>
         <div 
           className="p-5 sm:p-6 md:p-8"
           style={{ 
@@ -90,15 +92,14 @@ function AkunTenant() {
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text)' }}>Detail Profil Pemilik Kios</h3>
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="profile-nama" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nama Lengkap</label>
+              <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
                 <input
-                  id="profile-nama"
                   type="text"
                   name="nama"
                   value={formData.nama}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
+                  readOnly={!isEditing}
+                  aria-readonly={!isEditing}
                   style={{
                     backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
                     color: 'var(--text)',
@@ -108,27 +109,23 @@ function AkunTenant() {
                     fontSize: '16px',
                     height: '44px'
                   }}
-                  required
                 />
-                {fieldError?.field === 'nama' && (
-                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="profile-kios" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor Kios</label>
-                <input id="profile-kios" type="text" name="kios" value={formData.kios} disabled style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px', fontWeight: '700' }} />
-              </div>
+              </FormField>
+
+              <FormField label="Nomor Kios" id="profile-kios">
+                <input id="profile-kios" type="text" name="kios" value={formData.kios} readOnly aria-readonly="true" style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px', fontWeight: '700' }} />
+              </FormField>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="profile-email" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Email</label>
+              <FormField label="Email" id="profile-email" required error={fieldError?.field === 'email' ? fieldError.message : undefined}>
                 <input
-                  id="profile-email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
+                  readOnly={!isEditing}
+                  aria-readonly={!isEditing}
                   style={{
                     backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
                     color: 'var(--text)',
@@ -138,21 +135,17 @@ function AkunTenant() {
                     fontSize: '16px',
                     height: '44px'
                   }}
-                  required
                 />
-                {fieldError?.field === 'email' && (
-                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label htmlFor="profile-telepon" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Telepon</label>
+              </FormField>
+
+              <FormField label="Telepon" id="profile-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
                 <input
-                  id="profile-telepon"
                   type="tel"
                   name="telepon"
                   value={formData.telepon}
                   onChange={handleInputChange}
-                  disabled={!isEditing}
+                  readOnly={!isEditing}
+                  aria-readonly={!isEditing}
                   style={{
                     backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
                     color: 'var(--text)',
@@ -162,25 +155,21 @@ function AkunTenant() {
                     fontSize: '16px',
                     height: '44px'
                   }}
-                  required
                 />
-                {fieldError?.field === 'telepon' && (
-                  <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
-                )}
-              </div>
+              </FormField>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label htmlFor="profile-jenis-usaha" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Usaha</label>
-              <input id="profile-jenis-usaha" type="text" name="jenisUsaha" value={formData.jenisUsaha} disabled style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label htmlFor="profile-alamat" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Lengkap</label>
+
+            <FormField label="Jenis Usaha" id="profile-jenis-usaha">
+              <input type="text" name="jenisUsaha" value={formData.jenisUsaha} readOnly aria-readonly="true" style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} />
+            </FormField>
+
+            <FormField label="Alamat Lengkap" id="profile-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
               <textarea
-                id="profile-alamat"
                 name="alamat"
                 value={formData.alamat}
                 onChange={handleInputChange}
-                disabled={!isEditing}
+                readOnly={!isEditing}
+                aria-readonly={!isEditing}
                 rows="3"
                 style={{
                   backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
@@ -192,12 +181,9 @@ function AkunTenant() {
                   lineHeight: '1.6',
                   resize: 'none'
                 }}
-                required
               />
-              {fieldError?.field === 'alamat' && (
-                <span style={{ fontSize: '12px', color: 'var(--red)', fontWeight: '600' }}>{fieldError.message}</span>
-              )}
-            </div>
+            </FormField>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
               {isEditing ? (
                 <>

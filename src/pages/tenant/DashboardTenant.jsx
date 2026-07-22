@@ -62,6 +62,7 @@ function DashboardTenant() {
 
       {memilikiTagihan && (
         <div 
+          role="alert"
           className="p-5 sm:p-7 md:p-8"
           style={{
             backgroundColor: 'var(--red-50)',
@@ -122,7 +123,7 @@ function DashboardTenant() {
           <span className="label-micro">Service Charge Bulan Ini</span>
           <div style={{ margin: '12px 0 8px 0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
             <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '6px 14px', borderRadius: 'var(--radius-md)', fontWeight: '800', fontSize: '14px', border: '2px solid var(--green)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              ✓ {serviceCharge.status}
+              <span aria-hidden="true">✓</span> {serviceCharge.status}
             </span>
             <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>Rp {serviceCharge.nominal.toLocaleString('id-ID')}</div>
           </div>

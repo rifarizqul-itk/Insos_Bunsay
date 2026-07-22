@@ -12,14 +12,21 @@ function Modal({
   className = '',
 }) {
   const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
-  // Focus trap sederhana
+  // Focus trap & focus restoration
   useEffect(() => {
-    if (isOpen && modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length) focusable[0].focus();
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement;
+      if (modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length) focusable[0].focus();
+      }
+    } else if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
     }
   }, [isOpen]);
 

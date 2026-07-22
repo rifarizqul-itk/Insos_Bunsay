@@ -123,14 +123,17 @@
     letter-spacing: -0.01em;
   }
 
-  /* Keyboard Focus Outline (WCAG 2.4.7) */
+  /* Keyboard Focus Outline & Scroll Margin (WCAG 2.4.7 & WCAG 2.4.11) */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   select:focus-visible,
-  textarea:focus-visible {
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
     outline: 2px solid var(--red);
     outline-offset: 2px;
+    scroll-margin-top: 80px;
+    scroll-margin-bottom: 80px;
   }
 
   button, .active-feedback, .link-button {
@@ -184,7 +187,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 12px;
-    color: var(--text-3);
+    color: var(--text-2); /* Improved contrast WCAG AA 1.4.3 */
   }
 }
 

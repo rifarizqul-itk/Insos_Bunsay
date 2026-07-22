@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
-import { Icon } from '@iconify/react';
+import FormField from '../../components/ui/FormField';
+import Icon from '../../components/ui/Icon';
 
 function ForgotPassword() {
   const navigate = useNavigate();
   const { addToast } = useUI();
   const [email, setEmail] = useState('');
+  const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email) {
+      setError('Masukkan alamat email Anda.');
       addToast('Masukkan alamat email Anda.', 'error');
       return;
     }
 
+    setError(null);
     setIsSubmitting(true);
     // Simulasi pengiriman link reset
     setTimeout(() => {
@@ -64,23 +68,21 @@ function ForgotPassword() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="forgot-email-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
+          <FormField label="Alamat Email" id="forgot-email-input" required error={error}>
             <input
-              id="forgot-email-input"
               type="email"
               placeholder="nama@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
               autoComplete="email"
               style={{ height: '44px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', backgroundColor: 'var(--warm-gray)' }}
-              required
             />
-          </div>
+          </FormField>
 
           <button
             type="submit"
             disabled={isSubmitting}
+            aria-live="polite"
             style={{
               backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)',
               color: '#ffffff',
@@ -98,10 +100,10 @@ function ForgotPassword() {
             }}
           >
             {isSubmitting ? (
-              <>
+              <span role="status" className="flex items-center gap-2">
                 <Icon icon="ph:spinner-gap-bold" className="animate-spin" width="20" height="20" />
                 <span>Mengirim...</span>
-              </>
+              </span>
             ) : (
               'Kirim Tautan Reset'
             )}

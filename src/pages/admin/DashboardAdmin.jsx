@@ -5,6 +5,7 @@ import { useUI } from '../../context/UIContext';
 import { useAdminTenants } from '../../hooks/useAdmin';
 import DetailKeuanganTenant from './DetailKeuanganTenant';
 import Modal from '../../components/ui/Modal';
+import Table from '../../components/ui/Table';
 
 function DashboardAdmin() {
   const navigate = useNavigate();
@@ -12,12 +13,20 @@ function DashboardAdmin() {
   const { addToast } = useUI();
   const { data: tenants, loading, error, refetch } = useAdminTenants();
 
-
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [showVerifikasiModal, setShowVerifikasiModal] = useState(false);
   const [verifikasiTarget, setVerifikasiTarget] = useState(null);
+
+  const tableHeaders = [
+    { label: 'Nama Tenant' },
+    { label: 'No. Kios' },
+    { label: 'Jenis Usaha' },
+    { label: 'Tunggakan' },
+    { label: 'Status Bulan Ini' },
+    { label: 'Aksi', align: 'center' },
+  ];
 
   const filteredTenants = (tenants || []).filter(tenant => {
     const matchesSearch = tenant.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -57,7 +66,6 @@ function DashboardAdmin() {
     setVerifikasiTarget(null);
     refetch();
   };
-
 
   const handleDetailClick = (tenant) => {
     setSelectedTenant(tenant);
@@ -99,117 +107,127 @@ function DashboardAdmin() {
       'Belum Bayar': { bg: 'var(--red-100)', color: 'var(--red)', label: 'Belum Bayar', clickable: false },
       'Menunggu Verifikasi': { bg: 'var(--orange-bg)', color: 'var(--orange)', label: 'Menunggu Verifikasi', clickable: true }
     };
-    return styles[status] || styles['Belum Bayar'];
+    return styles[status] || { bg: 'var(--warm-gray)', color: 'var(--text-2)', label: status, clickable: false };
   };
+
+  const totalTenant = (tenants || []).length;
+  const belumBayarCount = (tenants || []).filter(t => t.statusPembayaran === 'Belum Bayar').length;
 
   return (
     <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>Panel Kendali Admin Plaza</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-          Ringkasan status pembayaran dan verifikasi bukti transfer.
-        </p>
+        <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)' }}>Dashboard Pengelola Plaza</h2>
+        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>Ringkasan statistik real-time dan pemantauan administrasi pembayaran kios.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-2)', textTransform: 'uppercase' }}>Total Tenant Aktif</span>
-          <div style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px' }}>{tenants?.length || 0}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
+          <span className="label-micro">Total Kios Terisi</span>
+          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginTop: '8px' }}>{totalTenant}</div>
+          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Aktif beroperasi di Plaza</span>
         </div>
-        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
+
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
           <span className="label-micro">Menunggu Verifikasi</span>
-          <div className="font-tabular-nums" style={{ fontSize: '28px', fontWeight: '800', marginTop: '6px', color: 'var(--orange)' }}>{antrean.length}</div>
+          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--orange)', marginTop: '8px' }}>{antrean.length}</div>
+          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Memerlukan konfirmasi admin</span>
         </div>
-        <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
-          <span className="label-micro">Dana Terkumpul (Bulan Ini)</span>
-          <div className="font-tabular-nums" style={{ fontSize: '24px', fontWeight: '800', marginTop: '10px', color: 'var(--green)' }}>Rp 142.500.000</div>
+
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
+          <span className="label-micro">Belum Bayar Bulan Ini</span>
+          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginTop: '8px' }}>{belumBayarCount}</div>
+          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Memiliki tagihan aktif</span>
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input type="text" className="w-full md:flex-1" placeholder="Cari nama tenant atau nomor kios..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ minWidth: '200px' }} />
-        <select value={statusFilter} className="w-full md:w-auto" onChange={(e) => setStatusFilter(e.target.value)} style={{ minWidth: '180px', height: '44px' }}>
-          <option value="Semua">Semua Status</option>
-          <option value="Lunas">Lunas</option>
-          <option value="Belum Bayar">Belum Bayar</option>
-          <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-        </select>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text)', margin: 0 }}>Daftar Administrasi Kios</h3>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Cari nama atau no kios..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Cari nama tenant atau nomor kios"
+            style={{ height: '44px', padding: '0 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', backgroundColor: '#ffffff', width: '220px' }}
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter status pembayaran bulan ini"
+            style={{ height: '44px', padding: '0 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', fontWeight: '600', backgroundColor: '#ffffff' }}
+          >
+            <option value="Semua">Semua Status</option>
+            <option value="Lunas">Lunas</option>
+            <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+            <option value="Belum Bayar">Belum Bayar</option>
+          </select>
+        </div>
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Nama Tenant</th>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>No. Kios</th>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Jenis Usaha</th>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Tunggakan</th>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px' }}>Status Bulan Ini</th>
-              <th style={{ padding: '8px 12px', fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
+      <Table
+        caption="Daftar Status Pembayaran Tenant Bulan Ini"
+        ariaLabel="Tabel Status Pembayaran Kios Plaza Kebun Sayur"
+        headers={tableHeaders}
+        isEmpty={filteredTenants.length === 0}
+        emptyMessage="Data tenant tidak ditemukan."
+        colSpan={6}
+      >
+        {filteredTenants.map((tenant) => {
+          const badge = getStatusBadge(tenant.statusPembayaran);
+          return (
+            <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
+              <th scope="row" data-label="Nama Tenant" style={{ padding: '8px 12px', fontWeight: '600', textAlign: 'left' }}>{tenant.nama}</th>
+              <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{tenant.kios}</td>
+              <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
+              <td data-label="Tunggakan" className="font-tabular-nums" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
+                Rp {tenant.tunggakan.toLocaleString('id-ID')}
+              </td>
+              <td data-label="Status Bulan Ini" style={{ padding: '8px 12px' }}>
+                <span
+                  onClick={() => { if (badge.clickable) handleOpenVerifikasi(tenant); }}
+                  style={{
+                    backgroundColor: badge.bg,
+                    color: badge.color,
+                    padding: '4px 12px',
+                    borderRadius: '4px',
+                    fontWeight: '700',
+                    fontSize: '12px',
+                    cursor: badge.clickable ? 'pointer' : 'default',
+                    display: 'inline-block',
+                    border: badge.clickable ? '2px solid var(--orange)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {badge.label}
+                </span>
+              </td>
+              <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
+                <button 
+                  onClick={() => handleDetailClick(tenant)} 
+                  className="table-action-btn"
+                  style={{ 
+                    backgroundColor: 'var(--warm-gray)', 
+                    color: 'var(--text)', 
+                    padding: '10px 16px', 
+                    minHeight: '44px',
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  Detail
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredTenants.length === 0 ? (
-              <tr><td colSpan="6" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>Data tenant tidak ditemukan.</td></tr>
-            ) : (
-              filteredTenants.map((tenant, index) => {
-                const badge = getStatusBadge(tenant.statusPembayaran);
-                return (
-                  <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                    <td data-label="Nama Tenant" style={{ padding: '8px 12px', fontWeight: '600' }}>{tenant.nama}</td>
-                    <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{tenant.kios}</td>
-                    <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
-                    <td data-label="Tunggakan" className="font-tabular-nums" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
-                      Rp {tenant.tunggakan.toLocaleString('id-ID')}
-                    </td>
-                    <td data-label="Status Bulan Ini" style={{ padding: '8px 12px' }}>
-                      <span
-                        onClick={() => { if (badge.clickable) handleOpenVerifikasi(tenant); }}
-                        style={{
-                          backgroundColor: badge.bg,
-                          color: badge.color,
-                          padding: '4px 12px',
-                          borderRadius: '4px',
-                          fontWeight: '700',
-                          fontSize: '12px',
-                          cursor: badge.clickable ? 'pointer' : 'default',
-                          display: 'inline-block',
-                          border: badge.clickable ? '2px solid var(--orange)' : 'none',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {badge.label}
-                      </span>
-                    </td>
-                    <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleDetailClick(tenant)} 
-                        className="table-action-btn"
-                        style={{ 
-                          backgroundColor: 'var(--warm-gray)', 
-                          color: 'var(--text)', 
-                          padding: '10px 16px', 
-                          minHeight: '44px',
-                          fontSize: '13px', 
-                          fontWeight: '600', 
-                          border: '1px solid var(--border)', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+          );
+        })}
+      </Table>
 
       <Modal
         isOpen={showVerifikasiModal}

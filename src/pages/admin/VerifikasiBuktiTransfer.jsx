@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
-import { Icon } from '@iconify/react';
+import Icon from '../../components/ui/Icon';
+import Table from '../../components/ui/Table';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const { antrean, verifyTransaction, isLoading, error } = useTransactionDomain();
@@ -11,6 +12,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const filteredAntrean = selectedTenant
     ? antrean.filter(item => item.nama === selectedTenant)
     : antrean;
+
+  const tableHeaders = [
+    { label: 'Tenant & Kios' },
+    { label: 'Jenis Tagihan' },
+    { label: 'Nominal' },
+    { label: 'Aksi', align: 'center' },
+  ];
 
   useEffect(() => {
     if (selectedTenant && filteredAntrean.length > 0) {
@@ -56,47 +64,34 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="w-full md:flex-[2]" style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
-                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Tenant & Kios</th>
-                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Jenis Tagihan</th>
-                <th style={{ padding: '8px 12px', fontSize: '14px' }}>Nominal</th>
-                <th style={{ padding: '8px 12px', fontSize: '14px', textAlign: 'center' }}>Aksi</th>
+        <div className="w-full md:flex-[2]">
+          <Table
+            caption="Antrean Verifikasi Bukti Transfer Tenant"
+            ariaLabel="Tabel Antrean Verifikasi Pembayaran Transfer Manual"
+            headers={tableHeaders}
+            isEmpty={filteredAntrean.length === 0}
+            emptyMessage={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada antrean pembayaran yang menunggu verifikasi.'}
+            colSpan={4}
+          >
+            {filteredAntrean.map((item, index) => (
+              <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
+                <th scope="row" data-label="Tenant & Kios" style={{ padding: '8px 12px', textAlign: 'left' }}>
+                  <div style={{ fontWeight: '600' }}>{item.nama}</div>
+                  <div className="font-tabular-nums font-bold" style={{ fontSize: '13px', color: 'var(--text-3)' }}>Kios {item.kios}</div>
+                </th>
+                <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
+                <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{item.nominal}</td>
+                <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
+                  <button 
+                    onClick={() => setPreviewItem(item)}
+                    style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 14px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', height: '44px', minHeight: '44px' }}
+                  >
+                    Periksa Bukti
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredAntrean.length === 0 ? (
-                <tr>
-                  <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-3)' }}>
-                    {selectedTenant 
-                      ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.`
-                      : 'Tidak ada antrean pembayaran yang menunggu verifikasi.'}
-                  </td>
-                </tr>
-              ) : (
-                filteredAntrean.map((item, index) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: index % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                    <td data-label="Tenant & Kios" style={{ padding: '8px 12px' }}>
-                      <div style={{ fontWeight: '600' }}>{item.nama}</div>
-                      <div className="font-tabular-nums font-bold" style={{ fontSize: '13px', color: 'var(--text-3)' }}>Kios {item.kios}</div>
-                    </td>
-                    <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-                    <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{item.nominal}</td>
-                    <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => setPreviewItem(item)}
-                        style={{ backgroundColor: 'var(--red)', color: '#ffffff', padding: '0 14px', fontSize: '13px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', height: '44px', minHeight: '44px' }}
-                      >
-                        Periksa Bukti
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+            ))}
+          </Table>
         </div>
 
         <div className="w-full md:flex-1">

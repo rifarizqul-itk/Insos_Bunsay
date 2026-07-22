@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useTunggakanAR } from '../../hooks/useTenant';
-import { Icon } from '@iconify/react';
+import Icon from '../../components/ui/Icon';
 
 function TunggakanAR() {
   const navigate = useNavigate();
   const { setBayar, addToast } = useUI();
   const { data, loading, error, refetch } = useTunggakanAR();
-
 
   const handleBayar = () => {
     if (!data) return;
@@ -139,12 +138,12 @@ function TunggakanAR() {
           }}
         >
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: 'var(--text)' }}>Riwayat Setoran Angsuran</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', padding: 0, margin: 0 }}>
             {riwayatCicilan.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-3)', padding: '20px' }}>Belum ada cicilan.</div>
+              <li style={{ textAlign: 'center', color: 'var(--text-3)', padding: '20px' }}>Belum ada cicilan.</li>
             ) : (
               riwayatCicilan.map((cicil) => (
-                <div key={cicil.ke} className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start sm:items-center" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '14px', backgroundColor: 'var(--warm-gray)' }}>
+                <li key={cicil.ke} className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start sm:items-center" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '14px', backgroundColor: 'var(--warm-gray)' }}>
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text)' }}>Angsuran Ke-<span className="font-tabular-nums">{cicil.ke}</span></div>
                     <div style={{ fontSize: '13px', color: 'var(--text-3)', marginTop: '2px' }}>Diterima: {cicil.tanggal}</div>
@@ -155,10 +154,10 @@ function TunggakanAR() {
                       {cicil.status}
                     </span>
                   </div>
-                </div>
+                </li>
               ))
             )}
-          </div>
+          </ul>
         </div>
       </div>
     </div>

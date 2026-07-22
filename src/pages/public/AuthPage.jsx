@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 
+import FormField from '../../components/ui/FormField';
+
 function AuthPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -11,14 +13,20 @@ function AuthPage() {
   const [formData, setFormData] = useState({ email: '', kataSandi: '' });
   const [selectedRole, setSelectedRole] = useState('tenant');
   const [rememberMe, setRememberMe] = useState(true);
+  const [formError, setFormError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (formError) setFormError(null);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.email || !formData.kataSandi) {
+      setFormError('Mohon isi alamat email dan kata sandi Anda.');
+      return;
+    }
 
     const userData = {
       name: selectedRole === 'admin' ? 'Administrator' : 'Hj. Yuliana',
@@ -70,10 +78,8 @@ function AuthPage() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="auth-email-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Alamat Email</label>
+          <FormField label="Alamat Email" id="auth-email-input" required error={formError ? 'Alamat email wajib diisi' : undefined}>
             <input
-              id="auth-email-input"
               type="email"
               name="email"
               placeholder="nama@email.com"
@@ -81,14 +87,11 @@ function AuthPage() {
               onChange={handleInputChange}
               autoComplete="username"
               style={{ height: '44px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', backgroundColor: 'var(--warm-gray)' }}
-              required
             />
-          </div>
+          </FormField>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="auth-password-input" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Kata Sandi</label>
+          <FormField label="Kata Sandi" id="auth-password-input" required error={formError ? 'Kata sandi wajib diisi' : undefined}>
             <input
-              id="auth-password-input"
               type="password"
               name="kataSandi"
               placeholder="Masukkan kata sandi Anda"
@@ -96,16 +99,23 @@ function AuthPage() {
               onChange={handleInputChange}
               autoComplete="current-password"
               style={{ height: '44px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '0 14px', fontSize: '16px', backgroundColor: 'var(--warm-gray)' }}
-              required
             />
-          </div>
+          </FormField>
 
-          {/* Role selector untuk simulasi */}
+          {/* Role selector untuk simulasi dengan ARIA RadioGroup (WCAG 1.3.1, 4.1.2) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Login Sebagai (Simulasi)</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <span id="role-select-label" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>
+              Login Sebagai (Simulasi)
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="role-select-label"
+              style={{ display: 'flex', gap: '8px' }}
+            >
               <button
                 type="button"
+                role="radio"
+                aria-checked={selectedRole === 'tenant'}
                 onClick={() => setSelectedRole('tenant')}
                 style={{
                   flex: 1,
@@ -124,6 +134,8 @@ function AuthPage() {
               </button>
               <button
                 type="button"
+                role="radio"
+                aria-checked={selectedRole === 'admin'}
                 onClick={() => setSelectedRole('admin')}
                 style={{
                   flex: 1,

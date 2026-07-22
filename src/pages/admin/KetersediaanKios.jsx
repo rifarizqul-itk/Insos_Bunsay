@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useAdminKios, useTenantRegistration } from '../../hooks/useAdmin';
 import Modal from '../../components/ui/Modal';
+import Icon from '../../components/ui/Icon';
+import Table from '../../components/ui/Table';
+import FormField from '../../components/ui/FormField';
 
 function KetersediaanKios({ isAdmin = false }) {
   const navigate = useNavigate();
@@ -17,6 +20,16 @@ function KetersediaanKios({ isAdmin = false }) {
   const [formTenant, setFormTenant] = useState({ nama: '', kios: '', email: '', usaha: '' });
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const tableHeaders = [
+    { label: 'Lantai' },
+    { label: 'No. Kios' },
+    { label: 'Status' },
+    ...(isAdmin ? [{ label: 'Nama Pemilik' }] : []),
+    { label: 'Jenis Usaha' },
+    ...(isAdmin ? [{ label: 'Catatan' }] : []),
+    ...(isAdmin ? [{ label: 'Aksi', align: 'center' }] : []),
+  ];
 
   const filteredKios = (kiosData || []).filter(kios => {
     const matchesSearch = kios.nomorKios.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -102,29 +115,41 @@ function KetersediaanKios({ isAdmin = false }) {
             style={{
               backgroundColor: 'var(--red)',
               color: '#ffffff',
-              padding: '0 24px',
+              padding: '0 20px',
               fontSize: '14px',
               fontWeight: '700',
-              height: '44px',
               border: 'none',
               borderRadius: 'var(--radius-md)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              height: '44px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            + Tambah Tenant Baru
+            <Icon icon="ph:plus-bold" width="18" height="18" />
+            <span>Daftarkan Tenant Baru</span>
           </button>
         )}
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        <input type="text" className="w-full md:flex-2" placeholder="Cari nomor kios atau nama tenant..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ minWidth: '200px' }} />
-        <select value={filterLantai} className="w-full md:w-auto" onChange={(e) => setFilterLantai(e.target.value)} style={{ minWidth: '140px', height: '44px' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', boxShadow: 'var(--shadow-card)' }}>
+        <input 
+          type="text" 
+          placeholder="Cari nomor kios atau nama tenant..." 
+          value={searchQuery} 
+          onChange={(e) => setSearchQuery(e.target.value)} 
+          aria-label="Cari nomor kios atau nama tenant"
+          style={{ height: '44px', padding: '0 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', minWidth: '240px', flex: 1 }} 
+        />
+        <select value={filterLantai} onChange={(e) => setFilterLantai(e.target.value)} aria-label="Filter berdasarkan lantai" style={{ height: '44px', padding: '0 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', fontWeight: '600', backgroundColor: '#ffffff' }}>
           <option value="Semua">Semua Lantai</option>
           <option value="Lt. 1">Lantai 1</option>
           <option value="Lt. 2">Lantai 2</option>
           <option value="Lt. 3">Lantai 3</option>
         </select>
-        <select value={filterStatus} className="w-full md:w-auto" onChange={(e) => setFilterStatus(e.target.value)} style={{ minWidth: '160px', height: '44px' }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} aria-label="Filter berdasarkan status ketersediaan kios" style={{ height: '44px', padding: '0 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', fontWeight: '600', backgroundColor: '#ffffff' }}>
           <option value="Semua">Semua Status</option>
           <option value="Terisi">Terisi</option>
           <option value="Kosong">Kosong</option>
@@ -132,69 +157,57 @@ function KetersediaanKios({ isAdmin = false }) {
         </select>
       </div>
 
-      <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--red)', color: '#ffffff' }}>
-              <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>Lantai</th>
-              <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>No. Kios</th>
-              <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>Status</th>
-              {isAdmin && <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>Nama Pemilik</th>}
-              <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>Jenis Usaha</th>
-              {isAdmin && <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700' }}>Catatan</th>}
-              {isAdmin && <th style={{ padding: '8px 12px', fontSize: '14px', fontWeight: '700', textAlign: 'center' }}>Aksi</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredKios.length === 0 ? (
-              <tr><td colSpan={isAdmin ? 7 : 4} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>Data unit kios tidak ditemukan.</td></tr>
-            ) : (
-              filteredKios.map((kios, index) => (
-                <tr key={kios.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-                  <td data-label="Lantai" style={{ padding: '8px 12px', fontWeight: '600' }}>{kios.lantai}</td>
-                  <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px', color: 'var(--text)' }}>{kios.nomorKios}</td>
-                  <td data-label="Status" style={{ padding: '8px 12px' }}>
-                    <span style={{ 
-                       backgroundColor: kios.statusKios === 'Terisi' ? 'var(--green-bg)' : kios.statusKios === 'Kosong' ? 'var(--red-100)' : 'var(--orange-bg)', 
-                       color: kios.statusKios === 'Terisi' ? 'var(--green)' : kios.statusKios === 'Kosong' ? 'var(--red)' : 'var(--orange)', 
-                       padding: '4px 10px', borderRadius: '4px', fontWeight: '700', fontSize: '12px'
-                    }}>
-                      {kios.statusKios}
-                    </span>
-                  </td>
-                  {isAdmin && <td data-label="Nama Pemilik" style={{ padding: '8px 12px', fontWeight: '600' }}>{kios.tenant}</td>}
-                  <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{kios.usaha}</td>
-                  {isAdmin && <td data-label="Catatan" style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--text-2)' }}>{kios.catatan}</td>}
-                  {isAdmin && (
-                    <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleDetailClick(kios)} 
-                        className="table-action-btn"
-                        style={{ 
-                          backgroundColor: 'var(--warm-gray)', 
-                          color: 'var(--text)', 
-                          padding: '10px 16px', 
-                          minHeight: '44px',
-                          fontSize: '13px', 
-                          fontWeight: '600', 
-                          border: '1px solid var(--border)', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))
+      <Table
+        caption="Tabel Pemetaan Utilitas & Ketersediaan Kios Plaza Kebun Sayur"
+        ariaLabel="Tabel Pemetaan Kios Pengelola Plaza"
+        headers={tableHeaders}
+        isEmpty={filteredKios.length === 0}
+        emptyMessage="Data unit kios tidak ditemukan."
+        colSpan={isAdmin ? 7 : 4}
+      >
+        {filteredKios.map((kios) => (
+          <tr key={kios.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
+            <td data-label="Lantai" style={{ padding: '8px 12px', fontWeight: '600' }}>{kios.lantai}</td>
+            <th scope="row" data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px', color: 'var(--text)', textAlign: 'left' }}>{kios.nomorKios}</th>
+            <td data-label="Status" style={{ padding: '8px 12px' }}>
+              <span style={{ 
+                 backgroundColor: kios.statusKios === 'Terisi' ? 'var(--green-bg)' : kios.statusKios === 'Kosong' ? 'var(--red-100)' : 'var(--orange-bg)', 
+                 color: kios.statusKios === 'Terisi' ? 'var(--green)' : kios.statusKios === 'Kosong' ? 'var(--red)' : 'var(--orange)', 
+                 padding: '4px 10px', borderRadius: '4px', fontWeight: '700', fontSize: '12px'
+              }}>
+                {kios.statusKios}
+              </span>
+            </td>
+            {isAdmin && <td data-label="Nama Pemilik" style={{ padding: '8px 12px', fontWeight: '600' }}>{kios.tenant}</td>}
+            <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{kios.usaha}</td>
+            {isAdmin && <td data-label="Catatan" style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--text-2)' }}>{kios.catatan}</td>}
+            {isAdmin && (
+              <td data-label="Aksi" style={{ padding: '14px 16px', textAlign: 'center' }}>
+                <button 
+                  onClick={() => handleDetailClick(kios)} 
+                  className="table-action-btn"
+                  style={{ 
+                    backgroundColor: 'var(--warm-gray)', 
+                    color: 'var(--text)', 
+                    padding: '10px 16px', 
+                    minHeight: '44px',
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  Detail
+                </button>
+              </td>
             )}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        ))}
+      </Table>
 
       <Modal
         isOpen={showTambahModal}
@@ -250,54 +263,46 @@ function KetersediaanKios({ isAdmin = false }) {
         }
       >
         <form onSubmit={handleTambahTenant} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="tambah-tenant-nama" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nama Lengkap</label>
+          <FormField label="Nama Lengkap" id="tambah-tenant-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
             <input 
-              id="tambah-tenant-nama" 
               type="text" 
               placeholder="Nama pemilik kios" 
               value={formTenant.nama} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, nama: e.target.value }))} 
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px' }} 
-              required 
             />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="tambah-tenant-kios" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nomor Kios</label>
+          </FormField>
+
+          <FormField label="Nomor Kios" id="tambah-tenant-kios" required error={fieldError?.field === 'kios' ? fieldError.message : undefined}>
             <input 
-              id="tambah-tenant-kios" 
               type="text" 
               placeholder="Contoh: B-1001" 
               value={formTenant.kios} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, kios: e.target.value }))} 
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px' }} 
-              required 
             />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="tambah-tenant-email" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Email</label>
+          </FormField>
+
+          <FormField label="Email" id="tambah-tenant-email" required error={fieldError?.field === 'email' ? fieldError.message : undefined}>
             <input 
-              id="tambah-tenant-email" 
               type="email" 
               placeholder="email@tenant.com" 
               value={formTenant.email} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, email: e.target.value }))} 
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px' }} 
-              required 
             />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="tambah-tenant-usaha" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Usaha</label>
+          </FormField>
+
+          <FormField label="Jenis Usaha" id="tambah-tenant-usaha" required error={fieldError?.field === 'usaha' ? fieldError.message : undefined}>
             <input 
-              id="tambah-tenant-usaha" 
               type="text" 
               placeholder="Contoh: Kerajinan, Fashion" 
               value={formTenant.usaha} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, usaha: e.target.value }))} 
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px' }} 
-              required 
             />
-          </div>
+          </FormField>
+
           <div style={{ fontSize: '13px', color: 'var(--text-3)', backgroundColor: 'var(--warm-gray)', padding: '12px', borderRadius: '6px' }}>
             <strong>Informasi Akun:</strong> Username dan password akan di-generate otomatis dan dikirim ke email tenant.
           </div>

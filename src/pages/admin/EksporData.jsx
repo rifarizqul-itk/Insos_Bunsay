@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
 import { useTransactionDomain } from '../../context/TransactionContext';
+import FormField from '../../components/ui/FormField';
 
 function EksporData() {
   const { addToast } = useUI();
@@ -41,21 +42,30 @@ function EksporData() {
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text)' }}>Pilih Periode Laporan</h3>
           <form onSubmit={handleDownloadExcel} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Bulan</label>
+              <FormField label="Bulan" id="ekspor-bulan">
                 <select value={bulanFilter} onChange={(e) => setBulanFilter(e.target.value)} style={{ height: '44px', borderRadius: '8px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}>
                   {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Tahun</label>
+              </FormField>
+
+              <FormField label="Tahun" id="ekspor-tahun">
                 <select value={tahunFilter} onChange={(e) => setTahunFilter(e.target.value)} style={{ height: '44px', borderRadius: '8px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}>
                   {['2024','2025','2026'].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-              </div>
+              </FormField>
             </div>
-            <button type="submit" disabled={isDownloading} style={{ backgroundColor: isDownloading ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 32px', fontSize: '15px', fontWeight: '700', height: '44px', border: 'none', cursor: isDownloading ? 'not-allowed' : 'pointer', width: 'auto' }}>
-              {isDownloading ? 'Memproses...' : 'Unduh Excel (.xlsx)'}
+
+            <button
+              type="submit"
+              disabled={isDownloading}
+              aria-live="polite"
+              style={{ backgroundColor: isDownloading ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 32px', fontSize: '15px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: isDownloading ? 'not-allowed' : 'pointer', width: 'auto' }}
+            >
+              {isDownloading ? (
+                <span role="status">Memproses Rekap...</span>
+              ) : (
+                'Unduh Excel (.xlsx)'
+              )}
             </button>
           </form>
         </div>

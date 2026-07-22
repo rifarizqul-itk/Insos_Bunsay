@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
 import { useTransactionDomain } from '../../context/TransactionContext';
-import { Icon } from '@iconify/react';
+import Icon from '../../components/ui/Icon';
+import FormField from '../../components/ui/FormField';
 
 function SetoranTunai() {
   const { addToast } = useUI();
@@ -80,15 +81,12 @@ function SetoranTunai() {
 
       <div style={{ maxWidth: '600px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '32px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
         <form onSubmit={handleSimpanTunai} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="setoran-tenant" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Pilih Tenant</label>
+          <FormField label="Pilih Tenant" id="setoran-tenant" required>
             <select
-              id="setoran-tenant"
               value={selectedTenantId}
               onChange={(e) => setSelectedTenantId(e.target.value)}
               className="font-tabular-nums"
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
-              required
             >
               <option value="">-- Pilih Tenant --</option>
               {tenantData.map((t) => (
@@ -97,12 +95,10 @@ function SetoranTunai() {
                 </option>
               ))}
             </select>
-          </div>
+          </FormField>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="setoran-jenis" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Jenis Tagihan</label>
+          <FormField label="Jenis Tagihan" id="setoran-jenis">
             <select
-              id="setoran-jenis"
               value={jenisTagihan}
               onChange={(e) => setJenisTagihan(e.target.value)}
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
@@ -110,31 +106,25 @@ function SetoranTunai() {
               <option value="Service Charge">Service Charge</option>
               <option value="Tunggakan AR">Tunggakan Historis (AR)</option>
             </select>
-          </div>
+          </FormField>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="setoran-nominal" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nominal Tunai (Rp)</label>
+          <FormField label="Nominal Tunai (Rp)" id="setoran-nominal" required>
             <input
-              id="setoran-nominal"
               type="number"
               placeholder="Contoh: 1500000"
               value={nominalTunai}
               onChange={(e) => setNominalTunai(e.target.value)}
               className="font-tabular-nums"
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
-              required
             />
-          </div>
+          </FormField>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="upload-bukti-tunai" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Unggah Foto Bukti</label>
+          <FormField label="Unggah Foto Bukti" id="upload-bukti-tunai" required={!previewBukti}>
             <input
-              id="upload-bukti-tunai"
               type="file"
               accept="image/*"
               onChange={handleFileChange}
               style={{ display: 'none' }}
-              required={!previewBukti}
             />
             <label
               htmlFor="upload-bukti-tunai"
@@ -168,7 +158,7 @@ function SetoranTunai() {
                 <img src={previewBukti} alt="Bukti Tunai" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }} />
               </div>
             )}
-          </div>
+          </FormField>
 
           <button
             type="submit"

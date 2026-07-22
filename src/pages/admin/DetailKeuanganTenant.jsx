@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
 import Modal from '../../components/ui/Modal';
+import Icon from '../../components/ui/Icon';
+import Table from '../../components/ui/Table';
+import FormField from '../../components/ui/FormField';
 
 function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
   const { addToast } = useUI();
@@ -11,6 +14,15 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
     tunggakan: tenant.tunggakan,
     rincianTunggakan: tenant.rincianTunggakan || '—'
   });
+
+  const tableHeaders = [
+    { label: 'ID' },
+    { label: 'Tanggal' },
+    { label: 'Jenis' },
+    { label: 'Nominal' },
+    { label: 'Metode' },
+    { label: 'Status' },
+  ];
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -60,131 +72,101 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
             fontWeight: '600',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-md)',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
           }}
         >
-          ← Kembali ke Dashboard Admin
+          <Icon icon="ph:arrow-left-bold" width="18" height="18" />
+          <span>Kembali ke Daftar Tenant</span>
         </button>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-          Detail Keuangan: {tenant.nama} (<span className="font-tabular-nums font-bold">Kios {tenant.kios}</span>)
-        </h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-          Status pembayaran, rincian tunggakan, dan riwayat transaksi.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+              Detail Keuangan: {tenant.nama}
+            </h2>
+            <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
+              Nomor Kios: <strong className="font-tabular-nums">{tenant.kios}</strong> — {tenant.usaha || '—'}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEditModal(true)}
+            style={{
+              backgroundColor: 'var(--red)',
+              color: '#ffffff',
+              padding: '0 20px',
+              fontSize: '14px',
+              fontWeight: '700',
+              border: 'none',
+              borderRadius: 'var(--radius-md)',
+              cursor: 'pointer',
+              height: '44px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Icon icon="ph:pencil-bold" width="18" height="18" />
+            <span>Edit Status / Tunggakan</span>
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border)',
-            padding: '28px',
-            boxShadow: 'var(--shadow-card)'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: 'var(--text)' }}>
-              Status Rekapitulasi Keuangan
-            </h3>
-            <button
-              onClick={() => setShowEditModal(true)}
-              style={{
-                backgroundColor: 'var(--warm-gray)',
-                color: 'var(--text)',
-                padding: '0 16px',
-                fontSize: '13px',
-                fontWeight: '600',
-                height: '44px',
-                border: '1px solid var(--border)',
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
+            <span className="label-micro">Status Pembayaran Bulan Ini</span>
+            <div style={{ marginTop: '12px' }}>
+              <span style={{
+                backgroundColor: getStatusBadgeStyle(tenant.statusPembayaran).bg,
+                color: getStatusBadgeStyle(tenant.statusPembayaran).color,
+                padding: '6px 14px',
                 borderRadius: 'var(--radius-md)',
-                cursor: 'pointer'
-              }}
-            >
-              Edit Data Keuangan
-            </button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-            <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span className="label-micro">Status Bulan Ini</span>
-              <div style={{ marginTop: '6px' }}>
-                <span
-                  style={{
-                    backgroundColor: getStatusBadgeStyle(tenant.statusPembayaran).bg,
-                    color: getStatusBadgeStyle(tenant.statusPembayaran).color,
-                    padding: '4px 10px',
-                    borderRadius: '4px',
-                    fontWeight: '700',
-                    fontSize: '13px'
-                  }}
-                >
-                  {getStatusBadgeStyle(tenant.statusPembayaran).label}
-                </span>
-              </div>
-            </div>
-            <div style={{ backgroundColor: 'var(--warm-gray)', padding: '16px', borderRadius: '8px' }}>
-              <span className="label-micro">Tunggakan AR (Historis)</span>
-              <div className="font-tabular-nums" style={{ fontSize: '16px', fontWeight: '800', marginTop: '6px', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--text)' }}>
-                {formatRupiah(tunggakanValue)}
-              </div>
+                fontWeight: '800',
+                fontSize: '14px',
+                display: 'inline-block'
+              }}>
+                {getStatusBadgeStyle(tenant.statusPembayaran).label}
+              </span>
             </div>
           </div>
-          <div>
-            <span style={{ color: 'var(--text-2)', fontSize: '13px', fontWeight: '600' }}>Rincian Tunggakan:</span>
-            <div style={{ fontWeight: '600', fontSize: '14px', marginTop: '2px', color: 'var(--text-2)' }}>{tenant.rincianTunggakan || '—'}</div>
+
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
+            <span className="label-micro">Akumulasi Tunggakan AR (Historis)</span>
+            <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--green)', marginTop: '8px' }}>
+              {formatRupiah(tunggakanValue)}
+            </div>
           </div>
         </div>
 
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border)',
-            padding: '28px',
-            boxShadow: 'var(--shadow-card)'
-          }}
-        >
+        <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', boxShadow: 'var(--shadow-card)' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: 'var(--text)' }}>
             Riwayat Transaksi Pelaporan Terdahulu
           </h3>
-          <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ backgroundColor: 'var(--warm-gray)', borderBottom: '2px solid var(--border)' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>ID</th>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>Tanggal</th>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>Jenis</th>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>Nominal</th>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>Metode</th>
-                  <th style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--text-2)' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tenant.riwayat && tenant.riwayat.length > 0 ? (
-                  tenant.riwayat.map((row, idx) => (
-                    <tr key={row.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                      <td data-label="ID" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{row.id}</td>
-                      <td data-label="Tanggal" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tanggal}</td>
-                      <td data-label="Jenis" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tipe}</td>
-                      <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
-                      <td data-label="Metode" style={{ padding: '8px 12px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
-                      <td data-label="Status" style={{ padding: '8px 12px' }}>
-                        <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>
-                          {row.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-3)' }}>
-                      Belum ada riwayat transaksi.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            caption={`Riwayat Transaksi Keuangan Kios ${tenant.kios}`}
+            ariaLabel={`Tabel Riwayat Transaksi Keuangan Tenant ${tenant.nama}`}
+            headers={tableHeaders}
+            isEmpty={!tenant.riwayat || tenant.riwayat.length === 0}
+            emptyMessage="Belum ada riwayat transaksi."
+            colSpan={6}
+          >
+            {tenant.riwayat && tenant.riwayat.map((row, idx) => (
+              <tr key={row.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
+                <td data-label="ID" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{row.id}</td>
+                <td data-label="Tanggal" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tanggal}</td>
+                <td data-label="Jenis" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tipe}</td>
+                <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
+                <td data-label="Metode" style={{ padding: '8px 12px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
+                <td data-label="Status" style={{ padding: '8px 12px' }}>
+                  <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>
+                    {row.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </Table>
         </div>
       </div>
 
@@ -241,10 +223,8 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
         }
       >
         <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="edit-status-pembayaran" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Status Pembayaran</label>
+          <FormField label="Status Pembayaran" id="edit-status-pembayaran">
             <select
-              id="edit-status-pembayaran"
               name="statusPembayaran"
               value={editData.statusPembayaran}
               onChange={handleEditChange}
@@ -254,31 +234,27 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
               <option value="Belum Bayar">Belum Bayar</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
             </select>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="edit-tunggakan" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Nilai Tunggakan AR (Rp)</label>
+          </FormField>
+
+          <FormField label="Tunggakan AR (Nominal)" id="edit-tunggakan">
             <input
-              id="edit-tunggakan"
-              type="text"
+              type="number"
               name="tunggakan"
               value={editData.tunggakan}
               onChange={handleEditChange}
-              placeholder="Contoh: 5500000"
               style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
             />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label htmlFor="edit-rincian-tunggakan" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-2)' }}>Rincian Tunggakan</label>
+          </FormField>
+
+          <FormField label="Rincian / Catatan Tunggakan" id="edit-rincian-tunggakan">
             <textarea
-              id="edit-rincian-tunggakan"
               name="rincianTunggakan"
               value={editData.rincianTunggakan}
               onChange={handleEditChange}
               rows="3"
-              placeholder="Deskripsi rincian tunggakan..."
-              style={{ padding: '12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '15px', resize: 'none' }}
+              style={{ borderRadius: '6px', border: '1px solid var(--border)', padding: '10px 12px', fontSize: '15px', resize: 'none' }}
             />
-          </div>
+          </FormField>
         </form>
       </Modal>
     </div>

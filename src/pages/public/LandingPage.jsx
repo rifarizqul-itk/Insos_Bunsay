@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon } from '@iconify/react';
+import Icon from '../../components/ui/Icon';
 
 function LandingPage() {
   const navigate = useNavigate();
