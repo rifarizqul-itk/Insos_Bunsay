@@ -87,12 +87,16 @@ Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
 
 ## 🎨 Standar Desain & Aksesibilitas Frontend
 
-Aplikasi frontend menerapkan pendekatan estetika **Modern Civic Precision** (DFII Score: 12.8 - *Excellent*) serta standar kepatuhan **WCAG 2.2 AA**:
+Aplikasi frontend menerapkan pendekatan estetika **Modern Civic Precision** (DFII Score: 12.8 - *Excellent*) serta kepatuhan penuh **WCAG 2.2 AA** (Level A & AA) di seluruh 17 halaman aplikasi:
 
 1. **Tipografi & Angka Tabular**: Font tunggal **Plus Jakarta Sans** dengan kelas `.font-tabular-nums` untuk perataan vertikal seluruh nilai finansial Rupiah dan nomor unit kios.
-2. **Touch Targets Seluler**: Setiap tombol interaktif memiliki ukuran sentuh minimum **44px x 44px**.
-3. **Bebas Emoji Mentah**: Seluruh ikon aksi menggunakan SVG terstruktur via `@iconify/react`.
-4. **Audit UX Pro Max**: Rincian evaluasi dan kepatuhan UI/UX Pro Max dapat dilihat di **[AUDIT_UI_UX_PRO_MAX.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/AUDIT_UI_UX_PRO_MAX.md)**.
+2. **Touch Targets Seluler**: Setiap tombol dan elemen interaktif memiliki ukuran sentuh minimum **44px x 44px** (`min-height: 44px`) dengan umpan balik visual `active:scale-[0.97]`.
+3. **Bebas Emoji Mentah & Shared Icon Wrapper**: Seluruh ikon menggunakan `@iconify/react` yang dibungkus oleh komponen terpusat `Icon.jsx` dengan suntikan `aria-hidden="true"` otomatis (WCAG 1.1.1).
+4. **Semantik Formulir & Tabel Teraksesibel**:
+   - **`FormField.jsx`**: Otomatis mengikat `label` (`htmlFor`), input (`id`), error message (`aria-describedby`), dan indikator error (`aria-invalid="true"`).
+   - **`Table.jsx`**: Mengintegrasikan elemen `<caption>` tersembunyi/terlihat, `aria-label`, header `scope="col"`, dan identifier baris `<th scope="row">`.
+5. **Navigasi & Live Status**: Menjadwalkan Skip to Content Link (`<a href="#main-app">`), pembaharuan `document.title` dinamis berbasis rute, restorasi fokus modal, serta indikator `role="status"` / `aria-live="polite"` pada toast & tombol aksi.
+6. **Audit & Logbook**: Rincian evaluasi dan kepatuhan UI/UX Pro Max dapat dilihat di **[AUDIT_UI_UX_PRO_MAX.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/AUDIT_UI_UX_PRO_MAX.md)** dan histori refactoring pada **[WALKTHROUGH.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/WALKTHROUGH.md)** (`ENTRY 08`).
 
 ---
 
@@ -198,7 +202,6 @@ Akses `http://localhost:5173` untuk melihat aplikasi.
 
 ## 📎 Referensi Tambahan
 
-- **Laporan Audit UI/UX Pro Max**: `AUDIT_UI_UX_PRO_MAX.md` – evaluasi kepatuhan UX & WCAG 2.2 AA.
 - **Logbook Walkthrough**: `WALKTHROUGH.md` – riwayat rincian perubahan kode repositori.
 - **Spesifikasi Handover**: `GEMINI.md` – dokumen spesifikasi handover pengembang.
 - **Data Kios**: `CONTEXT/Data_Kios_BY_LEGAL` – sumber utama untuk migrasi data.

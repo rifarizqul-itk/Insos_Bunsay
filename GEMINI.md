@@ -57,11 +57,16 @@ Berikut adalah rangkuman resmi perubahan, penambahan fitur, serta penyempurnaan 
    - **Navigation System**: Navigasi bawah (`BottomNav.jsx`) pada perangkat seluler (< 768px) yang secara dinamis menyesuaikan menu berdasarkan peran (`adminItems` vs `tenantItems`). Navigasi desktop berupa Sidebar tetap (`Sidebar.jsx` & `SidebarAdmin.jsx`) selebar 240px.
    - **Reflow Tabel Responsif**: Penggunaan atribut HTML `data-label` pada elemen `<td>` dan rule CSS `@media (max-width: 768px)` di `index.css` yang secara otomatis mentransformasi tabel kaku menjadi kartu bertumpuk di layar smartphone.
    - **Aksesibilitas Sentuh**: Semua tombol dan elemen interaktif dijamin memiliki ukuran minimal `44px x 44px` (`min-height: 44px`) serta efek tekan `transform: scale(0.97)` untuk kenyamanan pengguna lansia/dewasa (usia 40+).
+   - **Shared UI Components Teraksesibel**: Penggunaan `Icon.jsx` (`aria-hidden="true"`), `Table.jsx` (`<caption>`, `aria-label`, `scope="col"`, `<th scope="row">`), dan `FormField.jsx` (`htmlFor` + `id`, `aria-describedby`, `aria-invalid`) di seluruh 17 halaman.
+   - **Global Navigation & Status**: Pemasangan Skip Link (`#main-app`), `document.title` dinamis rute, restorasi fokus modal, dan `role="status"` / `aria-live="polite"` pada toast & tombol aksi.
 
 5. **Spesifikasi Integrasi Mock API & Backend**:
    - Pemisahan berkas API di `src/api/` (`admin.js`, `tenant.js`, `transactions.js`, `client.js`).
    - Penambahan aturan ENUM case-sensitive untuk status transaksi & kios (`"Lunas"`, `"Belum Bayar"`, `"Menunggu Verifikasi"`, `"Terisi"`, `"Kosong"`, `"Perlu Validasi"`).
    - Penambahan spesifikasi respons error JSON terstandar dalam bahasa Indonesia formal untuk mematuhi kriteria WCAG 3.3.1 & 3.3.3.
+
+6. **Refaktorisasi Aksesibilitas WCAG 2.2 AA (Tahap 1, 2, & 3)**:
+   - Refaktorisasi 100% lengkap pada 17 halaman aplikasi mengacu pada `@wcag-audit-patterns` dan `WALKTHROUGH.md` (`ENTRY 08`). Verified 0 build errors.
 
 ---
 
