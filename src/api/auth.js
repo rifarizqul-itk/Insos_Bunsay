@@ -4,6 +4,7 @@ const mockDefaultUser = {
   name: 'Hj. Yuliana',
   email: 'yuliana.bunsay@email.com',
   kios: 'B-1001',
+  statusPemilik: 'Aktif',
   role: 'tenant'
 };
 
@@ -18,12 +19,13 @@ const mockAdminUser = {
  * Dipakai saat VITE_USE_MOCK=true (kategori 4: true external/mock)
  */
 export const MockAuthAdapter = {
-  async login({ email, password, role = 'tenant' }) {
-    if (!email || !email.includes('@')) {
+  async login({ username, email, password, role = 'tenant' }) {
+    const inputUsername = username || email || '';
+    if (!inputUsername || inputUsername.trim().length === 0) {
       return mockDelay({
         success: false,
-        message: 'Email tidak valid.',
-        field: 'email'
+        message: 'Username wajib diisi.',
+        field: 'username'
       });
     }
 
@@ -35,9 +37,10 @@ export const MockAuthAdapter = {
       });
     }
 
+    const cleanUsername = inputUsername.trim();
     const userData = role === 'admin' 
-      ? { ...mockAdminUser, email } 
-      : { ...mockDefaultUser, email };
+      ? { ...mockAdminUser, username: cleanUsername, email: email || `${cleanUsername}@gmail.com` } 
+      : { ...mockDefaultUser, username: cleanUsername, email: email || `${cleanUsername}@gmail.com` };
 
     return mockDelay({
       success: true,

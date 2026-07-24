@@ -3,24 +3,30 @@ import { useUI } from '../../context/UIContext';
 import Modal from '../../components/ui/Modal';
 import Icon from '../../components/ui/Icon';
 import Table from '../../components/ui/Table';
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
+import AlokasiBreakdown from '../../components/ui/AlokasiBreakdown';
+import EmptyState from '../../components/ui/EmptyState';
 
 function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
   const { addToast } = useUI();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({
-    statusPembayaran: tenant.statusPembayaran,
-    tunggakan: tenant.tunggakan,
+    statusPembayaran: tenant.statusPembayaran || 'Belum Bayar',
+    tunggakan: tenant.tunggakan || tenant.hutangTunggakan || 0,
     rincianTunggakan: tenant.rincianTunggakan || '—'
   });
 
   const tableHeaders = [
-    { label: 'ID' },
+    { label: 'ID Transaksi' },
     { label: 'Tanggal' },
-    { label: 'Jenis' },
-    { label: 'Nominal' },
+    { label: 'Jenis / Ket' },
+    { label: 'Nominal Bayar' },
     { label: 'Metode' },
+    { label: 'Rincian Cicilan' },
     { label: 'Status' },
   ];
 
@@ -41,133 +47,112 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
     addToast('Data keuangan tenant berhasil diperbarui.', 'success');
   };
 
-  const getStatusBadgeStyle = (status) => {
-    const styles = {
-      'Lunas': { bg: 'var(--green-bg)', color: 'var(--green)', label: 'Lunas (Bulan Ini)' },
-      'Belum Bayar': { bg: 'var(--red-100)', color: 'var(--red)', label: 'Belum Bayar' },
-      'Menunggu Verifikasi': { bg: 'var(--orange-bg)', color: 'var(--orange)', label: 'Menunggu Verifikasi' }
-    };
-    return styles[status] || styles['Belum Bayar'];
-  };
-
   const formatRupiah = (angka) => {
     if (typeof angka === 'string') angka = parseInt(angka.replace(/[^0-9]/g, ''), 10) || 0;
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(angka);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
   };
 
-  const tunggakanValue = typeof tenant.tunggakan === 'number' ? tenant.tunggakan : parseInt(String(tenant.tunggakan).replace(/[^0-9]/g, ''), 10) || 0;
+  const rawTunggakan = tenant.hutangTunggakan ?? tenant.tunggakan ?? 0;
+  const tunggakanValue = typeof rawTunggakan === 'number' ? rawTunggakan : parseInt(String(rawTunggakan).replace(/[^0-9]/g, ''), 10) || 0;
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={onBack}
-          style={{
-            backgroundColor: 'var(--warm-gray)',
-            color: 'var(--text)',
-            padding: '0 20px',
-            fontSize: '14px',
-            marginBottom: '16px',
-            height: '44px',
-            fontWeight: '600',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
+          className="mb-4 gap-2 font-bold"
         >
-          <Icon icon="ph:arrow-left-bold" width="18" height="18" />
+          <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
           <span>Kembali ke Daftar Tenant</span>
-        </button>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        </Button>
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
               Detail Keuangan: {tenant.nama}
-            </h2>
-            <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-              Nomor Kios: <strong className="font-tabular-nums">{tenant.kios}</strong> — {tenant.usaha || '—'}
+            </h1>
+            <p className="text-text-2 text-sm sm:text-base font-medium mt-1">
+              Nomor Kios: <strong className="font-tabular-nums text-red">{tenant.kios}</strong> — {tenant.usaha || '—'}
             </p>
           </div>
-          <button
+          
+          <Button
+            variant="primary"
+            size="md"
             onClick={() => setShowEditModal(true)}
-            style={{
-              backgroundColor: 'var(--red)',
-              color: '#ffffff',
-              padding: '0 20px',
-              fontSize: '14px',
-              fontWeight: '700',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              cursor: 'pointer',
-              height: '44px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
+            className="gap-2 shadow-md self-start sm:self-auto"
           >
-            <Icon icon="ph:pencil-bold" width="18" height="18" />
-            <span>Edit Status / Tunggakan</span>
-          </button>
+            <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
+            <span>Edit Status Pembayaran</span>
+          </Button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
-            <span className="label-micro">Status Pembayaran Bulan Ini</span>
-            <div style={{ marginTop: '12px' }}>
-              <span style={{
-                backgroundColor: getStatusBadgeStyle(tenant.statusPembayaran).bg,
-                color: getStatusBadgeStyle(tenant.statusPembayaran).color,
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-md)',
-                fontWeight: '800',
-                fontSize: '14px',
-                display: 'inline-block'
-              }}>
-                {getStatusBadgeStyle(tenant.statusPembayaran).label}
-              </span>
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Card variant="elevated" className="p-5 flex flex-col justify-between">
+            <span className="label-micro text-text-3">Status Pembayaran Bulan Ini</span>
+            <div className="mt-2">
+              <Badge status={tenant.statusPembayaran} />
             </div>
-          </div>
+          </Card>
 
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
-            <span className="label-micro">Akumulasi Tunggakan AR (Historis)</span>
-            <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', color: tunggakanValue > 0 ? 'var(--orange)' : 'var(--green)', marginTop: '8px' }}>
+          <Card variant="elevated" className="p-5 flex flex-col justify-between">
+            <span className="label-micro text-text-3">Total Tunggakan Akumulatif</span>
+            <div className={`text-2xl sm:text-3xl font-extrabold font-tabular-nums mt-1 ${tunggakanValue > 0 ? 'text-orange' : 'text-green'}`}>
               {formatRupiah(tunggakanValue)}
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '28px', boxShadow: 'var(--shadow-card)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', color: 'var(--text)' }}>
-            Riwayat Transaksi Pelaporan Terdahulu
+        <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4">
+          <h3 className="text-lg font-extrabold text-text tracking-tight">
+            Riwayat Transaksi Tenant
           </h3>
-          <Table
-            caption={`Riwayat Transaksi Keuangan Kios ${tenant.kios}`}
-            ariaLabel={`Tabel Riwayat Transaksi Keuangan Tenant ${tenant.nama}`}
-            headers={tableHeaders}
-            isEmpty={!tenant.riwayat || tenant.riwayat.length === 0}
-            emptyMessage="Belum ada riwayat transaksi."
-            colSpan={6}
-          >
-            {tenant.riwayat && tenant.riwayat.map((row, idx) => (
-              <tr key={row.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? '#ffffff' : 'var(--warm-gray)' }}>
-                <td data-label="ID" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{row.id}</td>
-                <td data-label="Tanggal" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tanggal}</td>
-                <td data-label="Jenis" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{row.tipe}</td>
-                <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}</td>
-                <td data-label="Metode" style={{ padding: '8px 12px', color: 'var(--text-3)', fontWeight: '600' }}>{row.metode}</td>
-                <td data-label="Status" style={{ padding: '8px 12px' }}>
-                  <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700', fontSize: '11px' }}>
-                    {row.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </Table>
-        </div>
+
+          {(!tenant.riwayat || tenant.riwayat.length === 0) ? (
+            <EmptyState
+              icon="heroicons:receipt-refund-20-solid"
+              title="Belum Ada Transaksi"
+              description="Tenant ini belum memiliki riwayat transaksi pembayaran."
+            />
+          ) : (
+            <Table
+              caption={`Riwayat Transaksi Keuangan Kios ${tenant.kios}`}
+              ariaLabel={`Tabel Riwayat Transaksi Keuangan Tenant ${tenant.nama}`}
+              headers={tableHeaders}
+              colSpan={7}
+            >
+              {tenant.riwayat.map((row, idx) => (
+                <tr key={row.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                  <td data-label="ID Transaksi" className="font-tabular-nums font-bold p-3 text-text-2">
+                    {row.id}
+                  </td>
+                  <td data-label="Tanggal" className="p-3 text-text-2 font-medium font-tabular-nums">
+                    {row.tanggal || row.waktu}
+                  </td>
+                  <td data-label="Jenis / Ket" className="p-3 text-text font-semibold">
+                    {row.tipe || row.tagihan}
+                  </td>
+                  <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                    {typeof row.nominal === 'number' ? formatRupiah(row.nominal) : row.nominal}
+                  </td>
+                  <td data-label="Metode" className="p-3 text-text-3 font-semibold text-xs">
+                    {row.metode}
+                  </td>
+                  <td data-label="Rincian Cicilan" className="p-3">
+                    <AlokasiBreakdown alokasiList={row.alokasi} compact={true} />
+                  </td>
+                  <td data-label="Status" className="p-3">
+                    <Badge status={row.status} />
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          )}
+        </Card>
       </div>
 
       <Modal
@@ -177,72 +162,45 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
         size="md"
         footer={
           <>
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setShowEditModal(false)}
-              style={{
-                flex: 1,
-                backgroundColor: 'var(--warm-gray)',
-                color: 'var(--text)',
-                padding: '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'pointer',
-                height: '44px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
             >
               Batal
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="primary"
               onClick={handleSaveEdit}
-              style={{
-                flex: 1,
-                backgroundColor: 'var(--red)',
-                color: '#ffffff',
-                padding: '12px',
-                fontSize: '14px',
-                fontWeight: '700',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'pointer',
-                height: '44px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
             >
               Simpan Perubahan
-            </button>
+            </Button>
           </>
         }
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <FormField label="Status Pembayaran" id="edit-status-pembayaran">
+        <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="flex flex-col gap-4 font-sans">
+          <FormField label="Status Pembayaran Bulan Ini" id="edit-status-pembayaran">
             <select
               name="statusPembayaran"
               value={editData.statusPembayaran}
               onChange={handleEditChange}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
+              className="w-full h-11 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text"
             >
               <option value="Lunas">Lunas</option>
+              <option value="Dicicil">Dicicil</option>
               <option value="Belum Bayar">Belum Bayar</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
             </select>
           </FormField>
 
-          <FormField label="Tunggakan AR (Nominal)" id="edit-tunggakan">
+          <FormField label="Akumulasi Tunggakan (Rp)" id="edit-tunggakan">
             <input
               type="number"
               name="tunggakan"
               value={editData.tunggakan}
               onChange={handleEditChange}
-              style={{ height: '44px', borderRadius: '6px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3 text-base font-extrabold font-tabular-nums text-text"
             />
           </FormField>
 
@@ -251,8 +209,8 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
               name="rincianTunggakan"
               value={editData.rincianTunggakan}
               onChange={handleEditChange}
-              rows="3"
-              style={{ borderRadius: '6px', border: '1px solid var(--border)', padding: '10px 12px', fontSize: '15px', resize: 'none' }}
+              rows={3}
+              className="w-full p-3 rounded-md border border-border bg-warm-gray/50 text-sm text-text resize-none"
             />
           </FormField>
         </form>

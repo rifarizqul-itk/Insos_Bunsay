@@ -1,5 +1,6 @@
 import React from 'react';
 import { useUI } from '../context/UIContext';
+import Icon from './ui/Icon';
 
 const Toast = () => {
   const { toasts, removeToast } = useUI();
@@ -8,7 +9,7 @@ const Toast = () => {
 
   return (
     <div 
-      className="fixed z-[9999] flex flex-col gap-2 w-[calc(100%-32px)] md:w-auto md:max-w-[400px] left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px)+12px)] md:bottom-6"
+      className="fixed z-50 flex flex-col gap-2 w-[calc(100%-32px)] md:w-auto md:max-w-[400px] left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px)+12px)] md:bottom-6"
     >
       {toasts.map((toast) => (
         <div
@@ -19,7 +20,7 @@ const Toast = () => {
           style={{ animation: 'fadeIn 0.2s ease' }}
         >
           <span 
-            className="text-sm font-semibold break-words flex-1 pr-2"
+            className="text-sm font-semibold break-words flex-1 pr-2 text-pretty"
             style={{
               color: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--text)'
             }}
@@ -29,9 +30,9 @@ const Toast = () => {
           <button
             onClick={() => removeToast(toast.id)}
             aria-label="Tutup notifikasi"
-            className="bg-transparent border-none text-lg cursor-pointer text-text-3 hover:text-text transition-colors flex items-center justify-center h-11 w-11 rounded-md active:scale-90"
+            className="bg-transparent border-none text-lg cursor-pointer text-text-3 hover:text-text transition-colors flex items-center justify-center size-11 rounded-md active:scale-90"
           >
-            ✕
+            <Icon icon="heroicons:x-mark-20-solid" width="18" height="18" />
           </button>
         </div>
       ))}

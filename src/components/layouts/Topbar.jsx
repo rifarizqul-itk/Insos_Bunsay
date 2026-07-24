@@ -6,8 +6,8 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   const notifikasiRef = useRef(null);
 
   const daftarNotifikasi = [
-    { id: 1, teks: 'Tagihan Tunggakan (Piutang) historis Anda terdeteksi belum lunas.', waktu: 'Hari ini', tipe: 'penting' },
-    { id: 2, teks: 'Pembayaran Service Charge bulan April 2026 telah tervalidasi lunas.', waktu: '2 hari lalu', tipe: 'sukses' }
+    { id: 1, teks: 'Tunggakan sewa bulan sebelumnya belum lunas.', waktu: 'Hari ini', tipe: 'penting' },
+    { id: 2, teks: 'Pembayaran sewa bulan April 2026 sudah lunas.', waktu: '2 hari lalu', tipe: 'sukses' }
   ];
 
   useEffect(() => {
@@ -16,13 +16,20 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         setIsOpen(false);
       }
     }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    }
     document.addEventListener('mousedown', handleKlikLuar);
     document.addEventListener('touchstart', handleKlikLuar);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleKlikLuar);
       document.removeEventListener('touchstart', handleKlikLuar);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [isOpen]);
 
   const hamburgerClass = variant === 'admin' ? 'topbar-hamburger-admin' : 'topbar-hamburger-tenant';
 
@@ -77,6 +84,8 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Notifikasi"
+          aria-expanded={isOpen}
+          aria-controls="notifikasi-dropdown"
           style={{
             height: '48px', 
             backgroundColor: isOpen ? 'var(--warm-gray)' : 'transparent',
@@ -109,6 +118,9 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         {/* Kotak Kontainer Lembar Dropdown Menu */}
         {isOpen && (
           <div 
+            id="notifikasi-dropdown"
+            role="region"
+            aria-label="Panel Notifikasi"
             className="topbar-dropdown"
             style={{
               position: 'absolute',
@@ -125,7 +137,7 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
               flexDirection: 'column',
               gap: '12px',
               animation: 'fadeIn 0.15s ease-out',
-              zIndex: 110
+              zIndex: 40
             }}
           >
             <div style={{
@@ -136,13 +148,14 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
               paddingBottom: '8px',
               margin: 0
             }}>
-              Pemberitahuan Terbaru
+              Notifikasi
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div role="list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {daftarNotifikasi.map((notif) => (
                 <div 
                   key={notif.id} 
+                  role="listitem"
                   style={{
                     padding: '12px',
                     borderRadius: 'var(--radius-md)',
@@ -163,11 +176,11 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
                     gap: '6px'
                   }}>
                     {notif.tipe === 'penting' ? (
-                      <Icon icon="ph:warning-circle-bold" className="text-orange flex-shrink-0" width="18" height="18" style={{ color: 'var(--orange)' }} />
+                      <Icon icon="ph:warning-circle-bold" aria-label="Notifikasi penting" className="text-orange shrink-0 size-4.5" style={{ color: 'var(--orange)' }} />
                     ) : (
-                      <Icon icon="ph:check-circle-bold" className="text-green flex-shrink-0" width="18" height="18" style={{ color: 'var(--green)' }} />
+                      <Icon icon="ph:check-circle-bold" aria-label="Notifikasi sukses" className="text-green shrink-0 size-4.5" style={{ color: 'var(--green)' }} />
                     )} 
-                    <span>{notif.teks}</span>
+                    <span className="text-pretty">{notif.teks}</span>
                   </div>
                   <span style={{ 
                     fontSize: '12px', 

@@ -33,7 +33,12 @@ function FormField({
           className={`text-sm font-semibold text-text-2 ${labelClassName}`}
         >
           {label}
-          {required && <span className="text-red ml-1" aria-hidden="true">*</span>}
+          {required && (
+            <>
+              <span className="text-red ml-1" aria-hidden="true">*</span>
+              <span className="sr-only"> (wajib diisi)</span>
+            </>
+          )}
         </label>
       )}
 
@@ -42,6 +47,7 @@ function FormField({
         return React.cloneElement(child, {
           id: fieldId,
           required,
+          'aria-required': required ? true : undefined,
           'aria-invalid': error ? true : undefined,
           'aria-describedby': describedByIDs,
           'aria-readonly': readOnly ? true : undefined,

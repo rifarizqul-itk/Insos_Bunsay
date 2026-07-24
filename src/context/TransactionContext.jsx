@@ -7,7 +7,7 @@ export const TransactionProvider = ({ children }) => {
   const [antrean, setAntrean] = useState([]);
   const [riwayat, setRiwayat] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null); // TransactionError | null ({ message, field? })
+  const [error, setError] = useState(null);
 
   const refreshState = useCallback(async () => {
     setIsLoading(true);
@@ -33,7 +33,13 @@ export const TransactionProvider = ({ children }) => {
     refreshState();
   }, [refreshState]);
 
-  // --- Semantic Action Methods (Command Surface) ---
+  const getFIFOPreview = useCallback(async (idPemilik, nominal) => {
+    try {
+      return await transactionPort.previewFIFO(idPemilik || 1, nominal);
+    } catch (_) {
+      return { allocations: [], remainingAmount: 0, updatedBills: [] };
+    }
+  }, []);
 
   const verifyTransaction = useCallback(async (id, status, alasan = null) => {
     setIsLoading(true);
@@ -155,13 +161,11 @@ export const TransactionProvider = ({ children }) => {
   }, []);
 
   const value = {
-    // Reactive State
     antrean,
     riwayat,
     isLoading,
     error,
-
-    // Semantic Methods
+    getFIFOPreview,
     verifyTransaction,
     recordCashPayment,
     submitTenantPayment,
@@ -177,5 +181,3 @@ export const useTransactionDomain = () => {
   if (!context) throw new Error('useTransactionDomain must be used within TransactionProvider');
   return context;
 };
-
-

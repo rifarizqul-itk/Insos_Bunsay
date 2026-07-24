@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 import { useTenantProfile } from '../../hooks/useTenant';
-
 import FormField from '../../components/ui/FormField';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Icon from '../../components/ui/Icon';
 
 function AkunTenant() {
   const { user, logout, updateUser } = useAuth();
@@ -21,8 +23,15 @@ function AkunTenant() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...profileData });
-  const [fieldError, setFieldError] = useState(null); // { field: string, message: string }
+  const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [passwordData, setPasswordData] = useState({
+    kataSandiLama: '',
+    kataSandiBaru: '',
+    konfirmasiKataSandi: ''
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     if (profileFromApi) {
@@ -69,51 +78,101 @@ function AkunTenant() {
     }
   };
 
+  const firstInputRef = React.useRef(null);
+  const [passwordError, setPasswordError] = useState(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(null);
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (name === 'kataSandiBaru' && passwordError) setPasswordError(null);
+    if (name === 'konfirmasiKataSandi' && confirmPasswordError) setConfirmPasswordError(null);
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      if (firstInputRef.current) firstInputRef.current.focus();
+    }, 50);
+  };
+
+  const handleSavePassword = (e) => {
+    e.preventDefault();
+    let hasErr = false;
+    setPasswordError(null);
+    setConfirmPasswordError(null);
+
+    if (!passwordData.kataSandiBaru || passwordData.kataSandiBaru.length < 6) {
+      setPasswordError('Kata sandi baru minimal 6 karakter.');
+      addToast('Kata sandi baru minimal 6 karakter.', 'error');
+      hasErr = true;
+    }
+
+    if (passwordData.kataSandiBaru !== passwordData.konfirmasiKataSandi) {
+      setConfirmPasswordError('Konfirmasi kata sandi baru tidak cocok.');
+      addToast('Konfirmasi kata sandi baru tidak cocok.', 'error');
+      hasErr = true;
+    }
+
+    if (hasErr) return;
+
+    setIsChangingPassword(true);
+    setTimeout(() => {
+      setIsChangingPassword(false);
+      setPasswordData({
+        kataSandiLama: '',
+        kataSandiBaru: '',
+        konfirmasiKataSandi: ''
+      });
+      addToast('Kata sandi akun tenant berhasil diperbarui!', 'success');
+    }, 400);
+  };
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', letterSpacing: '-0.5px' }}>Pengaturan Akun Tenant</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-          Kelola informasi data diri dan akses penutupan sesi login.
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Pengaturan Akun Tenant
+        </h1>
+        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+          Kelola profil pemilik kios, kontak, dan kata sandi Anda.
         </p>
       </div>
 
-      <div className="akun-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', items: 'flex-start' }}>
-        <div 
-          className="p-5 sm:p-6 md:p-8"
-          style={{ 
-            backgroundColor: '#ffffff', 
-            borderRadius: 'var(--radius-lg)', 
-            border: '1px solid var(--border)', 
-            boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
-          }}
-        >
-          <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text)' }}>Detail Profil Pemilik Kios</h3>
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="akun-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        {/* Form Profil Utama */}
+        <Card variant="elevated" className="lg:col-span-8 p-6 sm:p-8 flex flex-col gap-6">
+          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+            Detail Profil Pemilik Kios
+          </h3>
+          
+          <form onSubmit={handleSave} className="flex flex-col gap-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
                 <input
+                  ref={firstInputRef}
                   type="text"
                   name="nama"
                   value={formData.nama}
                   onChange={handleInputChange}
                   readOnly={!isEditing}
                   aria-readonly={!isEditing}
-                  style={{
-                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
-                    color: 'var(--text)',
-                    border: fieldError?.field === 'nama' ? '2px solid var(--red)' : '1px solid var(--border)',
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '16px',
-                    height: '44px'
-                  }}
+                  className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors ${
+                    isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                  } ${fieldError?.field === 'nama' ? 'border-red' : ''}`}
                 />
               </FormField>
 
               <FormField label="Nomor Kios" id="profile-kios">
-                <input id="profile-kios" type="text" name="kios" value={formData.kios} readOnly aria-readonly="true" style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px', fontWeight: '700' }} />
+                <input 
+                  id="profile-kios" 
+                  type="text" 
+                  name="kios" 
+                  value={formData.kios} 
+                  readOnly 
+                  aria-readonly="true" 
+                  className="w-full h-11 rounded-md border border-border/80 bg-warm-gray/50 px-3.5 text-base font-extrabold font-tabular-nums text-text-2" 
+                />
               </FormField>
             </div>
 
@@ -126,15 +185,9 @@ function AkunTenant() {
                   onChange={handleInputChange}
                   readOnly={!isEditing}
                   aria-readonly={!isEditing}
-                  style={{
-                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
-                    color: 'var(--text)',
-                    border: fieldError?.field === 'email' ? '2px solid var(--red)' : '1px solid var(--border)',
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '16px',
-                    height: '44px'
-                  }}
+                  className={`w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors ${
+                    isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                  } ${fieldError?.field === 'email' ? 'border-red' : ''}`}
                 />
               </FormField>
 
@@ -146,21 +199,22 @@ function AkunTenant() {
                   onChange={handleInputChange}
                   readOnly={!isEditing}
                   aria-readonly={!isEditing}
-                  style={{
-                    backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
-                    color: 'var(--text)',
-                    border: fieldError?.field === 'telepon' ? '2px solid var(--red)' : '1px solid var(--border)',
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '16px',
-                    height: '44px'
-                  }}
+                  className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors ${
+                    isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                  } ${fieldError?.field === 'telepon' ? 'border-red' : ''}`}
                 />
               </FormField>
             </div>
 
             <FormField label="Jenis Usaha" id="profile-jenis-usaha">
-              <input type="text" name="jenisUsaha" value={formData.jenisUsaha} readOnly aria-readonly="true" style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text-2)', border: '1px solid var(--border)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: '16px', height: '44px' }} />
+              <input 
+                type="text" 
+                name="jenisUsaha" 
+                value={formData.jenisUsaha} 
+                readOnly 
+                aria-readonly="true" 
+                className="w-full h-11 rounded-md border border-border/80 bg-warm-gray/50 px-3.5 text-base font-semibold text-text-2" 
+              />
             </FormField>
 
             <FormField label="Alamat Lengkap" id="profile-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
@@ -170,69 +224,119 @@ function AkunTenant() {
                 onChange={handleInputChange}
                 readOnly={!isEditing}
                 aria-readonly={!isEditing}
-                rows="3"
-                style={{
-                  backgroundColor: isEditing ? '#ffffff' : 'var(--warm-gray)',
-                  color: 'var(--text)',
-                  border: fieldError?.field === 'alamat' ? '2px solid var(--red)' : '1px solid var(--border)',
-                  padding: '12px 14px',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  resize: 'none'
-                }}
+                rows={3}
+                className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
+                  isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                } ${fieldError?.field === 'alamat' ? 'border-red' : ''}`}
               />
             </FormField>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+            <div className="flex justify-end gap-3 pt-2">
               {isEditing ? (
                 <>
-                  <button type="button" onClick={() => { setFormData({ ...profileData }); setFieldError(null); setIsEditing(false); }} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Batal</button>
-                  <button type="submit" disabled={isSubmitting} style={{ backgroundColor: isSubmitting ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 24px', fontSize: '14px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>{isSubmitting ? 'Menyimpan...' : 'Simpan'}</button>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={() => { setFormData({ ...profileData }); setFieldError(null); setIsEditing(false); }}
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  </Button>
                 </>
               ) : (
-                <button type="button" onClick={() => setIsEditing(true)} style={{ backgroundColor: 'var(--warm-gray)', color: 'var(--text)', padding: '0 24px', fontSize: '14px', fontWeight: '600', height: '44px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>Ubah Data Profil</button>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={handleStartEdit}
+                  className="gap-2"
+                >
+                  <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
+                  <span>Ubah Data Profil</span>
+                </Button>
               )}
             </div>
-
           </form>
-        </div>
+        </Card>
 
-        <div 
-          className="p-4 sm:p-5 md:p-6"
-          style={{ 
-            backgroundColor: '#ffffff', 
-            borderRadius: 'var(--radius-lg)', 
-            border: '1px solid var(--border)', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '20px', 
-            boxShadow: '0 2px 12px rgba(139,26,26,0.08)' 
-          }}
-        >
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Akses Keamanan</h3>
-          <p style={{ fontSize: '14px', color: 'var(--text-2)', lineHeight: '1.6' }}>
-            Logout untuk mengakhiri sesi aktif Anda.
-          </p>
-          <button
-            type="button"
-            onClick={() => { logout(); addToast('Anda telah logout.', 'info'); }}
-            style={{
+        {/* Column Kanan: Ubah Kata Sandi & Keluar Akun */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          {/* Card Ubah Kata Sandi */}
+          <form onSubmit={handleSavePassword}>
+            <Card variant="elevated" className="flex flex-col gap-4 p-6">
+              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+                Ubah Kata Sandi
+              </h3>
+              
+              <FormField label="Kata Sandi Saat Ini" id="tenant-pwd-old">
+                <input
+                  type="password"
+                  name="kataSandiLama"
+                  placeholder="Masukkan kata sandi lama"
+                  value={passwordData.kataSandiLama}
+                  onChange={handlePasswordChange}
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                />
+              </FormField>
 
-              backgroundColor: 'var(--red-100)',
-              color: 'var(--red)',
-              padding: '12px',
-              fontSize: '14px',
-              fontWeight: '700',
-              width: '100%',
-              border: '1px solid var(--border)',
-              height: '48px',
-              borderRadius: 'var(--radius-md)',
-              cursor: 'pointer'
-            }}
-          >
-            Keluar dari Akun
-          </button>
+              <FormField label="Kata Sandi Baru" id="tenant-pwd-new" required error={passwordError}>
+                <input
+                  type="password"
+                  name="kataSandiBaru"
+                  placeholder="Minimal 6 karakter"
+                  value={passwordData.kataSandiBaru}
+                  onChange={handlePasswordChange}
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                />
+              </FormField>
+
+              <FormField label="Konfirmasi Kata Sandi Baru" id="tenant-pwd-confirm" required error={confirmPasswordError}>
+                <input
+                  type="password"
+                  name="konfirmasiKataSandi"
+                  placeholder="Ulangi kata sandi baru"
+                  value={passwordData.konfirmasiKataSandi}
+                  onChange={handlePasswordChange}
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                />
+              </FormField>
+
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                disabled={isChangingPassword}
+                className="mt-1 h-11 text-sm font-extrabold shadow-sm"
+              >
+                {isChangingPassword ? 'Memperbarui...' : 'Perbarui Kata Sandi'}
+              </Button>
+            </Card>
+          </form>
+
+          {/* Card Keluar dari Akun */}
+          <Card variant="elevated" className="flex flex-col gap-4 p-6">
+            <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+              Keluar Akun
+            </h3>
+            <p className="text-sm text-text-2 font-medium leading-relaxed text-pretty">
+              Keluar dari akun tenant untuk mengakhiri sesi aktif Anda pada perangkat ini.
+            </p>
+            <Button
+              type="button"
+              variant="danger"
+              fullWidth
+              className="h-11 text-sm font-bold gap-2"
+              onClick={() => { logout(); addToast('Anda telah logout.', 'info'); }}
+            >
+              <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" width="18" height="18" />
+              <span>Keluar dari Akun</span>
+            </Button>
+          </Card>
         </div>
       </div>
     </div>

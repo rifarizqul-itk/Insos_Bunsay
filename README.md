@@ -22,66 +22,25 @@ Data tenant, kios, dan tunggakan historis tersedia dalam file:
 
 - **`CONTEXT/Data_Kios_BY_LEGAL_versi_MARKDOWN.md`** atau **`CONTEXT/Data Kios BY LEGAL ( update 26 April 2025 ).xlsx`** – berisi semua data kios per lantai, nama pemilik, nomor KTP, alamat, kontak, nomor SP/PPJB, tanggal BAST, ukuran, jenis usaha, sertifikat, dan histori pengalihan hak. Total tenant aktif sekitar **250 unit** (data per 26 April 2025).
 
-### Skema Database yang Disarankan
+### Skema Database Resmi (ERD v4 — FINAL)
 
-Berdasarkan kebutuhan aplikasi, berikut skema minimal yang direkomendasikan:
+Skema database resmi yang digunakan oleh frontend mengacu pada **[bunsay_erd.dbml.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/bunsay_erd.dbml.md)** dan **[GEMINI.md](file:///d:/ITK/SEMESTER%205/INOVASI%20SOSIAL/plaza-kebun-sayur-payment/GEMINI.md)** (Spesifikasi Handover V5.4).
 
-#### 1. Tabel `tenants`
-| Kolom           | Tipe        | Keterangan                           |
-|-----------------|-------------|--------------------------------------|
-| `id`            | INT / UUID  | Primary key                          |
-| `nama`          | VARCHAR     | Nama pemilik kios                    |
-| `email`         | VARCHAR     | Untuk login tenant                   |
-| `password_hash` | VARCHAR     | Hash kata sandi (bcrypt)             |
-| `no_ktp`        | VARCHAR     | Nomor KTP                            |
-| `alamat`        | TEXT        | Alamat lengkap                       |
-| `no_telepon`    | VARCHAR     | Nomor telepon                        |
-| `jenis_usaha`   | VARCHAR     | Jenis usaha (Kerajinan, Fashion, dll)|
-
-#### 2. Tabel `kios`
-| Kolom           | Tipe        | Keterangan                           |
-|-----------------|-------------|--------------------------------------|
-| `id`            | INT / UUID  | Primary key                          |
-| `nomor_kios`    | VARCHAR     | e.g. "B-1001"                        |
-| `lantai`        | VARCHAR     | "Lt. 1", "Lt. 2", "Lt. 3"            |
-| `status`        | ENUM        | `Terisi`, `Kosong`, `Perlu Validasi` |
-| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id` (nullable)|
-| `ukuran`        | VARCHAR     | e.g. "6M"                            |
-| `no_sp`         | VARCHAR     | Nomor SP / tanggal                   |
-| `no_ppjb`       | VARCHAR     | Nomor PPJB / tanggal                 |
-| `tgl_bast`      | DATE        | Tanggal BAST                         |
-| `no_sertifikat` | VARCHAR     | Nomor sertifikat / tanggal ambil     |
-| `catatan`       | TEXT        | Keterangan tambahan                  |
-
-#### 3. Tabel `transactions`
-| Kolom           | Tipe        | Keterangan                           |
-|-----------------|-------------|--------------------------------------|
-| `id`            | INT / UUID  | Primary key                          |
-| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id`          |
-| `jenis_tagihan` | ENUM        | `Service Charge`, `Tunggakan AR`     |
-| `nominal`       | DECIMAL     | Jumlah pembayaran                    |
-| `metode`        | ENUM        | `Transfer Manual`, `Midtrans`, `Tunai`|
-| `status`        | ENUM        | `Lunas`, `Menunggu Verifikasi`, `Tertolak` |
-| `waktu`         | TIMESTAMP   | Waktu transaksi                      |
-| `bukti`         | VARCHAR     | Path/file name bukti (jika ada)      |
-| `alasan_tolak`  | TEXT        | Alasan jika status `Tertolak`        |
+#### Rangkuman 9 Tabel Utama (ERD v4):
+1. **`Roles`**: Peran pengguna (`"Tenant"`, `"Admin"`).
+2. **`User`**: Akun login terpusat berbasis **`Username`** (bukan email). Email disimpan untuk administrasi & reset lupa kata sandi.
+3. **`Pemilik`**: Data profil pemilik kios beserta kolom `Status_Pemilik` (`"Aktif"`, `"Nonaktif"`).
+4. **`Kios`**: Master data kios (`No_Kios`, `Lantai`, `Ukuran`, `Status`: `"Terisi"`, `"Kosong"`, `"Perlu Validasi"`).
+5. **`Dokumen`**: Tabel generik dokumen legalitas (`SP`, `PPJB`, `Sertifikat`, `KTP`).
+6. **`Sewa`**: Siklus sewa per bulan (reset setiap bulan, bukan kontrak jangka panjang bertahun-tahun).
+7. **`Tagihan`**: Satu tagihan per siklus sewa (1:1), dengan `Tarif_Sewa` all-inclusive (termasuk service charge & kebersihan) dan `Hutang_Tunggakan` akumulatif. Status: `"Lunas"`, `"Belum Bayar"`, `"Dicicil"`, `"Menunggu Verifikasi"`.
+8. **`Pembayaran`**: Mencatat pembayaran bebas (cicilan FIFO) lintas 3 metode: `"Transfer"`, `"Tunai"`, `"Midtrans"`.
+9. **`Alokasi_Pembayaran`**: Tabel junction untuk mengalokasikan nominal pembayaran ke tagihan secara FIFO (First-In-First-Out).
 
 > **⚠️ PENTING – Case-Sensitive ENUM:**  
 > Frontend menggunakan string status secara **case-sensitive** untuk menentukan tampilan warna dan ikon.  
-> Pastikan nilai yang dikembalikan API **persis sama** dengan nilai di atas, misalnya:  
-> `"Lunas"` (bukan `"lunas"` atau `"LUNAS"`), `"Menunggu Verifikasi"`, `"Terisi"`, dst.
-
-#### 4. Tabel `tunggakan_ar` (opsional, untuk historis)
-| Kolom           | Tipe        | Keterangan                           |
-|-----------------|-------------|--------------------------------------|
-| `id`            | INT / UUID  | Primary key                          |
-| `tenant_id`     | INT / UUID  | Foreign key ke `tenants.id`          |
-| `total_awal`    | DECIMAL     | Total tunggakan awal                 |
-| `terbayar`      | DECIMAL     | Total yang sudah dibayar             |
-| `sisa`          | DECIMAL     | Sisa tunggakan                       |
-| `riwayat_cicilan`| JSON       | Array objek cicilan                  |
-
-> **Catatan**: Data di `Data_Kios_BY_LEGAL` mencakup informasi kepemilikan, sertifikat, dan pengalihan hak yang dapat dijadikan acuan untuk mengisi tabel `tenants` dan `kios`.
+> Pastikan nilai yang dikembalikan API **persis sama** dengan spesifikasi ERD v4, misalnya:  
+> `"Lunas"` (bukan `"lunas"` atau `"LUNAS"`), `"Dicicil"`, `"Menunggu Verifikasi"`, `"Terisi"`, dst.
 
 ---
 

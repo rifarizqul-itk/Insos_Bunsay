@@ -1,6 +1,10 @@
 import React from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import Table from '../../components/ui/Table';
+import Icon from '../../components/ui/Icon';
+import EmptyState from '../../components/ui/EmptyState';
 
 function DetailTenantAdmin({ tenantName, onBack }) {
   const tenantsMockDatabase = {
@@ -9,10 +13,10 @@ function DetailTenantAdmin({ tenantName, onBack }) {
       kontak: '0812-5564-593', sp: '423 / 5 Mei 2008', ppjb: '423 / 5 Mei 2008',
       bast: '1 Januari 2010', ukuran: '6 Meter Persegi', usaha: 'Kerajinan',
       sertifikat: '422 / 12 April 2012', keterangan: 'Sertifikat diambil BPD Syariah',
-      statusTagihan: 'Lunas', tunggakan: 'Rp 13.219.998', rincianTunggakan: 'Tunggakan pembukuan historis lama terhitung s/d September 2024',
+      statusTagihan: 'Lunas', tunggakan: 'Rp 0', rincianTunggakan: '—',
       riwayat: [
-        { id: 'TX-3011', tanggal: '10 Mei 2026', tipe: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', status: 'Lunas' },
-        { id: 'TX-3010', tanggal: '02 Mei 2026', tipe: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank', status: 'Lunas' }
+        { id: 'TX-3011', tanggal: '10 Mei 2026', tipe: 'Pelunasan Masa Sewa Kios', nominal: 'Rp 3.500.000', metode: 'Midtrans', status: 'Lunas' },
+        { id: 'TX-3010', tanggal: '02 Mei 2026', tipe: 'Pelunasan Masa Sewa Kios', nominal: 'Rp 1.500.000', metode: 'Transfer Bank', status: 'Lunas' }
       ]
     },
     'Eva Tauresea': {
@@ -22,7 +26,7 @@ function DetailTenantAdmin({ tenantName, onBack }) {
       sertifikat: 'Belum Diambil', keterangan: 'Menunggu konfirmasi kedatangan pemilik di kantor pengelola',
       statusTagihan: 'Belum Bayar', tunggakan: 'Rp 0', rincianTunggakan: '—',
       riwayat: [
-        { id: 'TX-2088', tanggal: '01 Mei 2026', tipe: 'Service Charge', nominal: 'Rp 350.000', metode: 'QRIS', status: 'Lunas' }
+        { id: 'TX-2088', tanggal: '01 Mei 2026', tipe: 'Pelunasan Masa Sewa Kios', nominal: 'Rp 3.500.000', metode: 'Midtrans', status: 'Lunas' }
       ]
     },
     'H. Ahmad': {
@@ -30,7 +34,7 @@ function DetailTenantAdmin({ tenantName, onBack }) {
       kontak: '0852-1122-3344', sp: '301 / 2 Maret 2009', ppjb: '301 / 2 Maret 2009',
       bast: '1 Mei 2009', ukuran: '6 Meter Persegi', usaha: 'Perhiasan',
       sertifikat: 'Belum Dibuatkan', keterangan: 'Berkas penunjang pembuatan sertifikat belum lengkap',
-      statusTagihan: 'Ada Tunggakan', tunggakan: 'Rp 5.500.000', rincianTunggakan: 'Service Charge Bulan Berjalan (Rp 4.000.000) + Akumulasi Denda (Rp 1.500.000)',
+      statusTagihan: 'Dicicil', tunggakan: 'Rp 2.500.000', rincianTunggakan: 'Sewa Bulan Berjalan (Rp 4.000.000) + Akumulasi Tunggakan (Rp 2.500.000)',
       riwayat: []
     },
     'Toko Kalimantan': {
@@ -40,88 +44,126 @@ function DetailTenantAdmin({ tenantName, onBack }) {
       sertifikat: 'Sudah Diambil', keterangan: 'Diambil oleh perwakilan keluarga sah pemilik',
       statusTagihan: 'Lunas', tunggakan: 'Rp 0', rincianTunggakan: '—',
       riwayat: [
-        { id: 'TX-1044', tanggal: '28 April 2026', tipe: 'Service Charge', nominal: 'Rp 1.500.000', metode: 'Transfer Bank', status: 'Lunas' }
+        { id: 'TX-1044', tanggal: '28 April 2026', tipe: 'Pelunasan Masa Sewa Kios', nominal: 'Rp 3.500.000', metode: 'Transfer Bank', status: 'Lunas' }
       ]
     }
   };
 
   const tenantData = tenantsMockDatabase[tenantName] || tenantsMockDatabase['Hj. Yuliana'];
 
-  const statusBadgeClasses = {
-    'Lunas': 'bg-green-bg text-green',
-    'Belum Bayar': 'bg-red-100 text-red',
-    'Ada Tunggakan': 'bg-orange-bg text-orange',
-  };
+  const tableHeaders = [
+    { label: 'ID Transaksi' },
+    { label: 'Tanggal' },
+    { label: 'Jenis' },
+    { label: 'Nominal' },
+    { label: 'Metode' },
+    { label: 'Status' },
+  ];
 
   return (
-    <div className="page-fade-in flex flex-col gap-8">
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <Button variant="secondary" size="sm" onClick={onBack} className="mb-4">← Kembali ke Panel Kendali Admin</Button>
-        <h2 className="text-2.5xl font-extrabold text-text tracking-tight">Profil Lengkap Tenant: {tenantName} (<span className="font-mono">Kios {tenantData.kios}</span>)</h2>
-        <p className="text-sm text-text-2 mt-1">Informasi kepemilikan, status keuangan, dan riwayat transaksi.</p>
+        <Button variant="secondary" size="sm" onClick={onBack} className="mb-4 gap-2 font-bold">
+          <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
+          <span>Kembali ke Panel Kendali Admin</span>
+        </Button>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Profil Lengkap Tenant: {tenantName} (<span className="font-tabular-nums text-red">Kios {tenantData.kios}</span>)
+        </h1>
+        <p className="text-text-2 text-sm sm:text-base font-medium mt-1">Informasi kepemilikan, status keuangan, dan riwayat transaksi.</p>
       </div>
 
-      <div className="flex flex-col gap-7">
-        <Card>
-          <h3 className="text-lg font-bold text-text border-b border-border pb-3 mb-5">Dokumen Informasi Kepemilikan Properti Kios</h3>
+      <div className="flex flex-col gap-6">
+        <Card variant="elevated" className="p-6 sm:p-7">
+          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 mb-5">
+            Dokumen Informasi Kepemilikan Properti Kios
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div><span className="text-text-3">Nama Pemilik:</span> <div className="font-semibold mt-0.5">{tenantName}</div></div>
-            <div><span className="text-text-3">Nomor KTP:</span> <div className="font-semibold mt-0.5">{tenantData.ktp}</div></div>
-            <div><span className="text-text-3">Alamat:</span> <div className="font-semibold mt-0.5">{tenantData.alamat}</div></div>
-            <div><span className="text-text-3">Kontak:</span> <div className="font-semibold mt-0.5">{tenantData.kontak}</div></div>
-            <div><span className="text-text-3">No. SP / Tgl:</span> <div className="font-semibold mt-0.5">{tenantData.sp}</div></div>
-            <div><span className="text-text-3">No. PPJB / Tgl:</span> <div className="font-semibold mt-0.5">{tenantData.ppjb}</div></div>
-            <div><span className="text-text-3">Tgl BAST:</span> <div className="font-semibold mt-0.5">{tenantData.bast}</div></div>
-            <div><span className="text-text-3">Ukuran:</span> <div className="font-semibold mt-0.5">{tenantData.ukuran}</div></div>
-            <div><span className="text-text-3">Jenis Usaha:</span> <div className="font-semibold mt-0.5">{tenantData.usaha}</div></div>
-            <div><span className="text-text-3">Sertifikat / Tgl Ambil:</span> <div className="font-semibold mt-0.5">{tenantData.sertifikat}</div></div>
-            <div className="sm:col-span-2"><span className="text-text-3">Keterangan Arsip:</span><div className="font-semibold mt-0.5 text-text-2">{tenantData.keterangan}</div></div>
-          </div>
-        </Card>
-
-        <Card>
-          <h3 className="text-lg font-bold text-text border-b border-border pb-3 mb-5">Status Rekapitulasi Keuangan Berjalan & Tunggakan AR</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-            <div className="bg-warm-gray p-4 rounded-md"><span className="text-text-3 text-xs font-bold uppercase tracking-wide">Status Service Charge</span><div className="mt-1.5"><span className={`inline-block px-3 py-1 rounded font-bold text-xs ${statusBadgeClasses[tenantData.statusTagihan] || 'bg-warm-gray text-text-2'}`}>{tenantData.statusTagihan}</span></div></div>
-            <div className="bg-warm-gray p-4 rounded-md"><span className="text-text-3 text-xs font-bold uppercase tracking-wide">Tunggakan AR</span><div className={`text-base font-extrabold mt-1.5 font-mono ${tenantData.tunggakan !== 'Rp 0' ? 'text-orange' : 'text-text'}`}>{tenantData.tunggakan}</div></div>
-          </div>
-          <div><span className="text-text-3 text-xs font-semibold">Rincian Tunggakan:</span><div className="font-semibold text-sm mt-0.5 text-text-2">{tenantData.rincianTunggakan}</div></div>
-        </Card>
-
-        <Card>
-          <h3 className="text-lg font-bold text-text mb-4">Riwayat Transaksi Pelaporan Terdahulu</h3>
-          <div className="border border-border rounded-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table>
-                <thead>
-                  <tr className="bg-warm-gray border-b-2 border-border">
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">ID</th>
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Tanggal</th>
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Jenis</th>
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Nominal</th>
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Metode</th>
-                    <th className="px-3 py-2 text-left text-xs font-bold text-text-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tenantData.riwayat.length === 0 ? (
-                    <tr><td colSpan="6" className="py-6 text-center text-text-3 text-sm">Belum ada riwayat transaksi.</td></tr>
-                  ) : (
-                    tenantData.riwayat.map((row, idx) => (
-                      <tr key={row.id} className={`border-b border-border ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray'}`}>
-                        <td data-label="ID" className="px-3 py-2 font-semibold text-sm font-mono">{row.id}</td>
-                        <td data-label="Tanggal" className="px-3 py-2 text-text-2 text-sm">{row.tanggal}</td>
-                        <td data-label="Jenis" className="px-3 py-2 text-text-2 text-sm">{row.tipe}</td>
-                        <td data-label="Nominal" className="px-3 py-2 font-semibold text-sm font-mono">{row.nominal}</td>
-                        <td data-label="Metode" className="px-3 py-2 text-text-3 font-semibold text-sm">{row.metode}</td>
-                        <td data-label="Status" className="px-3 py-2"><span className="bg-green-bg text-green px-2 py-0.5 rounded font-bold text-[11px]">{row.status}</span></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div><span className="text-text-3 font-semibold">Nama Pemilik:</span> <div className="font-bold text-text mt-0.5">{tenantName}</div></div>
+            <div><span className="text-text-3 font-semibold">Nomor KTP:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.ktp}</div></div>
+            <div><span className="text-text-3 font-semibold">Alamat:</span> <div className="font-semibold text-text mt-0.5">{tenantData.alamat}</div></div>
+            <div><span className="text-text-3 font-semibold">Kontak HP:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.kontak}</div></div>
+            <div><span className="text-text-3 font-semibold">No. SP / Tgl:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.sp}</div></div>
+            <div><span className="text-text-3 font-semibold">No. PPJB / Tgl:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.ppjb}</div></div>
+            <div><span className="text-text-3 font-semibold">Tgl BAST:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.bast}</div></div>
+            <div><span className="text-text-3 font-semibold">Ukuran Unit:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.ukuran}</div></div>
+            <div><span className="text-text-3 font-semibold">Jenis Usaha:</span> <div className="font-bold text-text mt-0.5">{tenantData.usaha}</div></div>
+            <div><span className="text-text-3 font-semibold">Sertifikat / Tgl Ambil:</span> <div className="font-bold text-text font-tabular-nums mt-0.5">{tenantData.sertifikat}</div></div>
+            <div className="sm:col-span-2">
+              <span className="text-text-3 font-semibold block mb-1">Keterangan Arsip:</span>
+              <Card variant="inset" className="p-3 text-xs text-text leading-relaxed">
+                {tenantData.keterangan}
+              </Card>
             </div>
           </div>
+        </Card>
+
+        <Card variant="elevated" className="p-6 sm:p-7">
+          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 mb-5">
+            Status Rekapitulasi Keuangan
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+            <Card variant="inset" className="p-4 flex flex-col justify-between">
+              <span className="label-micro text-text-3">Status Tagihan Sewa</span>
+              <div className="mt-1.5">
+                <Badge status={tenantData.statusTagihan} />
+              </div>
+            </Card>
+            <Card variant="inset" className="p-4 flex flex-col justify-between">
+              <span className="label-micro text-text-3">Total Tunggakan</span>
+              <div className={`text-xl font-extrabold font-tabular-nums mt-1 ${tenantData.tunggakan !== 'Rp 0' ? 'text-orange' : 'text-text'}`}>
+                {tenantData.tunggakan}
+              </div>
+            </Card>
+          </div>
+          <div>
+            <span className="text-text-3 text-xs font-semibold block mb-1">Rincian Tunggakan:</span>
+            <div className="font-semibold text-sm text-text-2">{tenantData.rincianTunggakan}</div>
+          </div>
+        </Card>
+
+        <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4">
+          <h3 className="text-lg font-extrabold text-text tracking-tight">
+            Riwayat Transaksi Pelaporan Terdahulu
+          </h3>
+
+          {tenantData.riwayat.length === 0 ? (
+            <EmptyState
+              icon="heroicons:receipt-refund-20-solid"
+              title="Belum Ada Transaksi"
+              description="Belum ada catatan transaksi pelaporan terdahulu."
+            />
+          ) : (
+            <Table
+              caption="Riwayat Transaksi Pelaporan Terdahulu"
+              ariaLabel="Tabel Riwayat Transaksi Pelaporan Terdahulu Tenant"
+              headers={tableHeaders}
+              colSpan={6}
+            >
+              {tenantData.riwayat.map((row, idx) => (
+                <tr key={row.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                  <td data-label="ID" className="font-tabular-nums font-bold p-3 text-text-2">
+                    {row.id}
+                  </td>
+                  <td data-label="Tanggal" className="p-3 text-text-2 font-medium font-tabular-nums">
+                    {row.tanggal}
+                  </td>
+                  <td data-label="Jenis" className="p-3 text-text font-semibold">
+                    {row.tipe}
+                  </td>
+                  <td data-label="Nominal" className="font-tabular-nums font-extrabold p-3 text-text">
+                    {row.nominal}
+                  </td>
+                  <td data-label="Metode" className="p-3 text-text-3 font-semibold text-xs">
+                    {row.metode}
+                  </td>
+                  <td data-label="Status" className="p-3">
+                    <Badge status={row.status} />
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          )}
         </Card>
       </div>
     </div>

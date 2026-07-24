@@ -18,7 +18,7 @@ function BottomNav({ role }) {
     { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'material-symbols:fact-check-outline' },
     { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'material-symbols:payments-outline' },
     { label: 'Riwayat', path: '/admin/riwayat', icon: 'material-symbols:history' },
-    { label: 'Kios', path: '/admin/kios', icon: 'material-symbols:storefront-outline' }
+    { label: 'Profil', path: '/admin/akun', icon: 'material-symbols:person-outline' }
   ];
 
   const menuItems = role === 'admin' ? adminItems : tenantItems;
@@ -29,11 +29,17 @@ function BottomNav({ role }) {
     return location.pathname.startsWith(path) && path !== '/admin/dashboard' && path !== '/tenant/dashboard';
   };
 
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && 'navigator' in window && typeof window.navigator.vibrate === 'function') {
+      try { window.navigator.vibrate(10); } catch {}
+    }
+  };
+
   return (
     <nav 
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-border shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+      className="md:hidden fixed bottom-2 left-2 right-2 z-40 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
       style={{
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))',
+        marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
         fontFamily: "'Plus Jakarta Sans', sans-serif"
       }}
     >
@@ -45,7 +51,7 @@ function BottomNav({ role }) {
           alignItems: 'center',
           justifyContent: 'space-between',
           boxSizing: 'border-box',
-          padding: '0 4px',
+          padding: '0 6px',
           margin: 0
         }}
       >
@@ -55,6 +61,9 @@ function BottomNav({ role }) {
             <Link
               key={item.path}
               to={item.path}
+              onClick={triggerHaptic}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
               className="active:scale-95 transition-transform duration-100 ease-out cursor-pointer"
               style={{
                 flex: '1 1 0%',
@@ -65,7 +74,7 @@ function BottomNav({ role }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
-                color: active ? 'var(--red)' : 'var(--text-3)',
+                color: active ? 'var(--red)' : 'var(--text-2)',
                 fontWeight: active ? '700' : '600',
                 textDecoration: 'none',
                 boxSizing: 'border-box',
@@ -74,9 +83,7 @@ function BottomNav({ role }) {
             >
               <Icon 
                 icon={item.icon} 
-                width="24" 
-                height="24" 
-                style={{ marginBottom: '2px', flexShrink: 0 }}
+                className="size-6 mb-0.5 shrink-0"
               />
               <span 
                 style={{
@@ -87,8 +94,7 @@ function BottomNav({ role }) {
                   textOverflow: 'ellipsis',
                   maxWidth: '100%',
                   textAlign: 'center',
-                  padding: '0 1px',
-                  letterSpacing: '-0.01em'
+                  padding: '0 1px'
                 }}
               >
                 {item.label}

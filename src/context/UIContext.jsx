@@ -4,7 +4,7 @@ const UIContext = createContext(null);
 
 export const UIProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
-  const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Service Charge' });
+  const [bayarProps, setBayarProps] = useState({ nominal: '', jenis: 'Pelunasan Masa Sewa Kios' });
 
   const addToast = useCallback((message, type = 'info', duration = 3000) => {
     const id = Date.now() + Math.random();

@@ -1,6 +1,6 @@
 // Modal reusable - untuk verifikasi, konfirmasi, dll.
-import React, { useEffect, useRef } from 'react';
-import Button from './Button';
+import React, { useEffect, useRef, useId } from 'react';
+import Icon from './Icon';
 
 function Modal({
   isOpen,
@@ -13,6 +13,7 @@ function Modal({
 }) {
   const modalRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const titleId = useId();
 
   // Focus trap & focus restoration
   useEffect(() => {
@@ -51,45 +52,45 @@ function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-5 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black/45 backdrop-blur-sm page-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={title ? titleId : undefined}
     >
       <div
         ref={modalRef}
         className={`
-          bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto
+          bg-white rounded-2xl shadow-2xl border border-border w-full max-h-[90dvh] flex flex-col overflow-hidden
           page-fade-in ${sizeClasses[size]} ${className}
         `}
       >
         {/* Header */}
         {title && (
-          <div className="flex justify-between items-center border-b border-border px-6 py-4">
-            <h3 id="modal-title" className="text-lg font-bold text-text">
+          <div className="flex justify-between items-center border-b border-border px-6 py-4 bg-cream/20 flex-shrink-0">
+            <h3 id={titleId} className="text-lg font-extrabold text-text tracking-tight text-balance">
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="text-text-3 hover:text-text transition-colors flex items-center justify-center h-11 w-11 rounded-md -mr-2"
+              className="text-text-3 hover:text-text hover:bg-warm-gray/60 transition-colors flex items-center justify-center size-11 rounded-md -mr-2"
               aria-label="Tutup modal"
             >
-              ✕
+              <Icon icon="heroicons:x-mark-20-solid" width="22" height="22" />
             </button>
           </div>
         )}
 
-        {/* Body */}
-        <div className="px-6 py-5">
+        {/* Scrollable Body */}
+        <div className="px-6 py-5 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="border-t border-border px-6 py-4 flex gap-3 justify-end">
+          <div className="border-t border-border px-6 py-4 flex gap-3 justify-end flex-shrink-0 bg-cream/10">
             {footer}
           </div>
         )}

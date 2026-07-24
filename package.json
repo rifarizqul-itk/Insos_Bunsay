@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lhci": "npx @lhci/cli autorun --config=./lighthouserc.cjs",
+    "lhci:desktop": "cmd /c \"set LHCI_FORM_FACTOR=desktop && npx @lhci/cli autorun --config=./lighthouserc.cjs\""
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",

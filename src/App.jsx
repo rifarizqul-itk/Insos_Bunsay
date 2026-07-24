@@ -1,29 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { UIProvider } from './context/UIContext';
+import { SkeletonCard, SkeletonText } from './components/ui/Skeleton';
 
-// Public
-import LandingPage from './pages/public/LandingPage';
-import AuthPage from './pages/public/AuthPage';
-import ForgotPassword from './pages/public/ForgotPassword';
+// Public Pages (Lazy Loaded)
+const LandingPage = lazy(() => import('./pages/public/LandingPage'));
+const AuthPage = lazy(() => import('./pages/public/AuthPage'));
 
-// Tenant
-import DashboardTenant from './pages/tenant/DashboardTenant';
-import BayarSekarang from './pages/tenant/BayarSekarang';
-import HistoriPembayaran from './pages/tenant/HistoriPembayaran';
-import TunggakanAR from './pages/tenant/TunggakanAR';
-import AkunTenant from './pages/tenant/AkunTenant';
+// Tenant Pages (Lazy Loaded)
+const DashboardTenant = lazy(() => import('./pages/tenant/DashboardTenant'));
+const BayarSekarang = lazy(() => import('./pages/tenant/BayarSekarang'));
+const HistoriPembayaran = lazy(() => import('./pages/tenant/HistoriPembayaran'));
+const TunggakanAR = lazy(() => import('./pages/tenant/TunggakanAR'));
+const AkunTenant = lazy(() => import('./pages/tenant/AkunTenant'));
 
-// Admin
-import DashboardAdmin from './pages/admin/DashboardAdmin';
-import VerifikasiBuktiTransfer from './pages/admin/VerifikasiBuktiTransfer';
-import SetoranTunai from './pages/admin/SetoranTunai';
-import RiwayatTransaksiAdmin from './pages/admin/RiwayatTransaksiAdmin';
-import KetersediaanKios from './pages/admin/KetersediaanKios';
-import DetailAdministrasiKios from './pages/admin/DetailAdministrasiKios';
-import EksporData from './pages/admin/EksporData';
+// Admin Pages (Lazy Loaded)
+const DashboardAdmin = lazy(() => import('./pages/admin/DashboardAdmin'));
+const VerifikasiBuktiTransfer = lazy(() => import('./pages/admin/VerifikasiBuktiTransfer'));
+const SetoranTunai = lazy(() => import('./pages/admin/SetoranTunai'));
+const RiwayatTransaksiAdmin = lazy(() => import('./pages/admin/RiwayatTransaksiAdmin'));
+const KetersediaanKios = lazy(() => import('./pages/admin/KetersediaanKios'));
+const DetailAdministrasiKios = lazy(() => import('./pages/admin/DetailAdministrasiKios'));
+const RiwayatPemilikKios = lazy(() => import('./pages/admin/RiwayatPemilikKios'));
+const EksporData = lazy(() => import('./pages/admin/EksporData'));
+const AkunAdmin = lazy(() => import('./pages/admin/AkunAdmin'));
 
 // Layout components
 import Sidebar from './components/layouts/Sidebar';
@@ -48,8 +50,22 @@ const routeTitles = {
   '/admin/riwayat': 'Riwayat Transaksi Admin | Bunsay Plaza Kebun Sayur',
   '/admin/kios': 'Ketersediaan & Pemetaan Kios | Bunsay Plaza Kebun Sayur',
   '/admin/detail-administrasi': 'Detail Administrasi Kios | Bunsay Plaza Kebun Sayur',
+  '/admin/riwayat-pemilik': 'Riwayat Pemilik Kios | Bunsay Plaza Kebun Sayur',
   '/admin/ekspor': 'Ekspor Rekap Keuangan | Bunsay Plaza Kebun Sayur',
+  '/admin/akun': 'Pengaturan Akun Pengelola | Bunsay Plaza Kebun Sayur',
 };
+
+function PageLoader() {
+  return (
+    <div className="page-fade-in flex flex-col gap-6 p-4 sm:p-6" role="status" aria-live="polite">
+      <div className="space-y-2">
+        <SkeletonText className="h-8 w-56" />
+        <SkeletonText className="h-4 w-80 max-w-full" />
+      </div>
+      <SkeletonCard className="h-40 w-full" />
+    </div>
+  );
+}
 
 function AppContent() {
   const { isLoggedIn, role, logout, user } = useAuth();
@@ -77,17 +93,19 @@ function AppContent() {
       <>
         <a
           href="#main-public"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-red focus:text-white focus:font-bold focus:rounded-md focus:shadow-lg focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-red focus:text-white focus:font-bold focus:rounded-md focus:shadow-lg focus:outline-none"
         >
           Skip to main content
         </a>
         <main id="main-public" tabIndex="-1" className="outline-none">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/auth/lupa-sandi" element={<ForgotPassword />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/auth/lupa-sandi" element={<AuthPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </main>
         <Toast />
       </>
@@ -106,14 +124,14 @@ function AppContent() {
       {/* Skip Link (WCAG 2.4.1) */}
       <a
         href="#main-app"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-red focus:text-white focus:font-bold focus:rounded-md focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-red focus:text-white focus:font-bold focus:rounded-md focus:shadow-lg focus:outline-none"
       >
         Skip to main content
       </a>
 
       {/* Sidebar – fixed di semua ukuran, di mobile tersembunyi dengan translate */}
       <div className={`
-        fixed left-0 top-0 z-[100] h-screen w-[240px] bg-white border-r border-border
+        fixed left-0 top-0 z-40 h-dvh w-[240px] bg-white border-r border-border
         transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
@@ -131,7 +149,7 @@ function AppContent() {
           role="button"
           tabIndex={0}
           aria-label="Tutup menu navigasi"
-          className="md:hidden fixed inset-0 bg-black/40 z-[95] backdrop-blur-sm cursor-pointer"
+          className="md:hidden fixed inset-0 bg-black/40 z-30 backdrop-blur-sm cursor-pointer"
           onClick={closeSidebar}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -152,30 +170,34 @@ function AppContent() {
 
         <main id="main-app" tabIndex="-1" className="flex-1 p-4 sm:p-6 md:p-8 main-content-wrapper outline-none">
           <div className="max-w-7xl mx-auto">
-            <Routes>
-              {/* Tenant */}
-              <Route element={<ProtectedRoute allowedRoles={['tenant']} />}>
-                <Route path="/tenant/dashboard" element={<DashboardTenant />} />
-                <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
-                <Route path="/tenant/histori" element={<HistoriPembayaran />} />
-                <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
-                <Route path="/tenant/akun" element={<AkunTenant />} />
-              </Route>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Tenant */}
+                <Route element={<ProtectedRoute allowedRoles={['tenant']} />}>
+                  <Route path="/tenant/dashboard" element={<DashboardTenant />} />
+                  <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
+                  <Route path="/tenant/histori" element={<HistoriPembayaran />} />
+                  <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
+                  <Route path="/tenant/akun" element={<AkunTenant />} />
+                </Route>
 
-              {/* Admin */}
-              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-                <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
-                <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
-                <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
-                <Route path="/admin/kios" element={<KetersediaanKios isAdmin={true} />} />
-                <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
-                <Route path="/admin/ekspor" element={<EksporData />} />
-              </Route>
+                {/* Admin */}
+                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                  <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+                  <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
+                  <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
+                  <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
+                  <Route path="/admin/kios" element={<KetersediaanKios isAdmin={true} />} />
+                  <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
+                  <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
+                  <Route path="/admin/ekspor" element={<EksporData />} />
+                  <Route path="/admin/akun" element={<AkunAdmin />} />
+                </Route>
 
-              <Route path="/" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
-              <Route path="*" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
-            </Routes>
+                <Route path="/" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
+                <Route path="*" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
+              </Routes>
+            </Suspense>
           </div>
         </main>
       </div>

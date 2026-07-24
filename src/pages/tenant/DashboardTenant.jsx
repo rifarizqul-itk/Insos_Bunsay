@@ -2,25 +2,29 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
 import { useTenantDashboard } from '../../hooks/useTenant';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import Icon from '../../components/ui/Icon';
+import { SkeletonCard, SkeletonText } from '../../components/ui/Skeleton';
 
 function DashboardTenant() {
   const navigate = useNavigate();
-  const { setBayar, addToast } = useUI();
+  const { setBayar } = useUI();
   const { data, loading, error, refetch } = useTenantDashboard();
-
 
   if (loading) {
     return (
       <div className="page-fade-in flex flex-col gap-8">
         <div className="space-y-2">
-          <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
-          <div className="h-5 w-96 max-w-full bg-warm-gray/50 animate-pulse rounded-md"></div>
+          <SkeletonText className="h-9 w-64" />
+          <SkeletonText className="h-5 w-96 max-w-full" />
         </div>
-        <div className="h-32 w-full bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        <SkeletonCard className="h-36 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
-          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
-          <div className="h-36 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <SkeletonCard className="h-36" />
+          <SkeletonCard className="h-36" />
+          <SkeletonCard className="h-36" />
         </div>
       </div>
     );
@@ -28,116 +32,143 @@ function DashboardTenant() {
 
   if (error) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <p style={{ color: 'var(--red)', fontWeight: '600' }}>Gagal memuat data. Silakan coba lagi.</p>
-        <button onClick={refetch} style={{ marginTop: '16px', backgroundColor: 'var(--red)', color: '#fff', padding: '0 24px', height: '44px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
+      <Card variant="inset" className="p-10 text-center my-8">
+        <p className="text-red font-bold text-base mb-4">Gagal memuat data. Silakan coba lagi.</p>
+        <Button variant="primary" onClick={refetch}>
           Muat Ulang
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
   if (!data) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-3)' }}>Data tidak tersedia.</div>;
+    return (
+      <div className="p-10 text-center text-text-3 font-medium">Data tidak tersedia.</div>
+    );
   }
 
-  const { nama, kios, serviceCharge, tunggakan } = data;
-  const memilikiTagihan = tunggakan && tunggakan.nominal > 0;
+  const { nama, kios, siklusSewa, tagihanBerjalan } = data || {};
+  
+  const periodeText = siklusSewa ? `${siklusSewa.tanggalMulai} s/d ${siklusSewa.tanggalSelesai}` : '01 Mei 2026 s/d 31 Mei 2026';
+  const jatuhTempo = siklusSewa?.jatuhTempo || '12 Mei 2026';
+  const tarifSewaVal = tagihanBerjalan?.tarifSewa ?? 7000000;
+  const hutangTunggakanVal = tagihanBerjalan?.hutangTunggakan ?? 4500000;
+  const totalTagihanVal = tagihanBerjalan?.totalTagihan ?? (tarifSewaVal + hutangTunggakanVal);
+  const statusTagihan = tagihanBerjalan?.statusTagihan || 'Belum Bayar';
 
-  const handleBayar = (nominal, jenis) => {
-    setBayar(String(nominal), jenis);
+  const perluBayar = (statusTagihan === 'Belum Bayar' || statusTagihan === 'Dicicil') && totalTagihanVal > 0;
+  const sedangVerifikasi = statusTagihan === 'Menunggu Verifikasi';
+
+  const handleBayar = (nominal) => {
+    setBayar(String(nominal), 'Pelunasan Masa Sewa & Tunggakan');
     navigate('/tenant/pembayaran');
   };
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+    <div className="page-fade-in flex flex-col gap-8 font-sans">
       <div>
-        <h2 style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)', letterSpacing: '-0.5px' }}>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight text-balance">
           Halo, {nama}
-        </h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '16px', fontWeight: '600', marginTop: '6px' }}>
-          Pemilik Sah Kios <span className="font-tabular-nums font-bold">{kios}</span> — Selamat datang di panel administrasi mandiri Anda.
+        </h1>
+        <p className="text-text-2 text-base font-semibold mt-1 text-pretty">
+          Pemilik Kios <span className="font-tabular-nums font-bold text-red">{kios}</span> — Selamat datang di akun Bunsay Anda.
         </p>
       </div>
 
-      {memilikiTagihan && (
+      {perluBayar && (
         <div 
           role="alert"
-          className="p-5 sm:p-7 md:p-8"
-          style={{
-            backgroundColor: 'var(--red-50)',
-            border: '2px solid var(--red)',
-            borderRadius: 'var(--radius-lg)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '24px',
-          }}
+          className="p-6 sm:p-7 md:p-8 bg-red-50 border-2 border-red rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-glow-maroon"
         >
-          <div style={{ flex: 1, minWidth: '300px' }}>
-            <h3 className="label-micro" style={{ color: 'var(--red)', margin: 0, fontSize: '13px' }}>
-              Pemberitahuan Tagihan Belum Lunas
-            </h3>
-            <p style={{ fontSize: '16px', color: 'var(--text)', fontWeight: '700', margin: '8px 0 0 0', lineHeight: '1.6' }}>
-              Sistem mendeteksi Anda masih memiliki kewajiban {tunggakan.label} sebesar <span className="font-tabular-nums font-bold">Rp {tunggakan.nominal.toLocaleString('id-ID')}</span>. Silakan klik tombol untuk melangsungkan pelaporan bayar.
+          <div className="flex-1 min-w-[280px]">
+            <span className="label-micro text-red">
+              Tagihan Sewa & Tunggakan Bulan Ini
+            </span>
+            <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
+              Total tagihan yang perlu dibayar bulan ini adalah <span className="font-tabular-nums text-red font-extrabold">Rp {totalTagihanVal.toLocaleString('id-ID')}</span> (sewa bulan ini Rp {tarifSewaVal.toLocaleString('id-ID')} + sisa tunggakan Rp {hutangTunggakanVal.toLocaleString('id-ID')}).
             </p>
           </div>
           <div className="w-full md:w-auto">
-            <button
-              onClick={() => handleBayar(tunggakan.nominal, 'Cicilan Tunggakan (Piutang)')}
-              className="w-full md:w-auto"
-              style={{
-                backgroundColor: 'var(--red)',
-                color: '#ffffff',
-                padding: '0 32px',
-                fontSize: '16px',
-                fontWeight: '800',
-                border: '2px solid var(--red-dark)',
-                height: '52px',
-                cursor: 'pointer',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="md:w-auto h-13 px-8 text-base font-extrabold gap-2 shadow-md"
+              onClick={() => handleBayar(totalTagihanVal)}
             >
-              Bayar Tagihan Sekarang
-            </button>
+              Bayar Sekarang
+              <Icon icon="heroicons:arrow-right-20-solid" width="20" height="20" />
+            </Button>
           </div>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+      {sedangVerifikasi && (
         <div 
-          className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
+          role="status"
+          className="p-6 sm:p-7 md:p-8 bg-orange-bg border-2 border-orange rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-card"
         >
-          <span className="label-micro">Masa Aktif Service Charge</span>
-          <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--text)' }}>{serviceCharge.dueDate}</div>
-          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Tenggat biaya fasilitas & pengelolaan kios</span>
-        </div>
-
-        <div 
-          className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
-        >
-          <span className="label-micro">Service Charge Bulan Ini</span>
-          <div style={{ margin: '12px 0 8px 0', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-            <span style={{ backgroundColor: 'var(--green-bg)', color: 'var(--green)', padding: '6px 14px', borderRadius: 'var(--radius-md)', fontWeight: '800', fontSize: '14px', border: '2px solid var(--green)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <span aria-hidden="true">✓</span> {serviceCharge.status}
+          <div className="flex-1 min-w-[280px]">
+            <span className="label-micro text-orange">
+              Pembayaran Sedang Diverifikasi
             </span>
-            <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>Rp {serviceCharge.nominal.toLocaleString('id-ID')}</div>
+            <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
+              Bukti pembayaran sebesar <span className="font-tabular-nums text-orange font-extrabold">Rp {totalTagihanVal.toLocaleString('id-ID')}</span> sudah diterima dan sedang diperiksa oleh kantor pengelola.
+            </p>
           </div>
-          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Fasilitas & utilitas pasar</span>
+          <div className="w-full md:w-auto">
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              className="md:w-auto h-12 px-6 font-bold"
+              onClick={() => navigate('/tenant/histori')}
+            >
+              Lihat Status Transaksi
+            </Button>
+          </div>
         </div>
+      )}
 
-        <div 
-          className="p-5 sm:p-6 md:p-7"
-          style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}
-        >
-          <span className="label-micro">Tunggakan Historis</span>
-          <div className="font-tabular-nums" style={{ fontSize: '26px', fontWeight: '800', lineHeight: '1.4', margin: '12px 0 8px 0', color: 'var(--orange)' }}>Rp {tunggakan.nominal.toLocaleString('id-ID')}</div>
-          <span style={{ fontSize: '14px', color: 'var(--text-2)', fontWeight: '600' }}>Data terarsip s/d Sept 2024</span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <Card variant="elevated" className="flex flex-col justify-between">
+          <div>
+            <h2 className="label-micro text-balance">Masa Sewa Bulanan</h2>
+            <div className="font-tabular-nums text-lg sm:text-xl font-extrabold text-text mt-2 mb-2 leading-tight">
+              {periodeText}
+            </div>
+          </div>
+          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
+            Jatuh tempo pelunasan: <strong className="font-tabular-nums text-text">{jatuhTempo}</strong>
+          </p>
+        </Card>
+
+        <Card variant="elevated" className="flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="label-micro text-balance">Tarif Sewa Bulan Ini</h2>
+              <Badge status={statusTagihan} />
+            </div>
+            <div className="font-tabular-nums text-2xl sm:text-3xl font-extrabold text-text tracking-tight my-2">
+              Rp {tarifSewaVal.toLocaleString('id-ID')}
+            </div>
+          </div>
+          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
+            Sewa unit kios berjalan
+          </p>
+        </Card>
+
+        <Card variant="elevated" className="flex flex-col justify-between">
+          <div>
+            <h2 className="label-micro text-balance">Total Tunggakan Sewa</h2>
+            <div className={`font-tabular-nums text-2xl sm:text-3xl font-extrabold tracking-tight my-2 ${hutangTunggakanVal > 0 ? 'text-orange' : 'text-green'}`}>
+              Rp {hutangTunggakanVal.toLocaleString('id-ID')}
+            </div>
+          </div>
+          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
+            Sisa tunggakan dari bulan-bulan sebelumnya
+          </p>
+        </Card>
       </div>
     </div>
   );

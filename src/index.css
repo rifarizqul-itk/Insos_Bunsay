@@ -1,4 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+@import "tailwindcss";
+
+/* Global Scrollbar Stability (Mencegah Layout Shift antar Rute) */
+html {
+  scrollbar-gutter: stable;
+}
 
 @theme {
   /* Red Palette (Primary Identity) */
@@ -59,6 +65,9 @@
 
   /* Box Shadows (Warm Subtle Depth for Modern Civic Precision) */
   --shadow-card: 0 4px 20px -2px rgba(139, 26, 26, 0.06), 0 2px 6px -1px rgba(28, 21, 18, 0.04);
+  --shadow-card-elevated: 0 10px 30px -4px rgba(139, 26, 26, 0.10), 0 4px 12px -2px rgba(28, 21, 18, 0.06);
+  --shadow-glow-maroon: 0 0 25px 2px rgba(139, 26, 26, 0.15);
+  --shadow-modal: 0 20px 45px -10px rgba(28, 21, 18, 0.25);
 }
 
 @import "tailwindcss";
@@ -73,19 +82,27 @@
     --cream: #FAF6F0;
     --warm-gray: #F2ECE4;
     --gold: #C59B27;
-    --border: #E6DED6;
+    --border: #C4B8B0;
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 16px;
     --radius-xl: 24px;
     --text: #1C1512;
     --text-2: #54463E;
-    --text-3: #6E5D51;
+    --text-3: #5A4D47;
     --disabled-bg: #9E8E82;
     --green: #14592F;
     --green-bg: #E7F4ED;
     --orange: #9E4A00;
     --orange-bg: #FDF0E3;
+
+    /* Z-Index Scale Tokens */
+    --z-sticky: 40;
+    --z-header: 90;
+    --z-dropdown: 100;
+    --z-drawer: 400;
+    --z-modal: 500;
+    --z-toast: 1000;
   }
 
   * {
@@ -113,14 +130,16 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 800;
     color: var(--text);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
   }
 
   h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 700;
     color: var(--text);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
   }
 
   /* Keyboard Focus Outline & Scroll Margin (WCAG 2.4.7 & WCAG 2.4.11) */
@@ -142,7 +161,7 @@
     font-weight: 600;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     min-height: 44px;
   }
 
@@ -153,7 +172,7 @@
     transform: scale(0.97);
   }
 
-  input, select, textarea {
+  input, textarea {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 16px; /* Mencegah auto-zoom di iOS Safari */
     color: var(--text);
@@ -162,6 +181,22 @@
     border-radius: var(--radius-md);
     padding: 12px 16px;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  select {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 12px;
+    padding-right: 28px;
+    outline: none;
+    line-height: normal;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
@@ -189,6 +224,18 @@
     font-size: 12px;
     color: var(--text-2); /* Improved contrast WCAG AA 1.4.3 */
   }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .shadow-card-elevated {
+    box-shadow: var(--shadow-card-elevated);
+  }
+  .shadow-glow-maroon {
+    box-shadow: var(--shadow-glow-maroon);
+  }
 }
 
 @layer components {
@@ -204,12 +251,12 @@
 
   /* Topbar */
   .topbar-container {
-    @apply h-16 bg-white border-b border-border sticky top-0 z-[90] flex items-center justify-between px-4 md:px-8;
+    @apply h-16 bg-white border-b border-border sticky top-0 z-20 flex items-center justify-between px-4 md:px-8;
   }
 
   /* Dropdown notifikasi */
   .topbar-dropdown {
-    @apply absolute top-[56px] right-0 w-[90vw] max-w-[360px] bg-white border border-border rounded-xl shadow-md p-4 flex flex-col gap-3 z-[110] animate-[fadeIn_0.15s_ease-out];
+    @apply absolute top-[56px] right-0 w-[90vw] max-w-[360px] bg-white border border-border rounded-xl shadow-md p-4 flex flex-col gap-3 z-30 animate-[fadeIn_0.15s_ease-out];
   }
 
   /* ============================================
@@ -435,13 +482,19 @@
   }
 }
 
-/* Dukungan Aksesibilitas Pengurangan Gerakan (WCAG 2.2 / UI-UX Pro Max) */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
 

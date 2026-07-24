@@ -1,136 +1,161 @@
 import React, { useState } from 'react';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import Modal from '../../components/ui/Modal';
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import Table from '../../components/ui/Table';
+import AlokasiBreakdown from '../../components/ui/AlokasiBreakdown';
+import EmptyState from '../../components/ui/EmptyState';
 
 function RiwayatTransaksiAdmin() {
   const { riwayat } = useTransactionDomain();
   const [selectedBukti, setSelectedBukti] = useState(null);
+  const [filterMetode, setFilterMetode] = useState('Semua');
+
+  const filteredRiwayat = riwayat.filter(item => {
+    if (filterMetode === 'Semua') return true;
+    return item.metode === filterMetode;
+  });
 
   const tableHeaders = [
     { label: 'ID TRX' },
     { label: 'Tenant & Kios' },
     { label: 'Jenis Tagihan' },
-    { label: 'Nominal' },
+    { label: 'Nominal Bayar' },
     { label: 'Metode & Waktu' },
+    { label: 'Alokasi Tagihan' },
     { label: 'Status', align: 'center' },
     { label: 'Aksi', align: 'center' },
   ];
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>
-      <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>Riwayat Transaksi Admin</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-          Menampilkan seluruh rekaman transaksi yang telah dikonfirmasi atau ditolak.
-        </p>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+            Riwayat Transaksi Admin
+          </h1>
+          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+            Log seluruh transaksi lintas metode (Transfer Bank, Tunai Loket, Midtrans Gateway).
+          </p>
+        </div>
+
+        {/* Filter 3 Metode Pembayaran Resmi */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="filter-metode-admin" className="text-xs sm:text-sm font-bold text-text-2">Metode:</label>
+          <select
+            id="filter-metode-admin"
+            aria-label="Filter Metode Pembayaran Transaksi Admin"
+            value={filterMetode}
+            onChange={(e) => setFilterMetode(e.target.value)}
+            className="h-10 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+          >
+            <option value="Semua">Semua Metode (3)</option>
+            <option value="Transfer">Transfer Bank</option>
+            <option value="Tunai">Tunai (Loket)</option>
+            <option value="Midtrans">Midtrans Gateway</option>
+          </select>
+        </div>
       </div>
 
-      <Table
-        caption="Riwayat Transaksi Lintas Metode Pengelola Plaza"
-        ariaLabel="Tabel Riwayat Seluruh Transaksi Admin"
-        headers={tableHeaders}
-        isEmpty={riwayat.length === 0}
-        emptyMessage="Belum ada riwayat verifikasi transaksi."
-        colSpan={7}
-      >
-        {riwayat.map((item) => (
-          <tr key={item.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-            <td data-label="ID TRX" className="font-tabular-nums font-bold" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.id}</td>
-            <th scope="row" data-label="Tenant & Kios" style={{ padding: '8px 12px', textAlign: 'left' }}>
-              <div style={{ fontWeight: '600' }}>{item.nama}</div>
-              <div className="font-tabular-nums font-bold" style={{ fontSize: '13px', color: 'var(--text-3)' }}>Kios {item.kios}</div>
-            </th>
-            <td data-label="Jenis Tagihan" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{item.tagihan}</td>
-            <td data-label="Nominal" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{item.nominal}</td>
-            <td data-label="Metode & Waktu" style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--text-2)' }}>
-              <div>{item.metode}</div>
-              <div style={{ color: 'var(--text-3)', fontSize: '12px' }}>{item.waktu}</div>
-            </td>
-            <td data-label="Status" style={{ padding: '8px 12px', textAlign: 'center' }}>
-              <span style={{ 
-                backgroundColor: item.status === 'Lunas' ? '#E8F5EE' : '#FDF2F2', 
-                color: item.status === 'Lunas' ? '#1A6B3A' : '#8B1A1A', 
-                padding: '4px 12px', 
-                borderRadius: '12px', 
-                fontSize: '12px', 
-                fontWeight: '700',
-                display: 'inline-block'
-              }}>
-                {item.status}
-              </span>
-              {item.alasan && (
-                <div style={{ fontSize: '11px', color: 'var(--red)', marginTop: '4px', fontStyle: 'italic', fontWeight: '500' }}>
-                  {item.alasan}
-                </div>
-              )}
-            </td>
-            <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
-              <button 
-                onClick={() => setSelectedBukti(item)}
-                className="table-action-btn"
-                style={{ 
-                  backgroundColor: 'transparent', 
-                  color: 'var(--red)', 
-                  border: '1px solid var(--red)', 
-                  padding: '10px 16px', 
-                  fontSize: '13px', 
-                  fontWeight: '600', 
-                  cursor: 'pointer', 
-                  borderRadius: '4px',
-                  minHeight: '44px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                Lihat Bukti
-              </button>
-            </td>
-          </tr>
-        ))}
-      </Table>
+      <Card variant="elevated" className="p-4 sm:p-6">
+        {filteredRiwayat.length === 0 ? (
+          <EmptyState
+            icon="heroicons:receipt-percent-20-solid"
+            title="Riwayat Transaksi Kosong"
+            description="Belum ada transaksi pembayaran yang tercatat untuk filter metode ini."
+          />
+        ) : (
+          <Table
+            caption="Riwayat Transaksi Lintas Metode Pengelola Plaza"
+            ariaLabel="Tabel Riwayat Seluruh Transaksi Admin"
+            headers={tableHeaders}
+            colSpan={8}
+          >
+            {filteredRiwayat.map((item, idx) => (
+              <tr key={item.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                <td data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text-2">
+                  {item.id}
+                </td>
+                <th scope="row" data-label="Tenant & Kios" className="p-3 text-left">
+                  <div className="font-bold text-text text-sm">{item.nama}</div>
+                  <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
+                </th>
+                <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
+                  {item.tagihan}
+                </td>
+                <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                  {item.nominal}
+                </td>
+                <td data-label="Metode & Waktu" className="p-3 text-text-2 text-xs">
+                  <div className="font-bold text-text text-sm">
+                    {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
+                  </div>
+                  <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
+                </td>
+                <td data-label="Alokasi Tagihan" className="p-3">
+                  <AlokasiBreakdown alokasiList={item.alokasi} compact={true} />
+                </td>
+                <td data-label="Status" className="p-3 text-center">
+                  <Badge status={item.status} />
+                  {item.alasan && (
+                    <div className="text-[11px] text-red mt-1 italic font-medium">
+                      {item.alasan}
+                    </div>
+                  )}
+                </td>
+                <td data-label="Aksi" className="p-3 text-center">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedBukti(item)}
+                    aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
+                    className="h-8 px-3 text-xs font-bold"
+                  >
+                    Detail
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
+      </Card>
 
+      {/* Modal Detail Transaksi Admin */}
       <Modal
         isOpen={!!selectedBukti}
         onClose={() => setSelectedBukti(null)}
-        title={selectedBukti ? `Bukti ${selectedBukti.id}` : ''}
-        size="sm"
+        title={selectedBukti ? `Detail Transaksi ${selectedBukti.id}` : ''}
+        size="md"
         footer={
-          <button 
-            onClick={() => setSelectedBukti(null)} 
-            style={{ 
-              backgroundColor: 'var(--warm-gray)', 
-              color: 'var(--text)', 
-              padding: '0 20px', 
-              fontSize: '14px', 
-              fontWeight: '600', 
-              borderRadius: 'var(--radius-md)', 
-              border: 'none', 
-              cursor: 'pointer',
-              height: '44px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%'
-            }}
+          <Button 
+            variant="secondary"
+            fullWidth
+            onClick={() => setSelectedBukti(null)}
           >
             Tutup
-          </button>
+          </Button>
         }
       >
         {selectedBukti && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div><span style={{ color: 'var(--text-3)' }}>Tenant:</span> <strong>{selectedBukti.nama} ({selectedBukti.kios})</strong></div>
-              <div><span style={{ color: 'var(--text-3)' }}>Nominal:</span> <strong>{selectedBukti.nominal}</strong></div>
-              <div><span style={{ color: 'var(--text-3)' }}>Metode:</span> <strong>{selectedBukti.metode}</strong></div>
-              <div><span style={{ color: 'var(--text-3)' }}>Waktu:</span> <strong>{selectedBukti.waktu}</strong></div>
-              <div><span style={{ color: 'var(--text-3)' }}>Status:</span> <strong style={{ color: selectedBukti.status === 'Lunas' ? '#1A6B3A' : '#8B1A1A' }}>{selectedBukti.status}</strong></div>
-              {selectedBukti.alasan && <div><span style={{ color: 'var(--text-3)' }}>Alasan Tolak:</span> <strong style={{ color: 'var(--red)' }}>{selectedBukti.alasan}</strong></div>}
-            </div>
-            <div style={{ width: '100%', height: '220px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--text-3)', fontStyle: 'italic' }}>[Simulasi Lampiran Bukti_Transfer_{selectedBukti.id}.jpg]</span>
+          <div className="flex flex-col gap-4 text-sm font-sans">
+            <Card variant="inset" className="p-4 flex flex-col gap-2">
+              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{selectedBukti.nama} (<span className="font-tabular-nums">{selectedBukti.kios}</span>)</strong></div>
+              <div><span className="text-text-3 font-semibold">Nominal Bayar:</span> <strong className="text-text font-bold font-tabular-nums">{selectedBukti.nominal}</strong></div>
+              <div><span className="text-text-3 font-semibold">Metode:</span> <strong className="text-text font-bold">{selectedBukti.labelMetode || selectedBukti.metode}</strong></div>
+              <div><span className="text-text-3 font-semibold">Waktu:</span> <strong className="text-text font-bold font-tabular-nums">{selectedBukti.waktu}</strong></div>
+              <div><span className="text-text-3 font-semibold">Status:</span> <Badge status={selectedBukti.status} /></div>
+              {selectedBukti.alasan && <div><span className="text-text-3 font-semibold">Alasan Tolak:</span> <strong className="text-red font-bold">{selectedBukti.alasan}</strong></div>}
+            </Card>
+
+            {/* Rincian Alokasi FIFO */}
+            <AlokasiBreakdown alokasiList={selectedBukti.alokasi} />
+
+            <div className="w-full h-44 bg-warm-gray/60 border-2 border-dashed border-border rounded-xl flex items-center justify-center text-center p-4">
+              <span className="text-xs text-text-3 font-medium italic">
+                [Simulasi Lampiran Bukti_Pembayaran_{selectedBukti.id}.jpg]
+              </span>
             </div>
           </div>
         )}

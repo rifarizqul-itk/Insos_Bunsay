@@ -11,8 +11,9 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
     { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti' },
     { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai' },
     { id: 'riwayat', label: 'Riwayat Transaksi Admin', path: '/admin/riwayat' },
-    { id: 'kios', label: 'Tabel Ketersediaan Kios', path: '/admin/kios' },
-    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor' }
+    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios' },
+    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor' },
+    { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun' }
   ];
 
   const handleNavigate = (path) => {
@@ -24,6 +25,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
 
   return (
     <aside 
+      aria-label="Navigasi Utama Admin"
       className={`sidebar-admin-container ${isOpen ? 'mobile-open' : ''}`}
       style={{
         display: 'flex',
@@ -70,6 +72,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
             <button
               key={item.id}
               onClick={() => handleNavigate(item.path)}
+              aria-current={active ? 'page' : undefined}
               style={{
                 width: '100%',
                 backgroundColor: active ? 'var(--red-50)' : 'transparent',

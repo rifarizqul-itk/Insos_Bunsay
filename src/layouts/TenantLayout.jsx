@@ -7,7 +7,7 @@ function TenantLayout({ isSidebarOpen, setIsSidebarOpen, onLogout }) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FBF7F2', position: 'relative', overflowX: 'hidden' }}>
+    <div className="min-h-dvh bg-[#FBF7F2] relative overflow-x-hidden">
       <Sidebar
         activeMenu=""
         setActiveMenu={(menu) => navigate(`/tenant/${menu}`)}

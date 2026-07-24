@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import FormField from '../../components/ui/FormField';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Icon from '../../components/ui/Icon';
 
 function EksporData() {
   const { addToast } = useUI();
@@ -27,57 +30,94 @@ function EksporData() {
     }
   };
 
-
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>Ekspor Rekapitulasi Keuangan</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>
-          Unduh seluruh data transaksi berjalan, status sewa, service charge, dan rincian tunggakan ke format Excel (.xlsx).
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Ekspor Laporan Keuangan
+        </h1>
+        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+          Unduh rekap transaksi sewa dan akumulasi tunggakan tenant ke berkas Excel (.xlsx).
         </p>
       </div>
 
-      <div className="ekspor-layout-grid mobile-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', alignItems: 'flex-start' }}>
-        <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '32px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', color: 'var(--text)' }}>Pilih Periode Laporan</h3>
-          <form onSubmit={handleDownloadExcel} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <FormField label="Bulan" id="ekspor-bulan">
-                <select value={bulanFilter} onChange={(e) => setBulanFilter(e.target.value)} style={{ height: '44px', borderRadius: '8px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}>
-                  {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map(b => <option key={b} value={b}>{b}</option>)}
+      <div className="ekspor-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <Card variant="elevated" className="lg:col-span-8 p-6 sm:p-8 flex flex-col gap-6">
+          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+            Pilih Periode Laporan Keuangan
+          </h3>
+          
+          <form onSubmit={handleDownloadExcel} className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <FormField label="Bulan Laporan" id="ekspor-bulan">
+                <select 
+                  value={bulanFilter} 
+                  onChange={(e) => setBulanFilter(e.target.value)} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
+                >
+                  {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
                 </select>
               </FormField>
 
-              <FormField label="Tahun" id="ekspor-tahun">
-                <select value={tahunFilter} onChange={(e) => setTahunFilter(e.target.value)} style={{ height: '44px', borderRadius: '8px', border: '1px solid var(--border)', padding: '0 12px', fontSize: '15px' }}>
-                  {['2024','2025','2026'].map(t => <option key={t} value={t}>{t}</option>)}
+              <FormField label="Tahun Laporan" id="ekspor-tahun">
+                <select 
+                  value={tahunFilter} 
+                  onChange={(e) => setTahunFilter(e.target.value)} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                >
+                  {['2024','2025','2026'].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
                 </select>
               </FormField>
             </div>
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="lg"
               disabled={isDownloading}
-              aria-live="polite"
-              style={{ backgroundColor: isDownloading ? 'var(--disabled-bg)' : 'var(--red)', color: '#ffffff', padding: '0 32px', fontSize: '15px', fontWeight: '700', height: '44px', border: 'none', borderRadius: 'var(--radius-md)', cursor: isDownloading ? 'not-allowed' : 'pointer', width: 'auto' }}
+              className="h-13 px-8 text-base font-extrabold gap-2.5 shadow-md self-start"
             >
               {isDownloading ? (
-                <span role="status">Memproses Rekap...</span>
+                <span role="status" className="flex items-center gap-2">
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="20" height="20" />
+                  <span>Memproses Rekap...</span>
+                </span>
               ) : (
-                'Unduh Excel (.xlsx)'
+                <>
+                  <Icon icon="heroicons:arrow-down-tray-20-solid" width="22" height="22" />
+                  <span>Unduh Rekap Excel (.xlsx)</span>
+                </>
               )}
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
 
-        <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 12px rgba(139,26,26,0.08)' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)' }}>Komponen Lembar Excel</h4>
-          <ul style={{ fontSize: '13px', color: 'var(--text-2)', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
-            <li><strong>Sheet 1:</strong> Rekap Setoran Sewa Unit Gedung bulanan.</li>
-            <li><strong>Sheet 2:</strong> Rekap Pembayaran Service Charge & Kebersihan.</li>
-            <li><strong>Sheet 3:</strong> Sisa saldo akumulasi Tunggakan AR historis per tenant.</li>
+        {/* Informasi Lembar Rekap */}
+        <Card variant="elevated" className="lg:col-span-4 p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2 border-b border-border pb-3">
+            <Icon icon="heroicons:table-cells-20-solid" width="22" height="22" className="text-red" />
+            <h3 className="text-base font-extrabold text-text tracking-tight text-balance">Lembar Kerja (.xlsx)</h3>
+          </div>
+          
+          <ul className="text-sm text-text-2 space-y-3 leading-relaxed">
+            <li className="flex gap-2">
+              <strong className="text-text font-bold flex-shrink-0">Sheet 1:</strong>
+              <span>Rekap Seluruh Transaksi Pembayaran Sewa (Tunai, Transfer, Midtrans).</span>
+            </li>
+            <li className="flex gap-2">
+              <strong className="text-text font-bold flex-shrink-0">Sheet 2:</strong>
+              <span>Akumulasi Tunggakan Berjalan per Tenant.</span>
+            </li>
+            <li className="flex gap-2">
+              <strong className="text-text font-bold flex-shrink-0">Sheet 3:</strong>
+              <span>Rekap Pemetaan Status & Ketersediaan Unit Kios Plaza.</span>
+            </li>
           </ul>
-        </div>
+        </Card>
       </div>
     </div>
   );

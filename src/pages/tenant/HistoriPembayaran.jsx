@@ -1,81 +1,109 @@
-import React, { useState } from 'react';
-import { useTransactionDomain } from '../../context/TransactionContext';
-
+import React, { useState, useEffect } from 'react';
+import { getTenantHistory } from '../../api/tenant';
 import Table from '../../components/ui/Table';
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import AlokasiBreakdown from '../../components/ui/AlokasiBreakdown';
+import EmptyState from '../../components/ui/EmptyState';
+import { SkeletonTable } from '../../components/ui/Skeleton';
 
 function HistoriPembayaran() {
-  const { riwayat } = useTransactionDomain();
-  const [filterStatus, setFilterStatus] = useState('Semua');
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMetode, setSelectedMetode] = useState('Semua');
 
-  const transaksiDifilter = riwayat.filter((item) => {
-    if (filterStatus === 'Semua') return true;
-    return item.status === filterStatus;
+  useEffect(() => {
+    getTenantHistory()
+      .then(data => setHistory(data))
+      .catch(() => setHistory([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredHistory = history.filter(item => {
+    if (selectedMetode === 'Semua') return true;
+    return item.metode === selectedMetode;
   });
 
   const tableHeaders = [
-    { label: 'ID' },
+    { label: 'ID Transaksi' },
     { label: 'Tanggal' },
-    { label: 'Jenis' },
-    { label: 'Nominal' },
-    { label: 'Metode' },
-    { label: 'Status' },
+    { label: 'Nominal Bayar' },
+    { label: 'Metode Pembayaran' },
+    { label: 'Rincian Cicilan' },
+    { label: 'Status' }
   ];
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)' }}>Arsip Riwayat Pembayaran</h2>
-          <p style={{ color: 'var(--text-2)', fontSize: '15px', fontWeight: '600', marginTop: '4px' }}>Daftar pelaporan transaksi digital Anda yang terekam di dalam sistem.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+            Riwayat Pembayaran Tenant
+          </h1>
+          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+            Daftar seluruh pembayaran sewa kios dan pemotongan tagihannya.
+          </p>
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          aria-label="Filter status riwayat pembayaran"
-          style={{ minWidth: '220px', height: '48px', borderRadius: 'var(--radius-md)', fontSize: '16px', fontWeight: '700', color: 'var(--text)', border: '1px solid var(--border)', padding: '0 12px', backgroundColor: '#ffffff' }}
-        >
-          <option value="Semua">Semua Riwayat</option>
-          <option value="Lunas">Status Lunas</option>
-          <option value="Pending">Menunggu Verifikasi</option>
-          <option value="Tertolak">Ditolak</option>
-        </select>
+
+        {/* Filter 3 Metode Pembayaran Resmi */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="filter-metode-tenant" className="text-xs sm:text-sm font-bold text-text-2">Metode:</label>
+          <select
+            id="filter-metode-tenant"
+            aria-label="Filter Metode Pembayaran Tenant"
+            value={selectedMetode}
+            onChange={(e) => setSelectedMetode(e.target.value)}
+            className="h-10 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+          >
+            <option value="Semua">Semua Metode (3)</option>
+            <option value="Transfer">Transfer Bank</option>
+            <option value="Tunai">Tunai (Loket)</option>
+            <option value="Midtrans">Midtrans Gateway</option>
+          </select>
+        </div>
       </div>
 
-      <Table
-        caption="Arsip Riwayat Pembayaran Tenant"
-        ariaLabel="Tabel Riwayat Pembayaran Tenant"
-        headers={tableHeaders}
-        isEmpty={transaksiDifilter.length === 0}
-        emptyMessage={`Tidak ada riwayat dengan status "${filterStatus}".`}
-        colSpan={6}
-      >
-        {transaksiDifilter.map((item) => (
-          <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
-            <td data-label="ID" className="py-2 px-0 md:px-3 font-extrabold text-text font-mono">{item.id}</td>
-            <td data-label="Tanggal" className="py-2 px-0 md:px-3 text-text font-bold">{item.waktu?.split(',')[0] || item.tanggal || '—'}</td>
-            <td data-label="Jenis" className="py-2 px-0 md:px-3 text-text font-bold">{item.tagihan}</td>
-            <td data-label="Nominal" className="py-2 px-0 md:px-3 font-extrabold text-text font-mono">{item.nominal}</td>
-            <td data-label="Metode" className="py-2 px-0 md:px-3 text-text-2 font-bold">{item.metode}</td>
-            <td data-label="Status" className="py-2 px-0 md:px-3">
-              <span style={{
-                backgroundColor: item.status === 'Lunas' ? 'var(--green-bg)' : item.status === 'Pending' ? 'var(--orange-bg)' : 'var(--red-100)',
-                color: item.status === 'Lunas' ? 'var(--green)' : item.status === 'Pending' ? 'var(--orange)' : 'var(--red)',
-                padding: '6px 14px', borderRadius: 'var(--radius-md)', fontWeight: '800', fontSize: '13px',
-                border: `2px solid ${item.status === 'Lunas' ? 'var(--green)' : item.status === 'Pending' ? 'var(--orange)' : 'var(--red)'}`,
-                display: 'inline-block'
-              }}>
-                <span aria-hidden="true">{item.status === 'Lunas' ? '✓ ' : item.status === 'Pending' ? '⏳ ' : '✕ '}</span>
-                {item.status === 'Lunas' ? 'Lunas' : item.status === 'Pending' ? 'Pending' : 'Ditolak'}
-              </span>
-              {item.alasan && (
-                <div style={{ fontSize: '11px', color: 'var(--red)', marginTop: '4px', fontStyle: 'italic' }}>
-                  {item.alasan}
-                </div>
-              )}
-            </td>
-          </tr>
-        ))}
-      </Table>
+      <Card variant="elevated" className="p-4 sm:p-6">
+        {loading ? (
+          <SkeletonTable rows={5} />
+        ) : filteredHistory.length === 0 ? (
+          <EmptyState
+            icon="heroicons:receipt-refund-20-solid"
+            title="Belum Ada Riwayat Transaksi"
+            description="Riwayat pembayaran sewa kios Anda akan otomatis tercatat di sini setelah melakukan pembayaran."
+          />
+        ) : (
+          <Table
+            caption="Tabel Histori Pembayaran Tenant"
+            ariaLabel="Daftar Histori Transaksi Pembayaran Tenant"
+            headers={tableHeaders}
+            colSpan={6}
+          >
+            {filteredHistory.map((row, idx) => (
+              <tr key={row.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                <th scope="row" data-label="ID Transaksi" className="font-tabular-nums font-bold p-3 text-text text-left">
+                  {row.id}
+                </th>
+                <td data-label="Tanggal" className="p-3 text-text-2 font-medium">
+                  {row.tanggal || row.waktu}
+                </td>
+                <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                  Rp {(Number(row.nominal) || 0).toLocaleString('id-ID')}
+                </td>
+                <td data-label="Metode Pembayaran" className="p-3 text-text font-bold">
+                  {row.metode === 'Midtrans' ? 'Midtrans Gateway' : row.metode === 'Transfer' ? 'Transfer Bank' : row.metode === 'Tunai' ? 'Tunai Loket' : row.metode}
+                </td>
+                <td data-label="Rincian Cicilan" className="p-3">
+                  <AlokasiBreakdown alokasiList={row.alokasi} compact={true} />
+                </td>
+                <td data-label="Status" className="p-3">
+                  <Badge status={row.status} />
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
+      </Card>
     </div>
   );
 }

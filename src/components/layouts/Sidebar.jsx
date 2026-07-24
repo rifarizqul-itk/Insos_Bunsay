@@ -10,7 +10,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
     { id: 'dashboard', label: 'Dashboard', path: '/tenant/dashboard' },
     { id: 'pembayaran', label: 'Bayar Sekarang', path: '/tenant/pembayaran' },
     { id: 'histori', label: 'Histori Pembayaran', path: '/tenant/histori' },
-    { id: 'tunggakan', label: 'Tunggakan (Piutang)', path: '/tenant/tunggakan' },
+    { id: 'tunggakan', label: 'Tunggakan Sewa', path: '/tenant/tunggakan' },
     { id: 'akun', label: 'Akun Tenant', path: '/tenant/akun' }
   ];
 
@@ -23,6 +23,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
 
   return (
     <aside 
+      aria-label="Navigasi Utama Tenant"
       className={`sidebar-tenant-container ${isOpen ? 'mobile-open' : ''}`}
       style={{
         display: 'flex',
@@ -69,6 +70,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
             <button
               key={item.id}
               onClick={() => handleNavigate(item.path)}
+              aria-current={active ? 'page' : undefined}
               style={{
                 width: '100%',
                 backgroundColor: active ? 'var(--red-50)' : 'transparent',

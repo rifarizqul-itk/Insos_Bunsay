@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
 import { useAdminTenants } from '../../hooks/useAdmin';
 import DetailKeuanganTenant from './DetailKeuanganTenant';
-import Modal from '../../components/ui/Modal';
+import Drawer from '../../components/ui/Drawer';
 import Table from '../../components/ui/Table';
+import StatCard from '../../components/ui/StatCard';
+import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Icon from '../../components/ui/Icon';
+import AlokasiBreakdown from '../../components/ui/AlokasiBreakdown';
+import EmptyState from '../../components/ui/EmptyState';
+import { SkeletonCard, SkeletonTable } from '../../components/ui/Skeleton';
 
 function DashboardAdmin() {
-  const navigate = useNavigate();
   const { antrean, verifyTransaction } = useTransactionDomain();
   const { addToast } = useUI();
   const { data: tenants, loading, error, refetch } = useAdminTenants();
@@ -16,7 +22,7 @@ function DashboardAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [selectedTenant, setSelectedTenant] = useState(null);
-  const [showVerifikasiModal, setShowVerifikasiModal] = useState(false);
+  const [showVerifikasiDrawer, setShowVerifikasiDrawer] = useState(false);
   const [verifikasiTarget, setVerifikasiTarget] = useState(null);
 
   const tableHeaders = [
@@ -29,6 +35,7 @@ function DashboardAdmin() {
   ];
 
   const filteredTenants = (tenants || []).filter(tenant => {
+    if (tenant.statusPemilik === 'Nonaktif') return false;
     const matchesSearch = tenant.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tenant.kios.toLowerCase().includes(searchQuery.toLowerCase());
     if (statusFilter === 'Semua') return matchesSearch;
@@ -42,11 +49,11 @@ function DashboardAdmin() {
       return;
     }
     setVerifikasiTarget({ tenant, antrean: antreanItem });
-    setShowVerifikasiModal(true);
+    setShowVerifikasiDrawer(true);
   };
 
   const handleProsesVerifikasi = async (id, status) => {
-    const statusFinal = status === 'konfirmasi' ? 'Lunas' : 'Tertolak';
+    const statusFinal = status === 'konfirmasi' ? 'Lunas' : 'Ditolak';
     const alasan = status === 'konfirmasi' ? null : 'Bukti transfer tidak valid';
     const item = antrean.find(a => a.id === id);
     if (!item) return;
@@ -62,7 +69,7 @@ function DashboardAdmin() {
       addToast('Terjadi kesalahan saat memproses verifikasi.', 'error');
     }
 
-    setShowVerifikasiModal(false);
+    setShowVerifikasiDrawer(false);
     setVerifikasiTarget(null);
     refetch();
   };
@@ -79,219 +86,198 @@ function DashboardAdmin() {
     return (
       <div className="page-fade-in flex flex-col gap-8">
         <div className="space-y-2">
-          <div className="h-9 w-64 bg-warm-gray/70 animate-pulse rounded-md"></div>
-          <div className="h-5 w-80 bg-warm-gray/50 animate-pulse rounded-md"></div>
+          <SkeletonTable rows={1} className="h-10 w-64" />
+          <SkeletonTable rows={1} className="h-5 w-80" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
-          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
-          <div className="h-28 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+          <SkeletonCard className="h-32" />
+          <SkeletonCard className="h-32" />
+          <SkeletonCard className="h-32" />
         </div>
-        <div className="h-64 bg-warm-gray/40 animate-pulse rounded-xl border border-border"></div>
+        <SkeletonTable rows={5} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <p style={{ color: 'var(--red)' }}>Gagal memuat data.</p>
-        <button onClick={refetch} style={{ marginTop: '16px', backgroundColor: 'var(--red)', color: '#fff', padding: '0 24px', height: '44px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>Muat Ulang</button>
-      </div>
+      <Card variant="inset" className="p-10 text-center my-8">
+        <p className="text-red font-bold text-base mb-4">Gagal memuat data tenant.</p>
+        <Button variant="primary" onClick={refetch}>
+          Muat Ulang
+        </Button>
+      </Card>
     );
   }
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      'Lunas': { bg: 'var(--green-bg)', color: 'var(--green)', label: 'Lunas (Bulan Ini)', clickable: false },
-      'Belum Bayar': { bg: 'var(--red-100)', color: 'var(--red)', label: 'Belum Bayar', clickable: false },
-      'Menunggu Verifikasi': { bg: 'var(--orange-bg)', color: 'var(--orange)', label: 'Menunggu Verifikasi', clickable: true }
-    };
-    return styles[status] || { bg: 'var(--warm-gray)', color: 'var(--text-2)', label: status, clickable: false };
-  };
-
-  const totalTenant = (tenants || []).length;
-  const belumBayarCount = (tenants || []).filter(t => t.statusPembayaran === 'Belum Bayar').length;
+  const totalTenant = (tenants || []).filter(t => t.statusPemilik !== 'Nonaktif').length;
+  const belumBayarCount = (tenants || []).filter(t => t.statusPembayaran === 'Belum Bayar' && t.statusPemilik !== 'Nonaktif').length;
 
   return (
-    <div className="page-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text)' }}>Dashboard Pengelola Plaza</h2>
-        <p style={{ color: 'var(--text-2)', fontSize: '15px', marginTop: '4px' }}>Ringkasan statistik real-time dan pemantauan administrasi pembayaran kios.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Dashboard Pengelola Plaza
+        </h1>
+        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+          Ringkasan data pembayaran, antrean verifikasi, dan administrasi kios.
+        </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
-          <span className="label-micro">Total Kios Terisi</span>
-          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginTop: '8px' }}>{totalTenant}</div>
-          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Aktif beroperasi di Plaza</span>
-        </div>
-
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
-          <span className="label-micro">Menunggu Verifikasi</span>
-          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--orange)', marginTop: '8px' }}>{antrean.length}</div>
-          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Memerlukan konfirmasi admin</span>
-        </div>
-
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-card)' }}>
-          <span className="label-micro">Belum Bayar Bulan Ini</span>
-          <div className="font-tabular-nums" style={{ fontSize: '32px', fontWeight: '800', color: 'var(--red)', marginTop: '8px' }}>{belumBayarCount}</div>
-          <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>Memiliki tagihan aktif</span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <StatCard
+          label="Total Kios Terisi"
+          value={totalTenant}
+          color="red"
+          icon={<Icon icon="heroicons:home-20-solid" width="24" height="24" />}
+        />
+        <StatCard
+          label="Menunggu Verifikasi Transfer"
+          value={antrean.length}
+          color="orange"
+          icon={<Icon icon="heroicons:clock-20-solid" width="24" height="24" />}
+        />
+        <StatCard
+          label="Belum Bayar Bulan Ini"
+          value={belumBayarCount}
+          color="red"
+          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" width="24" height="24" />}
+        />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text)', margin: 0 }}>Daftar Administrasi Kios</h3>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Cari nama atau no kios..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Cari nama tenant atau nomor kios"
-            style={{ height: '44px', padding: '0 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', backgroundColor: '#ffffff', width: '220px' }}
+      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">
+            Daftar Administrasi Kios
+          </h3>
+          
+          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Cari nama atau no kios..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Cari nama tenant atau nomor kios"
+              className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-red"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter status pembayaran bulan ini"
+              className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+            >
+              <option value="Semua">Semua Status</option>
+              <option value="Lunas">Lunas</option>
+              <option value="Dicicil">Dicicil</option>
+              <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+              <option value="Belum Bayar">Belum Bayar</option>
+            </select>
+          </div>
+        </div>
+
+        {filteredTenants.length === 0 ? (
+          <EmptyState
+            icon="heroicons:user-minus-20-solid"
+            title="Tenant Tidak Ditemukan"
+            description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
           />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filter status pembayaran bulan ini"
-            style={{ height: '44px', padding: '0 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '15px', fontWeight: '600', backgroundColor: '#ffffff' }}
+        ) : (
+          <Table
+            caption="Daftar Status Pembayaran Tenant Bulan Ini"
+            ariaLabel="Tabel Status Pembayaran Kios Plaza Kebun Sayur"
+            headers={tableHeaders}
+            colSpan={6}
           >
-            <option value="Semua">Semua Status</option>
-            <option value="Lunas">Lunas</option>
-            <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-            <option value="Belum Bayar">Belum Bayar</option>
-          </select>
-        </div>
-      </div>
+            {filteredTenants.map((tenant, idx) => {
+              const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
+              return (
+                <tr key={tenant.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-left text-text">
+                    {tenant.nama}
+                  </th>
+                  <td data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text">
+                    {tenant.kios}
+                  </td>
+                  <td data-label="Jenis Usaha" className="p-3 text-text-2 font-medium">
+                    {tenant.usaha}
+                  </td>
+                  <td data-label="Tunggakan" className={`font-tabular-nums p-3 font-extrabold ${((tenant.hutangTunggakan ?? tenant.tunggakan ?? 0) > 0) ? 'text-orange' : 'text-text'}`}>
+                    Rp {(tenant.hutangTunggakan ?? tenant.tunggakan ?? 0).toLocaleString('id-ID')}
+                  </td>
+                  <td data-label="Status Bulan Ini" className="p-3">
+                    <Badge 
+                      status={tenant.statusPembayaran} 
+                      clickable={isVerifikasiPending}
+                      onClick={isVerifikasiPending ? () => handleOpenVerifikasi(tenant) : undefined}
+                      aria-label={isVerifikasiPending ? `Verifikasi bukti transfer ${tenant.nama} (${tenant.kios})` : `Status pembayaran: ${tenant.statusPembayaran}`}
+                    />
+                  </td>
+                  <td data-label="Aksi" className="p-3 text-center">
+                    <Button 
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDetailClick(tenant)} 
+                      aria-label={`Lihat detail keuangan ${tenant.nama} (${tenant.kios})`}
+                      className="h-9 px-4 text-xs font-bold"
+                    >
+                      Detail
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+          </Table>
+        )}
+      </Card>
 
-      <Table
-        caption="Daftar Status Pembayaran Tenant Bulan Ini"
-        ariaLabel="Tabel Status Pembayaran Kios Plaza Kebun Sayur"
-        headers={tableHeaders}
-        isEmpty={filteredTenants.length === 0}
-        emptyMessage="Data tenant tidak ditemukan."
-        colSpan={6}
-      >
-        {filteredTenants.map((tenant) => {
-          const badge = getStatusBadge(tenant.statusPembayaran);
-          return (
-            <tr key={tenant.id} style={{ borderBottom: '2px solid var(--border)', backgroundColor: '#ffffff' }}>
-              <th scope="row" data-label="Nama Tenant" style={{ padding: '8px 12px', fontWeight: '600', textAlign: 'left' }}>{tenant.nama}</th>
-              <td data-label="No. Kios" className="font-tabular-nums font-bold" style={{ padding: '8px 12px' }}>{tenant.kios}</td>
-              <td data-label="Jenis Usaha" style={{ padding: '8px 12px', color: 'var(--text-2)' }}>{tenant.usaha}</td>
-              <td data-label="Tunggakan" className="font-tabular-nums" style={{ padding: '8px 12px', fontWeight: '600', color: tenant.tunggakan > 0 ? 'var(--orange)' : 'var(--text)' }}>
-                Rp {tenant.tunggakan.toLocaleString('id-ID')}
-              </td>
-              <td data-label="Status Bulan Ini" style={{ padding: '8px 12px' }}>
-                <span
-                  onClick={() => { if (badge.clickable) handleOpenVerifikasi(tenant); }}
-                  style={{
-                    backgroundColor: badge.bg,
-                    color: badge.color,
-                    padding: '4px 12px',
-                    borderRadius: '4px',
-                    fontWeight: '700',
-                    fontSize: '12px',
-                    cursor: badge.clickable ? 'pointer' : 'default',
-                    display: 'inline-block',
-                    border: badge.clickable ? '2px solid var(--orange)' : 'none',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {badge.label}
-                </span>
-              </td>
-              <td data-label="Aksi" style={{ padding: '8px 12px', textAlign: 'center' }}>
-                <button 
-                  onClick={() => handleDetailClick(tenant)} 
-                  className="table-action-btn"
-                  style={{ 
-                    backgroundColor: 'var(--warm-gray)', 
-                    color: 'var(--text)', 
-                    padding: '10px 16px', 
-                    minHeight: '44px',
-                    fontSize: '13px', 
-                    fontWeight: '600', 
-                    border: '1px solid var(--border)', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  Detail
-                </button>
-              </td>
-            </tr>
-          );
-        })}
-      </Table>
-
-      <Modal
-        isOpen={showVerifikasiModal}
-        onClose={() => { setShowVerifikasiModal(false); setVerifikasiTarget(null); }}
-        title="Verifikasi Bukti Transfer"
+      {/* Drawer Slide-Over Panel Verifikasi Bukti Transfer */}
+      <Drawer
+        isOpen={showVerifikasiDrawer}
+        onClose={() => { setShowVerifikasiDrawer(false); setVerifikasiTarget(null); }}
+        title="Verifikasi Bukti Transfer Bank"
+        subtitle={verifikasiTarget ? `Tenant ${verifikasiTarget.tenant.nama} (${verifikasiTarget.tenant.kios})` : ''}
         size="md"
         footer={
-          <>
-            <button 
-              onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')} 
-              style={{ 
-                backgroundColor: 'var(--warm-gray)', 
-                color: 'var(--red)', 
-                padding: '0 24px', 
-                fontSize: '14px', 
-                fontWeight: '600', 
-                border: '1px solid var(--border)', 
-                borderRadius: 'var(--radius-md)', 
-                cursor: 'pointer',
-                height: '44px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              Tolak Bukti
-            </button>
-            <button 
-              onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')} 
-              style={{ 
-                backgroundColor: 'var(--green)', 
-                color: '#ffffff', 
-                padding: '0 24px', 
-                fontSize: '14px', 
-                fontWeight: '700', 
-                border: 'none', 
-                borderRadius: 'var(--radius-md)', 
-                cursor: 'pointer',
-                height: '44px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              Konfirmasi Lunas
-            </button>
-          </>
+          verifikasiTarget && (
+            <>
+              <Button 
+                variant="danger"
+                size="md"
+                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')} 
+              >
+                Tolak Bukti
+              </Button>
+              <Button 
+                variant="primary"
+                size="md"
+                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')} 
+              >
+                Konfirmasi Lunas
+              </Button>
+            </>
+          )
         }
       >
         {verifikasiTarget && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div><span style={{ color: 'var(--text-2)' }}>Tenant:</span> <strong>{verifikasiTarget.tenant.nama} ({verifikasiTarget.tenant.kios})</strong></div>
-              <div><span style={{ color: 'var(--text-2)' }}>Tagihan:</span> <strong>{verifikasiTarget.antrean.tagihan}</strong></div>
-              <div><span style={{ color: 'var(--text-2)' }}>Nominal:</span> <strong>{verifikasiTarget.antrean.nominal}</strong></div>
-              <div><span style={{ color: 'var(--text-2)' }}>Metode:</span> <strong>{verifikasiTarget.antrean.metode}</strong></div>
-              <div><span style={{ color: 'var(--text-2)' }}>Waktu:</span> <strong>{verifikasiTarget.antrean.waktu}</strong></div>
-            </div>
-            <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--warm-gray)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '16px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--text-3)', fontStyle: 'italic' }}>[Simulasi Lampiran Bukti_Transfer_{verifikasiTarget.antrean.id}.jpg]</span>
-            </div>
+          <div className="flex flex-col gap-5 text-sm">
+            <Card variant="inset" className="p-4 flex flex-col gap-2.5">
+              <div><span className="text-text-3 font-semibold">Jenis Tagihan:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.tagihan}</strong></div>
+              <div><span className="text-text-3 font-semibold">Nominal Pembayaran:</span> <strong className="text-text font-bold font-tabular-nums">{verifikasiTarget.antrean.nominal}</strong></div>
+              <div><span className="text-text-3 font-semibold">Metode:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.labelMetode || verifikasiTarget.antrean.metode}</strong></div>
+              <div><span className="text-text-3 font-semibold">Waktu Pengiriman:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.waktu}</strong></div>
+            </Card>
+
+            <AlokasiBreakdown alokasiList={verifikasiTarget.antrean.alokasi} />
+
+            <figure className="w-full min-h-[220px] bg-warm-gray/60 border-2 border-dashed border-border rounded-xl flex flex-col justify-center items-center text-center p-6 gap-2">
+              <Icon icon="heroicons:photo-20-solid" width="32" height="32" className="text-text-3" />
+              <figcaption className="text-xs text-text-3 font-medium italic">
+                [Simulasi Lampiran Bukti_Transfer_{verifikasiTarget.antrean.id}.jpg]
+              </figcaption>
+            </figure>
           </div>
         )}
-      </Modal>
+      </Drawer>
     </div>
   );
 }
