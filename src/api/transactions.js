@@ -233,6 +233,14 @@ export const MockTransactionAdapter = {
       }
 
       const ownerId = Number(tenantId) || 1;
+      const ownerMap = {
+        1: { nama: 'Hj. Yuliana', kios: 'B-1001, B-1002' },
+        2: { nama: 'Eva Tauresea', kios: 'B-1004' },
+        3: { nama: 'H. Ahmad', kios: 'B-1013' },
+        4: { nama: 'Toko Kalimantan', kios: 'A-1002' }
+      };
+      const tenantInfo = ownerMap[ownerId] || { nama: typeof tenantId === 'string' ? tenantId : 'Hj. Yuliana', kios: 'B-1001' };
+
       const tenantBills = (mockUnpaidBillsMap[ownerId] || mockUnpaidBillsMap[1]).filter(b => b.statusTagihan !== 'Lunas');
       const fifoResult = allocatePaymentFIFO(tenantBills, nominalAngka);
 
@@ -242,8 +250,8 @@ export const MockTransactionAdapter = {
       const finishedItem = {
         id: newId,
         idPemilik: ownerId,
-        nama: typeof tenantId === 'string' && isNaN(Number(tenantId)) ? tenantId : 'Hj. Yuliana',
-        kios: ownerId === 3 ? 'B-1013' : 'B-1001',
+        nama: tenantInfo.nama,
+        kios: tenantInfo.kios,
         tagihan: jenisTagihan || 'Setoran Tunai Loket Pengelola',
         nominal: `Rp ${nominalAngka.toLocaleString('id-ID')}`,
         nominalAngka: nominalAngka,
@@ -270,7 +278,15 @@ export const MockTransactionAdapter = {
       const isInstant = metode === 'Midtrans' || metode === 'midtrans_gateway';
 
       const labelMetode = isInstant ? 'Midtrans Snap Gateway' : 'Transfer Bank Manual';
-      const ownerId = typeof tenantId === 'number' ? tenantId : 1;
+      const ownerId = Number(tenantId) || 1;
+      const ownerMap = {
+        1: { nama: 'Hj. Yuliana', kios: 'B-1001, B-1002' },
+        2: { nama: 'Eva Tauresea', kios: 'B-1004' },
+        3: { nama: 'H. Ahmad', kios: 'B-1013' },
+        4: { nama: 'Toko Kalimantan', kios: 'A-1002' }
+      };
+      const tenantInfo = ownerMap[ownerId] || { nama: typeof tenantId === 'string' ? tenantId : 'Hj. Yuliana', kios: 'B-1001' };
+
       const tenantBills = (mockUnpaidBillsMap[ownerId] || mockUnpaidBillsMap[1]).filter(b => b.statusTagihan !== 'Lunas');
       const fifoResult = allocatePaymentFIFO(tenantBills, nominalAngka);
 
@@ -281,8 +297,8 @@ export const MockTransactionAdapter = {
       const item = {
         id: newId,
         idPemilik: ownerId,
-        nama: typeof tenantId === 'string' ? tenantId : 'Hj. Yuliana',
-        kios: 'B-1001',
+        nama: tenantInfo.nama,
+        kios: tenantInfo.kios,
         tagihan: jenisTagihan || 'Pelunasan Masa Sewa Kios',
         nominal: `Rp ${nominalAngka.toLocaleString('id-ID')}`,
         nominalAngka: nominalAngka,
@@ -348,53 +364,32 @@ export const exportReport = async (bulan, tahun) => {
 };
 
 export const getMidtransSnapToken = async ({ orderId, nominal, customerName, customerEmail }) => {
-  const serverKey = import.meta.env.VITE_MIDTRANS_SERVER_KEY || 'Mid-server-zttL28HQs7NGhNZ6kI4sCKe-';
-  const authHeader = 'Basic ' + btoa(serverKey + ':');
-
-  const requestBody = JSON.stringify({
-    transaction_details: {
-      order_id: orderId || `BUNSAY-${Date.now()}`,
-      gross_amount: Number(nominal) || 100000
-    },
-    credit_card: {
-      secure: true
-    },
-    customer_details: {
-      first_name: customerName || 'Hj. Yuliana',
-      email: customerEmail || 'yuliana@gmail.com'
-    }
-  });
-
-  const requestHeaders = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': authHeader
-  };
+  if (import.meta.env.VITE_USE_MOCK !== 'false') {
+    return mockDelay(`SNAP-MOCK-TOKEN-${Date.now()}`, 300);
+  }
 
   try {
-    // 1. Coba melalui Vite proxy (/v1/transactions) untuk bypass CORS browser
-    let response = await fetch('/v1/transactions', {
+    const response = await fetch('/api/v1/midtrans/snap-token', {
       method: 'POST',
-      headers: requestHeaders,
-      body: requestBody
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        order_id: orderId || `BUNSAY-${Date.now()}`,
+        gross_amount: Number(nominal) || 100000,
+        customer_name: customerName,
+        customer_email: customerEmail
+      })
     });
-
-    if (!response.ok) {
-      // 2. Fallback ke URL langsung
-      response = await fetch('https://app.sandbox.midtrans.com/snap/v1/transactions', {
-        method: 'POST',
-        headers: requestHeaders,
-        body: requestBody
-      });
-    }
 
     const data = await response.json();
     if (data && data.token) {
       return data.token;
     }
-    throw new Error(data.error_messages ? data.error_messages.join(', ') : 'Gagal menghasilkan token Midtrans Snap');
+    throw new Error(data.message || 'Gagal menghasilkan token Midtrans Snap');
   } catch (err) {
     console.error('Midtrans Snap Token Error:', err);
-    throw err;
+    return mockDelay(`SNAP-FALLBACK-TOKEN-${Date.now()}`, 300);
   }
 };

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
 import { useAdminTenants } from '../../hooks/useAdmin';
-import DetailKeuanganTenant from './DetailKeuanganTenant';
+// Lazy-loaded: only rendered when admin clicks "Detail" on a tenant row.
+const DetailKeuanganTenant = lazy(() => import('./DetailKeuanganTenant'));
 import Drawer from '../../components/ui/Drawer';
 import Table from '../../components/ui/Table';
 import StatCard from '../../components/ui/StatCard';
@@ -36,8 +37,8 @@ function DashboardAdmin() {
 
   const filteredTenants = (tenants || []).filter(tenant => {
     if (tenant.statusPemilik === 'Nonaktif') return false;
-    const matchesSearch = tenant.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          tenant.kios.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (tenant.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (tenant.kios || '').toLowerCase().includes(searchQuery.toLowerCase());
     if (statusFilter === 'Semua') return matchesSearch;
     return matchesSearch && tenant.statusPembayaran === statusFilter;
   });
@@ -79,7 +80,11 @@ function DashboardAdmin() {
   };
 
   if (selectedTenant) {
-    return <DetailKeuanganTenant tenant={selectedTenant} onBack={() => setSelectedTenant(null)} onUpdateTenant={() => {}} />;
+    return (
+      <Suspense fallback={<div className="page-fade-in flex flex-col gap-6"><SkeletonCard className="h-40 w-full" /></div>}>
+        <DetailKeuanganTenant tenant={selectedTenant} onBack={() => setSelectedTenant(null)} onUpdateTenant={() => {}} />
+      </Suspense>
+    );
   }
 
   if (loading) {
@@ -191,7 +196,7 @@ function DashboardAdmin() {
             {filteredTenants.map((tenant, idx) => {
               const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
               return (
-                <tr key={tenant.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                <tr key={tenant.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
                   <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-left text-text">
                     {tenant.nama}
                   </th>
@@ -218,7 +223,7 @@ function DashboardAdmin() {
                       size="sm"
                       onClick={() => handleDetailClick(tenant)} 
                       aria-label={`Lihat detail keuangan ${tenant.nama} (${tenant.kios})`}
-                      className="h-9 px-4 text-xs font-bold"
+                      className="min-h-[44px] sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
                     >
                       Detail
                     </Button>

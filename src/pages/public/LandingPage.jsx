@@ -12,11 +12,16 @@ function LandingPage() {
       {/* Top Navbar Publik */}
       <nav className="landing-navbar h-[72px] bg-white border-b border-border sticky top-0 flex items-center justify-between px-6 md:px-10 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <img 
-            src="/assets/main_logo_transparent_for_light_bg.png" 
-            alt="Logo Resmi Plaza Kebun Sayur" 
-            className="h-11 w-auto object-contain" 
-          />
+          <picture>
+            <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+            <img
+              src="/assets/main_logo_transparent_for_light_bg.png"
+              alt="Logo Resmi Plaza Kebun Sayur"
+              className="h-11 w-auto object-contain"
+              width={176}
+              height={44}
+            />
+          </picture>
           <span className="font-extrabold text-xl md:text-2xl text-red tracking-tight text-balance">
             Plaza Kebun Sayur
           </span>
@@ -55,15 +60,22 @@ function LandingPage() {
               </div>
             </div>
             
-            <div className="h-full min-h-[280px] md:min-h-[400px] overflow-hidden bg-warm-gray/30 relative">
-              <img 
-                src="/assets/Photograph_of_plaza_building.jpg" 
-                alt="Gedung Plaza Kebun Sayur Balikpapan" 
-                fetchPriority="high"
-                loading="eager"
-                decoding="async"
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-              />
+        <div className="h-full min-h-[280px] md:min-h-[400px] overflow-hidden bg-warm-gray/30 relative">
+              <picture>
+                {/* WebP format — ~88% smaller than the original JPG */}
+                <source srcSet="/assets/Photograph_of_plaza_building.webp" type="image/webp" />
+                {/* JPEG fallback for legacy browsers */}
+                <img
+                  src="/assets/Photograph_of_plaza_building.jpg"
+                  alt="Gedung Plaza Kebun Sayur Balikpapan"
+                  fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
+                  width={800}
+                  height={600}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+              </picture>
             </div>
           </Card>
 

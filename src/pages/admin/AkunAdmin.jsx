@@ -23,6 +23,16 @@ function AkunAdmin() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
 
+  const profileTimerRef = React.useRef(null);
+  const pwdTimerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
+      if (pwdTimerRef.current) clearTimeout(pwdTimerRef.current);
+    };
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -41,7 +51,7 @@ function AkunAdmin() {
     }
 
     setIsLoadingProfile(true);
-    setTimeout(() => {
+    profileTimerRef.current = setTimeout(() => {
       updateUser({
         username: formData.username.trim(),
         name: formData.nama.trim(),
@@ -66,7 +76,7 @@ function AkunAdmin() {
     }
 
     setIsLoadingPassword(true);
-    setTimeout(() => {
+    pwdTimerRef.current = setTimeout(() => {
       setIsLoadingPassword(false);
       setFormData(prev => ({
         ...prev,

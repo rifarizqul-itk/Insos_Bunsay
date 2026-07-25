@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState('tenant');
   const [user, setUser] = useState(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Load auth state from authPort / storage
   useEffect(() => {
@@ -16,13 +17,17 @@ export const AuthProvider = ({ children }) => {
         setRole(session.role || 'tenant');
         setUser(session.user || null);
       }
-    }).catch(() => {});
+    }).catch(() => {})
+      .finally(() => {
+        setIsHydrated(true);
+      });
   }, []);
 
   const login = useCallback(async (roleParam, userData, rememberMe = true) => {
     setIsLoggedIn(true);
     setRole(roleParam);
     setUser(userData);
+    setIsHydrated(true);
 
     const payload = JSON.stringify({ role: roleParam, user: userData });
     if (rememberMe) {
@@ -39,6 +44,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(false);
     setRole('tenant');
     setUser(null);
+    setIsHydrated(true);
     localStorage.removeItem('auth');
     sessionStorage.removeItem('auth');
   }, []);
@@ -47,10 +53,10 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => {
       const updated = { ...(prev || {}), ...newUserData };
       const payload = JSON.stringify({ role, user: updated });
-      if (localStorage.getItem('auth')) {
-        localStorage.setItem('auth', payload);
-      } else if (sessionStorage.getItem('auth')) {
+      if (sessionStorage.getItem('auth')) {
         sessionStorage.setItem('auth', payload);
+      } else {
+        localStorage.setItem('auth', payload);
       }
       return updated;
     });
@@ -60,6 +66,7 @@ export const AuthProvider = ({ children }) => {
     isLoggedIn,
     role,
     user,
+    isHydrated,
     login,
     logout,
     updateUser,
@@ -73,4 +80,5 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
+
 

@@ -86,7 +86,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               colSpan={5}
             >
               {filteredAntrean.map((item, index) => (
-                <tr key={item.id || index} className={`border-b border-border/80 ${index % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+                <tr key={item.id || index} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
                   <th scope="row" data-label="Tenant & Kios" className="p-3 text-left">
                     <div className="font-bold text-text text-sm">{item.nama}</div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
@@ -106,7 +106,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                       size="sm"
                       onClick={() => setPreviewItem(item)}
                       aria-label={`Periksa bukti transfer ${item.nama} (${item.kios}) - nominal ${item.nominal}`}
-                      className="h-8 px-3 text-xs font-bold"
+                      className="min-h-[44px] sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
                     >
                       Periksa Bukti
                     </Button>

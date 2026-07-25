@@ -42,10 +42,12 @@ function FormField({
         </label>
       )}
 
-      {React.Children.map(children, (child) => {
+      {React.Children.map(children, (child, index) => {
         if (!React.isValidElement(child)) return child;
+        const isFormControl = typeof child.type === 'string' && ['input', 'select', 'textarea'].includes(child.type);
+        const shouldAttachId = isFormControl || index === 0;
         return React.cloneElement(child, {
-          id: fieldId,
+          ...(shouldAttachId ? { id: child.props.id || fieldId } : {}),
           required,
           'aria-required': required ? true : undefined,
           'aria-invalid': error ? true : undefined,

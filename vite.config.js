@@ -9,9 +9,16 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
+            // React Router — updates independently; separate chunk so upgrading
+            // router doesn't bust the larger react-core cache.
+            if (id.includes('react-router')) {
+              return 'react-router';
             }
+            // React core — highly stable, long-lived browser cache.
+            if (id.includes('react-dom') || id.includes('/react/')) {
+              return 'react-core';
+            }
+            // Iconify icon sets — can be large; isolate for caching.
             if (id.includes('@iconify')) {
               return 'iconify';
             }

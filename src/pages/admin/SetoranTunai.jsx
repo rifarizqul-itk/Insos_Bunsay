@@ -113,7 +113,7 @@ function SetoranTunai() {
         setBuktiTunai(null);
         setPreviewBukti(null);
         setShowKonfirmasi(false);
-        const fileInput = document.getElementById('upload-bukti-tunai');
+        const fileInput = document.getElementById('upload-bukti-tunai-input');
         if (fileInput) fileInput.value = '';
       } else {
         addToast(result?.message || 'Gagal menyimpan setoran.', 'error');
@@ -216,21 +216,21 @@ function SetoranTunai() {
             {/* FIFO Preview */}
             <FIFOPreview allocations={fifoAllocations} nominal={Number(nominalTunai) || 0} />
 
-            <FormField label="Unggah Foto Bukti Setoran" id="upload-bukti-tunai" required={!previewBukti}>
+            <FormField label="Unggah Foto Bukti Setoran" id="upload-bukti-tunai-field" required={!previewBukti}>
               <input
-                id="upload-bukti-tunai"
+                id="upload-bukti-tunai-input"
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
                 className="sr-only"
               />
               <label
-                htmlFor="upload-bukti-tunai"
+                htmlFor="upload-bukti-tunai-input"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    document.getElementById('upload-bukti-tunai')?.click();
+                    document.getElementById('upload-bukti-tunai-input')?.click();
                   }
                 }}
                 className="flex flex-col items-center justify-center gap-2 bg-warm-gray/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-[120px] hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"

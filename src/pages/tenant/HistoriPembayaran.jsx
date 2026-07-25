@@ -80,7 +80,7 @@ function HistoriPembayaran() {
             colSpan={6}
           >
             {filteredHistory.map((row, idx) => (
-              <tr key={row.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+              <tr key={row.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
                 <th scope="row" data-label="ID Transaksi" className="font-tabular-nums font-bold p-3 text-text text-left">
                   {row.id}
                 </th>
@@ -88,7 +88,7 @@ function HistoriPembayaran() {
                   {row.tanggal || row.waktu}
                 </td>
                 <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
-                  Rp {(Number(row.nominal) || 0).toLocaleString('id-ID')}
+                  Rp {(row.nominalAngka ?? (parseInt(String(row.nominal || '').replace(/[^0-9]/g, ''), 10) || 0)).toLocaleString('id-ID')}
                 </td>
                 <td data-label="Metode Pembayaran" className="p-3 text-text font-bold">
                   {row.metode === 'Midtrans' ? 'Midtrans Gateway' : row.metode === 'Transfer' ? 'Transfer Bank' : row.metode === 'Tunai' ? 'Tunai Loket' : row.metode}

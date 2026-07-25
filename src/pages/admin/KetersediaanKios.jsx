@@ -39,9 +39,9 @@ function KetersediaanKios({ isAdmin = false }) {
   ];
 
   const filteredKios = (kiosData || []).filter(kios => {
-    const matchesSearch = kios.nomorKios.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          kios.tenant.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLantai = filterLantai === 'Semua' || kios.lantai === filterLantai;
+    const matchesSearch = (kios.nomorKios || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (kios.tenant || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLantai = filterLantai === 'Semua' || kios.lantai === filterLantai || (kios.lantai || '').includes(filterLantai.replace('Lantai ', 'Lt. '));
     const matchesStatus = filterStatus === 'Semua' || kios.statusKios === filterStatus;
     return matchesSearch && matchesLantai && matchesStatus;
   });
@@ -205,9 +205,9 @@ function KetersediaanKios({ isAdmin = false }) {
               className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
             >
               <option value="Semua">Semua Lantai</option>
-              <option value="Lantai 1">Lantai 1</option>
-              <option value="Lantai 2">Lantai 2</option>
-              <option value="Lantai 3">Lantai 3</option>
+              <option value="Lt. 1">Lantai 1</option>
+              <option value="Lt. 2">Lantai 2</option>
+              <option value="Lt. 3">Lantai 3</option>
             </select>
             <select
               value={filterStatus}
@@ -237,12 +237,12 @@ function KetersediaanKios({ isAdmin = false }) {
             colSpan={isAdmin ? 7 : 4}
           >
             {filteredKios.map((kios, idx) => (
-              <tr key={kios.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
-                <td data-label="Lantai" className="p-3 text-text-2 font-semibold">
-                  {kios.lantai}
-                </td>
-                <td data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text">
+              <tr key={kios.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
+                <th scope="row" data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text text-left">
                   {kios.nomorKios}
+                </th>
+                <td data-label="Lantai" className="p-3 text-text-2 font-semibold">
+                  Lantai {kios.lantai}
                 </td>
                 <td data-label="Status" className="p-3">
                   <Badge status={kios.statusKios} />
@@ -267,7 +267,7 @@ function KetersediaanKios({ isAdmin = false }) {
                       size="sm" 
                       onClick={() => handleDetailClick(kios)}
                       aria-label={`Lihat detail administrasi kios ${kios.nomorKios} (${kios.tenant || 'Kosong'})`}
-                      className="h-8 px-3 text-xs font-bold"
+                      className="min-h-[44px] sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
                     >
                       Detail
                     </Button>

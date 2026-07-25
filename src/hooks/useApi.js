@@ -4,37 +4,35 @@ export function useApi(apiFn, deps = [], immediate = true) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState(null);
-  const abortRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   const execute = useCallback(async (...args) => {
-    // Cancel previous request if any
-    if (abortRef.current) {
-      abortRef.current();
-      abortRef.current = null;
-    }
-
+    if (!isMountedRef.current) return;
     setLoading(true);
     setError(null);
     try {
       const result = await apiFn(...args);
-      setData(result);
-      setLoading(false);
+      if (isMountedRef.current) {
+        setData(result);
+        setLoading(false);
+      }
       return result;
     } catch (err) {
-      setError(err);
-      setLoading(false);
+      if (isMountedRef.current) {
+        setError(err);
+        setLoading(false);
+      }
       throw err;
     }
   }, [apiFn]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     if (immediate) {
       execute();
     }
     return () => {
-      if (abortRef.current) {
-        abortRef.current();
-      }
+      isMountedRef.current = false;
     };
   }, deps);
 

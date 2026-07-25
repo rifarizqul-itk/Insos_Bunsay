@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
@@ -17,7 +17,9 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
   ];
 
   const handleNavigate = (path) => {
-    navigate(path);
+    startTransition(() => {
+      navigate(path);
+    });
     onClose();
   };
 
@@ -44,13 +46,18 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
         gap: '12px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img 
-            src="/assets/main_logo_transparent_for_light_bg.png" 
-            alt="Logo Plaza Kebun Sayur" 
-            loading="lazy"
-            decoding="async"
-            style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
-          />
+          <picture>
+            <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+            <img
+              src="/assets/main_logo_transparent_for_light_bg.png"
+              alt="Logo Plaza Kebun Sayur"
+              loading="lazy"
+              decoding="async"
+              width={144}
+              height={36}
+              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+            />
+          </picture>
           <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
             Admin
           </span>

@@ -96,10 +96,13 @@ function BayarSekarang() {
     }
   }, [metode, previewBukti]);
 
-  const handleRadioKeyDown = (e) => {
+  const handleRadioKeyDown = (e, targetMetode) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       setMetode(prev => (prev === 'transfer_manual' ? 'midtrans_gateway' : 'transfer_manual'));
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (targetMetode) setMetode(targetMetode);
     }
   };
 
@@ -344,7 +347,7 @@ function BayarSekarang() {
                       tabIndex={metode === 'transfer_manual' ? 0 : -1}
                       aria-checked={metode === 'transfer_manual'}
                       onClick={() => setMetode('transfer_manual')}
-                      onKeyDown={handleRadioKeyDown}
+                      onKeyDown={(e) => handleRadioKeyDown(e, 'transfer_manual')}
                       className={`
                         w-full min-h-[48px] px-4 py-3 rounded-xl font-bold text-sm text-left flex items-center justify-between border transition-all cursor-pointer
                         ${metode === 'transfer_manual' 
@@ -365,7 +368,7 @@ function BayarSekarang() {
                       tabIndex={metode === 'midtrans_gateway' ? 0 : -1}
                       aria-checked={metode === 'midtrans_gateway'}
                       onClick={() => setMetode('midtrans_gateway')}
-                      onKeyDown={handleRadioKeyDown}
+                      onKeyDown={(e) => handleRadioKeyDown(e, 'midtrans_gateway')}
                       className={`
                         w-full min-h-[48px] px-4 py-3 rounded-xl font-bold text-sm text-left flex items-center justify-between border transition-all cursor-pointer
                         ${metode === 'midtrans_gateway' 
@@ -383,21 +386,21 @@ function BayarSekarang() {
                 </div>
 
                 {metode === 'transfer_manual' && (
-                  <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer" required={!previewBukti}>
+                  <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-field" required={!previewBukti}>
                     <input
-                      id="upload-bukti-transfer"
+                      id="upload-bukti-transfer-input"
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
                       className="sr-only"
                     />
                     <label
-                      htmlFor="upload-bukti-transfer"
+                      htmlFor="upload-bukti-transfer-input"
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          document.getElementById('upload-bukti-transfer')?.click();
+                          document.getElementById('upload-bukti-transfer-input')?.click();
                         }
                       }}
                       className="flex flex-col items-center justify-center gap-2 bg-warm-gray/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-[120px] hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"

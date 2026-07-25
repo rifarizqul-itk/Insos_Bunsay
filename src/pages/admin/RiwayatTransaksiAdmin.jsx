@@ -74,14 +74,14 @@ function RiwayatTransaksiAdmin() {
             colSpan={8}
           >
             {filteredRiwayat.map((item, idx) => (
-              <tr key={item.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
-                <td data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text-2">
+              <tr key={item.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
+                <th scope="row" data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text text-left">
                   {item.id}
-                </td>
-                <th scope="row" data-label="Tenant & Kios" className="p-3 text-left">
+                </th>
+                <td data-label="Tenant & Kios" className="p-3 text-left">
                   <div className="font-bold text-text text-sm">{item.nama}</div>
                   <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
-                </th>
+                </td>
                 <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
                   {item.tagihan}
                 </td>

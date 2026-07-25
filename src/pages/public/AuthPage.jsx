@@ -42,11 +42,14 @@ function AuthPage() {
     if (name === 'kataSandi' && passwordError) setPasswordError(null);
   };
 
-  const handleRadioKeyDown = (e) => {
+  const handleRadioKeyDown = (e, targetRole) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       const nextRole = selectedRole === 'tenant' ? 'admin' : 'tenant';
       setSelectedRole(nextRole);
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (targetRole) setSelectedRole(targetRole);
     }
   };
 
@@ -75,6 +78,13 @@ function AuthPage() {
     navigate(selectedRole === 'admin' ? '/admin/dashboard' : '/tenant/dashboard');
   };
 
+  const timerRef = React.useRef(null);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const handleForgotSubmit = (e) => {
     e.preventDefault();
     if (!identifier || identifier.trim().length === 0) {
@@ -86,7 +96,7 @@ function AuthPage() {
     setForgotError(null);
     setIsForgotSubmitting(true);
 
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setIsForgotSubmitting(false);
       setIsForgotSent(true);
       addToast('Instruksi pemulihan kata sandi telah dikirim jika akun terdaftar di sistem.', 'success');
@@ -164,7 +174,7 @@ function AuthPage() {
                   tabIndex={selectedRole === 'tenant' ? 0 : -1}
                   aria-checked={selectedRole === 'tenant'}
                   onClick={() => setSelectedRole('tenant')}
-                  onKeyDown={handleRadioKeyDown}
+                  onKeyDown={(e) => handleRadioKeyDown(e, 'tenant')}
                   className={`
                     flex-1 h-11 rounded-md font-bold text-sm transition-all duration-150 cursor-pointer
                     ${selectedRole === 'tenant' 
@@ -180,7 +190,7 @@ function AuthPage() {
                   tabIndex={selectedRole === 'admin' ? 0 : -1}
                   aria-checked={selectedRole === 'admin'}
                   onClick={() => setSelectedRole('admin')}
-                  onKeyDown={handleRadioKeyDown}
+                  onKeyDown={(e) => handleRadioKeyDown(e, 'admin')}
                   className={`
                     flex-1 h-11 rounded-md font-bold text-sm transition-all duration-150 cursor-pointer
                     ${selectedRole === 'admin' 

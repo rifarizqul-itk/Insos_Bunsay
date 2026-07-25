@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, startTransition } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TransactionProvider } from './context/TransactionContext';
@@ -27,13 +27,13 @@ const RiwayatPemilikKios = lazy(() => import('./pages/admin/RiwayatPemilikKios')
 const EksporData = lazy(() => import('./pages/admin/EksporData'));
 const AkunAdmin = lazy(() => import('./pages/admin/AkunAdmin'));
 
-// Layout components
-import Sidebar from './components/layouts/Sidebar';
-import SidebarAdmin from './components/layouts/SidebarAdmin';
-import Topbar from './components/layouts/Topbar';
+// Layout components — lazy loaded for bundle optimization with explicit Suspense boundaries
+const Sidebar = lazy(() => import('./components/layouts/Sidebar'));
+const SidebarAdmin = lazy(() => import('./components/layouts/SidebarAdmin'));
+const Topbar = lazy(() => import('./components/layouts/Topbar'));
+const BottomNav = lazy(() => import('./components/layouts/BottomNav'));
 import ProtectedRoute from './components/ProtectedRoute';
 import Toast from './components/Toast';
-import BottomNav from './components/layouts/BottomNav';
 
 const routeTitles = {
   '/': 'Beranda Utama | Portal Bunsay Plaza Kebun Sayur',
@@ -136,11 +136,13 @@ function AppContent() {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}>
-        <SidebarComponent
-          isOpen={isSidebarOpen}
-          onClose={closeSidebar}
-          onLogout={logout}
-        />
+        <Suspense fallback={<div className="h-full w-full bg-white border-r border-border animate-pulse" />}>
+          <SidebarComponent
+            isOpen={isSidebarOpen}
+            onClose={closeSidebar}
+            onLogout={logout}
+          />
+        </Suspense>
       </div>
 
       {/* Overlay mobile (WCAG 2.1.2 Accessible Keyboard Trap/Button) */}
@@ -162,11 +164,13 @@ function AppContent() {
 
       {/* Konten utama – diberi padding-left di desktop agar tidak tertutup sidebar */}
       <div className="pl-0 md:pl-[240px] min-h-dvh flex flex-col bg-[#FBF7F2]">
-        <Topbar
-          userTitle={userTitle}
-          onToggleSidebar={toggleSidebar}
-          variant={variant}
-        />
+        <Suspense fallback={<div className="h-16 w-full bg-white border-b border-border animate-pulse" />}>
+          <Topbar
+            userTitle={userTitle}
+            onToggleSidebar={toggleSidebar}
+            variant={variant}
+          />
+        </Suspense>
 
         <main id="main-app" tabIndex="-1" className="flex-1 p-4 sm:p-6 md:p-8 main-content-wrapper outline-none">
           <div className="max-w-7xl mx-auto">
@@ -203,7 +207,9 @@ function AppContent() {
       </div>
 
       <Toast />
-      <BottomNav role={role} />
+      <Suspense fallback={null}>
+        <BottomNav role={role} />
+      </Suspense>
     </>
   );
 }

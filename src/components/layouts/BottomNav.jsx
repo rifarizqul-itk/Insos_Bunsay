@@ -85,18 +85,7 @@ function BottomNav({ role }) {
                 icon={item.icon} 
                 className="size-6 mb-0.5 shrink-0"
               />
-              <span 
-                style={{
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  maxWidth: '100%',
-                  textAlign: 'center',
-                  padding: '0 1px'
-                }}
-              >
+              <span className="text-[10px] xs:text-[11px] leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
                 {item.label}
               </span>
             </Link>

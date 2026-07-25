@@ -12,9 +12,9 @@ const variantClasses = {
 };
 
 const sizeClasses = {
-  sm: 'px-4 py-2 text-sm h-10',
-  md: 'px-6 py-2.5 text-base h-11',
-  lg: 'px-8 py-3 text-base h-12',
+  sm: 'px-4 py-2 text-sm min-h-[44px]',
+  md: 'px-6 py-2.5 text-base min-h-[44px]',
+  lg: 'px-8 py-3 text-base min-h-[48px]',
 };
 
 const triggerHaptic = (duration = 15) => {

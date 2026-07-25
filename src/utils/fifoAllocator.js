@@ -35,8 +35,43 @@ export function allocatePaymentFIFO(unpaidBills = [], paymentAmount = 0) {
   const allocations = [];
   const updatedBills = [];
 
-  // Urutkan tagihan berdasarkan periode tertua jika belum diurutkan
-  const sortedBills = [...unpaidBills].sort((a, b) => (a.periode || '').localeCompare(b.periode || ''));
+  const parsePeriodToTimestamp = (pStr) => {
+    if (!pStr) return 0;
+    const str = String(pStr).trim();
+    if (/^\d{4}-\d{2}$/.test(str)) {
+      const [year, month] = str.split('-').map(Number);
+      return year * 100 + month;
+    }
+    const monthNames = {
+      januari: 1, jan: 1,
+      februari: 2, feb: 2,
+      maret: 3, mar: 3,
+      april: 4, apr: 4,
+      mei: 5,
+      juni: 6, jun: 6,
+      juli: 7, jul: 7,
+      agustus: 8, agu: 8, ags: 8,
+      september: 9, sep: 9,
+      oktober: 10, okt: 10,
+      november: 11, nov: 11,
+      desember: 12, des: 12
+    };
+    const parts = str.toLowerCase().split(/\s+/);
+    if (parts.length >= 2) {
+      const monthNum = monthNames[parts[0]] || 1;
+      const yearNum = parseInt(parts[1], 10) || 2026;
+      return yearNum * 100 + monthNum;
+    }
+    return 0;
+  };
+
+  // Urutkan tagihan berdasarkan periode tertua secara kronologis (bukan alfabetis)
+  const sortedBills = [...unpaidBills].sort((a, b) => {
+    const timeA = parsePeriodToTimestamp(a.periode);
+    const timeB = parsePeriodToTimestamp(b.periode);
+    if (timeA !== timeB) return timeA - timeB;
+    return (a.periode || '').localeCompare(b.periode || '');
+  });
 
   for (const bill of sortedBills) {
     const totalTagihan = Number(bill.totalTagihan || bill.tarifSewa || 0);

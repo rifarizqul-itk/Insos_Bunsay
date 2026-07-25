@@ -34,83 +34,37 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   const hamburgerClass = variant === 'admin' ? 'topbar-hamburger-admin' : 'topbar-hamburger-tenant';
 
   return (
-    <header 
-      className="topbar-container"
-      style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        minHeight: '64px',
-        height: 'auto',
-        paddingTop: '8px',
-        paddingBottom: '8px'
-      }}
-    >
+    <header className="topbar-container min-h-[64px] py-2 flex justify-between items-center bg-white border-b border-border">
       {/* Sisi Kiri: Tombol Hamburger (Khusus Mobile) + Sapaan Identitas */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '0', flex: '1', marginRight: '12px' }}>
+      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
         <button
           onClick={onToggleSidebar}
           aria-label="Buka menu navigasi"
-          className={hamburgerClass}
-          style={{
-            backgroundColor: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0 12px',
-            cursor: 'pointer',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '44px',
-            color: 'var(--text)',
-            flexShrink: 0
-          }}
+          className={`${hamburgerClass} bg-transparent border border-border rounded-md px-3 cursor-pointer items-center justify-center h-11 text-text shrink-0`}
         >
           <Icon icon="ph:list-bold" width="22" height="22" />
         </button>
         
-        <div 
-          style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-2)', lineHeight: '1.25' }}
-          className="min-w-0 break-words"
-        >
+        <div className="text-[15px] font-bold text-text-2 leading-tight min-w-0 break-words">
           <span className="hidden sm:inline">Sesi Aktif: </span>
-          <span style={{ color: 'var(--red)' }}>{userTitle}</span>
+          <span className="text-red font-extrabold">{userTitle}</span>
         </div>
       </div>
 
       {/* Sisi Kanan: Dropdown Notifikasi */}
-      <div ref={notifikasiRef} style={{ position: 'relative' }}>
+      <div ref={notifikasiRef} className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Notifikasi"
           aria-expanded={isOpen}
           aria-controls="notifikasi-dropdown"
-          style={{
-            height: '48px', 
-            backgroundColor: isOpen ? 'var(--warm-gray)' : 'transparent',
-            color: 'var(--text)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0 16px',
-            fontSize: '15px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
+          className={`
+            h-11 px-4 text-[15px] font-extrabold cursor-pointer flex items-center gap-2 rounded-md border border-border transition-colors
+            ${isOpen ? 'bg-warm-gray text-text' : 'bg-transparent text-text hover:bg-warm-gray/50'}
+          `}
         >
           <span>Notifikasi</span>
-          <span style={{
-            backgroundColor: 'var(--red)',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontWeight: '800',
-            padding: '2px 8px',
-            borderRadius: '12px',
-            display: 'inline-block'
-          }}>
+          <span className="bg-red text-white text-xs font-extrabold px-2 py-0.5 rounded-full inline-block font-tabular-nums">
             {daftarNotifikasi.length}
           </span>
         </button>
@@ -121,72 +75,31 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
             id="notifikasi-dropdown"
             role="region"
             aria-label="Panel Notifikasi"
-            className="topbar-dropdown"
-            style={{
-              position: 'absolute',
-              top: '56px',
-              right: '-8px',
-              width: 'calc(100vw - 32px)',
-              maxWidth: '360px',
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)', 
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              animation: 'fadeIn 0.15s ease-out',
-              zIndex: 40
-            }}
+            className="topbar-dropdown absolute top-14 -right-2 w-[calc(100vw-32px)] max-w-[360px] bg-white border border-border rounded-2xl shadow-card-elevated p-4 flex flex-col gap-3 z-40 animate-[fadeIn_0.15s_ease-out]"
           >
-            <div style={{
-              fontSize: '15px',
-              fontWeight: '800',
-              color: 'var(--text)',
-              borderBottom: '2px solid var(--warm-gray)',
-              paddingBottom: '8px',
-              margin: 0
-            }}>
+            <div className="text-[15px] font-extrabold text-text border-b-2 border-warm-gray pb-2 m-0">
               Notifikasi
             </div>
 
-            <div role="list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div role="list" className="flex flex-col gap-2">
               {daftarNotifikasi.map((notif) => (
                 <div 
                   key={notif.id} 
                   role="listitem"
-                  style={{
-                    padding: '12px',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: notif.tipe === 'penting' ? 'var(--red-50)' : 'var(--cream)',
-                    border: notif.tipe === 'penting' ? '1px solid var(--red-100)' : '1px solid var(--border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}
+                  className={`
+                    p-3 rounded-md flex flex-col gap-1 text-left border
+                    ${notif.tipe === 'penting' ? 'bg-red-50 border-red-100' : 'bg-cream border-border'}
+                  `}
                 >
-                  <div style={{ 
-                    fontSize: '14px', 
-                    fontWeight: '700', 
-                    color: 'var(--text)', 
-                    lineHeight: '1.5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
+                  <div className="text-sm font-bold text-text leading-snug flex items-center gap-1.5">
                     {notif.tipe === 'penting' ? (
-                      <Icon icon="ph:warning-circle-bold" aria-label="Notifikasi penting" className="text-orange shrink-0 size-4.5" style={{ color: 'var(--orange)' }} />
+                      <Icon icon="ph:warning-circle-bold" aria-label="Notifikasi penting" className="text-orange shrink-0 size-4.5" />
                     ) : (
-                      <Icon icon="ph:check-circle-bold" aria-label="Notifikasi sukses" className="text-green shrink-0 size-4.5" style={{ color: 'var(--green)' }} />
+                      <Icon icon="ph:check-circle-bold" aria-label="Notifikasi sukses" className="text-green shrink-0 size-4.5" />
                     )} 
                     <span className="text-pretty">{notif.teks}</span>
                   </div>
-                  <span style={{ 
-                    fontSize: '12px', 
-                    fontWeight: '800', 
-                    color: 'var(--text-3)' 
-                  }}>
+                  <span className="text-xs font-extrabold text-text-3 font-tabular-nums">
                     {notif.waktu}
                   </span>
                 </div>

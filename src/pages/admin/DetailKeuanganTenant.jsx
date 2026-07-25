@@ -20,6 +20,14 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
     rincianTunggakan: tenant.rincianTunggakan || '—'
   });
 
+  React.useEffect(() => {
+    setEditData({
+      statusPembayaran: tenant.statusPembayaran || 'Belum Bayar',
+      tunggakan: tenant.tunggakan || tenant.hutangTunggakan || 0,
+      rincianTunggakan: tenant.rincianTunggakan || '—'
+    });
+  }, [tenant, showEditModal]);
+
   const tableHeaders = [
     { label: 'ID Transaksi' },
     { label: 'Tanggal' },
@@ -126,10 +134,10 @@ function DetailKeuanganTenant({ tenant, onBack, onUpdateTenant }) {
               colSpan={7}
             >
               {tenant.riwayat.map((row, idx) => (
-                <tr key={row.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
-                  <td data-label="ID Transaksi" className="font-tabular-nums font-bold p-3 text-text-2">
+                <tr key={row.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="ID Transaksi" className="font-tabular-nums font-bold p-3 text-text text-left">
                     {row.id}
-                  </td>
+                  </th>
                   <td data-label="Tanggal" className="p-3 text-text-2 font-medium font-tabular-nums">
                     {row.tanggal || row.waktu}
                   </td>

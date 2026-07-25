@@ -260,9 +260,10 @@ html {
   }
 
   /* ============================================
-     TABEL → KARTU di mobile (≤ 768px)
+     TABEL → KARTU MODERN UNIVERSAL (≤ 1024px)
+     Konsep A: Clean Card Layout Non-Desktop (WCAG 2.2 AA)
      ============================================ */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     table,
     thead,
     tbody,
@@ -276,26 +277,102 @@ html {
       display: none;
     }
 
+    /* Container Kartu Mobile */
     tr {
-      @apply bg-white border border-border rounded-xl mb-4 p-4 shadow-sm;
+      @apply bg-white border border-border rounded-2xl mb-4 p-4 sm:p-5 shadow-card-elevated flex flex-col gap-2.5 transition-all hover:shadow-md;
     }
 
+    /* Header Utama Kartu (Header Baris 1: ID Transaksi / No Kios / Nama Tenant) */
+    th[scope="row"],
+    tr > th:first-child,
+    tr > td:first-child {
+      @apply flex items-center justify-between pb-2 border-b border-border/60 text-base font-extrabold text-text tabular-nums p-0 mb-1 w-full text-left;
+    }
+
+    th[scope="row"]::before,
+    tr > th:first-child::before,
+    tr > td:first-child::before {
+      content: attr(data-label);
+      @apply text-xs font-semibold text-text-3 uppercase tracking-wider font-sans mr-2;
+    }
+
+    /* Setiap Baris Sel Data Standar (Tanggal, Status, Lantai, dll) */
     td {
-      @apply flex justify-between items-center py-2 px-0 border-b border-border last:border-0;
+      @apply flex justify-between items-center py-1.5 px-0 border-0 text-sm font-medium text-text w-full;
     }
 
     td::before {
       content: attr(data-label);
-      @apply font-bold text-text-2 text-sm;
+      @apply text-xs font-semibold text-text-2 tracking-wide font-sans mr-2 flex-shrink-0;
     }
 
-    td:last-child {
-      @apply border-0 pb-0;
+    /* Hilangkan Teks "Aksi" pada Kolom Tombol Aksi */
+    td[data-label="Aksi"] {
+      @apply flex justify-end items-center pt-2.5 mt-1 border-t border-border/50 w-full;
     }
 
-    /* Penyesuaian aksi tombol di kartu */
-    td .table-action-btn {
-      @apply w-auto;
+    td[data-label="Aksi"]::before {
+      content: none !important;
+      display: none !important;
+    }
+
+    /* Bidang Teks Panjang / Multi-baris yang DITUMPUK VERTIKAL (Label di Atas, Isi di Bawah) */
+    td[data-label="Jenis Tagihan"],
+    td[data-label="Jenis / Ket"],
+    td[data-label="Jenis Usaha"],
+    td[data-label="Jenis"],
+    td[data-label="Catatan"],
+    td[data-label="Tenant & Kios"],
+    td[data-label="Nama Pemilik"],
+    td[data-label="Nama Tenant"],
+    td[data-label="Metode & Waktu"],
+    td[data-label="Metode Pembayaran"],
+    td[data-label="Metode"],
+    td[data-label="Rincian Cicilan"],
+    td[data-label="Alokasi Tagihan"],
+    td[data-label="Riwayat Cicilan"],
+    td[data-label="Estimasi Alokasi (FIFO)"],
+    td[data-label="Unit Kios Terakhir"] {
+      @apply flex-col items-start gap-1 pt-2 mt-0.5 border-t border-border/40 w-full text-left font-semibold text-text;
+    }
+
+    td[data-label="Jenis Tagihan"]::before,
+    td[data-label="Jenis / Ket"]::before,
+    td[data-label="Jenis Usaha"]::before,
+    td[data-label="Jenis"]::before,
+    td[data-label="Catatan"]::before,
+    td[data-label="Tenant & Kios"]::before,
+    td[data-label="Nama Pemilik"]::before,
+    td[data-label="Nama Tenant"]::before,
+    td[data-label="Metode & Waktu"]::before,
+    td[data-label="Metode Pembayaran"]::before,
+    td[data-label="Metode"]::before,
+    td[data-label="Rincian Cicilan"]::before,
+    td[data-label="Alokasi Tagihan"]::before,
+    td[data-label="Riwayat Cicilan"]::before,
+    td[data-label="Estimasi Alokasi (FIFO)"]::before,
+    td[data-label="Unit Kios Terakhir"]::before {
+      @apply mb-0.5 text-xs text-text-3 font-bold uppercase tracking-wider mr-0;
+    }
+
+    td[data-label="Tenant & Kios"] > div,
+    td[data-label="Metode & Waktu"] > div {
+      @apply w-full text-left;
+    }
+
+    /* Highlight khusus untuk Nominal Bayar & Financial */
+    td[data-label="Nominal Bayar"],
+    td[data-label="Nominal"],
+    td[data-label="Total Tagihan"],
+    td[data-label="Dana Terkumpul"],
+    td[data-label="Tunggakan"] {
+      @apply py-1.5 font-extrabold text-base text-red tabular-nums;
+    }
+
+    /* Penyesuaian tombol aksi pada kartu */
+    td .table-action-btn,
+    td .btn-group {
+      @apply w-auto flex justify-end gap-2;
     }
   }
 

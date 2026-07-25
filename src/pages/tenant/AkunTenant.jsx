@@ -33,6 +33,13 @@ function AkunTenant() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+  const timerRef = React.useRef(null);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (profileFromApi) {
       const merged = {
@@ -117,7 +124,7 @@ function AkunTenant() {
     if (hasErr) return;
 
     setIsChangingPassword(true);
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setIsChangingPassword(false);
       setPasswordData({
         kataSandiLama: '',

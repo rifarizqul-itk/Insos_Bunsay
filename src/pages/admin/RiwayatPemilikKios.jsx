@@ -25,9 +25,9 @@ function RiwayatPemilikKios() {
 
   const nonactiveTenants = (tenants || []).filter(t => t.statusPemilik === 'Nonaktif');
   const filteredData = nonactiveTenants.filter(t => 
-    t.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.kios.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (t.usaha && t.usaha.toLowerCase().includes(searchQuery.toLowerCase()))
+    (t.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.kios || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.usaha || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDetailClick = (tenant) => {
@@ -110,7 +110,7 @@ function RiwayatPemilikKios() {
             colSpan={6}
           >
             {filteredData.map((tenant, idx) => (
-              <tr key={tenant.id || idx} className={`border-b border-border/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-warm-gray/30'}`}>
+              <tr key={tenant.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
                 <th scope="row" data-label="Nama Pemilik" className="p-3 font-bold text-left text-text">
                   {tenant.nama}
                 </th>
