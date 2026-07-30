@@ -1,58 +1,147 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏪 Plaza Tenant Backend — Bunsay Kebun Sayur Balikpapan
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API Backend Laravel 11 untuk sistem manajemen sewa kios dan pembayaran.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Prasyarat
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Pastikan Laragon sudah berjalan dengan:
+- PHP 8.3+
+- MySQL aktif
+- Composer tersedia di terminal Laragon
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ⚠️ Kenapa Perlu `composer install` Padahal Composer Sudah Ada?
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Ini pertanyaan yang wajar. Laragon memang sudah include Composer (tool-nya), tapi **folder `vendor/` sengaja tidak di-upload ke Git** karena ukurannya terlalu besar.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Folder `vendor/` berisi seluruh framework Laravel, Sanctum, dan semua library PHP. Tanpa folder ini, `php artisan` tidak akan bisa jalan sama sekali.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+Repo di GitHub:          Setelah clone ke komputermu:
+├── composer.json  ──►  ├── composer.json   ✅ ada
+├── composer.lock  ──►  ├── composer.lock   ✅ ada
+└── vendor/ ✗      ──►  └── vendor/         ❌ KOSONG
+                                              ↑ wajib jalankan composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+**`composer install`** = perintah ke Composer untuk baca `composer.json` dan download semua dependency ke folder `vendor/` di komputermu sendiri.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 👑 Langkah Owner (PATRA — Jalankan Sekali, Lalu Push)
 
-## Code of Conduct
+> Ini hanya dijalankan **satu kali oleh pemilik repo** di komputernya.
+> Setelah di-push, tim **tidak perlu** langkah ini — cukup `composer install`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Buka terminal Laragon, lalu masuk ke folder backend:
 
-## Security Vulnerabilities
+```bash
+# Ganti path sesuai lokasi folder project di komputermu
+cd "C:\Users\NAMAMU\Documents\...\plaza_tenant_backend"
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Tambahkan Sanctum (mengupdate composer.json & composer.lock)
+composer require laravel/sanctum
 
-## License
+# Publish config Sanctum ke folder config/
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Setelah selesai, **commit dan push**:
+
+```bash
+git add composer.json composer.lock config/sanctum.php
+git commit -m "feat: install laravel sanctum"
+git push
+```
+
+---
+
+## 👥 Langkah Tim (Setelah Clone / Pull)
+
+> Jalankan ini setiap kali **pertama clone** atau setelah pull perubahan besar dari owner.
+
+Buka terminal Laragon, lalu masuk ke folder backend:
+
+```bash
+# Ganti path sesuai lokasi folder project di komputermu masing-masing
+cd "C:\Users\NAMAMU\Documents\...\plaza_tenant_backend"
+
+# 1. Download semua dependency PHP ke folder vendor/
+#    (Termasuk Laravel, Sanctum, dll — wajib karena vendor/ tidak ada di Git)
+composer install
+
+# 2. Salin file konfigurasi environment
+copy .env.example .env
+
+# 3. Generate application key (wajib, tidak bisa dilewati)
+php artisan key:generate
+
+# 4. Edit file .env → sesuaikan nama database, username, password MySQL
+#    (lihat bagian "Konfigurasi .env" di bawah)
+
+# 5. Buat semua tabel di database
+php artisan migrate
+```
+
+---
+
+## Konfigurasi `.env` — Bagian Database
+
+Buka file `.env` yang baru dibuat, lalu sesuaikan bagian ini:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=plaza_tenant
+DB_USERNAME=root
+DB_PASSWORD=           # kosongkan jika Laragon default (tanpa password)
+```
+
+> ⚠️ Pastikan database `plaza_tenant` sudah dibuat di phpMyAdmin / HeidiSQL **sebelum** menjalankan `php artisan migrate`.
+
+---
+
+## Menjalankan Server Development
+
+```bash
+# Jalankan Laravel di http://localhost:8000
+php artisan serve
+```
+
+> Frontend (Vite) otomatis proxy semua request `/api/*` ke `localhost:8000`.
+> Tidak perlu konfigurasi tambahan — langsung `npm run dev` di folder frontend.
+
+---
+
+## Struktur API Routes
+
+Semua route ada di [`routes/api.php`](routes/api.php).
+
+| Method | Endpoint | Controller | Auth |
+|--------|----------|------------|------|
+| POST | `/api/login` | AuthController@login | Public |
+| POST | `/api/register` | AuthController@register | Public |
+| POST | `/api/logout` | AuthController@logout | ✅ Sanctum |
+| GET | `/api/dashboard/admin` | DashboardController@adminDashboard | ✅ Sanctum |
+| GET | `/api/dashboard/tenant` | DashboardController@tenantDashboard | ✅ Sanctum |
+| — | `/api/pemilik` | PemilikController (CRUD) | ✅ Sanctum |
+| — | `/api/kios` | KiosController (CRUD) | ✅ Sanctum |
+| — | `/api/sewa` | SewaController (CRUD) | ✅ Sanctum |
+| — | `/api/dokumen` | DokumenController (CRUD) | ✅ Sanctum |
+| — | `/api/tagihan` | TagihanController (index, store, show, update) | ✅ Sanctum |
+| — | `/api/pembayaran` | PembayaranController (index, store, show, update) | ✅ Sanctum |
+| PUT | `/api/pembayaran/{id}/konfirmasi` | PembayaranController@konfirmasi | ✅ Sanctum |
+
+---
+
+## Pembagian Tim
+
+| Nama | Tanggung Jawab |
+|------|----------------|
+| **PATRA** | AuthController, DashboardController |
+| **ARMAN** | PemilikController, KiosController, SewaController, DokumenController |
+| **DAWWAS** | TagihanController, PembayaranController |
