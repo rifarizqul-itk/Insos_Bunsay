@@ -4,93 +4,48 @@ API Backend Laravel 11 untuk sistem manajemen sewa kios dan pembayaran.
 
 ---
 
-## Prasyarat
+## ✅ Panduan Setup — Untuk Semua Anggota Tim
 
-Pastikan Laragon sudah berjalan dengan:
-- PHP 8.3+
-- MySQL aktif
-- Composer tersedia di terminal Laragon
+> Ikuti langkah ini **dari awal sampai selesai**.
 
----
 
-## ⚠️ Kenapa Perlu `composer install` Padahal Composer Sudah Ada?
 
-Ini pertanyaan yang wajar. Laragon memang sudah include Composer (tool-nya), tapi **folder `vendor/` sengaja tidak di-upload ke Git** karena ukurannya terlalu besar.
-
-Folder `vendor/` berisi seluruh framework Laravel, Sanctum, dan semua library PHP. Tanpa folder ini, `php artisan` tidak akan bisa jalan sama sekali.
-
-```
-Repo di GitHub:          Setelah clone ke komputermu:
-├── composer.json  ──►  ├── composer.json   ✅ ada
-├── composer.lock  ──►  ├── composer.lock   ✅ ada
-└── vendor/ ✗      ──►  └── vendor/         ❌ KOSONG
-                                              ↑ wajib jalankan composer install
-```
-
-**`composer install`** = perintah ke Composer untuk baca `composer.json` dan download semua dependency ke folder `vendor/` di komputermu sendiri.
-
----
-
-## 👑 Langkah Owner (PATRA — Jalankan Sekali, Lalu Push)
-
-> Ini hanya dijalankan **satu kali oleh pemilik repo** di komputernya.
-> Setelah di-push, tim **tidak perlu** langkah ini — cukup `composer install`.
-
-Buka terminal Laragon, lalu masuk ke folder backend:
+### Langkah 1 — Clone Repo
 
 ```bash
-# Ganti path sesuai lokasi folder project di komputermu
-cd "C:\Users\NAMAMU\Documents\...\plaza_tenant_backend"
-
-# Tambahkan Sanctum (mengupdate composer.json & composer.lock)
-composer require laravel/sanctum
-
-# Publish config Sanctum ke folder config/
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+git clone <https://github.com/rifarizqul-itk/Insos_Bunsay/tree/main> plaza_tenant_backend
+cd plaza_tenant_backend
 ```
 
-Setelah selesai, **commit dan push**:
-
-```bash
-git add composer.json composer.lock config/sanctum.php
-git commit -m "feat: install laravel sanctum"
-git push
-```
-
+> Kalau sudah pernah clone, cukup pull:
+> ```bash
+> git pull
+> ```
 ---
 
-## 👥 Langkah Tim (Setelah Clone / Pull)
-
-> Jalankan ini setiap kali **pertama clone** atau setelah pull perubahan besar dari owner.
-
-Buka terminal Laragon, lalu masuk ke folder backend:
+### Langkah 2 — Install Dependency PHP
 
 ```bash
-# Ganti path sesuai lokasi folder project di komputermu masing-masing
-cd "C:\Users\NAMAMU\Documents\...\plaza_tenant_backend"
-
-# 1. Download semua dependency PHP ke folder vendor/
-#    (Termasuk Laravel, Sanctum, dll — wajib karena vendor/ tidak ada di Git)
 composer install
+```
 
-# 2. Salin file konfigurasi environment
+> Ini mendownload Laravel, Sanctum, dan semua library PHP ke folder `vendor/`.
+> Folder `vendor/` tidak ada di Git, jadi wajib dijalankan di tiap komputer.
+
+---
+
+### Langkah 3 — Buat File Konfigurasi
+
+```bash
 copy .env.example .env
-
-# 3. Generate application key (wajib, tidak bisa dilewati)
 php artisan key:generate
-
-# 4. Edit file .env → sesuaikan nama database, username, password MySQL
-#    (lihat bagian "Konfigurasi .env" di bawah)
-
-# 5. Buat semua tabel di database
-php artisan migrate
 ```
 
 ---
 
-## Konfigurasi `.env` — Bagian Database
+### Langkah 4 — Sesuaikan Database di `.env`
 
-Buka file `.env` yang baru dibuat, lalu sesuaikan bagian ini:
+Buka file `.env`, cari bagian ini dan sesuaikan:
 
 ```env
 DB_CONNECTION=mysql
@@ -98,22 +53,66 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=plaza_tenant
 DB_USERNAME=root
-DB_PASSWORD=           # kosongkan jika Laragon default (tanpa password)
+DB_PASSWORD=
 ```
 
-> ⚠️ Pastikan database `plaza_tenant` sudah dibuat di phpMyAdmin / HeidiSQL **sebelum** menjalankan `php artisan migrate`.
+> Kosongkan `DB_PASSWORD` kalau Laragon default (tanpa password).
+> Buat database `plaza_tenant` dulu di phpMyAdmin sebelum lanjut.
 
 ---
 
-## Menjalankan Server Development
+### Langkah 5 — Buat Tabel Database
 
 ```bash
-# Jalankan Laravel di http://localhost:8000
+php artisan session:table
+php artisan migrate
+```
+
+---
+
+### Langkah 6 — Jalankan Server
+
+```bash
 php artisan serve
 ```
 
-> Frontend (Vite) otomatis proxy semua request `/api/*` ke `localhost:8000`.
-> Tidak perlu konfigurasi tambahan — langsung `npm run dev` di folder frontend.
+Backend berjalan di: **http://localhost:8000**
+
+---
+
+### Langkah 7 — Jalankan Frontend (di terminal terpisah)
+
+Buka terminal baru, masuk ke folder frontend:
+
+```bash
+cd ..\plaza_tenant_frontend
+
+npm install
+
+npm run dev
+```
+
+Frontend berjalan di: **http://localhost:5173**
+
+> Frontend otomatis terhubung ke backend di `localhost:8000` — tidak perlu konfigurasi tambahan.
+
+---
+
+## Ringkasan Perintah (Copy-Paste)
+
+```bash
+# BACKEND
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
+
+# FRONTEND (terminal terpisah)
+cd ..\plaza_tenant_frontend
+npm install
+npm run dev
+```
 
 ---
 
