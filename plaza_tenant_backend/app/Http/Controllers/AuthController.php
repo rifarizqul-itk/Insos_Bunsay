@@ -17,7 +17,7 @@ class AuthController extends Controller
 
         $user = User::where('Username', $request->username)->first();
 
-        // Gunakan Hash::check() agar aman (password di-hash saat register)
+        // Wajib pakai Hash::check() karena password di database sudah di-hash oleh seeder
         if (!$user || !Hash::check($request->password, $user->Password)) {
             return response()->json(['message' => 'Username atau password salah.'], 401);
         }
@@ -39,12 +39,12 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|unique:user,Username',
             'password' => 'required|string|min:6',
-            'id_roles' => 'required|integer',
+            'id_roles'  => 'required|integer',
         ]);
 
         $user = User::create([
             'Username' => $request->username,
-            'Password' => Hash::make($request->password), // Hash password sebelum disimpan
+            'Password' => Hash::make($request->password), // Hash sebelum disimpan
             'Id_roles' => $request->id_roles,
         ]);
 

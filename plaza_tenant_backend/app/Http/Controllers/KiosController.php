@@ -14,7 +14,8 @@ class KiosController extends Controller
      */
     public function index()
     {
-        $kios = Kios::all();
+        // 🔑 Tambahkan eager loading relasi sewa -> pemilik
+        $kios = Kios::with(['sewa.pemilik'])->get();
 
         return response()->json([
             'success' => true,
@@ -29,7 +30,6 @@ class KiosController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input data sesuai struktur kolom migration
         $validator = Validator::make($request->all(), [
             'No_Kios' => 'required|string|max:10|unique:kios,No_Kios',
             'Lantai'  => 'nullable|integer',
@@ -37,7 +37,6 @@ class KiosController extends Controller
             'Status'  => 'nullable|in:Terisi,Kosong',
         ]);
 
-        // Jika validasi gagal
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -46,7 +45,6 @@ class KiosController extends Controller
             ], 422);
         }
 
-        // Simpan data ke database
         $kios = Kios::create($request->all());
 
         return response()->json([
@@ -62,7 +60,8 @@ class KiosController extends Controller
      */
     public function show($id)
     {
-        $kios = Kios::find($id);
+        // 🔑 Tambahkan eager loading relasi lengkap (sewa -> pemilik -> dokumen)
+        $kios = Kios::with(['sewa.pemilik.dokumen'])->find($id);
 
         if (!$kios) {
             return response()->json([
@@ -84,37 +83,37 @@ class KiosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $kios = Kios::find($id);
+        // Ambil data Kios beserta relasi sewa dan pemiliknya
+        $kios = Kios::with('sewa.pemilik')->find($id);
 
         if (!$kios) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data kios tidak ditemukan'
+                'message' => 'Data Kios tidak ditemukan'
             ], 404);
         }
 
-        // Validasi input update (No_Kios unik kecuali untuk kios ini sendiri)
-        $validator = Validator::make($request->all(), [
-            'No_Kios' => 'required|string|max:10|unique:kios,No_Kios,' . $id . ',Id_Kios',
-            'Lantai'  => 'nullable|integer',
-            'Ukuran'  => 'nullable|string|max:20',
-            'Status'  => 'nullable|in:Terisi,Kosong',
+        // 1. Update data dasar Kios
+        $kios->update([
+            'No_Kios' => $request->input('nomorKios', $kios->No_Kios),
+            'Lantai'  => $request->input('lantai', $kios->Lantai),
+            'Catatan' => $request->input('catatan', $kios->Catatan),
+            'Status'  => $request->input('statusKios', $kios->Status),
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors'  => $validator->errors()
-            ], 422);
+        // 2. Jika ada perubahan Nama Pemilik (tenant), update tabel Pemilik
+        if ($request->has('tenant') && $kios->sewa && $kios->sewa->pemilik) {
+            $kios->sewa->pemilik->update([
+                'Nama' => $request->input('tenant')
+            ]);
         }
 
-        // Update data kios
-        $kios->update($request->all());
+        // 3. Load ulang data relasi terbaru
+        $kios->load(['sewa.pemilik.dokumen']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Data kios berhasil diperbarui',
+            'message' => 'Data administrasi kios berhasil diperbarui di database',
             'data'    => $kios
         ], 200);
     }
