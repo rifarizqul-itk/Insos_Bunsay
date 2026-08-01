@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('users')->insertOrIgnore([
+        DB::table('user')->insertOrIgnore([
             ['Id_user' => 1, 'Id_roles' => 2, 'Username' => 'pemilik1', 'Password' => Hash::make('123456')],
             ['Id_user' => 2, 'Id_roles' => 2, 'Username' => 'pemilik2', 'Password' => Hash::make('123456')],
             ['Id_user' => 3, 'Id_roles' => 2, 'Username' => 'pemilik3', 'Password' => Hash::make('123456')],
