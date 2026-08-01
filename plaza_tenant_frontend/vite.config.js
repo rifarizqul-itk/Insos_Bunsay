@@ -29,12 +29,17 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Mengintercept request lokal dari /v1/transactions
-      '/v1/transactions': {
-        target: 'https://app.sandbox.midtrans.com', // Cukup arahkan ke domain utama
+      // Proxy semua request /api ke Laravel backend (php artisan serve)
+      '/api': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
-        // Ubah jalur lokal /v1/transactions menjadi /snap/v1/transactions saat dikirim ke Midtrans
+      },
+      // Mengintercept request lokal dari /v1/transactions ke Midtrans
+      '/v1/transactions': {
+        target: 'https://app.sandbox.midtrans.com',
+        changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/v1\/transactions/, '/snap/v1/transactions'),
       }
     }

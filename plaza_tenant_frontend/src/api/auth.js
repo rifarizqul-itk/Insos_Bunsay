@@ -1,61 +1,29 @@
-import { mockDelay } from './client';
-
-const mockDefaultUser = {
-  name: 'Hj. Yuliana',
-  email: 'yuliana.bunsay@email.com',
-  kios: 'B-1001',
-  statusPemilik: 'Aktif',
-  role: 'tenant'
-};
-
-const mockAdminUser = {
-  name: 'Pengelola Plaza (Admin)',
-  email: 'info.plazabunsay@gmail.com',
-  role: 'admin'
-};
+import { httpClient } from './client';
 
 /**
- * Concrete Mock Adapter implementing AuthPort
- * Dipakai saat VITE_USE_MOCK=true (kategori 4: true external/mock)
+ * Real API Adapter — memanggil backend Laravel via Sanctum token
  */
-export const MockAuthAdapter = {
-  async login({ username, email, password, role = 'tenant' }) {
-    const inputUsername = username || email || '';
-    if (!inputUsername || inputUsername.trim().length === 0) {
-      return mockDelay({
-        success: false,
-        message: 'Username wajib diisi.',
-        field: 'username'
-      });
+export const RealAuthAdapter = {
+  async login({ username, password }) {
+    try {
+      const data = await httpClient.post('/login', { username, password });
+      // Simpan token & user ke localStorage
+      const role = data.user?.Id_roles === 1 ? 'admin' : 'tenant';
+      const authPayload = { token: data.token, user: data.user, role };
+      localStorage.setItem('auth', JSON.stringify(authPayload));
+      return { success: true, message: 'Login berhasil.', ...authPayload };
+    } catch (err) {
+      return { success: false, message: err.message || 'Login gagal.' };
     }
-
-    if (!password || password.length < 4) {
-      return mockDelay({
-        success: false,
-        message: 'Kata sandi minimal 4 karakter.',
-        field: 'password'
-      });
-    }
-
-    const cleanUsername = inputUsername.trim();
-    const userData = role === 'admin' 
-      ? { ...mockAdminUser, username: cleanUsername, email: email || `${cleanUsername}@gmail.com` } 
-      : { ...mockDefaultUser, username: cleanUsername, email: email || `${cleanUsername}@gmail.com` };
-
-    return mockDelay({
-      success: true,
-      message: 'Login berhasil.',
-      token: `mock-jwt-token-${Date.now()}`,
-      role,
-      user: userData
-    });
   },
 
   async logout() {
-    return mockDelay({
-      success: true,
-      message: 'Logout berhasil.'
-    });
+    try {
+      await httpClient.post('/logout');
+    } catch (_) {}
+    localStorage.removeItem('auth');
+    sessionStorage.removeItem('auth');
+    return { success: true, message: 'Logout berhasil.' };
   },
 
   async getSession() {
@@ -63,20 +31,12 @@ export const MockAuthAdapter = {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        return mockDelay({
-          isLoggedIn: true,
-          role: parsed.role || 'tenant',
-          user: parsed.user || null
-        });
+        return { isLoggedIn: true, role: parsed.role || 'tenant', user: parsed.user || null };
       } catch (_) {}
     }
-    return mockDelay({
-      isLoggedIn: false,
-      role: 'tenant',
-      user: null
-    });
+    return { isLoggedIn: false, role: 'tenant', user: null };
   }
 };
 
 // Unified Port Seam Export
-export const authPort = MockAuthAdapter;
+export const authPort = RealAuthAdapter;

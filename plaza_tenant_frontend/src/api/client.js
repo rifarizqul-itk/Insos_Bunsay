@@ -3,7 +3,7 @@
  * Digunakan sebagai port/adapter HTTP transport universal untuk terhubung ke REST API backend.
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 
 /**
