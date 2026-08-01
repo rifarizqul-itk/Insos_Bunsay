@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kios;
+use App\Models\Pemilik;
+use App\Models\Sewa;
 use App\Models\Tagihan;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
@@ -25,13 +27,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
+        $pemilik = Pemilik::where('Id_User', $user->Id_user)->first();
 
         if (!$pemilik) {
             return response()->json(['message' => 'Data pemilik tidak ditemukan.'], 404);
         }
 
-        $sewa = \App\Models\Sewa::where('Id_Pemilik', $pemilik->Id_Pemilik)->get();
+        $sewa = Sewa::where('Id_Pemilik', $pemilik->Id_Pemilik)->get();
         $sewaIds = $sewa->pluck('Id_Sewa');
         $tagihan = Tagihan::whereIn('Id_Sewa', $sewaIds)->get();
 
