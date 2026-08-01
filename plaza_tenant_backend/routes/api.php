@@ -28,6 +28,9 @@ use App\Http\Controllers\PembayaranController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::apiResource('kios', KiosController::class);
+Route::apiResource('pemilik', PemilikController::class);
+
 // ============================================================
 // PROTECTED ROUTES (Wajib login)
 // ============================================================
@@ -39,8 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
 
     // --- ARMAN: Master Data Kios & Sewa ---
-    Route::apiResource('pemilik', PemilikController::class);
-    Route::apiResource('kios', KiosController::class);
     Route::apiResource('sewa', SewaController::class);
     Route::apiResource('dokumen', DokumenController::class);
 
