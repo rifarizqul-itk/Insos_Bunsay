@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pemilik extends Model
 {
     protected $table = 'pemilik';
-    protected $primaryKey = 'Id_pemilik';
+    protected $primaryKey = 'Id_Pemilik';
+    public $timestamps = false;
     protected $guarded = [];
 }

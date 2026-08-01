@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Kios extends Model
 {
     protected $table = 'kios';
-    protected $primaryKey = 'Id_kios';
+    protected $primaryKey = 'Id_Kios';
+    public $timestamps = false;
     protected $guarded = [];
 }

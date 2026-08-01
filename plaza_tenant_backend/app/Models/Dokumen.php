@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Dokumen extends Model
 {
     protected $table = 'dokumen';
-    protected $primaryKey = 'Id_dokumen';
+    protected $primaryKey = 'Id_Dokumen';
+    public $timestamps = false;
     protected $guarded = [];
 }
