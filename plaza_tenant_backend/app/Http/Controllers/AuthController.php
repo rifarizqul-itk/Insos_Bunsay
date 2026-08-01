@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -16,7 +17,8 @@ class AuthController extends Controller
 
         $user = User::where('Username', $request->username)->first();
 
-        if (!$user || $user->Password !== $request->password) {
+        // Gunakan Hash::check() agar aman (password di-hash saat register)
+        if (!$user || !Hash::check($request->password, $user->Password)) {
             return response()->json(['message' => 'Username atau password salah.'], 401);
         }
 
@@ -24,7 +26,11 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $user,
+            'user'  => [
+                'Id_user'  => $user->Id_user,
+                'Username' => $user->Username,
+                'Id_roles' => $user->Id_roles,
+            ],
         ]);
     }
 
@@ -33,16 +39,20 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|unique:user,Username',
             'password' => 'required|string|min:6',
-            'id_roles'  => 'required|integer',
+            'id_roles' => 'required|integer',
         ]);
 
         $user = User::create([
             'Username' => $request->username,
-            'Password' => $request->password,
+            'Password' => Hash::make($request->password), // Hash password sebelum disimpan
             'Id_roles' => $request->id_roles,
         ]);
 
-        return response()->json($user, 201);
+        return response()->json([
+            'Id_user'  => $user->Id_user,
+            'Username' => $user->Username,
+            'Id_roles' => $user->Id_roles,
+        ], 201);
     }
 
     public function logout(Request $request)
