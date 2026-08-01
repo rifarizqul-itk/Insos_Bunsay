@@ -241,7 +241,45 @@ export const MockAdminAdapter = {
   }
 };
 
-export const adminPort = MockAdminAdapter;
+import { httpClient } from './client';
+
+export const RealAdminAdapter = {
+  async getTenants() {
+    return MockAdminAdapter.getTenants(); // Sementara mock
+  },
+
+  async getKiosList() {
+    try {
+      const data = await httpClient.get('/kios');
+      // Mapping format database ke format frontend
+      return data.map(kios => ({
+        id: kios.Id_Kios,
+        lantai: `Lt. ${kios.Lantai}`,
+        nomorKios: kios.No_Kios,
+        statusKios: kios.Status,
+        tenant: 'Tenant Data', // Harus ambil dari relasi tabel sewa/pemilik nanti
+        usaha: 'Umum'
+      }));
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  },
+
+  async getKiosDetail(kiosId) {
+    return MockAdminAdapter.getKiosDetail(kiosId);
+  },
+
+  async createTenant(payload) {
+    return MockAdminAdapter.createTenant(payload);
+  },
+
+  async updateKios(kiosId, data) {
+    return MockAdminAdapter.updateKios(kiosId, data);
+  }
+};
+
+export const adminPort = RealAdminAdapter;
 
 export const getAdminTenants = () => adminPort.getTenants();
 export const getAdminKios = () => adminPort.getKiosList();
