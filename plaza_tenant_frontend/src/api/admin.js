@@ -23,7 +23,40 @@ export const MockAdminAdapter = {
   },
 
   async getKiosList() {
-    return mockDelay([...mockKios]);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/kios', {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) return [];
+
+      const jsonResult = await response.json();
+
+      // 🔑 KUNCINYA DI SINI:
+      // Mengecek apakah data dibungkus dalam jsonResult.data atau langsung jsonResult
+      const dataArray = Array.isArray(jsonResult) 
+        ? jsonResult 
+        : (jsonResult.data || []);
+
+      // Memastikan dataArray benar-benar Array sebelum di-map
+      if (!Array.isArray(dataArray)) {
+        console.error('Format data bukan Array:', dataArray);
+        return [];
+      }
+
+      return dataArray.map((item) => ({
+        id: item.Id_Kios || item.id,
+        nomorKios: item.No_Kios || item.nomorKios || '-',
+        lantai: item.Lantai ? `Lt. ${item.Lantai}` : 'Lt. 1',
+        statusKios: item.Status || item.statusKios || 'Kosong',
+        tenant: item.Nama_Pemilik || item.tenant || '—',
+        usaha: item.Jenis_Usaha || item.usaha || '—',
+        catatan: item.Catatan || item.catatan || '—'
+      }));
+    } catch (error) {
+      console.error('Error fetching kios list:', error);
+      return [];
+    }
   },
 
   async getKiosDetail(kiosId) {
@@ -241,7 +274,58 @@ export const MockAdminAdapter = {
   }
 };
 
-export const adminPort = MockAdminAdapter;
+import { httpClient } from './client';
+
+export const RealAdminAdapter = {
+  async getTenants() {
+    return MockAdminAdapter.getTenants(); // Sementara mock
+  },
+
+  async getKiosList() {
+    try {
+      const response = await httpClient.get('/kios');
+      
+      // 🔑 PERBAIKAN UTAMA:
+      // Ambil array data dari response dengan aman
+      const dataArray = Array.isArray(response) 
+        ? response 
+        : (response?.data || []);
+
+      if (!Array.isArray(dataArray)) {
+        console.error('Format data dari httpClient bukan Array:', response);
+        return [];
+      }
+
+      // Mapping format database ke format frontend React
+      return dataArray.map(kios => ({
+        id: kios.Id_Kios || kios.id,
+        lantai: kios.Lantai ? `Lt. ${kios.Lantai}` : 'Lt. 1',
+        nomorKios: kios.No_Kios || kios.nomorKios || '-',
+        statusKios: kios.Status || kios.statusKios || 'Kosong',
+        tenant: kios.Nama_Pemilik || kios.tenant || '—',
+        usaha: kios.Jenis_Usaha || kios.usaha || 'Umum',
+        catatan: kios.Catatan || kios.catatan || '—'
+      }));
+    } catch (err) {
+      console.error('Error saat fetch Kios:', err);
+      return [];
+    }
+  },
+
+  async getKiosDetail(kiosId) {
+    return MockAdminAdapter.getKiosDetail(kiosId);
+  },
+
+  async createTenant(payload) {
+    return MockAdminAdapter.createTenant(payload);
+  },
+
+  async updateKios(kiosId, data) {
+    return MockAdminAdapter.updateKios(kiosId, data);
+  }
+};
+
+export const adminPort = RealAdminAdapter;
 
 export const getAdminTenants = () => adminPort.getTenants();
 export const getAdminKios = () => adminPort.getKiosList();

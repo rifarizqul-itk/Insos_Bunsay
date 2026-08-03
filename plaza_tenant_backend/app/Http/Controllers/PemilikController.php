@@ -7,32 +7,157 @@ use Illuminate\Http\Request;
 
 class PemilikController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     * GET /api/pemilik
+     */
     public function index()
     {
-        return response()->json(Pemilik::all());
+        try {
+            // Mengambil semua pemilik beserta data akun user dan dokumennya jika ada
+            $pemilik = Pemilik::with(['user', 'dokumen'])->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Daftar data pemilik berhasil diambil',
+                'data'    => $pemilik
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data pemilik: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
+    /**
+     * Store a newly created resource in storage.
+     * POST /api/pemilik
+     */
     public function store(Request $request)
     {
-        $pemilik = Pemilik::create($request->all());
-        return response()->json($pemilik, 201);
+        // 1. Validasi Input
+        $validatedData = $request->validate([
+            'Id_User'    => 'nullable|exists:users,id', // Sesuaikan jika PK users adalah Id_user
+            'Nama'       => 'required|string|max:255',
+            'No_Telepon' => 'required|string|max:20',
+            'No_KTP'     => 'required|string|max:20|unique:pemilik,No_KTP',
+            'Alamat'     => 'required|string',
+        ]);
+
+        try {
+            // 2. Simpan Data ke Database
+            $pemilik = Pemilik::create($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pemilik berhasil ditambahkan',
+                'data'    => $pemilik
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan pemilik: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function show(string $id)
+    /**
+     * Display the specified resource.
+     * GET /api/pemilik/{id}
+     */
+    public function show($id)
     {
-        return response()->json(Pemilik::findOrFail($id));
+        try {
+            $pemilik = Pemilik::with(['user', 'dokumen', 'sewa.kios'])->find($id);
+
+            if (!$pemilik) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pemilik tidak ditemukan'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail data pemilik ditemukan',
+                'data'    => $pemilik
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function update(Request $request, string $id)
+    /**
+     * Update the specified resource in storage.
+     * PUT/PATCH /api/pemilik/{id}
+     */
+    public function update(Request $request, $id)
     {
-        $pemilik = Pemilik::findOrFail($id);
-        $pemilik->update($request->all());
-        return response()->json($pemilik);
+        $pemilik = Pemilik::find($id);
+
+        if (!$pemilik) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pemilik tidak ditemukan'
+            ], 404);
+        }
+
+        // Validasi input update (No_KTP diabaikan untuk ID pemilik ini sendiri)
+        $validatedData = $request->validate([
+            'Id_User'    => 'nullable|exists:users,id',
+            'Nama'       => 'sometimes|required|string|max:255',
+            'No_Telepon' => 'sometimes|required|string|max:20',
+            'No_KTP'     => 'sometimes|required|string|max:20|unique:pemilik,No_KTP,' . $id . ',Id_Pemilik',
+            'Alamat'     => 'sometimes|required|string',
+        ]);
+
+        try {
+            $pemilik->update($validatedData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pemilik berhasil diperbarui',
+                'data'    => $pemilik
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui data pemilik: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function destroy(string $id)
+    /**
+     * Remove the specified resource from storage.
+     * DELETE /api/pemilik/{id}
+     */
+    public function destroy($id)
     {
-        Pemilik::findOrFail($id)->delete();
-        return response()->json(['message' => 'Pemilik berhasil dihapus.']);
+        try {
+            $pemilik = Pemilik::find($id);
+
+            if (!$pemilik) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pemilik tidak ditemukan'
+                ], 404);
+            }
+
+            $pemilik->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pemilik berhasil dihapus'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus pemilik (Mungkin data masih terikat dengan transaksi Sewa/Dokumen): ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
