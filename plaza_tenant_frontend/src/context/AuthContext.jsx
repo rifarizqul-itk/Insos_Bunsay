@@ -24,12 +24,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = useCallback(async (roleParam, userData, rememberMe = true) => {
+    // Jika dipanggil dari AuthPage dengan data dari backend (sudah ada token)
+    // userData bisa berisi { token, user, role } dari RealAuthAdapter.login()
+    const roleResolved = userData?.role || roleParam;
+    const userResolved = userData?.user || userData;
+
     setIsLoggedIn(true);
-    setRole(roleParam);
-    setUser(userData);
+    setRole(roleResolved);
+    setUser(userResolved);
     setIsHydrated(true);
 
-    const payload = JSON.stringify({ role: roleParam, user: userData });
+    // Simpan seluruh payload (termasuk token) ke storage
+    const payload = JSON.stringify({ role: roleResolved, user: userResolved, token: userData?.token });
     if (rememberMe) {
       localStorage.setItem('auth', payload);
       sessionStorage.removeItem('auth');

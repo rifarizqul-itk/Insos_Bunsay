@@ -14,8 +14,8 @@ class PemilikController extends Controller
     public function index()
     {
         try {
-            // Mengambil semua pemilik beserta data akun user dan dokumennya jika ada
-            $pemilik = Pemilik::with(['user', 'dokumen'])->get();
+            // Mengambil semua pemilik beserta data akun user, dokumen, sewa, kios, dan tagihannya
+            $pemilik = Pemilik::with(['user', 'dokumen', 'sewa.kios', 'sewa.tagihan'])->get();
 
             return response()->json([
                 'success' => true,

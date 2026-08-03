@@ -21,7 +21,7 @@ class TagihanController extends Controller
             'Tarif_Sewa' => 'required|numeric',
             'Hutang_Tunggakan' => 'nullable|numeric',
             'Total_Tagihan' => 'required|numeric',
-            'Status_Tagihan' => 'required|in:Lunas,Belum Bayar,Menunggu Verifikasi',
+            'Status_Tagihan' => 'required|in:Lunas,Belum Bayar,Menunggu Verifikasi,Dicicil',
         ]);
 
         $tagihan = Tagihan::create($request->only([
@@ -50,7 +50,7 @@ class TagihanController extends Controller
             'Tarif_Sewa' => 'sometimes|numeric',
             'Hutang_Tunggakan' => 'sometimes|numeric',
             'Total_Tagihan' => 'sometimes|numeric',
-            'Status_Tagihan' => 'sometimes|in:Lunas,Belum Bayar,Menunggu Verifikasi',
+            'Status_Tagihan' => 'sometimes|in:Lunas,Belum Bayar,Menunggu Verifikasi,Dicicil',
         ]);
 
         $tagihan = Tagihan::findOrFail($id);
