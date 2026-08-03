@@ -10,4 +10,9 @@ class Pembayaran extends Model
     protected $primaryKey = 'Id_Pembayaran';
     public $timestamps = false;
     protected $guarded = [];
+
+    public function tagihan()
+    {
+        return $this->belongsTo(Tagihan::class, 'Id_Tagihan', 'Id_Tagihan');
+    }
 }
