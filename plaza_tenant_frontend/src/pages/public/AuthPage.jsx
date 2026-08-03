@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
+import { authPort } from '../../api/auth';
 import FormField from '../../components/ui/FormField';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -53,7 +54,9 @@ function AuthPage() {
     }
   };
 
-  const handleLoginSubmit = (e) => {
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     let hasError = false;
     if (!formData.username) {
@@ -66,16 +69,28 @@ function AuthPage() {
     }
     if (hasError) return;
 
-    const userData = {
-      name: selectedRole === 'admin' ? (formData.username || 'Pengelola Plaza') : (formData.username || 'Hj. Yuliana'),
-      username: formData.username,
-      kios: selectedRole === 'admin' ? null : 'B-1001',
-      email: `${formData.username}@gmail.com`,
-    };
+    setIsLoginLoading(true);
+    try {
+      // Hit backend nyata — authPort sudah pakai RealAuthAdapter
+      const result = await authPort.login({
+        username: formData.username,
+        password: formData.kataSandi,
+      });
 
-    login(selectedRole, userData, rememberMe);
-    addToast(`Selamat datang, ${userData.name}!`, 'success');
-    navigate(selectedRole === 'admin' ? '/admin/dashboard' : '/tenant/dashboard');
+      if (result.success) {
+        // Role ditentukan dari Id_roles backend (1 = admin, lainnya = tenant)
+        await login(result.role, result, rememberMe);
+        addToast(`Selamat datang, ${result.user?.Username || formData.username}!`, 'success');
+        navigate(result.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard');
+      } else {
+        setUsernameError(result.message || 'Username atau kata sandi salah.');
+        addToast(result.message || 'Login gagal. Periksa username dan kata sandi Anda.', 'error');
+      }
+    } catch (_) {
+      addToast('Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.', 'error');
+    } finally {
+      setIsLoginLoading(false);
+    }
   };
 
   const timerRef = React.useRef(null);
@@ -227,9 +242,15 @@ function AuthPage() {
               variant="primary"
               size="md"
               fullWidth
+              disabled={isLoginLoading}
               className="mt-2 h-12 text-base font-extrabold shadow-md"
             >
-              Masuk
+              {isLoginLoading ? (
+                <span className="flex items-center gap-2">
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="18" height="18" />
+                  <span>Memproses...</span>
+                </span>
+              ) : 'Masuk'}
             </Button>
 
             <Link

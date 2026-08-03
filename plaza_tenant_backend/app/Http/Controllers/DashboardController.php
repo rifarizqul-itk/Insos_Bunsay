@@ -14,12 +14,12 @@ class DashboardController extends Controller
     public function adminDashboard(Request $request)
     {
         return response()->json([
-            'total_kios'        => Kios::count(),
-            'kios_terisi'       => Kios::where('Status', 'Terisi')->count(),
-            'kios_kosong'       => Kios::where('Status', 'Kosong')->count(),
-            'tagihan_pending'   => Tagihan::where('Status_Tagihan', 'Belum Bayar')->count(),
-            'tagihan_menunggu'  => Tagihan::where('Status_Tagihan', 'Menunggu Verifikasi')->count(),
-            'pembayaran_today'  => Pembayaran::whereDate('Tanggal_Bayar', today())->count(),
+            'total_kios'       => Kios::count(),
+            'kios_terisi'      => Kios::where('Status', 'Terisi')->count(),
+            'kios_kosong'      => Kios::where('Status', 'Kosong')->count(),
+            'tagihan_pending'  => Tagihan::where('Status_Tagihan', 'Belum Bayar')->count(),
+            'tagihan_menunggu' => Tagihan::where('Status_Tagihan', 'Menunggu Verifikasi')->count(),
+            'pembayaran_today' => Pembayaran::whereDate('Tanggal_Bayar', today())->count(),
         ]);
     }
 
@@ -27,20 +27,40 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $pemilik = Pemilik::where('Id_User', $user->Id_user)->first();
+        $pemilik = Pemilik::where('Id_User', $user->Id_user)->with('sewa.tagihan', 'sewa.kios')->first();
 
         if (!$pemilik) {
             return response()->json(['message' => 'Data pemilik tidak ditemukan.'], 404);
         }
 
-        $sewa = Sewa::where('Id_Pemilik', $pemilik->Id_Pemilik)->get();
-        $sewaIds = $sewa->pluck('Id_Sewa');
-        $tagihan = Tagihan::whereIn('Id_Sewa', $sewaIds)->get();
+        // Ambil sewa aktif paling baru (bulan berjalan)
+        $sewaTerbaru = $pemilik->sewa->sortByDesc('Tanggal_Mulai')->first();
+        $tagihanBerjalan = $sewaTerbaru?->tagihan?->sortByDesc('Periode')->first();
+
+        // Kumpulkan semua nomor kios yang dimiliki pemilik ini
+        $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
 
         return response()->json([
-            'pemilik' => $pemilik,
-            'sewa'    => $sewa,
-            'tagihan' => $tagihan,
+            'idPemilik'  => $pemilik->Id_Pemilik,
+            'nama'       => $pemilik->Nama,
+            'kios'       => $kiosList->implode(', '),
+            'kiosList'   => $kiosList,
+            'statusPemilik' => $pemilik->Status_Pemilik,
+            'siklusSewa' => $sewaTerbaru ? [
+                'idSewa'         => $sewaTerbaru->Id_Sewa,
+                'tanggalMulai'   => $sewaTerbaru->Tanggal_Mulai,
+                'tanggalSelesai' => $sewaTerbaru->Tanggal_Selesai,
+                'jatuhTempo'     => optional($tagihanBerjalan)->Jatuh_Tempo,
+                'jenisUsaha'     => $sewaTerbaru->Jenis_Usaha,
+            ] : null,
+            'tagihanBerjalan' => $tagihanBerjalan ? [
+                'idTagihan'       => $tagihanBerjalan->Id_Tagihan,
+                'periode'         => $tagihanBerjalan->Periode,
+                'tarifSewa'       => (float) $tagihanBerjalan->Tarif_Sewa,
+                'hutangTunggakan' => (float) ($tagihanBerjalan->Hutang_Tunggakan ?? 0),
+                'totalTagihan'    => (float) $tagihanBerjalan->Total_Tagihan,
+                'statusTagihan'   => $tagihanBerjalan->Status_Tagihan,
+            ] : null,
         ]);
     }
 }

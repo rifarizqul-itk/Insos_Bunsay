@@ -28,40 +28,24 @@ use App\Http\Controllers\PembayaranController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// --- PATRA: Auth & Dashboard ---
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
-Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
-
-    // --- ARMAN: Master Data Kios & Sewa ---
-Route::apiResource('pemilik', PemilikController::class);
-Route::apiResource('kios', KiosController::class);
-Route::apiResource('sewa', SewaController::class);
-Route::apiResource('dokumen', DokumenController::class);
-
-    // --- DAWWAS: Tagihan & Pembayaran ---
-Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
-Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
-Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
-
 // ============================================================
-// PROTECTED ROUTES (Wajib login) ini nanti diaktifkan tunggu server sudah mau di aktifkan 
+// PROTECTED ROUTES (Wajib login)
 // ============================================================
-// Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
     // --- PATRA: Auth & Dashboard ---
-    // Route::post('/logout', [AuthController::class, 'logout']);
-    // Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
-    // Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
+    Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
 
-    // // --- ARMAN: Master Data Kios & Sewa ---
-    // Route::apiResource('pemilik', PemilikController::class);
-    // Route::apiResource('kios', KiosController::class);
-    // Route::apiResource('sewa', SewaController::class);
-    // Route::apiResource('dokumen', DokumenController::class);
+    // --- ARMAN: Master Data Kios & Sewa ---
+    Route::apiResource('pemilik', PemilikController::class);
+    Route::apiResource('kios', KiosController::class);
+    Route::apiResource('sewa', SewaController::class);
+    Route::apiResource('dokumen', DokumenController::class);
 
-    // // --- DAWWAS: Tagihan & Pembayaran ---
-    // Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
-    // Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
-    // Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
-// });
+    // --- DAWWAS: Tagihan & Pembayaran ---
+    Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
+    Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
+    Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
+});
