@@ -14,7 +14,26 @@ class TagihanController extends Controller
 
     public function store(Request $request)
     {
-        $tagihan = Tagihan::create($request->all());
+        $request->validate([
+            'Id_Sewa' => 'required|exists:sewa,Id_Sewa',
+            'Periode' => 'required|string|max:7',
+            'Jatuh_Tempo' => 'required|date',
+            'Tarif_Sewa' => 'required|numeric',
+            'Hutang_Tunggakan' => 'nullable|numeric',
+            'Total_Tagihan' => 'required|numeric',
+            'Status_Tagihan' => 'required|in:Lunas,Belum Bayar,Menunggu Verifikasi',
+        ]);
+
+        $tagihan = Tagihan::create($request->only([
+            'Id_Sewa',
+            'Periode',
+            'Jatuh_Tempo',
+            'Tarif_Sewa',
+            'Hutang_Tunggakan',
+            'Total_Tagihan',
+            'Status_Tagihan',
+        ]));
+
         return response()->json($tagihan, 201);
     }
 
@@ -25,8 +44,26 @@ class TagihanController extends Controller
 
     public function update(Request $request, string $id)
     {
+        $request->validate([
+            'Periode' => 'sometimes|string|max:7',
+            'Jatuh_Tempo' => 'sometimes|date',
+            'Tarif_Sewa' => 'sometimes|numeric',
+            'Hutang_Tunggakan' => 'sometimes|numeric',
+            'Total_Tagihan' => 'sometimes|numeric',
+            'Status_Tagihan' => 'sometimes|in:Lunas,Belum Bayar,Menunggu Verifikasi',
+        ]);
+
         $tagihan = Tagihan::findOrFail($id);
-        $tagihan->update($request->all());
+
+        $tagihan->update($request->only([
+            'Periode',
+            'Jatuh_Tempo',
+            'Tarif_Sewa',
+            'Hutang_Tunggakan',
+            'Total_Tagihan',
+            'Status_Tagihan',
+        ]));
+
         return response()->json($tagihan);
     }
 }
