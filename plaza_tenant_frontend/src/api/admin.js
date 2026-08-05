@@ -158,6 +158,7 @@ export const RealAdminAdapter = {
       });
 
       const newPemilik = response?.data || response;
+      const userObj = newPemilik.user || {};
 
       return {
         success: true,
@@ -169,8 +170,8 @@ export const RealAdminAdapter = {
           kios: payload.kios,
           usaha: payload.usaha || 'Umum',
           credentials: {
-            username: `tenant_${newPemilik.Id_Pemilik}`,
-            tempPassword: 'password123',
+            username: userObj.Username || `tenant_${newPemilik.Id_Pemilik}`,
+            tempPassword: userObj.plain_password || 'bunsay1234',
             email: payload.email || `tenant${newPemilik.Id_Pemilik}@bunsay.id`
           }
         }

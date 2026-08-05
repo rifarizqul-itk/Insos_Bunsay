@@ -50,16 +50,21 @@ class PemilikController extends Controller
             if (empty($validatedData['Id_User'])) {
                 $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($request->Nama));
                 $username = 'tenant_' . (strlen($cleanName) > 0 ? substr($cleanName, 0, 10) : 'user') . '_' . rand(100, 999);
+                $plainPassword = 'bunsay' . rand(1000, 9999);
                 $newUser = \App\Models\User::create([
                     'Id_roles' => 2,
                     'Username' => $username,
-                    'Password' => \Illuminate\Support\Facades\Hash::make('123456')
+                    'Password' => \Illuminate\Support\Facades\Hash::make($plainPassword)
                 ]);
                 $validatedData['Id_User'] = $newUser->Id_user;
             }
 
             // 2. Simpan Data ke Database
             $pemilik = Pemilik::create($validatedData);
+            $pemilik->load('user');
+            if (isset($plainPassword)) {
+                $pemilik->user->plain_password = $plainPassword;
+            }
 
             return response()->json([
                 'success' => true,
