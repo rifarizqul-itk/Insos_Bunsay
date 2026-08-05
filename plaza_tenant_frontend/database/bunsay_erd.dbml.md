@@ -16,7 +16,6 @@ Enum status_pemilik_enum {
 Enum status_kios_enum {
   Terisi
   Kosong
-  "Perlu Validasi"
 }
 
 Enum jenis_dokumen_enum {

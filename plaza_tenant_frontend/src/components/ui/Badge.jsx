@@ -1,6 +1,6 @@
 // Komponen Badge reusable - contoh migrasi ke Tailwind
 // Penggunaan: <Badge status="Lunas" />
-// Status yang didukung: Lunas, Belum Bayar, Menunggu Verifikasi, Terisi, Kosong, Perlu Validasi
+// Status yang didukung: Lunas, Belum Bayar, Dicicil, Menunggu Verifikasi, Terisi, Kosong
 
 import React from 'react';
 import Icon from './Icon';
@@ -12,7 +12,6 @@ const statusConfig = {
   'Menunggu Verifikasi': { bg: 'bg-orange-bg border-orange/30', text: 'text-orange', label: 'Menunggu Verifikasi', icon: 'heroicons:clock-20-solid' },
   'Terisi': { bg: 'bg-green-bg border-green/30', text: 'text-green', label: 'Terisi', icon: 'heroicons:home-20-solid' },
   'Kosong': { bg: 'bg-red-100 border-red/30', text: 'text-red', label: 'Kosong', icon: 'heroicons:no-symbol-20-solid' },
-  'Perlu Validasi': { bg: 'bg-orange-bg border-orange/30', text: 'text-orange', label: 'Perlu Validasi', icon: 'heroicons:question-mark-circle-20-solid' },
 };
 
 const Badge = React.memo(function Badge({ status, className = '', clickable = false, onClick }) {

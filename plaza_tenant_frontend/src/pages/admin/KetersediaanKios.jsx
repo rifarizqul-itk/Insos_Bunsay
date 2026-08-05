@@ -117,7 +117,6 @@ function KetersediaanKios({ isAdmin = false }) {
 
   const countTerisi = (kiosData || []).filter(k => k.statusKios === 'Terisi').length;
   const countKosong = (kiosData || []).filter(k => k.statusKios === 'Kosong').length;
-  const countValidasi = (kiosData || []).filter(k => k.statusKios === 'Perlu Validasi').length;
 
   return (
     <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
@@ -156,7 +155,7 @@ function KetersediaanKios({ isAdmin = false }) {
       </div>
 
       {/* Ringkasan Status Kios */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card variant="elevated" className="p-4 flex flex-col justify-between">
           <span className="label-micro text-text-3">Total Kios</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-tabular-nums text-text mt-1">
@@ -173,12 +172,6 @@ function KetersediaanKios({ isAdmin = false }) {
           <span className="label-micro text-red">Kios Kosong</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-tabular-nums text-red mt-1">
             {countKosong}
-          </div>
-        </Card>
-        <Card variant="elevated" className="p-4 flex flex-col justify-between">
-          <span className="label-micro text-orange">Perlu Validasi</span>
-          <div className="text-2xl sm:text-3xl font-extrabold font-tabular-nums text-orange mt-1">
-            {countValidasi}
           </div>
         </Card>
       </div>
@@ -218,7 +211,6 @@ function KetersediaanKios({ isAdmin = false }) {
               <option value="Semua">Semua Status</option>
               <option value="Terisi">Terisi</option>
               <option value="Kosong">Kosong</option>
-              <option value="Perlu Validasi">Perlu Validasi</option>
             </select>
           </div>
         </div>

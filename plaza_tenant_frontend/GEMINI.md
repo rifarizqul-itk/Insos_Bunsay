@@ -40,7 +40,7 @@ Berikut adalah rangkuman resmi perubahan, penambahan fitur, serta penyempurnaan 
      - `VerifikasiBuktiTransfer.jsx` (`/admin/verifikasi-bukti`) – Antrean khusus verifikasi bukti transfer (Terima / Tolak dengan catatan alasan).
      - `SetoranTunai.jsx` (`/admin/setoran-tunai`) – Form loket pencatatan pembayaran tunai langsung oleh admin di kantor pengelola beserta lampiran foto fisik bukti setoran.
      - `RiwayatTransaksiAdmin.jsx` (`/admin/riwayat`) – Log seluruh transaksi lintas metode (Tunai, Transfer, QRIS, Midtrans).
-     - `KetersediaanKios.jsx` (`/admin/kios`) – Tabel pemetaan unit kios (Terisi, Kosong, Perlu Validasi) lengkap dengan fitur modal pendaftaran tenant baru (`createTenant`).
+     - `KetersediaanKios.jsx` (`/admin/kios`) – Tabel pemetaan unit kios (Terisi, Kosong) lengkap dengan fitur modal pendaftaran tenant baru (`createTenant`).
      - `DetailAdministrasiKios.jsx` (`/admin/detail-administrasi`) – Rincian legalitas kios (No. SP, No. PPJB, No. Sertifikat).
      - `DetailKeuanganTenant.jsx` – Drill-down view detail keuangan dan transaksi per tenant (diakses langsung dari `DashboardAdmin.jsx`).
      - `DetailTenantAdmin.jsx` – View detail tenant tambahan untuk kebutuhan manajemen admin.
@@ -61,7 +61,7 @@ Berikut adalah rangkuman resmi perubahan, penambahan fitur, serta penyempurnaan 
 
 5. **Spesifikasi Integrasi Mock API & Backend**:
    - Pemisahan berkas API di `src/api/` (`admin.js`, `tenant.js`, `transactions.js`, `client.js`).
-   - Penambahan aturan ENUM case-sensitive untuk status transaksi & kios (`"Lunas"`, `"Belum Bayar"`, `"Menunggu Verifikasi"`, `"Terisi"`, `"Kosong"`, `"Perlu Validasi"`).
+   - Penambahan aturan ENUM case-sensitive untuk status transaksi & kios (`"Lunas"`, `"Belum Bayar"`, `"Menunggu Verifikasi"`, `"Terisi"`, `"Kosong"`).
    - Penambahan spesifikasi respons error JSON terstandar dalam bahasa Indonesia formal untuk mematuhi kriteria WCAG 3.3.1 & 3.3.3.
 
 6. **Refaktorisasi Aksesibilitas WCAG 2.2 AA (Tahap 1, 2, & 3)**:
@@ -267,7 +267,7 @@ Roles 1─N User 1─1 Pemilik 1─N Dokumen (opsional: Id_Kios)
 | `No_Kios` | VARCHAR(10) | UNIQUE | Format: `B-1001` |
 | `Lantai` | INT | | |
 | `Ukuran` | VARCHAR(20) | | Contoh: `"6M"` |
-| `Status` | ENUM | | `"Terisi"` / `"Kosong"` / `"Perlu Validasi"` |
+| `Status` | ENUM | | `"Terisi"` / `"Kosong"` |
 
 #### **5. `Dokumen`** *(generik, menggantikan kolom legalitas terpisah)*
 | Kolom | Tipe | Key | Keterangan |
@@ -413,7 +413,7 @@ Seluruh variabel desain didefinisikan dalam `src/index.css` menggunakan CSS Vari
 * **Border**: `var(--border)` (`#E8E0D8`).
 * **Teks Utama**: Primary `var(--text)` (`#1A1410`), Secondary `var(--text-2)` (`#5C4F46`), Muted `var(--text-3)` (`#7B6A5E`).
 * **Status Lunas / Terisi**: Green `var(--green)` (`#1A6B3A`), Green Background `var(--green-bg)` (`#E8F5EE`).
-* **Status Pending / Perlu Validasi / Tunggakan**: Orange `var(--orange)` (`#C05C00`), Orange Background `var(--orange-bg)` (`#FEF3E6`).
+* **Status Pending / Tunggakan**: Orange `var(--orange)` (`#C05C00`), Orange Background `var(--orange-bg)` (`#FEF3E6`).
 
 ### **4.2 Tipografi & Aksesibilitas Teks**
 * **Font Family**: `'Plus Jakarta Sans', sans-serif`.
@@ -465,7 +465,7 @@ Seluruh variabel desain didefinisikan dalam `src/index.css` menggunakan CSS Vari
 1. **Aturan ENUM Case-Sensitive**:
    Frontend menggunakan perbandingan string persis. Backend wajib mengembalikan nilai ENUM dalam format huruf kapital yang tepat sesuai skema Bab 2:
    - `Status_Tagihan`: `"Lunas"`, `"Belum Bayar"`, `"Dicicil"`, `"Menunggu Verifikasi"` *(🆕 "Dicicil" ditambahkan di V5.2)*
-   - `Status` (Kios): `"Terisi"`, `"Kosong"`, `"Perlu Validasi"`
+   - `Status` (Kios): `"Terisi"`, `"Kosong"`
    - `Status_Pemilik`: `"Aktif"`, `"Nonaktif"`
    - `Verifikasi_Pembayaran`: `"Menunggu"`, `"Diterima"`, `"Ditolak"`
    - `Metode_Bayar`: `"Transfer"`, `"Tunai"`, `"Midtrans"` *(🔧 **"QRIS" dihapus di V5.3**)*

@@ -30,7 +30,7 @@ Skema database resmi yang digunakan oleh frontend mengacu pada **[bunsay_erd.dbm
 1. **`Roles`**: Peran pengguna (`"Tenant"`, `"Admin"`).
 2. **`User`**: Akun login terpusat berbasis **`Username`** (bukan email). Email disimpan untuk administrasi & reset lupa kata sandi.
 3. **`Pemilik`**: Data profil pemilik kios beserta kolom `Status_Pemilik` (`"Aktif"`, `"Nonaktif"`).
-4. **`Kios`**: Master data kios (`No_Kios`, `Lantai`, `Ukuran`, `Status`: `"Terisi"`, `"Kosong"`, `"Perlu Validasi"`).
+4. **`Kios`**: Master data kios (`No_Kios`, `Lantai`, `Ukuran`, `Status`: `"Terisi"`, `"Kosong"`).
 5. **`Dokumen`**: Tabel generik dokumen legalitas (`SP`, `PPJB`, `Sertifikat`, `KTP`).
 6. **`Sewa`**: Siklus sewa per bulan (reset setiap bulan, bukan kontrak jangka panjang bertahun-tahun).
 7. **`Tagihan`**: Satu tagihan per siklus sewa (1:1), dengan `Tarif_Sewa` all-inclusive (termasuk service charge & kebersihan) dan `Hutang_Tunggakan` akumulatif. Status: `"Lunas"`, `"Belum Bayar"`, `"Dicicil"`, `"Menunggu Verifikasi"`.

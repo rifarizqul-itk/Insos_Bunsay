@@ -355,7 +355,6 @@ function DetailAdministrasiKios() {
               <select id="edit-kios-status" name="statusKios" value={editData.statusKios || 'Terisi'} onChange={handleEditChange} className="w-full h-10 rounded-md border border-border bg-white px-3 text-sm font-semibold">
                 <option value="Terisi">Terisi</option>
                 <option value="Kosong">Kosong</option>
-                <option value="Perlu Validasi">Perlu Validasi</option>
               </select>
             </FormField>
             <FormField label="Status Pemilik" id="edit-pemilik-status" hint={editData.statusPemilik === 'Nonaktif' ? 'Catatan: Status kios otomatis disesuaikan menjadi Kosong.' : undefined}>
