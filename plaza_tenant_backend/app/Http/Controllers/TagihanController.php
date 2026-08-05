@@ -7,9 +7,15 @@ use Illuminate\Http\Request;
 
 class TagihanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Tagihan::all());
+        $query = Tagihan::with(['sewa.pemilik']);
+        if ($request->has('Id_Pemilik')) {
+            $query->whereHas('sewa', function($q) use ($request) {
+                $q->where('Id_Pemilik', $request->Id_Pemilik);
+            });
+        }
+        return response()->json($query->get());
     }
 
     public function store(Request $request)
