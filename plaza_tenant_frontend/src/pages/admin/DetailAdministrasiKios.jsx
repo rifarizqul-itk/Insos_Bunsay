@@ -452,12 +452,11 @@ function DetailAdministrasiKios() {
               />
             </div>
 
-            <div className="flex gap-2.5">
+            <div className="flex gap-2.5 w-full">
               <Button
                 type="button"
                 variant="secondary"
-                fullWidth
-                className="h-10 text-xs font-bold gap-1.5"
+                className="flex-1 shrink-0 h-10 text-xs font-bold gap-1.5 whitespace-nowrap"
                 onClick={() => {
                   navigator.clipboard.writeText(resetResult.waMessage);
                   addToast('Pesan WA notifikasi resmi berhasil disalin ke clipboard!', 'success');
@@ -470,7 +469,7 @@ function DetailAdministrasiKios() {
                 href={`https://wa.me/?text=${encodeURIComponent(resetResult.waMessage)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a] h-10 rounded-md text-xs font-bold text-decoration-none flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                className="flex-1 shrink-0 bg-[#25D366] text-white hover:bg-[#20bd5a] h-10 rounded-md text-xs font-bold text-decoration-none flex items-center justify-center gap-1.5 transition-all shadow-sm whitespace-nowrap"
               >
                 <Icon icon="ic:baseline-whatsapp" width="18" height="18" />
                 <span>Kirim via WA</span>

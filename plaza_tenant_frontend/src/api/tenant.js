@@ -55,7 +55,7 @@ export const RealTenantAdapter = {
         nama: data.Nama,
         noKTP: data.No_KTP,
         kios: data.sewa?.map(s => s.kios?.No_Kios).join(', ') || '—',
-        email: data.user?.Email || '—',
+        email: data.user?.Email || parsed?.user?.email || '—',
         telepon: data.No_Telepon,
         alamat: data.Alamat,
         jenisUsaha: data.sewa?.[0]?.Jenis_Usaha || 'Umum',
@@ -79,14 +79,26 @@ export const RealTenantAdapter = {
       
       if(!data) throw new Error('Pemilik tidak ditemukan');
 
-      const result = await httpClient.put(`/pemilik/${data.Id_Pemilik}`, {
+      await httpClient.put(`/pemilik/${data.Id_Pemilik}`, {
         Nama: payload.nama,
         No_Telepon: payload.telepon,
         Alamat: payload.alamat,
       });
-      return { success: true, message: 'Profil berhasil diperbarui di SQL.', data: result };
+      return {
+        success: true,
+        message: 'Profil berhasil diperbarui.',
+        data: {
+          idPemilik: data.Id_Pemilik,
+          nama: payload.nama,
+          telepon: payload.telepon,
+          alamat: payload.alamat,
+          email: payload.email,
+          kios: data.sewa?.map(s => s.kios?.No_Kios).join(', ') || '—',
+          jenisUsaha: data.sewa?.[0]?.Jenis_Usaha || 'Umum'
+        }
+      };
     } catch (err) {
-      return { success: false, message: err?.message || 'Gagal memperbarui profil di SQL.', field: err?.field };
+      return { success: false, message: err?.message || 'Gagal memperbarui profil.', field: err?.field };
     }
   }
 };
@@ -136,6 +148,6 @@ export const createPayment = async (payload) => {
       status: payload.metode === 'Midtrans' ? 'Lunas' : 'Menunggu Verifikasi'
     };
   } catch (err) {
-    return { success: false, message: err?.message || 'Gagal menyimpan pembayaran ke SQL.' };
+    return { success: false, message: err?.message || 'Gagal menyimpan pembayaran.' };
   }
 };

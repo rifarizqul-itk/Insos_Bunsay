@@ -58,7 +58,12 @@ export const AuthProvider = ({ children }) => {
   const updateUser = useCallback((newUserData) => {
     setUser(prev => {
       const updated = { ...(prev || {}), ...newUserData };
-      const payload = JSON.stringify({ role, user: updated });
+      const existingStored = localStorage.getItem('auth') || sessionStorage.getItem('auth');
+      let token = null;
+      if (existingStored) {
+        try { token = JSON.parse(existingStored).token; } catch (_) {}
+      }
+      const payload = JSON.stringify({ role, user: updated, token });
       if (sessionStorage.getItem('auth')) {
         sessionStorage.setItem('auth', payload);
       } else {

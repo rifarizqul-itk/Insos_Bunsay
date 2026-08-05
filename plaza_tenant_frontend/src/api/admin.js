@@ -145,9 +145,9 @@ export const RealAdminAdapter = {
 
   async createTenant(payload) {
     try {
-      // 1. Buat data dummy untuk field KTP/Telepon agar lolos validasi backend
+      // 1. Buat data KTP/Telepon jika belum diisi dari form
       const noKTP = Math.floor(1000000000000000 + Math.random() * 9000000000000000).toString();
-      const noTelp = '08' + Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      const noTelp = payload.telepon || ('08' + Math.floor(1000000000 + Math.random() * 9000000000).toString());
       
       // 2. Simpan pemilik ke tabel pemilik di SQL
       const response = await httpClient.post('/pemilik', {
@@ -162,7 +162,7 @@ export const RealAdminAdapter = {
       return {
         success: true,
         id: newPemilik.Id_Pemilik,
-        message: `Tenant ${payload.nama} berhasil didaftarkan ke Database SQL.`,
+        message: `Tenant ${payload.nama} berhasil didaftarkan.`,
         data: {
           id: newPemilik.Id_Pemilik,
           nama: newPemilik.Nama,
@@ -177,7 +177,7 @@ export const RealAdminAdapter = {
       };
     } catch (err) {
       console.error('Error createTenant:', err);
-      return { success: false, message: err?.message || 'Gagal menambahkan tenant ke SQL.' };
+      return { success: false, message: err?.message || 'Gagal menambahkan tenant.' };
     }
   },
 
@@ -202,11 +202,11 @@ export const RealAdminAdapter = {
 
         return {
             success: true,
-            message: 'Data kios berhasil diperbarui langsung ke SQL.'
+            message: 'Data kios berhasil diperbarui.'
         };
     } catch (err) {
         console.error('Error updateKios:', err);
-        return { success: false, message: err?.message || 'Gagal update data kios ke SQL.' };
+        return { success: false, message: err?.message || 'Gagal memperbarui data kios.' };
     }
   }
 };

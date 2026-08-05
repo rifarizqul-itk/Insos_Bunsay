@@ -23,7 +23,7 @@ function KetersediaanKios({ isAdmin = false }) {
   const [filterLantai, setFilterLantai] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [showTambahDrawer, setShowTambahDrawer] = useState(false);
-  const [formTenant, setFormTenant] = useState({ nama: '', kios: '', email: '', usaha: '' });
+  const [formTenant, setFormTenant] = useState({ nama: '', kios: '', email: '', telepon: '', usaha: '' });
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdCredential, setCreatedCredential] = useState(null);
@@ -63,12 +63,13 @@ function KetersediaanKios({ isAdmin = false }) {
           setCreatedCredential({
             nama: formTenant.nama,
             kios: result.data.kios || formTenant.kios,
+            telepon: formTenant.telepon,
             username: result.data.credentials.username,
             tempPassword: result.data.credentials.tempPassword,
             email: result.data.credentials.email
           });
         }
-        setFormTenant({ nama: '', kios: '', email: '', usaha: '' });
+        setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '' });
         refetch();
       } else if (result && !result.success) {
         addToast(result.message || 'Gagal mendaftarkan tenant.', 'error');
@@ -329,6 +330,16 @@ function KetersediaanKios({ isAdmin = false }) {
             />
           </FormField>
 
+          <FormField label="Nomor Telepon" id="tambah-tenant-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
+            <input 
+              type="tel" 
+              placeholder="Contoh: 081234567890" 
+              value={formTenant.telepon} 
+              onChange={(e) => setFormTenant(prev => ({ ...prev, telepon: e.target.value }))} 
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+            />
+          </FormField>
+
           <FormField label="Jenis Usaha" id="tambah-tenant-usaha" required error={fieldError?.field === 'usaha' ? fieldError.message : undefined}>
             <input 
               type="text" 
@@ -403,19 +414,41 @@ function KetersediaanKios({ isAdmin = false }) {
               </div>
             </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                const textToCopy = `Nama Tenant: ${createdCredential.nama}\nKios: ${createdCredential.kios}\nUsername: ${createdCredential.username}\nPassword Sementara: ${createdCredential.tempPassword}`;
-                navigator.clipboard.writeText(textToCopy);
-                addToast('Kredensial berhasil disalin ke clipboard!', 'success');
-              }}
-              className="w-full h-10 text-xs font-bold gap-2"
-            >
-              <Icon icon="heroicons:document-duplicate-20-solid" width="18" height="18" />
-              <span>Salin Kredensial Tenant</span>
-            </Button>
+            <div className="flex gap-2.5 w-full">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const textToCopy = `Halo Bpk/Ibu ${createdCredential.nama}, berikut kredensial akun Bunsay Plaza Kebun Sayur Anda:\n\n- Kios: ${createdCredential.kios}\n- Username: ${createdCredential.username}\n- Password Sementara: ${createdCredential.tempPassword}\n\nSilakan login di portal Bunsay.`;
+                  navigator.clipboard.writeText(textToCopy);
+                  addToast('Kredensial tenant berhasil disalin!', 'success');
+                }}
+                className="flex-1 shrink-0 h-10 text-xs font-bold gap-1.5 whitespace-nowrap"
+              >
+                <Icon icon="heroicons:document-duplicate-20-solid" width="16" height="16" />
+                <span>Salin Kredensial</span>
+              </Button>
+              {(() => {
+                const cleanPhone = (createdCredential.telepon || '').replace(/[^0-9]/g, '');
+                const waPhone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+                const messageText = `Halo Bpk/Ibu ${createdCredential.nama}, berikut kredensial akun Bunsay Plaza Kebun Sayur Anda:\n\n- Kios: ${createdCredential.kios}\n- Username: ${createdCredential.username}\n- Password Sementara: ${createdCredential.tempPassword}\n\nSilakan login di portal Bunsay.`;
+                const waUrl = waPhone 
+                  ? `https://wa.me/${waPhone}?text=${encodeURIComponent(messageText)}`
+                  : `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+                return (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 shrink-0 bg-[#25D366] text-white hover:bg-[#20bd5a] h-10 rounded-md text-xs font-bold text-decoration-none flex items-center justify-center gap-1.5 transition-all shadow-sm whitespace-nowrap"
+                  >
+                    <Icon icon="ic:baseline-whatsapp" width="18" height="18" />
+                    <span>Kirim via WA</span>
+                  </a>
+                );
+              })()}
+            </div>
           </div>
         )}
       </Modal>

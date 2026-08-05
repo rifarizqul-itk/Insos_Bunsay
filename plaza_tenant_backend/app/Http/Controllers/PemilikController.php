@@ -38,7 +38,7 @@ class PemilikController extends Controller
     {
         // 1. Validasi Input
         $validatedData = $request->validate([
-            'Id_User'    => 'nullable|exists:users,id', // Sesuaikan jika PK users adalah Id_user
+            'Id_User'    => 'nullable',
             'Nama'       => 'required|string|max:255',
             'No_Telepon' => 'required|string|max:20',
             'No_KTP'     => 'required|string|max:20|unique:pemilik,No_KTP',
@@ -46,6 +46,18 @@ class PemilikController extends Controller
         ]);
 
         try {
+            // Otomatis buatkan akun User jika Id_User belum ada
+            if (empty($validatedData['Id_User'])) {
+                $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($request->Nama));
+                $username = 'tenant_' . (strlen($cleanName) > 0 ? substr($cleanName, 0, 10) : 'user') . '_' . rand(100, 999);
+                $newUser = \App\Models\User::create([
+                    'Id_roles' => 2,
+                    'Username' => $username,
+                    'Password' => \Illuminate\Support\Facades\Hash::make('123456')
+                ]);
+                $validatedData['Id_User'] = $newUser->Id_user;
+            }
+
             // 2. Simpan Data ke Database
             $pemilik = Pemilik::create($validatedData);
 

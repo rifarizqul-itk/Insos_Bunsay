@@ -13,12 +13,12 @@ function AkunTenant() {
   const { data: profileFromApi, loading, updateProfile } = useTenantProfile();
 
   const [profileData, setProfileData] = useState({
-    nama: user?.name || user?.nama || 'Hj. Yuliana',
-    kios: user?.kios || 'B-1001',
-    email: user?.email || 'yuliana.bunsay@email.com',
-    telepon: '0812-5564-593',
-    alamat: 'Jl. Adil Makmur No. 42, Kec. Balikpapan Barat, Kota Balikpapan, Kaltim 76123',
-    jenisUsaha: 'Kerajinan'
+    nama: user?.name || user?.nama || '—',
+    kios: user?.kios || '—',
+    email: user?.email || '—',
+    telepon: '—',
+    alamat: '—',
+    jenisUsaha: '—'
   });
 
   const [isEditing, setIsEditing] = useState(false);

@@ -173,50 +173,7 @@ function AuthPage() {
               />
             </FormField>
 
-            {/* Role selector untuk simulasi */}
-            <div className="flex flex-col gap-1.5">
-              <span id="role-select-label" className="text-sm font-semibold text-text-2">
-                Pilih Peran Login (BACKEND NANTI HAPUS INI YA)
-              </span>
-              <div
-                role="radiogroup"
-                aria-labelledby="role-select-label"
-                className="flex gap-2"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  tabIndex={selectedRole === 'tenant' ? 0 : -1}
-                  aria-checked={selectedRole === 'tenant'}
-                  onClick={() => setSelectedRole('tenant')}
-                  onKeyDown={(e) => handleRadioKeyDown(e, 'tenant')}
-                  className={`
-                    flex-1 h-11 rounded-md font-bold text-sm transition-all duration-150 cursor-pointer
-                    ${selectedRole === 'tenant' 
-                      ? 'bg-red text-white border-2 border-red-dark shadow-sm' 
-                      : 'bg-warm-gray/70 text-text border border-border hover:bg-warm-gray'}
-                  `}
-                >
-                  Tenant
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  tabIndex={selectedRole === 'admin' ? 0 : -1}
-                  aria-checked={selectedRole === 'admin'}
-                  onClick={() => setSelectedRole('admin')}
-                  onKeyDown={(e) => handleRadioKeyDown(e, 'admin')}
-                  className={`
-                    flex-1 h-11 rounded-md font-bold text-sm transition-all duration-150 cursor-pointer
-                    ${selectedRole === 'admin' 
-                      ? 'bg-red text-white border-2 border-red-dark shadow-sm' 
-                      : 'bg-warm-gray/70 text-text border border-border hover:bg-warm-gray'}
-                  `}
-                >
-                  Admin
-                </button>
-              </div>
-            </div>
+
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between mt-1 text-sm">

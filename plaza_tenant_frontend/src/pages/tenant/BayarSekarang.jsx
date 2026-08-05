@@ -157,8 +157,8 @@ function BayarSekarang() {
         const snapToken = await getMidtransSnapToken({
           orderId,
           nominal: nominalAngka,
-          customerName: user?.name || 'Hj. Yuliana',
-          customerEmail: user?.email || 'yuliana@gmail.com'
+          customerName: user?.name || user?.Username || 'Tenant',
+          customerEmail: user?.email || 'tenant@bunsay.id'
         });
 
         if (window.snap && typeof window.snap.pay === 'function') {
