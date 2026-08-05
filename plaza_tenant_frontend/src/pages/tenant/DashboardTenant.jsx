@@ -49,12 +49,12 @@ function DashboardTenant() {
 
   const { nama, kios, siklusSewa, tagihanBerjalan } = data || {};
   
-  const periodeText = siklusSewa ? `${siklusSewa.tanggalMulai} s/d ${siklusSewa.tanggalSelesai}` : '01 Mei 2026 s/d 31 Mei 2026';
-  const jatuhTempo = siklusSewa?.jatuhTempo || '12 Mei 2026';
-  const tarifSewaVal = tagihanBerjalan?.tarifSewa ?? 7000000;
-  const hutangTunggakanVal = tagihanBerjalan?.hutangTunggakan ?? 4500000;
-  const totalTagihanVal = tagihanBerjalan?.totalTagihan ?? (tarifSewaVal + hutangTunggakanVal);
-  const statusTagihan = tagihanBerjalan?.statusTagihan || 'Belum Bayar';
+  const periodeText = siklusSewa ? `${siklusSewa.tanggalMulai} s/d ${siklusSewa.tanggalSelesai}` : '—';
+  const jatuhTempo = siklusSewa?.jatuhTempo || '—';
+  const tarifSewaVal = tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0;
+  const hutangTunggakanVal = tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0;
+  const totalTagihanVal = tagihanBerjalan ? (tagihanBerjalan.totalTagihan ?? (tarifSewaVal + hutangTunggakanVal)) : 0;
+  const statusTagihan = tagihanBerjalan?.statusTagihan || 'Lunas';
 
   const perluBayar = (statusTagihan === 'Belum Bayar' || statusTagihan === 'Dicicil') && totalTagihanVal > 0;
   const sedangVerifikasi = statusTagihan === 'Menunggu Verifikasi';
@@ -126,6 +126,22 @@ function DashboardTenant() {
             >
               Lihat Status Transaksi
             </Button>
+          </div>
+        </div>
+      )}
+
+      {!perluBayar && !sedangVerifikasi && (
+        <div 
+          role="status"
+          className="p-6 sm:p-7 md:p-8 bg-green-50 border-2 border-green/30 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-card"
+        >
+          <div className="flex-1 min-w-[280px]">
+            <span className="label-micro text-green font-bold">
+              Status Tagihan Sewa
+            </span>
+            <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
+              Tidak ada tagihan aktif yang perlu dibayar saat ini. Semua tagihan sewa dan tunggakan Anda dalam kondisi lunas / bersih.
+            </p>
           </div>
         </div>
       )}

@@ -45,7 +45,7 @@ function TunggakanAR() {
   }
 
   const { totalHutangTunggakan, tagihanMenunggak } = data || {};
-  const totalTunggakanVal = totalHutangTunggakan ?? 4500000;
+  const totalTunggakanVal = totalHutangTunggakan ?? 0;
   const listTagihan = tagihanMenunggak || [];
 
   const handleBayar = () => {
