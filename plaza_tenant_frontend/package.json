@@ -3,16 +3,21 @@
   "private": true,
   "version": "0.2.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "lhci": "npx @lhci/cli autorun --config=./lighthouserc.cjs",
-    "lhci:desktop": "cmd /c \"set LHCI_FORM_FACTOR=desktop && npx @lhci/cli autorun --config=./lighthouserc.cjs\""
+    "dev:tenant": "npm run dev --workspace=@bunsay/tenant-app",
+    "dev:admin": "npm run dev --workspace=@bunsay/admin-app",
+    "build": "npm run build --workspaces --if-present",
+    "build:tenant": "npm run build --workspace=@bunsay/tenant-app",
+    "build:admin": "npm run build --workspace=@bunsay/admin-app",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "axios": "^1.7.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.16.0"

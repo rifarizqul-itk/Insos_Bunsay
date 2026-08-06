@@ -7,8 +7,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@bunsay/shared-ui': path.resolve(__dirname, './packages/shared-ui/src/index.ts'),
-      '@bunsay/shared-core': path.resolve(__dirname, './packages/shared-core/src/index.ts'),
+      '@bunsay/shared-ui': path.resolve(__dirname, './packages/shared-ui/src'),
+      '@bunsay/shared-core': path.resolve(__dirname, './packages/shared-core/src'),
       '@': path.resolve(__dirname, './src')
     }
   },
