@@ -1,0 +1,14 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html",
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}
