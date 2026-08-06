@@ -22,7 +22,7 @@ function PageLoader() {
 }
 
 function TenantAppRoutes() {
-  const tenantApiUrl = import.meta.env.VITE_TENANT_API_URL || 'https://bunsayhub.id';
+  const tenantApiUrl = import.meta.env.VITE_TENANT_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://bunsayhub.id');
 
   return (
     <TenantAuthProvider apiBaseUrl={tenantApiUrl}>

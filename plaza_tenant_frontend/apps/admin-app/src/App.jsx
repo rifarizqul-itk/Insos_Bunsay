@@ -21,7 +21,7 @@ function AdminPageLoader() {
 }
 
 function AdminAppRoutes() {
-  const adminApiUrl = import.meta.env.VITE_ADMIN_API_URL || 'https://admin.bunsayhub.id';
+  const adminApiUrl = import.meta.env.VITE_ADMIN_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://admin.bunsayhub.id');
 
   return (
     <AdminAuthProvider apiBaseUrl={adminApiUrl}>
