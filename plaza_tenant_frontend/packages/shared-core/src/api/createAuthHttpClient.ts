@@ -60,11 +60,18 @@ export function createAuthHttpClient(options: IAuthHttpClientOptions): AxiosInst
     (response: AxiosResponse) => response,
     async (error) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      const requestUrl = originalRequest?.url || '';
+
+      const isAuthEndpoint =
+        requestUrl.includes(refreshEndpoint) ||
+        requestUrl.includes('/auth/login') ||
+        requestUrl.includes('/auth/register') ||
+        requestUrl.includes('/auth/logout');
 
       if (
         error.response?.status === 401 &&
         !originalRequest._retry &&
-        !originalRequest.url?.includes(refreshEndpoint)
+        !isAuthEndpoint
       ) {
         if (isRefreshing) {
           return new Promise<string>((resolve, reject) => {
