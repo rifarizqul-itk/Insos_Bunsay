@@ -47,8 +47,8 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     },
   });
 
-  const login = useCallback(async (phone, password) => {
-    const response = await httpClient.post('/api/v1/tenant/auth/login', { phone, password });
+  const login = useCallback(async (username, password) => {
+    const response = await httpClient.post('/api/v1/tenant/auth/login', { username, password });
     const { accessToken: token, user: userData } = response.data;
     
     setAccessToken(token);
