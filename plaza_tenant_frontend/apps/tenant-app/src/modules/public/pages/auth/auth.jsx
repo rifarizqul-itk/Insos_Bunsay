@@ -51,13 +51,19 @@ function AuthPage() {
     setIsLoginLoading(true);
     try {
       const res = await login(formData.username, formData.kataSandi);
-      if (res.success) {
+      if (res?.success) {
         navigate('/tenant/dashboard');
       } else {
-        setUsernameError(res.message || 'Username atau kata sandi salah.');
+        setUsernameError(res?.message || 'Username atau kata sandi salah.');
       }
-    } catch (_) {
-      setUsernameError('Tidak dapat terhubung ke server auth.');
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setUsernameError(err.response.data.message);
+      } else if (err.response?.status === 401 || err.response?.status === 422) {
+        setUsernameError('Username atau kata sandi yang Anda masukkan salah.');
+      } else {
+        setUsernameError('Tidak dapat terhubung ke server auth. Pastikan backend Laravel berjalan.');
+      }
     } finally {
       setIsLoginLoading(false);
     }
