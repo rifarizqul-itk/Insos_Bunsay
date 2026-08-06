@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useUI } from '../../context/UIContext';
 import { useTransactionDomain } from '../../context/TransactionContext';
+import { downloadExcelRekap } from '../../utils/exportExcel';
 import FormField from '../../components/ui/FormField';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -8,7 +9,7 @@ import Icon from '../../components/ui/Icon';
 
 function EksporData() {
   const { addToast } = useUI();
-  const { exportReport } = useTransactionDomain();
+  const { riwayat } = useTransactionDomain();
   const [bulanFilter, setBulanFilter] = useState('Mei');
   const [tahunFilter, setTahunFilter] = useState('2026');
   const [isDownloading, setIsDownloading] = useState(false);
@@ -17,13 +18,10 @@ function EksporData() {
     e.preventDefault();
     setIsDownloading(true);
     try {
-      const result = await exportReport({ bulan: bulanFilter, tahun: tahunFilter });
-      if (result && result.success) {
-        addToast(result.message || `Berkas rekap ${bulanFilter} ${tahunFilter} berhasil diunduh.`, 'success');
-      } else {
-        addToast(result?.message || 'Gagal mengunduh berkas. Coba lagi.', 'error');
-      }
-    } catch (_) {
+      downloadExcelRekap(riwayat, bulanFilter, tahunFilter);
+      addToast(`Laporan_Keuangan_Plaza_${bulanFilter}_${tahunFilter}.xlsx berhasil diunduh.`, 'success');
+    } catch (error) {
+      console.error(error);
       addToast('Gagal mengunduh berkas. Coba lagi.', 'error');
     } finally {
       setIsDownloading(false);

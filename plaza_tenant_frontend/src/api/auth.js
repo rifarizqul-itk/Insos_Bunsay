@@ -35,6 +35,24 @@ export const RealAuthAdapter = {
       } catch (_) {}
     }
     return { isLoggedIn: false, role: 'tenant', user: null };
+  },
+
+  async updateProfile({ username }) {
+    try {
+      const data = await httpClient.put('/profile', { username });
+      return { success: true, message: data.message || 'Profil berhasil diperbarui.', user: data.user };
+    } catch (err) {
+      return { success: false, message: err.message || 'Gagal memperbarui profil.' };
+    }
+  },
+
+  async changePassword({ kataSandiLama, kataSandiBaru }) {
+    try {
+      const data = await httpClient.put('/change-password', { kataSandiLama, kataSandiBaru });
+      return { success: true, message: data.message || 'Kata sandi berhasil diperbarui.' };
+    } catch (err) {
+      return { success: false, message: err.message || 'Gagal mengubah kata sandi.' };
+    }
   }
 };
 

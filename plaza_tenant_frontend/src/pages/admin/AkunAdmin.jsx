@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
+import { authPort } from '../../api/auth';
 import FormField from '../../components/ui/FormField';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -11,7 +12,7 @@ function AkunAdmin() {
   const { addToast } = useUI();
 
   const [formData, setFormData] = useState({
-    username: user?.username || 'admin',
+    username: user?.Username || user?.username || 'admin',
     nama: user?.name || 'Pengelola Plaza (Admin Utama)',
     email: user?.email || 'info.plazabunsay@gmail.com',
     telepon: user?.telepon || '0811-5901-119',
@@ -23,22 +24,12 @@ function AkunAdmin() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
 
-  const profileTimerRef = React.useRef(null);
-  const pwdTimerRef = React.useRef(null);
-
-  React.useEffect(() => {
-    return () => {
-      if (profileTimerRef.current) clearTimeout(profileTimerRef.current);
-      if (pwdTimerRef.current) clearTimeout(pwdTimerRef.current);
-    };
-  }, []);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSimpanProfil = (e) => {
+  const handleSimpanProfil = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.nama || !formData.email) {
       addToast('Username, Nama Pengelola, dan Email wajib diisi.', 'error');
@@ -51,20 +42,34 @@ function AkunAdmin() {
     }
 
     setIsLoadingProfile(true);
-    profileTimerRef.current = setTimeout(() => {
-      updateUser({
-        username: formData.username.trim(),
-        name: formData.nama.trim(),
-        email: formData.email.trim(),
-        telepon: formData.telepon.trim()
-      });
+    try {
+      const result = await authPort.updateProfile({ username: formData.username.trim() });
+      if (result.success) {
+        updateUser({
+          Username: result.user?.Username || formData.username.trim(),
+          username: result.user?.Username || formData.username.trim(),
+          name: formData.nama.trim(),
+          email: formData.email.trim(),
+          telepon: formData.telepon.trim()
+        });
+        addToast(result.message || 'Profil Pengelola Plaza berhasil diperbarui.', 'success');
+      } else {
+        addToast(result.message || 'Gagal memperbarui profil.', 'error');
+      }
+    } catch (_) {
+      addToast('Terjadi kesalahan saat menghubungkan ke server.', 'error');
+    } finally {
       setIsLoadingProfile(false);
-      addToast('Profil Pengelola Plaza berhasil diperbarui.', 'success');
-    }, 400);
+    }
   };
 
-  const handleUbahSandi = (e) => {
+  const handleUbahSandi = async (e) => {
     e.preventDefault();
+    if (!formData.kataSandiLama) {
+      addToast('Kata sandi saat ini wajib diisi.', 'error');
+      return;
+    }
+
     if (!formData.kataSandiBaru || formData.kataSandiBaru.length < 6) {
       addToast('Kata sandi baru minimal 6 karakter.', 'error');
       return;
@@ -76,16 +81,28 @@ function AkunAdmin() {
     }
 
     setIsLoadingPassword(true);
-    pwdTimerRef.current = setTimeout(() => {
+    try {
+      const result = await authPort.changePassword({
+        kataSandiLama: formData.kataSandiLama,
+        kataSandiBaru: formData.kataSandiBaru
+      });
+
+      if (result.success) {
+        setFormData(prev => ({
+          ...prev,
+          kataSandiLama: '',
+          kataSandiBaru: '',
+          konfirmasiKataSandi: ''
+        }));
+        addToast(result.message || 'Kata sandi pengelola berhasil diperbarui!', 'success');
+      } else {
+        addToast(result.message || 'Gagal mengubah kata sandi.', 'error');
+      }
+    } catch (_) {
+      addToast('Terjadi kesalahan saat menghubungkan ke server.', 'error');
+    } finally {
       setIsLoadingPassword(false);
-      setFormData(prev => ({
-        ...prev,
-        kataSandiLama: '',
-        kataSandiBaru: '',
-        konfirmasiKataSandi: ''
-      }));
-      addToast('Kata sandi pengelola berhasil diperbarui!', 'success');
-    }, 400);
+    }
   };
 
   return (
