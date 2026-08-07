@@ -10,7 +10,7 @@ class PemilikSeeder extends Seeder
     public function run(): void
     {
         DB::table('pemilik')->insertOrIgnore([
-            ['Id_Pemilik' => 1, 'Id_User' => 1, 'Nama' => 'Ahmad Rizki', 'No_Telepon' => '081234567801', 'No_KTP' => '6471010101010001', 'Alamat' => 'Jl. Adil Makmur No.01'],
+            ['Id_Pemilik' => 1, 'Id_User' => 1, 'Nama' => 'AHMAD SARONI ', 'No_Telepon' => '081234567801', 'No_KTP' => '6471010101010001', 'Alamat' => 'Jl. Adil Makmur No.01'],
             ['Id_Pemilik' => 2, 'Id_User' => 2, 'Nama' => 'Budi Santoso', 'No_Telepon' => '081234567802', 'No_KTP' => '6471010101010002', 'Alamat' => 'Jl. Adil Makmur No.02'],
             ['Id_Pemilik' => 3, 'Id_User' => 3, 'Nama' => 'Citra Lestari', 'No_Telepon' => '081234567803', 'No_KTP' => '6471010101010003', 'Alamat' => 'Jl. Adil Makmur No.03'],
             ['Id_Pemilik' => 4, 'Id_User' => 4, 'Nama' => 'Dedi Irawan', 'No_Telepon' => '081234567804', 'No_KTP' => '6471010101010004', 'Alamat' => 'Jl. Adil Makmur No.04'],

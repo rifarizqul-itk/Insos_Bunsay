@@ -20,7 +20,7 @@ export const RealAuthAdapter = {
   async logout() {
     try {
       await httpClient.post('/logout');
-    } catch (_) {}
+    } catch (_) { }
     localStorage.removeItem('auth');
     sessionStorage.removeItem('auth');
     return { success: true, message: 'Logout berhasil.' };
@@ -32,7 +32,7 @@ export const RealAuthAdapter = {
       try {
         const parsed = JSON.parse(stored);
         return { isLoggedIn: true, role: parsed.role || 'tenant', user: parsed.user || null };
-      } catch (_) {}
+      } catch (_) { }
     }
     return { isLoggedIn: false, role: 'tenant', user: null };
   },

@@ -1,12 +1,12 @@
-import { mockDelay } from './client';
+import { mockDelay, httpClient } from './client';
 import { allocatePaymentFIFO } from '../utils/fifoAllocator';
 
 // Initial In-Memory Mock Data (ERD v4 Multi-Metode: Transfer, Tunai, Midtrans)
 let mockAntrean = [
   {
     id: 'TRX-1092',
-    idPemilik: 2,
-    nama: 'Eva Tauresea',
+    idPemilik: 4,
+    nama: 'Dedi Irawan',
     kios: 'B-1004',
     tagihan: 'Sewa Kios Mei 2026',
     nominal: 'Rp 4.000.000',
@@ -15,9 +15,128 @@ let mockAntrean = [
     labelMetode: 'Transfer Bank (BNI)',
     waktu: '19 Mei 2026, 14:20 WITA',
     status: 'Menunggu Verifikasi',
-    bukti: 'bukti_eva_mei.jpg',
+    bukti: 'bukti_dedi_mei.jpg',
     alokasi: [
-      { idTagihan: 102, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Lunas' }
+      { idTagihan: 102, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1093',
+    idPemilik: 2,
+    nama: 'Budi Santoso',
+    kios: 'B-1002',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (Mandiri)',
+    waktu: '18 Mei 2026, 11:30 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_budi_mei.jpg',
+    alokasi: [
+      { idTagihan: 103, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1094',
+    idPemilik: 3,
+    nama: 'Citra Lestari',
+    kios: 'B-1003',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (BCA)',
+    waktu: '17 Mei 2026, 10:15 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_citra_mei.jpg',
+    alokasi: [
+      { idTagihan: 104, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1095',
+    idPemilik: 5,
+    nama: 'Eka Putri',
+    kios: 'B-1005',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 3.500.000',
+    nominalAngka: 3500000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (BRI)',
+    waktu: '16 Mei 2026, 15:45 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_eka_mei.jpg',
+    alokasi: [
+      { idTagihan: 105, periode: '2026-05', nominalTeralokasi: 3500000, totalTagihan: 3500000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1096',
+    idPemilik: 6,
+    nama: 'Fajar Hadi',
+    kios: 'B-1006',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (BNI)',
+    waktu: '15 Mei 2026, 09:20 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_fajar_mei.jpg',
+    alokasi: [
+      { idTagihan: 106, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1097',
+    idPemilik: 7,
+    nama: 'Gita Sari',
+    kios: 'B-1007',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Tunai',
+    labelMetode: 'Tunai (Loket)',
+    waktu: '14 Mei 2026, 13:10 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_gita.jpg',
+    alokasi: [
+      { idTagihan: 107, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1098',
+    idPemilik: 8,
+    nama: 'Hendra Wijaya',
+    kios: 'B-1008',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (Mandiri)',
+    waktu: '13 Mei 2026, 16:00 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_hendra_mei.jpg',
+    alokasi: [
+      { idTagihan: 108, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
+    ]
+  },
+  {
+    id: 'TRX-1099',
+    idPemilik: 9,
+    nama: 'Indah Permata',
+    kios: 'B-1009',
+    tagihan: 'Sewa Kios Mei 2026',
+    nominal: 'Rp 4.000.000',
+    nominalAngka: 4000000,
+    metode: 'Transfer',
+    labelMetode: 'Transfer Bank (BCA)',
+    waktu: '12 Mei 2026, 10:45 WITA',
+    status: 'Menunggu Verifikasi',
+    bukti: 'bukti_indah_mei.jpg',
+    alokasi: [
+      { idTagihan: 109, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Belum Bayar' }
     ]
   }
 ];
@@ -26,7 +145,7 @@ let mockRiwayat = [
   {
     id: 'TRX-1090',
     idPemilik: 1,
-    nama: 'Hj. Yuliana',
+    nama: 'AHMAD SARONI',
     kios: 'B-1001, B-1002',
     tagihan: 'Pelunasan Masa Sewa & Akumulasi Tunggakan',
     nominal: 'Rp 15.000.000',
@@ -234,10 +353,10 @@ export const MockTransactionAdapter = {
 
       const ownerId = Number(tenantId) || 1;
       const ownerMap = {
-        1: { nama: 'Hj. Yuliana', kios: 'B-1001, B-1002' },
-        2: { nama: 'Eva Tauresea', kios: 'B-1004' },
-        3: { nama: 'H. Ahmad', kios: 'B-1013' },
-        4: { nama: 'Toko Kalimantan', kios: 'A-1002' }
+        1: { nama: 'AHMAD SARONI', kios: 'B-1001' },
+        2: { nama: 'Budi Santoso', kios: 'B-1002' },
+        3: { nama: 'Citra Lestari', kios: 'B-1003' },
+        4: { nama: 'Dedi Irawan', kios: 'A-1002' }
       };
       const tenantInfo = ownerMap[ownerId] || { nama: typeof tenantId === 'string' ? tenantId : 'Hj. Yuliana', kios: 'B-1001' };
 
@@ -340,7 +459,176 @@ export const MockTransactionAdapter = {
   }
 };
 
-export const transactionPort = MockTransactionAdapter;
+/**
+ * Real API Adapter — terhubung langsung ke REST API Laravel Backend (/api/pembayaran)
+ */
+export const RealTransactionAdapter = {
+  async query(params) {
+    const { scope, tenantId, status } = params || {};
+    try {
+      const rawData = await httpClient.get('/pembayaran');
+
+      if (!Array.isArray(rawData)) {
+        return MockTransactionAdapter.query(params);
+      }
+
+      const formatted = rawData.map(item => {
+        if (!item) return null;
+        const statusVerifikasi = item.Verifikasi_Pembayaran || 'Menunggu';
+        const isApproved = statusVerifikasi === 'Diterima';
+        const statusDisplay = statusVerifikasi === 'Menunggu'
+          ? 'Menunggu Verifikasi'
+          : (isApproved ? 'Lunas' : 'Ditolak');
+
+        const namaTenant = item.tagihan?.sewa?.pemilik?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || item.nama || 'Tenant Kebun Sayur';
+        const kodeKios = item.tagihan?.sewa?.kios?.No_Kios || item.tagihan?.sewa?.kios?.Kode_Kios || item.tagihan?.sewa?.kios?.Nomor_Kios || item.kios || '-';
+        const totalNominal = Number(item.Total_Bayar ?? item.nominalAngka ?? 0);
+
+        const periodeTagihan = item.tagihan?.Periode || item.tagihan?.Periode_Tagihan;
+        const labelTagihan = typeof item.tagihan === 'string'
+          ? item.tagihan
+          : (periodeTagihan ? `Sewa Kios Periode ${periodeTagihan}` : 'Pelunasan Masa Sewa Kios');
+
+        return {
+          id: item.Id_Pembayaran || item.id || `TRX-${Math.random()}`,
+          idPemilik: item.tagihan?.sewa?.pemilik?.Id_Pemilik || item.idPemilik,
+          nama: namaTenant,
+          kios: kodeKios,
+          tagihan: labelTagihan,
+          nominal: totalNominal > 0 ? `Rp ${totalNominal.toLocaleString('id-ID')}` : (item.nominal || 'Rp 0'),
+          nominalAngka: totalNominal,
+          metode: item.Metode_Bayar || item.metode || 'Transfer',
+          labelMetode: (item.Metode_Bayar || item.metode) === 'Tunai'
+            ? 'Tunai (Loket)'
+            : ((item.Metode_Bayar || item.metode) === 'Midtrans'
+                ? 'Midtrans Gateway'
+                : 'Transfer Bank'),
+          waktu: item.Tanggal_Bayar || item.waktu || '-',
+          status: statusDisplay,
+          bukti: item.Bukti_Pembayaran || item.bukti || null,
+          alokasi: item.Id_Tagihan ? [
+            {
+              idTagihan: item.Id_Tagihan,
+              periode: periodeTagihan || '-',
+              nominalTeralokasi: totalNominal,
+              totalTagihan: Number(item.tagihan?.Total_Tagihan || item.tagihan?.Nominal_Tagihan || totalNominal),
+              statusAkhir: isApproved ? 'Lunas' : (statusVerifikasi === 'Ditolak' ? 'Belum Bayar' : 'Proses Verifikasi')
+            }
+          ] : (item.alokasi || [])
+        };
+      }).filter(Boolean);
+
+      let result = formatted;
+      if (scope === 'QUEUE') {
+        result = result.filter(item => item.status === 'Menunggu Verifikasi');
+      } else if (scope === 'HISTORY') {
+        result = result.filter(item => item.status !== 'Menunggu Verifikasi');
+      }
+
+      if (tenantId) {
+        result = result.filter(item => item.idPemilik === Number(tenantId) || item.nama === tenantId);
+      }
+
+      return result;
+    } catch (err) {
+      return MockTransactionAdapter.query(params);
+    }
+  },
+
+  async previewFIFO(idPemilik, nominal) {
+    return MockTransactionAdapter.previewFIFO(idPemilik, nominal);
+  },
+
+  async execute(command) {
+    const { type, payload } = command || {};
+
+    if (type === 'VERIFY_TRANSACTION') {
+      const { id, status } = payload || {};
+      const statusBackend = (status === 'Lunas' || status === 'Diterima') ? 'Diterima' : 'Ditolak';
+      const numericId = String(id || '').replace(/^[^\d]*/, '') || id;
+
+      try {
+        const response = await httpClient.put(`/pembayaran/${numericId}/konfirmasi`, {
+          status: statusBackend
+        });
+
+        return {
+          success: true,
+          id,
+          message: response.message || `Transaksi ${id} berhasil di-konfirmasi.`
+        };
+      } catch (err) {
+        return {
+          success: false,
+          message: err.message || 'Gagal memproses verifikasi di server.'
+        };
+      }
+    }
+
+    if (type === 'RECORD_CASH') {
+      const { tenantId, idTagihan, nominal, bukti } = payload || {};
+      try {
+        const response = await httpClient.post('/pembayaran', {
+          Id_Tagihan: idTagihan || tenantId || 1,
+          Tanggal_Bayar: new Date().toISOString().split('T')[0],
+          Total_Bayar: Number(nominal) || 0,
+          Metode_Bayar: 'Tunai',
+          Bukti_Pembayaran: typeof bukti === 'string' ? bukti : (bukti?.name || 'setoran_tunai_loket.jpg'),
+          Verifikasi_Pembayaran: 'Diterima'
+        });
+
+        return {
+          success: true,
+          id: response.Id_Pembayaran || response.id,
+          message: `Setoran tunai Rp ${Number(nominal).toLocaleString('id-ID')} berhasil dicatat di server.`
+        };
+      } catch (err) {
+        return {
+          success: false,
+          message: err.message || 'Gagal mencatat setoran tunai ke server.'
+        };
+      }
+    }
+
+    if (type === 'SUBMIT_PAYMENT') {
+      const { tenantId, idTagihan, nominal, metode, bukti, berkas } = payload || {};
+      const fileBukti = (typeof bukti === 'string' && bukti.length > 5)
+        ? bukti
+        : (typeof berkas === 'string' && berkas.length > 5
+            ? berkas
+            : (bukti?.name || berkas?.name || 'bukti_transfer.jpg'));
+      const statusVerifikasi = metode === 'Midtrans' ? 'Diterima' : 'Menunggu';
+
+      try {
+        const response = await httpClient.post('/pembayaran', {
+          Id_Tagihan: idTagihan || tenantId || 1,
+          Tanggal_Bayar: new Date().toISOString().split('T')[0],
+          Total_Bayar: Number(nominal) || 0,
+          Metode_Bayar: metode || 'Transfer',
+          Bukti_Pembayaran: fileBukti,
+          Verifikasi_Pembayaran: statusVerifikasi
+        });
+
+        return {
+          success: true,
+          id: response.Id_Pembayaran || response.id,
+          message: metode === 'Midtrans'
+            ? 'Pembayaran Midtrans berhasil dicatat!'
+            : 'Bukti pembayaran terkirim! Menunggu verifikasi admin.'
+        };
+      } catch (err) {
+        return {
+          success: false,
+          message: err.message || 'Gagal mengirim pembayaran ke server.'
+        };
+      }
+    }
+
+    return MockTransactionAdapter.execute(command);
+  }
+};
+
+export const transactionPort = RealTransactionAdapter;
 
 export const verifyTransaction = async (id, status, alasan = null) => {
   return transactionPort.execute({

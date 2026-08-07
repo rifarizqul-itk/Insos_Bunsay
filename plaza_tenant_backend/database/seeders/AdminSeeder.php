@@ -12,7 +12,7 @@ class AdminSeeder extends Seeder
     {
         DB::table('user')->insertOrIgnore([
             // --- AKUN PENGELOLA (ADMIN) ---
-            ['Id_user' => 99, 'Id_roles' => 1, 'Username' => 'admin', 'Password' => Hash::make('123456')],
+            ['Id_user' => 99, 'Id_roles' => 1, 'Username' => 'admin', 'Password' => Hash::make('admin')],
         ]);
     }
 }

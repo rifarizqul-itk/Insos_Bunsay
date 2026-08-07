@@ -28,8 +28,8 @@ class KiosSeeder extends Seeder
             ['Id_Kios' => 16, 'No_Kios' => 'B-1016', 'Lantai' => 1, 'Ukuran' => '4x4 m', 'Status' => 'Terisi'],
             ['Id_Kios' => 17, 'No_Kios' => 'B-1017', 'Lantai' => 1, 'Ukuran' => '3x3 m', 'Status' => 'Terisi'],
             ['Id_Kios' => 18, 'No_Kios' => 'B-1018', 'Lantai' => 1, 'Ukuran' => '3x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 19, 'No_Kios' => 'B-1019', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Kosong'],
-            ['Id_Kios' => 20, 'No_Kios' => 'B-1020', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Kosong'],
+            ['Id_Kios' => 19, 'No_Kios' => 'B-1019', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
+            ['Id_Kios' => 20, 'No_Kios' => 'B-1020', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
         ]);
     }
 }

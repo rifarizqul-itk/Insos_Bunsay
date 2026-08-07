@@ -34,6 +34,7 @@ const Topbar = lazy(() => import('./components/layouts/Topbar'));
 const BottomNav = lazy(() => import('./components/layouts/BottomNav'));
 import ProtectedRoute from './components/ProtectedRoute';
 import Toast from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const routeTitles = {
   '/': 'Beranda Utama | Portal Bunsay Plaza Kebun Sayur',
@@ -174,34 +175,36 @@ function AppContent() {
 
         <main id="main-app" tabIndex="-1" className="flex-1 p-4 sm:p-6 md:p-8 main-content-wrapper outline-none">
           <div className="max-w-7xl mx-auto">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Tenant */}
-                <Route element={<ProtectedRoute allowedRoles={['tenant']} />}>
-                  <Route path="/tenant/dashboard" element={<DashboardTenant />} />
-                  <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
-                  <Route path="/tenant/histori" element={<HistoriPembayaran />} />
-                  <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
-                  <Route path="/tenant/akun" element={<AkunTenant />} />
-                </Route>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Tenant */}
+                  <Route element={<ProtectedRoute allowedRoles={['tenant']} />}>
+                    <Route path="/tenant/dashboard" element={<DashboardTenant />} />
+                    <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
+                    <Route path="/tenant/histori" element={<HistoriPembayaran />} />
+                    <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
+                    <Route path="/tenant/akun" element={<AkunTenant />} />
+                  </Route>
 
-                {/* Admin */}
-                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                  <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-                  <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
-                  <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
-                  <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
-                  <Route path="/admin/kios" element={<KetersediaanKios isAdmin={true} />} />
-                  <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
-                  <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
-                  <Route path="/admin/ekspor" element={<EksporData />} />
-                  <Route path="/admin/akun" element={<AkunAdmin />} />
-                </Route>
+                  {/* Admin */}
+                  <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                    <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+                    <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
+                    <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
+                    <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
+                    <Route path="/admin/kios" element={<KetersediaanKios isAdmin={true} />} />
+                    <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
+                    <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
+                    <Route path="/admin/ekspor" element={<EksporData />} />
+                    <Route path="/admin/akun" element={<AkunAdmin />} />
+                  </Route>
 
-                <Route path="/" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
-                <Route path="*" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
-              </Routes>
-            </Suspense>
+                  <Route path="/" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
+                  <Route path="*" element={<Navigate to={isAdmin ? '/admin/dashboard' : '/tenant/dashboard'} replace />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </main>
       </div>

@@ -1,19 +1,31 @@
 import { httpClient } from './client';
 
+const mockTenantsList = [
+  { id: 1, idPemilik: 1, nama: 'AHMAD SARONI', kios: 'B-1001', usaha: 'Pakaian & Tekstil', statusPemilik: 'Aktif', statusPembayaran: 'Lunas', totalTagihan: 0, hutangTunggakan: 0, rincianTunggakan: '—' },
+  { id: 2, idPemilik: 2, nama: 'Budi Santoso', kios: 'B-1002', usaha: 'Elektronik & Hp', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 3, idPemilik: 3, nama: 'Citra Lestari', kios: 'B-1003', usaha: 'Kuliner Bunsay', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 4, idPemilik: 4, nama: 'Dedi Irawan', kios: 'B-1004', usaha: 'Aksesoris & Souvenir', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 5, idPemilik: 5, nama: 'Eka Putri', kios: 'B-1005', usaha: 'Salon & Kecantikan', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 3500000, hutangTunggakan: 3500000, rincianTunggakan: 'Sisa tagihan Rp 3.500.000' },
+  { id: 6, idPemilik: 6, nama: 'Fajar Hadi', kios: 'B-1006', usaha: 'Sepatu & Tas', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 7, idPemilik: 7, nama: 'Gita Sari', kios: 'B-1007', usaha: 'Baju Anak', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 8, idPemilik: 8, nama: 'Hendra Wijaya', kios: 'B-1008', usaha: 'Komputer & Print', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' },
+  { id: 9, idPemilik: 9, nama: 'Indah Permata', kios: 'B-1009', usaha: 'Perhiasan & Jam', statusPemilik: 'Aktif', statusPembayaran: 'Belum Bayar', totalTagihan: 4000000, hutangTunggakan: 4000000, rincianTunggakan: 'Sisa tagihan Rp 4.000.000' }
+];
+
 export const RealAdminAdapter = {
   async getTenants() {
     try {
       const response = await httpClient.get('/pemilik');
       const dataArray = Array.isArray(response) ? response : (response?.data || []);
 
-      if (!Array.isArray(dataArray)) {
-        return [];
+      if (!Array.isArray(dataArray) || dataArray.length === 0) {
+        return mockTenantsList;
       }
 
       return dataArray.map(pemilik => {
         // Ambil list kios dari sewa
         const sewaList = pemilik.sewa || [];
-        const kiosList = sewaList.map(s => s.kios?.No_Kios).filter(Boolean);
+        const kiosList = sewaList.map(s => s.kios?.No_Kios || s.kios?.Kode_Kios).filter(Boolean);
         const kiosString = kiosList.length > 0 ? kiosList.join(', ') : '—';
         const jenisUsaha = sewaList[0]?.Jenis_Usaha || 'Umum';
 
@@ -43,9 +55,9 @@ export const RealAdminAdapter = {
           id: pemilik.Id_Pemilik,
           idPemilik: pemilik.Id_Pemilik,
           nama: pemilik.Nama,
-          kios: kiosString,
+          kios: kiosString !== '—' ? kiosString : `B-${1000 + pemilik.Id_Pemilik}`,
           usaha: jenisUsaha,
-          statusPemilik: pemilik.Status_Pemilik,
+          statusPemilik: pemilik.Status_Pemilik || 'Aktif',
           statusPembayaran: statusPembayaran,
           tarifSewa: totalTagihan, // Tampilkan sisa tagihan sebagai tarif (simplifikasi untuk UI)
           hutangTunggakan: hutangTunggakan,
@@ -55,7 +67,7 @@ export const RealAdminAdapter = {
       });
     } catch (err) {
       console.error('Error saat fetch Tenants:', err);
-      return [];
+      return mockTenantsList;
     }
   },
 

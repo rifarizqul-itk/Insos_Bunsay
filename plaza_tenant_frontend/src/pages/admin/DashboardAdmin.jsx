@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useTransactionDomain } from '../../context/TransactionContext';
 import { useUI } from '../../context/UIContext';
-import { useAdminTenants } from '../../hooks/useAdmin';
+import { useAdminTenants, useAdminKios } from '../../hooks/useAdmin';
 // Lazy-loaded: only rendered when admin clicks "Detail" on a tenant row.
 const DetailKeuanganTenant = lazy(() => import('./DetailKeuanganTenant'));
 import Drawer from '../../components/ui/Drawer';
@@ -19,6 +19,7 @@ function DashboardAdmin() {
   const { antrean, verifyTransaction } = useTransactionDomain();
   const { addToast } = useUI();
   const { data: tenants, loading, error, refetch } = useAdminTenants();
+  const { data: kiosList } = useAdminKios();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -38,7 +39,7 @@ function DashboardAdmin() {
   const filteredTenants = (tenants || []).filter(tenant => {
     if (tenant.statusPemilik === 'Nonaktif') return false;
     const matchesSearch = (tenant.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (tenant.kios || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (tenant.kios || '').toLowerCase().includes(searchQuery.toLowerCase());
     if (statusFilter === 'Semua') return matchesSearch;
     return matchesSearch && tenant.statusPembayaran === statusFilter;
   });
@@ -82,7 +83,7 @@ function DashboardAdmin() {
   if (selectedTenant) {
     return (
       <Suspense fallback={<div className="page-fade-in flex flex-col gap-6"><SkeletonCard className="h-40 w-full" /></div>}>
-        <DetailKeuanganTenant tenant={selectedTenant} onBack={() => setSelectedTenant(null)} onUpdateTenant={() => {}} />
+        <DetailKeuanganTenant tenant={selectedTenant} onBack={() => setSelectedTenant(null)} onUpdateTenant={() => { }} />
       </Suspense>
     );
   }
@@ -115,7 +116,10 @@ function DashboardAdmin() {
     );
   }
 
-  const totalTenant = (tenants || []).filter(t => t.statusPemilik !== 'Nonaktif').length;
+  const totalKiosTerisi = (Array.isArray(kiosList) && kiosList.length > 0)
+    ? kiosList.filter(k => k.statusKios === 'Terisi' || (k.tenant && k.tenant !== '—')).length
+    : (tenants || []).filter(t => t.statusPemilik !== 'Nonaktif' && t.kios && t.kios !== '—').length;
+
   const belumBayarCount = (tenants || []).filter(t => t.statusPembayaran === 'Belum Bayar' && t.statusPemilik !== 'Nonaktif').length;
 
   return (
@@ -132,7 +136,7 @@ function DashboardAdmin() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard
           label="Total Kios Terisi"
-          value={totalTenant}
+          value={totalKiosTerisi}
           color="red"
           icon={<Icon icon="heroicons:home-20-solid" width="24" height="24" />}
         />
@@ -155,7 +159,7 @@ function DashboardAdmin() {
           <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">
             Daftar Administrasi Kios
           </h3>
-          
+
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <input
               type="text"
@@ -210,18 +214,18 @@ function DashboardAdmin() {
                     Rp {(tenant.hutangTunggakan ?? tenant.tunggakan ?? 0).toLocaleString('id-ID')}
                   </td>
                   <td data-label="Status Bulan Ini" className="p-3">
-                    <Badge 
-                      status={tenant.statusPembayaran} 
+                    <Badge
+                      status={tenant.statusPembayaran}
                       clickable={isVerifikasiPending}
                       onClick={isVerifikasiPending ? () => handleOpenVerifikasi(tenant) : undefined}
                       aria-label={isVerifikasiPending ? `Verifikasi bukti transfer ${tenant.nama} (${tenant.kios})` : `Status pembayaran: ${tenant.statusPembayaran}`}
                     />
                   </td>
                   <td data-label="Aksi" className="p-3 text-center">
-                    <Button 
+                    <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleDetailClick(tenant)} 
+                      onClick={() => handleDetailClick(tenant)}
                       aria-label={`Lihat detail keuangan ${tenant.nama} (${tenant.kios})`}
                       className="min-h-[44px] sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
                     >
@@ -245,17 +249,17 @@ function DashboardAdmin() {
         footer={
           verifikasiTarget && (
             <>
-              <Button 
+              <Button
                 variant="danger"
                 size="md"
-                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')} 
+                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'tolak')}
               >
                 Tolak Bukti
               </Button>
-              <Button 
+              <Button
                 variant="primary"
                 size="md"
-                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')} 
+                onClick={() => handleProsesVerifikasi(verifikasiTarget.antrean.id, 'konfirmasi')}
               >
                 Konfirmasi Lunas
               </Button>

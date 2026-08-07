@@ -122,11 +122,12 @@ function BayarSekarang() {
       return;
     }
 
-    if (previewBukti && previewBukti.startsWith('blob:')) {
-      URL.revokeObjectURL(previewBukti);
-    }
     setBuktiTransfer(file);
-    setPreviewBukti(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewBukti(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleFormSubmit = (e) => {
@@ -149,6 +150,8 @@ function BayarSekarang() {
 
   const handleProsesPembayaran = async () => {
     const nominalAngka = parseInt(nominal, 10);
+    const firstUnpaidBill = unpaidBills.find(b => b.statusTagihan !== 'Lunas');
+    const targetIdTagihan = firstUnpaidBill?.idTagihan || Number(user?.idPemilik) || 1;
 
     if (metode === 'midtrans_gateway') {
       setIsLoading(true);
@@ -166,9 +169,11 @@ function BayarSekarang() {
             onSuccess: async function(result) {
               await submitTenantPayment({
                 tenantId: user?.idPemilik || 1,
+                idTagihan: targetIdTagihan,
                 jenisTagihan,
                 nominal: nominalAngka,
-                metode: 'Midtrans'
+                metode: 'Midtrans',
+                bukti: 'midtrans_success.jpg'
               });
               setIsLoading(false);
               addToast('Pembayaran Midtrans berhasil! Status Anda langsung Lunas.', 'success');
@@ -177,9 +182,11 @@ function BayarSekarang() {
             onPending: async function(result) {
               await submitTenantPayment({
                 tenantId: user?.idPemilik || 1,
+                idTagihan: targetIdTagihan,
                 jenisTagihan,
                 nominal: nominalAngka,
-                metode: 'Midtrans'
+                metode: 'Midtrans',
+                bukti: 'midtrans_pending.jpg'
               });
               setIsLoading(false);
               addToast('Pembayaran Midtrans diproses (Menunggu Pembayaran).', 'info');
@@ -196,9 +203,11 @@ function BayarSekarang() {
         } else {
           await submitTenantPayment({
             tenantId: user?.idPemilik || 1,
+            idTagihan: targetIdTagihan,
             jenisTagihan,
             nominal: nominalAngka,
-            metode: 'Midtrans'
+            metode: 'Midtrans',
+            bukti: 'midtrans_success.jpg'
           });
           setIsLoading(false);
           addToast('Pembayaran Midtrans instan berhasil! Status Anda langsung Lunas.', 'success');
@@ -216,19 +225,26 @@ function BayarSekarang() {
     try {
       const result = await submitTenantPayment({
         tenantId: user?.idPemilik || 1,
+        idTagihan: targetIdTagihan,
         jenisTagihan,
         nominal: nominalAngka,
         metode: 'Transfer',
-        berkas: buktiTransfer?.name || 'bukti_transfer.jpg'
+        bukti: previewBukti || (buktiTransfer ? buktiTransfer.name : 'bukti_transfer.jpg'),
+        berkas: previewBukti || (buktiTransfer ? buktiTransfer.name : 'bukti_transfer.jpg')
       });
       setIsLoading(false);
       if (result && result.success) {
+        if (previewBukti) {
+          try {
+            localStorage.setItem('latest_uploaded_bukti', previewBukti);
+            if (result.id) {
+              localStorage.setItem(`bukti_file_${result.id}`, previewBukti);
+            }
+          } catch (_) {}
+        }
         addToast(result.message || 'Bukti terkirim! Menunggu verifikasi admin.', 'success');
         setBayar('', 'Pelunasan Masa Sewa & Tunggakan');
         setBuktiTransfer(null);
-        if (previewBukti && previewBukti.startsWith('blob:')) {
-          URL.revokeObjectURL(previewBukti);
-        }
         setPreviewBukti(null);
         navigate('/tenant/histori');
       } else {

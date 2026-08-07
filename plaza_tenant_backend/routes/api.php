@@ -35,6 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- PATRA: Auth & Dashboard ---
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/change-password', [AuthController::class, 'changePassword']);
     Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
     Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
 

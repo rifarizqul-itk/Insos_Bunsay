@@ -61,4 +61,44 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logout berhasil.']);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'username' => 'required|string|unique:user,Username,' . $user->Id_user . ',Id_user',
+        ]);
+
+        $user->Username = $request->username;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui.',
+            'user'    => [
+                'Id_user'  => $user->Id_user,
+                'Username' => $user->Username,
+                'Id_roles' => $user->Id_roles,
+            ],
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'kataSandiLama' => 'required|string',
+            'kataSandiBaru' => 'required|string|min:6',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->kataSandiLama, $user->Password)) {
+            return response()->json(['message' => 'Kata sandi saat ini tidak sesuai.'], 422);
+        }
+
+        $user->Password = Hash::make($request->kataSandiBaru);
+        $user->save();
+
+        return response()->json(['message' => 'Kata sandi berhasil diperbarui.']);
+    }
 }

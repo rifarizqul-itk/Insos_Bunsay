@@ -8,10 +8,22 @@ import Card from '../../components/ui/Card';
 import FIFOPreview from '../../components/ui/FIFOPreview';
 import { allocatePaymentFIFO } from '../../utils/fifoAllocator';
 import { getTunggakan } from '../../api/tenant';
+import { useAdminTenants } from '../../hooks/useAdmin';
 
 function SetoranTunai() {
   const { addToast } = useUI();
   const { recordCashPayment, error: domainError } = useTransactionDomain();
+  const { data: realTenants = [] } = useAdminTenants();
+
+  const activeTenants = Array.isArray(realTenants) && realTenants.length > 0
+    ? realTenants
+    : [
+        { id: 1, nama: 'AHMAD SARONI', kios: 'B-1001' },
+        { id: 2, nama: 'Budi Santoso', kios: 'B-1002' },
+        { id: 3, nama: 'Citra Lestari', kios: 'B-1003' },
+        { id: 4, nama: 'Dedi Irawan', kios: 'B-1004' }
+      ];
+
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [jenisTagihan, setJenisTagihan] = useState('Setoran Tunai Loket Pengelola');
   const [nominalTunai, setNominalTunai] = useState('');
@@ -20,13 +32,6 @@ function SetoranTunai() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fifoAllocations, setFifoAllocations] = useState([]);
   const [unpaidBills, setUnpaidBills] = useState([]);
-
-  const tenantData = [
-    { id: 1, nama: 'Hj. Yuliana', kios: 'B-1001, B-1002' },
-    { id: 2, nama: 'Eva Tauresea', kios: 'B-1004' },
-    { id: 3, nama: 'H. Ahmad', kios: 'B-1013' },
-    { id: 4, nama: 'Toko Kalimantan', kios: 'A-1002' }
-  ];
 
   useEffect(() => {
     if (selectedTenantId) {
@@ -97,13 +102,16 @@ function SetoranTunai() {
 
   const handleSimpanTunaiFinal = async () => {
     setIsSubmitting(true);
-    const tenant = tenantData.find(t => String(t.id) === selectedTenantId);
+    const tenant = activeTenants.find(t => String(t.id || t.idPemilik) === selectedTenantId);
+    const firstUnpaidBill = unpaidBills.find(b => b.statusTagihan !== 'Lunas');
+
     try {
       const result = await recordCashPayment({
         tenantId: Number(selectedTenantId),
+        idTagihan: firstUnpaidBill?.idTagihan || Number(selectedTenantId) || 1,
         jenisTagihan,
         nominal: parseInt(nominalTunai),
-        bukti: buktiTunai.name
+        bukti: buktiTunai ? buktiTunai.name : 'setoran_tunai_loket.jpg'
       });
 
       if (result && result.success) {
@@ -124,6 +132,8 @@ function SetoranTunai() {
       setIsSubmitting(false);
     }
   };
+
+  const selectedTenantObj = activeTenants.find(t => String(t.id || t.idPemilik) === selectedTenantId);
 
   return (
     <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
@@ -150,7 +160,7 @@ function SetoranTunai() {
             </p>
 
             <Card variant="inset" className="p-4 flex flex-col gap-2.5 text-sm">
-              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{tenantData.find(t => String(t.id) === selectedTenantId)?.nama} ({tenantData.find(t => String(t.id) === selectedTenantId)?.kios})</strong></div>
+              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{selectedTenantObj?.nama} ({selectedTenantObj?.kios})</strong></div>
               <div><span className="text-text-3 font-semibold">Nominal Tunai:</span> <strong className="text-text font-bold font-tabular-nums text-base text-red">Rp {parseInt(nominalTunai, 10).toLocaleString('id-ID')}</strong></div>
               {buktiTunai && <div><span className="text-text-3 font-semibold">Bukti:</span> <strong className="text-text font-bold">{buktiTunai.name}</strong></div>}
             </Card>
@@ -195,8 +205,8 @@ function SetoranTunai() {
                 className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
               >
                 <option value="">-- Pilih Tenant Kios --</option>
-                {tenantData.map((t) => (
-                  <option key={t.id} value={String(t.id)}>
+                {activeTenants.map((t) => (
+                  <option key={t.id || t.idPemilik} value={String(t.id || t.idPemilik)}>
                     {t.kios} - {t.nama}
                   </option>
                 ))}
