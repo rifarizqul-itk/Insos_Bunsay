@@ -1,4 +1,4 @@
-# **FRONTEND & BACKEND DEVELOPMENT HANDOVER SPECIFICATION (V6.0 - MONOREPO & RBAC RELEASE)**
+# **FRONTEND & BACKEND DEVELOPMENT HANDOVER SPECIFICATION (V6.0 - MONOREPO & FULL DATABASE RELEASE)**
 
 ## **Website Digitalisasi Pembayaran Sewa Kios**
 ### **Plaza Kebun Sayur Balikpapan**
@@ -71,78 +71,147 @@ Plaza Kebun Sayur Balikpapan adalah pusat perbelanjaan di Balikpapan Barat yang 
 
 ---
 
-## **2. SKEMA DATABASE FINAL (ERD v5)**
+## **2. SKEMA DATABASE LENGKAP (ERD V6 - 11 TABEL SQL)**
+
+Berikut adalah rincian lengkap 11 tabel SQL yang digunakan oleh backend `plaza_tenant_backend`:
 
 ```
-Roles 1─N User 1─1 Pemilik 1─N Dokumen
-                       │
-                       └─N Sewa N─1 Kios
-                            │ (1─1 per bulan)
-                            ▼
-                         Tagihan
-                            │
-                     Alokasi_Pembayaran (N:N, Nominal_Teralokasi)
-                            │
-                         Pembayaran (FIFO)
+Roles (1)───(N) User (1)───(1) Pemilik (1)───(N) Dokumen
+                                  │
+                                  └───(N) Sewa (N)───(1) Kios
+                                            │
+                                            └───(1) Tagihan
+                                                      │
+                                             Alokasi_Pembayaran (N:N)
+                                                      │
+                                            Pembayaran (FIFO)
 
 ActivityLog (Audit Trail Log)
-Notification (Event-Driven Real-time)
+Notification (Real-time Event Notifications)
 ```
 
-### **2.1 Tabel Utama Database SQL (`plaza_tenant_backend`)**
+### **2.1 Rincian Struktur Tabel Database SQL**
 
-#### **1. `user` (RBAC & Auth)**
-| Kolom | Tipe | Key | Keterangan |
+#### **1. `Roles`**
+| Kolom | Tipe Data | Key | Keterangan |
 | :--- | :--- | :--- | :--- |
-| `Id_user` | BIGINT | PK | Auto Increment |
-| `Username` | VARCHAR(50) | UNIQUE | Identifier Login Utama |
-| `Password` | VARCHAR(255) | | Hash (Bcrypt) |
-| `nama_lengkap` | VARCHAR(100) | | Nama lengkap pengelola/tenant |
-| `email` | VARCHAR(100) | UNIQUE | Email pemulihan/informasi |
-| `Id_roles` | INT | FK | `1` = Admin, `2` = Tenant |
+| `Id_Roles` | INT | PK | `1` = Admin, `2` = Tenant |
+| `Nama_Role` | VARCHAR(30) | | `"Admin"` / `"Tenant"` |
+
+#### **2. `User` (Auth & RBAC)**
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `Id_User` | INT | PK | Auto Increment |
+| `Id_Roles` | INT | FK | Relasi ke `Roles.Id_Roles` |
+| `Username` | VARCHAR(50) | UNIQUE | Identifier Login Utama (Tenant & Admin) |
+| `Password` | VARCHAR(255) | | Hash Password (Bcrypt) |
+| `nama_lengkap` | VARCHAR(100) | | Nama Lengkap Pengelola / Tenant |
+| `email` | VARCHAR(100) | UNIQUE | Email Resmi Pemulihan |
 | `sub_role` | VARCHAR(30) | | `superadmin`, `kasir`, `auditor`, `admin_kios`, `custom` |
-| `permissions` | JSON | | Array permission key (misal: `['verifikasi_pembayaran', 'input_setoran']`) |
-| `status_aktif` | BOOLEAN | | Status keaktifan akun (`true` / `false`) |
+| `permissions` | JSON | | Array Permission Keys RBAC |
+| `status_aktif` | BOOLEAN | | Status Keaktifan Akun (`true` / `false`) |
 
-#### **2. `activity_logs` (Audit Trail)**
-| Kolom | Tipe | Key | Keterangan |
+#### **3. `Pemilik`**
+| Kolom | Tipe Data | Key | Keterangan |
 | :--- | :--- | :--- | :--- |
-| `id` | BIGINT | PK | Auto Increment |
-| `id_user` | BIGINT | FK | User ID yang melakukan aksi |
-| `username` | VARCHAR(100) | | Username pelaku aksi |
-| `role` | VARCHAR(50) | | Sub-role pelaku |
-| `modul` | VARCHAR(50) | | Modul target (`Pembayaran`, `User`, `Sewa`, dll) |
-| `aksi` | VARCHAR(50) | | Jenis aksi (`Login`, `Verifikasi Terima`, `Edit Profil`, dll) |
-| `deskripsi` | TEXT | | Deskripsi rinci aktivitas |
-| `ip_address` | VARCHAR(45) | | IP Client |
-| `created_at` | TIMESTAMP | | Waktu kejadian |
+| `Id_Pemilik` | INT | PK | Auto Increment |
+| `Id_User` | INT | FK (1:1) | Relasi ke `User.Id_User` |
+| `Nama` | VARCHAR(50) | | Nama Pemilik Resmi Terdaftar |
+| `No_Telepon` | VARCHAR(255) | | Nomor HP / WhatsApp |
+| `No_KTP` | CHAR(16) | UNIQUE | Nomor KTP Pemilik |
+| `Alamat` | TEXT | | Alamat Domisili Pemilik |
+| `Status_Pemilik` | ENUM | | `"Aktif"` / `"Nonaktif"` |
 
-#### **3. `notifications` (System Notifications)**
-| Kolom | Tipe | Key | Keterangan |
+#### **4. `Kios`**
+| Kolom | Tipe Data | Key | Keterangan |
 | :--- | :--- | :--- | :--- |
-| `id` | BIGINT | PK | Auto Increment |
-| `target_type` | VARCHAR(20) | | `'tenant'` atau `'admin'` |
-| `id_user` | BIGINT | NULLABLE | ID user spesifik (null = broadcast all admin) |
-| `title` | VARCHAR(150) | | Judul notifikasi |
-| `message` | TEXT | | Pesan rinci notifikasi |
-| `type` | VARCHAR(20) | | `'success'`, `'warning'`, `'danger'`, `'info'` |
-| `is_read` | BOOLEAN | | Status dibaca (`false` / `true`) |
-| `link` | VARCHAR(255) | NULLABLE | Tautan navigasi internal |
-| `created_at` | TIMESTAMP | | Waktu kirim |
+| `Id_Kios` | INT | PK | Auto Increment |
+| `No_Kios` | VARCHAR(10) | UNIQUE | Kode Kios (contoh: `B-1001`) |
+| `Lantai` | INT | | Nomor Lantai Kios |
+| `Ukuran` | VARCHAR(20) | | Ukuran Kios (contoh: `6M`) |
+| `Status` | ENUM | | `"Terisi"` / `"Kosong"` |
 
-#### **4. `pembayaran`**
-| Kolom | Tipe | Key | Keterangan |
+#### **5. `Dokumen`**
+| Kolom | Tipe Data | Key | Keterangan |
 | :--- | :--- | :--- | :--- |
-| `Id_Pembayaran` | BIGINT | PK | Auto Increment |
-| `Id_Tagihan` | BIGINT | FK | Target tagihan |
-| `Tanggal_Bayar` | DATE | | Tanggal transaksi |
-| `Total_Bayar` | DECIMAL(12,2) | | Nominal bayar |
+| `Id_Dokumen` | INT | PK | Auto Increment |
+| `Id_Pemilik` | INT | FK | Relasi ke `Pemilik.Id_Pemilik` |
+| `Id_Kios` | INT | FK, NULLABLE | FK Kios (untuk SP, PPJB, Sertifikat) |
+| `Jenis_Dokumen` | ENUM | | `'SP'`, `'PPJB'`, `'Sertifikat'`, `'KTP'` |
+| `Nomor_Dokumen` | VARCHAR(100) | NULLABLE | Nomor Resmi Berkas |
+| `Tanggal` | DATE | NULLABLE | Tanggal Penerbitan Berkas |
+| `Keterangan` | TEXT | NULLABLE | Catatan Bebas Dokumen |
+
+#### **6. `Sewa`**
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `Id_Sewa` | INT | PK | Auto Increment |
+| `Id_Pemilik` | INT | FK | Relasi ke `Pemilik.Id_Pemilik` |
+| `Id_Kios` | INT | FK | Relasi ke `Kios.Id_Kios` |
+| `Jenis_Usaha` | VARCHAR(100) | | Jenis Bidang Usaha Tenant |
+| `Tanggal_Mulai` | DATE | | Awal Siklus Sewa Bulanan |
+| `Tanggal_Selesai` | DATE | | Akhir Siklus Sewa Bulanan |
+| `Keterangan` | TEXT | NULLABLE | Catatan Tambahan Sewa |
+
+#### **7. `Tagihan`**
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `Id_Tagihan` | INT | PK | Auto Increment |
+| `Id_Sewa` | INT | FK (1:1) | Relasi ke `Sewa.Id_Sewa` |
+| `Periode` | CHAR(7) | INDEX | Format `YYYY-MM` (contoh: `2026-05`) |
+| `Jatuh_Tempo` | DATE | | Tanggal Jatuh Tempo (Tgl 12 tiap bulan) |
+| `Tarif_Sewa` | DECIMAL(12,2) | | Tarif Sewa Bulan Berjalan |
+| `Hutang_Tunggakan` | DECIMAL(12,2) | | Akumulasi Tunggakan Siklus Lalu |
+| `Total_Tagihan` | DECIMAL(12,2) | | `Tarif_Sewa` + `Hutang_Tunggakan` |
+| `Status_Tagihan` | ENUM | INDEX | `'Lunas'`, `'Belum Bayar'`, `'Dicicil'`, `'Menunggu Verifikasi'` |
+
+#### **8. `Pembayaran`**
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `Id_Pembayaran` | INT | PK | Auto Increment |
+| `Id_Tagihan` | INT | FK | Relasi ke `Tagihan.Id_Tagihan` |
+| `Tanggal_Bayar` | DATE | | Tanggal Transaksi Pembayaran |
+| `Total_Bayar` | DECIMAL(12,2) | | Nominal Pembayaran (Bebas / Cicilan) |
 | `Metode_Bayar` | ENUM | | `'Transfer'`, `'Tunai'`, `'Midtrans'` |
-| `Bukti_Pembayaran` | VARCHAR(255) | NULLABLE | Path foto resi transfer |
+| `Bukti_Pembayaran` | VARCHAR(255) | NULLABLE | Path Foto Resi Transfer Bank |
 | `Verifikasi_Pembayaran` | ENUM | | `'Menunggu'`, `'Diterima'`, `'Ditolak'` |
-| `catatan_admin` | TEXT | NULLABLE | Alasan penolakan admin |
-| `teks_sanggahan` | TEXT | NULLABLE | Alasan sanggahan tenant |
-| `bukti_sanggahan` | VARCHAR(255) | NULLABLE | Path foto resi perbaikan sanggahan |
+| `catatan_admin` | TEXT | NULLABLE | Alasan Penolakan dari Admin |
+| `teks_sanggahan` | TEXT | NULLABLE | Alasan Sanggahan dari Tenant |
+| `bukti_sanggahan` | VARCHAR(255) | NULLABLE | Path Foto Resi Sanggahan Perbaikan |
+
+#### **9. `Alokasi_Pembayaran`** *(Junction Table FIFO)*
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `Id_Alokasi` | INT | PK | Auto Increment |
+| `Id_Pembayaran` | INT | FK | Relasi ke `Pembayaran.Id_Pembayaran` |
+| `Id_Tagihan` | INT | FK | Relasi ke `Tagihan.Id_Tagihan` |
+| `Nominal_Teralokasi` | DECIMAL(12,2) | | Nominal Rupiah yang Dialokasikan Ke Tagihan Ini |
+
+#### **10. `activity_logs`** *(Audit Trail System)*
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `id` | BIGINT | PK | Auto Increment |
+| `id_user` | BIGINT | FK | ID Admin / User Pelaku Aksi |
+| `username` | VARCHAR(100) | | Username Pelaku Aksi |
+| `role` | VARCHAR(50) | | Sub-Role Admin |
+| `modul` | VARCHAR(50) | | Modul Target (`Pembayaran`, `User`, `Sewa`, dll) |
+| `aksi` | VARCHAR(50) | | Jenis Aksi (`Login`, `Verifikasi Terima`, `Edit Profil`, dll) |
+| `deskripsi` | TEXT | | Deskripsi Rinci Aktivitas |
+| `ip_address` | VARCHAR(45) | | IP Client Pelaku |
+| `created_at` | TIMESTAMP | | Waktu Kejadian Aktivitas |
+
+#### **11. `notifications`** *(Dynamic Event-Driven Notifications)*
+| Kolom | Tipe Data | Key | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `id` | BIGINT | PK | Auto Increment |
+| `target_type` | VARCHAR(20) | | Target Pengguna (`'tenant'` / `'admin'`) |
+| `id_user` | BIGINT | NULLABLE | User ID Spesifik (null = All Admin) |
+| `title` | VARCHAR(150) | | Judul Notifikasi |
+| `message` | TEXT | | Pesan Rinci Notifikasi |
+| `type` | VARCHAR(20) | | `'success'`, `'warning'`, `'danger'`, `'info'` |
+| `is_read` | BOOLEAN | | Status Dibaca (`false` / `true`) |
+| `link` | VARCHAR(255) | NULLABLE | Tautan Navigasi Internal |
+| `created_at` | TIMESTAMP | | Waktu Pengiriman |
 
 ---
 
