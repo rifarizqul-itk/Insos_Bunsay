@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { TenantAuthProvider } from './modules/public/TenantAuthProvider';
 import TenantProtectedRoute from './routes/TenantProtectedRoute';
 
+import TenantLayout from './modules/public/layouts/TenantLayout';
+
 // Tenant Module Pages (Lazy Loaded)
 const LandingPage = lazy(() => import('./modules/public/pages/landing'));
 const AuthPage = lazy(() => import('./modules/public/pages/auth'));
@@ -21,32 +23,38 @@ function PageLoader() {
   );
 }
 
+import { ToastProvider } from '@bunsay/shared-ui';
+
 function TenantAppRoutes() {
   const tenantApiUrl = import.meta.env.VITE_TENANT_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://bunsayhub.id');
 
   return (
-    <TenantAuthProvider apiBaseUrl={tenantApiUrl}>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Tenant Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/auth/lupa-sandi" element={<AuthPage />} />
+    <ToastProvider>
+      <TenantAuthProvider apiBaseUrl={tenantApiUrl}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Tenant Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/lupa-sandi" element={<AuthPage />} />
 
-          {/* Protected Tenant Routes */}
-          <Route element={<TenantProtectedRoute />}>
-            <Route path="/tenant/dashboard" element={<DashboardTenant />} />
-            <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
-            <Route path="/tenant/histori" element={<HistoriPembayaran />} />
-            <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
-            <Route path="/tenant/akun" element={<AkunTenant />} />
-          </Route>
+            {/* Protected Tenant Routes */}
+            <Route element={<TenantProtectedRoute />}>
+              <Route element={<TenantLayout />}>
+                <Route path="/tenant/dashboard" element={<DashboardTenant />} />
+                <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
+                <Route path="/tenant/histori" element={<HistoriPembayaran />} />
+                <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
+                <Route path="/tenant/akun" element={<AkunTenant />} />
+              </Route>
+            </Route>
 
-          {/* Fallback Redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </TenantAuthProvider>
+            {/* Fallback Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </TenantAuthProvider>
+    </ToastProvider>
   );
 }
 

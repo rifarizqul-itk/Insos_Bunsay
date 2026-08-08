@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useTenantAuth } from '../../TenantAuthProvider';
+import { useTenantAuth } from '../../useTenantAuth';
 import { FormField, Button, Card, Icon } from '@bunsay/shared-ui';
 
 function AuthPage() {
@@ -51,15 +51,16 @@ function AuthPage() {
     setIsLoginLoading(true);
     try {
       const res = await login(formData.username, formData.kataSandi);
-      if (res?.success) {
+      if (res?.accessToken) {
         navigate('/tenant/dashboard');
       } else {
         setUsernameError(res?.message || 'Username atau kata sandi salah.');
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setUsernameError(err.response.data.message);
-      } else if (err.response?.status === 401 || err.response?.status === 422) {
+      const errMsg = err?.response?.data?.message || err?.message;
+      if (errMsg) {
+        setUsernameError(errMsg);
+      } else if (err?.response?.status === 401 || err?.response?.status === 422) {
         setUsernameError('Username atau kata sandi yang Anda masukkan salah.');
       } else {
         setUsernameError('Tidak dapat terhubung ke server auth. Pastikan backend Laravel berjalan.');
@@ -194,7 +195,7 @@ function AuthPage() {
                 <span className="text-balance">Instruksi Pemulihan Dikirim</span>
               </div>
               <p className="text-xs sm:text-sm text-text leading-relaxed text-pretty">
-                Jika username terdaftar, instruksi telah dikirim. Periksa kotak masuk Anda.
+                Jika username atau email terdaftar, instruksi telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder spam.
               </p>
             </div>
             <Button

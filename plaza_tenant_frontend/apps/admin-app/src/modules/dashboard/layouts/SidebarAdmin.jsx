@@ -1,20 +1,31 @@
 import React, { startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@bunsay/shared-ui';
+import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function SidebarAdmin({ isOpen, onClose, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAdminAuth();
 
-  const menuItems = [
+  const userPerms = user?.permissions || ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+  const isSuperadmin = user?.sub_role === 'superadmin' || user?.username === 'admin' || user?.username === 'superadmin';
+
+  const rawMenuItems = [
     { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard' },
-    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti' },
-    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai' },
+    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran' },
+    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai', perm: 'input_setoran' },
     { id: 'riwayat', label: 'Riwayat Transaksi Admin', path: '/admin/riwayat' },
-    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios' },
-    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor' },
+    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios', perm: 'kelola_kios' },
+    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor', perm: 'ekspor_laporan' },
+    { id: 'audit-log', label: 'Audit Trail Log', path: '/admin/audit-log', perm: 'lihat_audit_log' },
     { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun' }
   ];
+
+  const menuItems = rawMenuItems.filter(item => {
+    if (!item.perm || isSuperadmin) return true;
+    return userPerms.includes(item.perm);
+  });
 
   const handleNavigate = (path) => {
     startTransition(() => {

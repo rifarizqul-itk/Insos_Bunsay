@@ -1,27 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Icon, FormField, Button, Card, FIFOPreview } from '@bunsay/shared-ui';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Icon, FormField, Button, Card, FIFOPreview, useToast } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO, MockTransactionAdapter } from '@bunsay/shared-core';
+import { useTenantAuth } from '../../../public/useTenantAuth';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 function BayarSekarang() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { addToast } = useToast();
+  const { httpClient } = useTenantAuth();
+  
   const [metode, setMetode] = useState('transfer_manual');
   const [jenisTagihan] = useState('Pelunasan Masa Sewa & Akumulasi Tunggakan');
-  const [nominal, setNominal] = useState('7500000');
+  const [nominal, setNominal] = useState(() => String(location.state?.nominal ?? '7500000'));
   const [nominalError, setNominalError] = useState(null);
   const [buktiTransfer, setBuktiTransfer] = useState(null);
   const [previewBukti, setPreviewBukti] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [unpaidBills, setUnpaidBills] = useState([]);
   const [fifoAllocations, setFifoAllocations] = useState([]);
   const [showReview, setShowReview] = useState(false);
 
-  const unpaidBills = [
-    { idTagihan: 95, periode: '2026-04', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 500000, statusTagihan: 'Dicicil' },
-    { idTagihan: 101, periode: '2026-05', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 0, statusTagihan: 'Belum Bayar' }
-  ];
+  useEffect(() => {
+    const fetchUnpaidBills = async () => {
+      try {
+        const dashRes = await httpClient.get('/api/v1/tenant/dashboard');
+        const idPemilik = dashRes.data?.idPemilik;
+        if (idPemilik) {
+          const tagihanRes = await httpClient.get(`/api/v1/admin/tagihan?Id_Pemilik=${idPemilik}`);
+          const tagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
+          
+          const activeUnpaid = tagihan
+            .filter(t => t.Status_Tagihan !== 'Lunas')
+            .map(t => ({
+              idTagihan: t.Id_Tagihan,
+              periode: t.Periode,
+              tarifSewa: parseFloat(t.Tarif_Sewa || 0),
+              totalTagihan: parseFloat(t.Total_Tagihan || 0),
+              totalTerbayar: 0,
+              statusTagihan: t.Status_Tagihan
+            }));
+          setUnpaidBills(activeUnpaid);
+        }
+      } catch (err) {
+        console.error('Error fetching unpaid bills:', err);
+      }
+    };
+
+    fetchUnpaidBills();
+  }, [httpClient]);
 
   useEffect(() => {
     const nominalNum = Number(nominal) || 0;
@@ -32,7 +62,7 @@ function BayarSekarang() {
     } else {
       setFifoAllocations([]);
     }
-  }, [nominal]);
+  }, [nominal, unpaidBills]);
 
   useEffect(() => {
     return () => {
@@ -42,17 +72,28 @@ function BayarSekarang() {
     };
   }, [previewBukti]);
 
+  const handleRadioKeyDown = (e, targetRole) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const nextMetode = metode === 'transfer_manual' ? 'midtrans_gateway' : 'transfer_manual';
+      setMetode(nextMetode);
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (targetRole) setMetode(targetRole);
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      alert('Format file tidak didukung.');
+      addToast('Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.', 'error');
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      alert('Ukuran berkas terlalu besar. Maksimal 5 MB.');
+      addToast('Ukuran berkas terlalu besar. Maksimal 5 MB.', 'error');
       return;
     }
 
@@ -68,11 +109,12 @@ function BayarSekarang() {
     const nominalAngka = parseInt(nominal, 10);
     if (!nominalAngka || nominalAngka <= 0) {
       setNominalError('Masukkan nominal pembayaran yang valid.');
+      addToast('Masukkan nominal pembayaran yang valid.', 'error');
       return;
     }
 
     if (metode === 'transfer_manual' && !buktiTransfer) {
-      alert('Mohon unggah foto bukti transfer terlebih dahulu.');
+      addToast('Mohon unggah foto bukti transfer terlebih dahulu.', 'error');
       return;
     }
 
@@ -83,7 +125,7 @@ function BayarSekarang() {
   const handleProsesPembayaran = async () => {
     setIsLoading(true);
     try {
-      await MockTransactionAdapter.execute({
+      const result = await MockTransactionAdapter.execute({
         type: 'SUBMIT_PAYMENT',
         payload: {
           tenantId: 1,
@@ -94,9 +136,15 @@ function BayarSekarang() {
         }
       });
       setIsLoading(false);
-      navigate('/tenant/histori');
+      if (result && result.success !== false) {
+        addToast('Bukti pembayaran terkirim! Menunggu verifikasi admin.', 'success');
+        navigate('/tenant/histori');
+      } else {
+        addToast(result?.message || 'Gagal mengirimkan bukti transfer.', 'error');
+      }
     } catch (_) {
       setIsLoading(false);
+      addToast('Gagal memproses pembayaran.', 'error');
     }
   };
 
@@ -196,8 +244,10 @@ function BayarSekarang() {
                     <button
                       type="button"
                       role="radio"
+                      tabIndex={metode === 'transfer_manual' ? 0 : -1}
                       aria-checked={metode === 'transfer_manual'}
                       onClick={() => setMetode('transfer_manual')}
+                      onKeyDown={(e) => handleRadioKeyDown(e, 'transfer_manual')}
                       className={`
                         w-full min-h-[48px] px-4 py-3 rounded-xl font-bold text-sm text-left flex items-center justify-between border transition-all cursor-pointer
                         ${metode === 'transfer_manual' ? 'bg-red-50 text-red border-red shadow-sm' : 'bg-warm-gray/60 text-text border-border hover:bg-warm-gray'}
@@ -213,8 +263,10 @@ function BayarSekarang() {
                     <button
                       type="button"
                       role="radio"
+                      tabIndex={metode === 'midtrans_gateway' ? 0 : -1}
                       aria-checked={metode === 'midtrans_gateway'}
                       onClick={() => setMetode('midtrans_gateway')}
+                      onKeyDown={(e) => handleRadioKeyDown(e, 'midtrans_gateway')}
                       className={`
                         w-full min-h-[48px] px-4 py-3 rounded-xl font-bold text-sm text-left flex items-center justify-between border transition-all cursor-pointer
                         ${metode === 'midtrans_gateway' ? 'bg-red-50 text-red border-red shadow-sm' : 'bg-warm-gray/60 text-text border-border hover:bg-warm-gray'}
@@ -240,6 +292,13 @@ function BayarSekarang() {
                     />
                     <label
                       htmlFor="upload-bukti-transfer-input"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          document.getElementById('upload-bukti-transfer-input')?.click();
+                        }
+                      }}
                       className="flex flex-col items-center justify-center gap-2 bg-warm-gray/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-[120px] hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"
                     >
                       <Icon icon="heroicons:arrow-up-tray-20-solid" width="28" height="28" className="text-red" />
@@ -301,7 +360,7 @@ function BayarSekarang() {
                         className="h-9 px-3 text-xs gap-1"
                         onClick={() => {
                           navigator.clipboard.writeText('08115901119');
-                          alert('Nomor rekening disalin!');
+                          addToast('Nomor rekening berhasil disalin!', 'success');
                         }}
                       >
                         <Icon icon="heroicons:document-duplicate-20-solid" width="14" height="14" />

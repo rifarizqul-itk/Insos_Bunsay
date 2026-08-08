@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { FormField, Button, Card, Icon } from '@bunsay/shared-ui';
-import { useTenantAuth } from '../../../public/TenantAuthProvider';
+import React, { useState, useRef } from 'react';
+import { FormField, Button, Card, Icon, useToast } from '@bunsay/shared-ui';
+import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function AkunTenant() {
   const { user, logout } = useTenantAuth();
+  const { addToast } = useToast();
+  const firstInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
     nama: user?.name || user?.Username || 'Hj. Yuliana',
@@ -13,6 +15,10 @@ function AkunTenant() {
     alamat: 'Jl. Letjen Suprapto No. 12, Balikpapan Barat',
     jenisUsaha: 'Sembako & Kelontong'
   });
+
+  const [fieldError, setFieldError] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...profileData });
@@ -25,32 +31,74 @@ function AkunTenant() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      firstInputRef.current?.focus();
+    }, 50);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldError && fieldError.field === name) {
+      setFieldError(null);
+    }
   };
 
   const handleSave = (e) => {
     e.preventDefault();
+    if (!formData.nama) {
+      setFieldError({ field: 'nama', message: 'Nama lengkap wajib diisi.' });
+      addToast('Nama lengkap wajib diisi.', 'error');
+      return;
+    }
+    if (!formData.email) {
+      setFieldError({ field: 'email', message: 'Email wajib diisi.' });
+      addToast('Email wajib diisi.', 'error');
+      return;
+    }
+    if (!formData.telepon) {
+      setFieldError({ field: 'telepon', message: 'Nomor telepon wajib diisi.' });
+      addToast('Nomor telepon wajib diisi.', 'error');
+      return;
+    }
+    if (!formData.alamat) {
+      setFieldError({ field: 'alamat', message: 'Alamat lengkap wajib diisi.' });
+      addToast('Alamat lengkap wajib diisi.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
       setProfileData(formData);
       setIsEditing(false);
       setIsSubmitting(false);
+      addToast('Data profil berhasil diperbarui!', 'success');
     }, 400);
   };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (name === 'kataSandiBaru' && passwordError) setPasswordError(null);
+    if (name === 'konfirmasiKataSandi' && confirmPasswordError) setConfirmPasswordError(null);
   };
 
   const handleSavePassword = (e) => {
     e.preventDefault();
-    if (passwordData.kataSandiBaru !== passwordData.konfirmasiKataSandi) {
-      alert('Konfirmasi kata sandi baru tidak cocok.');
-      return;
+    let hasError = false;
+    if (!passwordData.kataSandiBaru || passwordData.kataSandiBaru.length < 6) {
+      setPasswordError('Kata sandi baru minimal 6 karakter.');
+      addToast('Kata sandi baru minimal 6 karakter.', 'error');
+      hasError = true;
     }
+    if (passwordData.kataSandiBaru !== passwordData.konfirmasiKataSandi) {
+      setConfirmPasswordError('Konfirmasi kata sandi baru tidak cocok.');
+      addToast('Konfirmasi kata sandi baru tidak cocok.', 'error');
+      hasError = true;
+    }
+    if (hasError) return;
 
     setIsChangingPassword(true);
     setTimeout(() => {
@@ -60,7 +108,7 @@ function AkunTenant() {
         kataSandiBaru: '',
         konfirmasiKataSandi: ''
       });
-      alert('Kata sandi akun tenant berhasil diperbarui!');
+      addToast('Kata sandi akun tenant berhasil diperbarui!', 'success');
     }, 400);
   };
 
@@ -83,8 +131,9 @@ function AkunTenant() {
           
           <form onSubmit={handleSave} className="flex flex-col gap-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <FormField label="Nama Lengkap" id="profile-nama" required>
+              <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
                 <input
+                  ref={firstInputRef}
                   type="text"
                   name="nama"
                   value={formData.nama}
@@ -93,7 +142,7 @@ function AkunTenant() {
                   aria-readonly={!isEditing}
                   className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  }`}
+                  } ${fieldError?.field === 'nama' ? 'border-red' : ''}`}
                 />
               </FormField>
 
@@ -111,7 +160,7 @@ function AkunTenant() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <FormField label="Email" id="profile-email" required>
+              <FormField label="Email" id="profile-email" required error={fieldError?.field === 'email' ? fieldError.message : undefined}>
                 <input
                   type="email"
                   name="email"
@@ -121,11 +170,11 @@ function AkunTenant() {
                   aria-readonly={!isEditing}
                   className={`w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  }`}
+                  } ${fieldError?.field === 'email' ? 'border-red' : ''}`}
                 />
               </FormField>
 
-              <FormField label="Telepon" id="profile-telepon" required>
+              <FormField label="Telepon" id="profile-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
                 <input
                   type="tel"
                   name="telepon"
@@ -135,7 +184,7 @@ function AkunTenant() {
                   aria-readonly={!isEditing}
                   className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  }`}
+                  } ${fieldError?.field === 'telepon' ? 'border-red' : ''}`}
                 />
               </FormField>
             </div>
@@ -151,7 +200,7 @@ function AkunTenant() {
               />
             </FormField>
 
-            <FormField label="Alamat Lengkap" id="profile-alamat" required>
+            <FormField label="Alamat Lengkap" id="profile-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
               <textarea
                 name="alamat"
                 value={formData.alamat}
@@ -161,7 +210,7 @@ function AkunTenant() {
                 rows={3}
                 className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
                   isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                }`}
+                } ${fieldError?.field === 'alamat' ? 'border-red' : ''}`}
               />
             </FormField>
 
@@ -171,7 +220,7 @@ function AkunTenant() {
                   <Button 
                     type="button" 
                     variant="secondary" 
-                    onClick={() => { setFormData({ ...profileData }); setIsEditing(false); }}
+                    onClick={() => { setFormData({ ...profileData }); setFieldError(null); setIsEditing(false); }}
                   >
                     Batal
                   </Button>
@@ -187,7 +236,7 @@ function AkunTenant() {
                 <Button 
                   type="button" 
                   variant="secondary" 
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleStartEdit}
                   className="gap-2"
                 >
                   <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
@@ -216,25 +265,25 @@ function AkunTenant() {
                 />
               </FormField>
 
-              <FormField label="Kata Sandi Baru" id="tenant-pwd-new" required>
+              <FormField label="Kata Sandi Baru" id="tenant-pwd-new" required error={passwordError}>
                 <input
                   type="password"
                   name="kataSandiBaru"
                   placeholder="Minimal 6 karakter"
                   value={passwordData.kataSandiBaru}
                   onChange={handlePasswordChange}
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                  className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors ${passwordError ? 'border-red' : 'border-border'}`}
                 />
               </FormField>
 
-              <FormField label="Konfirmasi Kata Sandi Baru" id="tenant-pwd-confirm" required>
+              <FormField label="Konfirmasi Kata Sandi Baru" id="tenant-pwd-confirm" required error={confirmPasswordError}>
                 <input
                   type="password"
                   name="konfirmasiKataSandi"
                   placeholder="Ulangi kata sandi baru"
                   value={passwordData.konfirmasiKataSandi}
                   onChange={handlePasswordChange}
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                  className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors ${confirmPasswordError ? 'border-red' : 'border-border'}`}
                 />
               </FormField>
 
@@ -262,7 +311,7 @@ function AkunTenant() {
               variant="danger"
               fullWidth
               className="h-11 text-sm font-bold gap-2"
-              onClick={() => logout()}
+              onClick={() => { logout(); addToast('Anda telah logout.', 'info'); }}
             >
               <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" width="18" height="18" />
               <span>Keluar dari Akun</span>

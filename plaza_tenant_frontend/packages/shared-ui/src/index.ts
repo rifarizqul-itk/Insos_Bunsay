@@ -11,4 +11,7 @@ export { Table } from './components/Table';
 export { EmptyState } from './components/EmptyState';
 export { AlokasiBreakdown } from './components/AlokasiBreakdown';
 export { FIFOPreview } from './components/FIFOPreview';
-export { Toast } from './components/Toast';
+export { Toast, ToastProvider, useToast } from './components/Toast';
+export { ErrorBoundary } from './components/ErrorBoundary';
+
+

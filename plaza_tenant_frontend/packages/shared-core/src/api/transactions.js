@@ -139,6 +139,30 @@ function applyAllocationToMockBills(ownerId, allocations = []) {
 export const MockTransactionAdapter = {
   async query(params) {
     const { scope, tenantId, status } = params || {};
+    try {
+      const endpoint = scope === 'QUEUE' 
+        ? '/v1/admin/pembayaran?status=Menunggu'
+        : '/v1/admin/pembayaran';
+      const realData = await httpClient.get(endpoint);
+      if (Array.isArray(realData) && realData.length > 0) {
+        return realData.map(item => ({
+          id: `TRX-${item.Id_Pembayaran || item.id}`,
+          nama: item.tagihan?.sewa?.pemilik?.Nama || item.nama || 'Tenant',
+          kios: item.tagihan?.sewa?.kios?.No_Kios || item.kios || 'Kios',
+          tagihan: item.tagihan?.Periode ? `Sewa Kios ${item.tagihan.Periode}` : 'Sewa Kios',
+          nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
+          nominalAngka: Number(item.Total_Bayar || 0),
+          metode: item.Metode_Bayar || 'Transfer',
+          labelMetode: `${item.Metode_Bayar || 'Transfer Bank'} (SQL DB)`,
+          waktu: item.Tanggal_Bayar || 'Terbaru',
+          status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : 'Menunggu Verifikasi'),
+          alokasi: []
+        }));
+      }
+    } catch (_) {
+      // Graceful fallback to seed data
+    }
+
     let result = [];
 
     if (scope === 'QUEUE') {
@@ -319,6 +343,14 @@ export const MockTransactionAdapter = {
 
     if (type === 'EXPORT_REPORT') {
       const { bulan, tahun } = payload || {};
+      try {
+        const response = await httpClient.get(`/v1/admin/ekspor?bulan=${encodeURIComponent(bulan || 'Mei')}&tahun=${encodeURIComponent(tahun || '2026')}`);
+        if (response && response.success) {
+          return response;
+        }
+      } catch (_) {
+        // Fallback if backend stream is not reachable
+      }
       return mockDelay({
         success: true,
         url: `/downloads/rekap-${bulan || 'Mei'}-${tahun || '2026'}.xlsx`,

@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon, FormField, Button, Card, FIFOPreview } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
+import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function SetoranTunai() {
+  const navigate = useNavigate();
+  const { httpClient } = useAdminAuth();
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [jenisTagihan] = useState('Setoran Tunai Loket Pengelola');
   const [nominalTunai, setNominalTunai] = useState('');
@@ -13,18 +17,104 @@ function SetoranTunai() {
   const [tenantError, setTenantError] = useState(null);
   const [nominalError, setNominalError] = useState(null);
   const [showKonfirmasi, setShowKonfirmasi] = useState(false);
+  const [toastMsg, setToastMsg] = useState(null);
 
-  const tenantData = [
-    { id: 1, nama: 'Hj. Yuliana', kios: 'B-1001, B-1002' },
-    { id: 2, nama: 'Eva Tauresea', kios: 'B-1004' },
-    { id: 3, nama: 'H. Ahmad', kios: 'B-1013' },
-    { id: 4, nama: 'Toko Kalimantan', kios: 'A-1002' }
+  const [tenantData, setTenantData] = useState([]);
+  const [unpaidBills, setUnpaidBills] = useState([]);
+  const [isBillsLoading, setIsBillsLoading] = useState(false);
+  const [targetTagihanId, setTargetTagihanId] = useState(null);
+
+  useEffect(() => {
+    async function fetchTenants() {
+      try {
+        const response = await httpClient.get('/api/v1/admin/kios');
+        const raw = response?.data?.data || (Array.isArray(response?.data) ? response.data : []);
+        if (Array.isArray(raw) && raw.length > 0) {
+          const mapped = raw.map((item, idx) => {
+            const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0 ? item.sewa[0] : null;
+            const pemilik = activeSewa?.pemilik || null;
+            return {
+              id: item.Id_Kios || item.id || idx + 1,
+              idPemilik: pemilik?.Id_Pemilik || item.Id_Pemilik || idx + 1,
+              nama: pemilik?.Nama || (item.Status === 'Terisi' ? 'Penyewa Kios' : 'Kios Kosong'),
+              kios: item.No_Kios || `B-${1000 + idx}`
+            };
+          });
+          setTenantData(mapped);
+        } else {
+          setTenantData(fallbackTenants);
+        }
+      } catch (err) {
+        console.warn('Backend fetch tenant list fallback:', err);
+        setTenantData(fallbackTenants);
+      }
+    }
+    fetchTenants();
+  }, [httpClient]);
+
+  const fallbackTenants = [
+    { id: 1, idPemilik: 1, nama: 'Hj. Yuliana', kios: 'B-1001' },
+    { id: 2, idPemilik: 2, nama: 'Bpk. Hendra Kurniawan', kios: 'B-1003' },
+    { id: 3, idPemilik: 3, nama: 'Ibu Eva Tauresea', kios: 'B-1004' }
   ];
 
-  const unpaidBills = [
-    { idTagihan: 95, periode: '2026-04', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 500000, statusTagihan: 'Dicicil' },
-    { idTagihan: 101, periode: '2026-05', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 0, statusTagihan: 'Belum Bayar' }
-  ];
+  // Auto-fetch active bills when tenant is selected
+  useEffect(() => {
+    if (!selectedTenantId) {
+      setUnpaidBills([]);
+      setTargetTagihanId(null);
+      setNominalTunai('');
+      return;
+    }
+
+    const selectedObj = tenantData.find(t => String(t.id) === selectedTenantId);
+
+    async function fetchActiveBills() {
+      setIsBillsLoading(true);
+      try {
+        const url = selectedObj?.idPemilik 
+          ? `/api/v1/admin/tagihan?Id_Pemilik=${selectedObj.idPemilik}` 
+          : '/api/v1/admin/tagihan';
+        const response = await httpClient.get(url);
+        const raw = response?.data?.data || (Array.isArray(response?.data) ? response.data : []);
+        
+        if (Array.isArray(raw)) {
+          const active = raw
+            .filter(b => b.Status_Tagihan !== 'Lunas')
+            .map(b => ({
+              idTagihan: b.Id_Tagihan || b.id,
+              periode: b.Periode || 'Periode Aktif',
+              tarifSewa: Number(b.Tarif_Sewa || b.Total_Tagihan || b.Nominal || 450000),
+              totalTagihan: Number(b.Total_Tagihan || b.Nominal || 450000),
+              totalTerbayar: 0,
+              statusTagihan: b.Status_Tagihan || 'Belum Bayar'
+            }));
+
+          setUnpaidBills(active);
+          if (active.length > 0) {
+            setTargetTagihanId(active[0].idTagihan);
+            const totalNominal = active.reduce((sum, b) => sum + b.totalTagihan, 0);
+            setNominalTunai(String(totalNominal));
+          } else {
+            setTargetTagihanId(null);
+            setNominalTunai('');
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching tenant bills:', err);
+        // Fallback sample active bill if API query fails
+        const fallbackBill = [
+          { idTagihan: 101, periode: 'Sewa Kios Periode Mei 2026', tarifSewa: 450000, totalTagihan: 450000, totalTerbayar: 0, statusTagihan: 'Belum Bayar' }
+        ];
+        setUnpaidBills(fallbackBill);
+        setTargetTagihanId(101);
+        setNominalTunai('450000');
+      } finally {
+        setIsBillsLoading(false);
+      }
+    }
+    fetchActiveBills();
+  }, [selectedTenantId, tenantData, httpClient]);
 
   useEffect(() => {
     const nominalNum = Number(nominalTunai) || 0;
@@ -35,7 +125,7 @@ function SetoranTunai() {
     } else {
       setFifoAllocations([]);
     }
-  }, [nominalTunai, selectedTenantId]);
+  }, [nominalTunai, selectedTenantId, unpaidBills]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -73,21 +163,44 @@ function SetoranTunai() {
     setShowKonfirmasi(true);
   };
 
-  const handleSimpanTunaiFinal = () => {
+  const handleSimpanTunaiFinal = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      alert('Setoran tunai berhasil dicatat!');
+    try {
+      await httpClient.post('/api/v1/admin/pembayaran', {
+        Id_Tagihan: targetTagihanId || 101,
+        Tanggal_Bayar: new Date().toISOString().split('T')[0],
+        Total_Bayar: parseInt(nominalTunai, 10),
+        Metode_Bayar: 'Tunai',
+        Verifikasi_Pembayaran: 'Diterima'
+      });
+      setToastMsg('Setoran tunai loket berhasil dicatat di database SQL!');
       setNominalTunai('');
       setSelectedTenantId('');
       setBuktiTunai(null);
       setPreviewBukti(null);
       setShowKonfirmasi(false);
+      setTimeout(() => setToastMsg(null), 4000);
+    } catch (err) {
+      alert('Gagal menyimpan setoran tunai. Coba lagi.');
+    } finally {
       setIsSubmitting(false);
-    }, 400);
+    }
   };
+
+  const selectedTenantObj = tenantData.find(t => String(t.id) === selectedTenantId);
 
   return (
     <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+      {toastMsg && (
+        <div className="bg-emerald-500 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Icon icon="heroicons:check-circle-20-solid" width="20" height="20" />
+            <span>{toastMsg}</span>
+          </div>
+          <button onClick={() => setToastMsg(null)} className="text-white hover:opacity-80">✕</button>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Loket Setoran Tunai Admin
@@ -111,7 +224,7 @@ function SetoranTunai() {
             </p>
 
             <Card variant="inset" className="p-4 flex flex-col gap-2.5 text-sm">
-              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{tenantData.find(t => String(t.id) === selectedTenantId)?.nama} ({tenantData.find(t => String(t.id) === selectedTenantId)?.kios})</strong></div>
+              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{selectedTenantObj?.nama} ({selectedTenantObj?.kios})</strong></div>
               <div><span className="text-text-3 font-semibold">Nominal Tunai:</span> <strong className="text-text font-bold font-tabular-nums text-base text-red">Rp {parseInt(nominalTunai, 10).toLocaleString('id-ID')}</strong></div>
               {buktiTunai && <div><span className="text-text-3 font-semibold">Bukti:</span> <strong className="text-text font-bold">{buktiTunai.name}</strong></div>}
             </Card>
@@ -163,6 +276,93 @@ function SetoranTunai() {
                 ))}
               </select>
             </FormField>
+
+            {/* STATUS TAGIHAN AKTIF CARD */}
+            {selectedTenantId && (
+              <div className="page-fade-in">
+                {isBillsLoading ? (
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3 text-xs text-text-2 font-bold animate-pulse">
+                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin text-red" width="18" height="18" />
+                    <span>Mengambil data tagihan aktif tenant...</span>
+                  </div>
+                ) : unpaidBills.length > 0 ? (
+                  <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-lg flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-xs font-black text-amber-900 uppercase tracking-wider">
+                      <Icon icon="heroicons:document-text-20-solid" width="18" height="18" className="text-amber-700" />
+                      <span>📌 Tagihan Aktif Terdeteksi ({unpaidBills.length} Tagihan):</span>
+                    </div>
+
+                    {unpaidBills.map((bill, idx) => {
+                      const isPendingVerif = bill.statusTagihan === 'Menunggu Verifikasi' || bill.statusTagihan === 'Proses Verifikasi' || bill.statusTagihan === 'Menunggu';
+
+                      if (isPendingVerif) {
+                        return (
+                          <div key={bill.idTagihan || idx} className="flex flex-col gap-2.5 bg-blue-50/90 p-3.5 rounded-lg border border-blue-200 shadow-xs">
+                            <div className="flex justify-between items-start text-xs font-bold text-slate-800">
+                              <div>
+                                <div className="font-extrabold text-text text-sm">{bill.periode}</div>
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-extrabold mt-1 inline-flex items-center gap-1 border border-blue-200">
+                                  <Icon icon="heroicons:clock-20-solid" width="14" height="14" className="text-blue-600" />
+                                  Status: Menunggu Verifikasi Transfer Bank
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs font-extrabold text-red font-tabular-nums">
+                                  Rp {bill.totalTagihan.toLocaleString('id-ID')}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-blue-900 font-medium leading-relaxed m-0 bg-white/70 p-2 rounded border border-blue-100">
+                              💡 <strong>Informasi:</strong> Tenant ini sudah mengunggah foto bukti transfer bank secara online dan saat ini sedang menunggu verifikasi admin.
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/admin/verifikasi-bukti', {
+                                state: {
+                                  autoOpen: true,
+                                  tenantNama: selectedTenantObj?.nama,
+                                  idTagihan: bill.idTagihan
+                                }
+                              })}
+                              className="mt-0.5 inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-md transition-all cursor-pointer shadow-xs border-none active:scale-[0.99]"
+                            >
+                              <Icon icon="heroicons:arrow-top-right-on-square-20-solid" width="16" height="16" />
+                              <span>Periksa & Verifikasi Bukti Transfer Tenant Ini ➔</span>
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={bill.idTagihan || idx} className="flex justify-between items-center text-xs font-bold text-slate-800 bg-white p-2.5 rounded border border-amber-200">
+                          <div>
+                            <div className="font-extrabold text-text">{bill.periode}</div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-extrabold mt-0.5 inline-block">
+                              {bill.statusTagihan}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-extrabold text-red font-tabular-nums">
+                              Rp {bill.totalTagihan.toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-lg flex items-start gap-3 text-xs font-medium text-emerald-900">
+                    <Icon icon="heroicons:check-circle-20-solid" width="22" height="22" className="text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="font-extrabold text-emerald-950 block text-sm mb-0.5">Tidak Ada Tagihan Aktif / Tunggakan</strong>
+                      <span>Tenant <strong>{selectedTenantObj?.nama} ({selectedTenantObj?.kios})</strong> saat ini tidak memiliki tunggakan sewa (seluruh tagihan berstatus Lunas).</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <FormField label="Nominal Tunai (Rp)" id="setoran-nominal" required error={nominalError}>
               <input

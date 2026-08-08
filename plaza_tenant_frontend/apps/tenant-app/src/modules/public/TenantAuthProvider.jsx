@@ -1,45 +1,58 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useCallback, useMemo, useRef } from 'react';
 import { createAuthHttpClient, safeDecodeJwt, useAuthHydration } from '@bunsay/shared-core';
 
-const TenantAuthContext = createContext(null);
+export const TenantAuthContext = createContext(null);
+export { useTenantAuth } from './useTenantAuth';
 
 export function TenantAuthProvider({ children, apiBaseUrl }) {
   // Access Token stored strictly 100% in React memory state
   const [accessToken, setAccessToken] = useState(null);
   const [user, setUser] = useState(null);
 
+  // Ref gives the request interceptor always-fresh token reads without
+  // recreating the Axios instance on every 15-minute silent refresh (BUG-NEW-03).
+  const accessTokenRef = useRef(null);
+
+  /**
+   * Single source of truth for all token mutations.
+   * Keeps accessTokenRef (for interceptor), accessToken state (for context consumers),
+   * and user state in sync atomically.
+   */
+  const setTokenState = useCallback((newToken, userData = null) => {
+    accessTokenRef.current = newToken;
+    setAccessToken(newToken);
+    if (newToken) {
+      setUser(userData ?? safeDecodeJwt(newToken) ?? null);
+    } else {
+      setUser(null);
+    }
+  }, []);
+
   const handleLogout = useCallback(() => {
+    accessTokenRef.current = null;
     setAccessToken(null);
     setUser(null);
   }, []);
 
-  // Initialize Tenant Auth HTTP Client
+  // Initialize Tenant Auth HTTP Client — stable across token refreshes (BUG-NEW-03)
   const httpClient = useMemo(() => {
     return createAuthHttpClient({
-      baseURL: apiBaseUrl || 'https://bunsayhub.id',
+      baseURL: apiBaseUrl || import.meta.env.VITE_API_BASE_URL || '',
       refreshEndpoint: '/api/v1/tenant/auth/refresh',
-      getToken: () => accessToken,
-      setToken: (newToken) => {
-        setAccessToken(newToken);
-        if (newToken) {
-          setUser(safeDecodeJwt(newToken));
-        } else {
-          setUser(null);
-        }
-      },
+      getToken: () => accessTokenRef.current,   // always-fresh via ref, no stale closure
+      setToken: (newToken) => setTokenState(newToken),
       onUnauthenticated: handleLogout,
     });
-  }, [accessToken, apiBaseUrl, handleLogout]);
+  }, [apiBaseUrl, handleLogout, setTokenState]); // accessToken removed from deps — client is now stable
 
   // Silent Refresh on App Hydration / F5 Refresh
   const { isHydrated } = useAuthHydration({
     onHydrate: async () => {
       try {
         const response = await httpClient.post('/api/v1/tenant/auth/refresh', {});
-        const token = response.data?.accessToken;
+        const { accessToken: token, user: userData } = response.data || {};
         if (token) {
-          setAccessToken(token);
-          setUser(safeDecodeJwt(token));
+          setTokenState(token, userData ?? null);
         }
       } catch (e) {
         handleLogout();
@@ -50,11 +63,9 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
   const login = useCallback(async (username, password) => {
     const response = await httpClient.post('/api/v1/tenant/auth/login', { username, password });
     const { accessToken: token, user: userData } = response.data;
-    
-    setAccessToken(token);
-    setUser(userData || safeDecodeJwt(token));
+    setTokenState(token, userData ?? null);
     return response.data;
-  }, [httpClient]);
+  }, [httpClient, setTokenState]);
 
   const logout = useCallback(async () => {
     try {
@@ -91,9 +102,3 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     </TenantAuthContext.Provider>
   );
 }
-
-export const useTenantAuth = () => {
-  const context = useContext(TenantAuthContext);
-  if (!context) throw new Error('useTenantAuth harus digunakan di dalam TenantAuthProvider');
-  return context;
-};

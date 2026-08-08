@@ -13,6 +13,12 @@ export type { IUseAuthHydrationOptions } from './hooks/useAuthHydration';
 // Export Shared Core Business Allocator
 export { allocatePaymentFIFO, calculateBillStatus } from './utils/fifoAllocator';
 
-// Export Shared API Transport & Transaction Model
-export { httpClient, apiClient, mockDelay } from './api/client';
+// Export HTTP Client
+export { httpClient, apiClient } from './api/client';
+
+// Export Shared Transaction Model (mock adapter only — use context httpClient for real API calls)
 export { MockTransactionAdapter, transactionPort } from './api/transactions';
+
+// Export Excel Rekap Utility
+export { downloadExcelRekap } from './utils/exportExcel';
+

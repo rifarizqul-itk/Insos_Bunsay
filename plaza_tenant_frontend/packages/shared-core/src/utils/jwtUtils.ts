@@ -32,8 +32,8 @@ export function safeDecodeJwt(token: string): IJwtPayload | null {
     );
 
     return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('[JWT Safety] Failed to decode JWT payload safely:', e);
+  } catch (_) {
+    // Non-JWT token string (e.g. standard Sanctum opaque token ID|plainText)
     return null;
   }
 }

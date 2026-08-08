@@ -175,4 +175,41 @@ class SewaController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Terminate lease action.
+     * POST /api/v1/admin/sewa/{id}/akhiri
+     */
+    public function akhiriSewa($id)
+    {
+        try {
+            $sewa = Sewa::find($id);
+
+            if (!$sewa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data sewa tidak ditemukan'
+                ], 404);
+            }
+
+            $idKios = $sewa->Id_Kios;
+            $sewa->delete();
+
+            $kios = Kios::find($idKios);
+            if ($kios) {
+                $kios->update(['Status' => 'Kosong']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Masa sewa berhasil diakhiri dan status kios kembali Kosong',
+                'data'    => $kios
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengakhiri masa sewa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

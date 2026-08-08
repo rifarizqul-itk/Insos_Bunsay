@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAdminAuth } from '../modules/auth/AdminAuthProvider';
+import { useAdminAuth } from '../modules/auth/useAdminAuth';
 
 const ALLOWED_ADMIN_ROLES = ['admin', 'superadmin', 'staff_loket'];
 
@@ -15,7 +15,9 @@ export default function AdminProtectedRoute() {
     );
   }
 
-  if (!isLoggedIn || !ALLOWED_ADMIN_ROLES.includes(role)) {
+  // BUG-NEW-05: explicitly check role !== null before ALLOWED_ADMIN_ROLES.includes()
+  // role is ?? null in AdminAuthProvider — null must never pass this guard.
+  if (!isLoggedIn || !role || !ALLOWED_ADMIN_ROLES.includes(role)) {
     return <Navigate to="/login" replace />;
   }
 

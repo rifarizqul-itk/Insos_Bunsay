@@ -33,14 +33,8 @@ async function httpRequest(endpoint, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   let authHeader = {};
-  const storedAuth = typeof localStorage !== 'undefined' ? (localStorage.getItem('auth') || sessionStorage?.getItem('auth')) : null;
-  if (storedAuth) {
-    try {
-      const parsed = JSON.parse(storedAuth);
-      if (parsed.token) {
-        authHeader = { Authorization: `Bearer ${parsed.token}` };
-      }
-    } catch (_) {}
+  if (options.token) {
+    authHeader = { Authorization: `Bearer ${options.token}` };
   }
 
   const config = {

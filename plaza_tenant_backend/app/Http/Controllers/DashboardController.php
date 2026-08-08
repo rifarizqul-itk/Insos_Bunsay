@@ -8,18 +8,31 @@ use App\Models\Sewa;
 use App\Models\Tagihan;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function adminDashboard(Request $request)
     {
+        $kiosStats = DB::table('kios')
+            ->selectRaw('COUNT(*) as total, SUM(CASE WHEN Status = "Terisi" THEN 1 ELSE 0 END) as terisi, SUM(CASE WHEN Status = "Kosong" THEN 1 ELSE 0 END) as kosong')
+            ->first();
+
+        $tagihanStats = DB::table('tagihan')
+            ->selectRaw('SUM(CASE WHEN Status_Tagihan = "Belum Bayar" THEN 1 ELSE 0 END) as pending, SUM(CASE WHEN Status_Tagihan = "Menunggu Verifikasi" THEN 1 ELSE 0 END) as menunggu')
+            ->first();
+
+        $pembayaranToday = DB::table('pembayaran')
+            ->whereDate('Tanggal_Bayar', today())
+            ->count();
+
         return response()->json([
-            'total_kios'       => Kios::count(),
-            'kios_terisi'      => Kios::where('Status', 'Terisi')->count(),
-            'kios_kosong'      => Kios::where('Status', 'Kosong')->count(),
-            'tagihan_pending'  => Tagihan::where('Status_Tagihan', 'Belum Bayar')->count(),
-            'tagihan_menunggu' => Tagihan::where('Status_Tagihan', 'Menunggu Verifikasi')->count(),
-            'pembayaran_today' => Pembayaran::whereDate('Tanggal_Bayar', today())->count(),
+            'total_kios'       => (int) ($kiosStats->total ?? 0),
+            'kios_terisi'      => (int) ($kiosStats->terisi ?? 0),
+            'kios_kosong'      => (int) ($kiosStats->kosong ?? 0),
+            'tagihan_pending'  => (int) ($tagihanStats->pending ?? 0),
+            'tagihan_menunggu' => (int) ($tagihanStats->menunggu ?? 0),
+            'pembayaran_today' => (int) $pembayaranToday,
         ]);
     }
 
