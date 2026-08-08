@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Badge, Table, Modal, FormField, AlokasiBreakdown, EmptyState, useToast } from '@bunsay/shared-ui';
+import { Icon, Card, Button, Badge, Table, AlokasiBreakdown, EmptyState } from '@bunsay/shared-ui';
 
 function DetailKeuanganTenant() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToast } = useToast();
 
-  const [showEditModal, setShowEditModal] = useState(false);
-
-  const [tenant, setTenant] = useState({
+  const [tenant] = useState({
     id: id || 'B-1001',
     nama: 'Hj. Yuliana',
     kios: id || 'B-1001',
@@ -29,28 +26,6 @@ function DetailKeuanganTenant() {
       }
     ]
   });
-
-  const [editData, setEditData] = useState({
-    statusPembayaran: tenant.statusPembayaran,
-    tunggakan: tenant.tunggakan,
-    rincianTunggakan: tenant.rincianTunggakan
-  });
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveEdit = () => {
-    setTenant(prev => ({
-      ...prev,
-      statusPembayaran: editData.statusPembayaran,
-      tunggakan: Number(editData.tunggakan),
-      rincianTunggakan: editData.rincianTunggakan
-    }));
-    setShowEditModal(false);
-    addToast('Data keuangan tenant berhasil diperbarui.', 'success');
-  };
 
   const tableHeaders = [
     { label: 'ID Transaksi' },
@@ -85,15 +60,10 @@ function DetailKeuanganTenant() {
             </p>
           </div>
           
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => setShowEditModal(true)}
-            className="gap-2 shadow-md self-start sm:self-auto"
-          >
-            <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
-            <span>Edit Status Pembayaran</span>
-          </Button>
+          <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs font-extrabold self-start sm:self-auto">
+            <Icon icon="heroicons:shield-check-20-solid" width="18" height="18" className="text-emerald-600" />
+            <span>Kalkulasi Status Otomatis (Ledger Real-Time)</span>
+          </div>
         </div>
       </div>
 
@@ -160,55 +130,6 @@ function DetailKeuanganTenant() {
           )}
         </Card>
       </div>
-
-      <Modal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title={`Edit Data Keuangan: ${tenant.nama}`}
-        size="md"
-        footer={
-          <div className="flex gap-3 w-full">
-            <Button type="button" variant="secondary" fullWidth onClick={() => setShowEditModal(false)}>Batal</Button>
-            <Button type="button" variant="primary" fullWidth onClick={handleSaveEdit}>Simpan Perubahan</Button>
-          </div>
-        }
-      >
-        <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="flex flex-col gap-4 font-sans">
-          <FormField label="Status Pembayaran Bulan Ini" id="edit-status-pembayaran">
-            <select
-              name="statusPembayaran"
-              value={editData.statusPembayaran}
-              onChange={handleEditChange}
-              className="w-full h-11 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text"
-            >
-              <option value="Lunas">Lunas</option>
-              <option value="Dicicil">Dicicil</option>
-              <option value="Belum Bayar">Belum Bayar</option>
-              <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-            </select>
-          </FormField>
-
-          <FormField label="Akumulasi Tunggakan (Rp)" id="edit-tunggakan">
-            <input
-              type="number"
-              name="tunggakan"
-              value={editData.tunggakan}
-              onChange={handleEditChange}
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3 text-base font-extrabold font-tabular-nums text-text"
-            />
-          </FormField>
-
-          <FormField label="Rincian / Catatan Tunggakan" id="edit-rincian-tunggakan">
-            <textarea
-              name="rincianTunggakan"
-              value={editData.rincianTunggakan}
-              onChange={handleEditChange}
-              rows={3}
-              className="w-full p-3 rounded-md border border-border bg-warm-gray/50 text-sm text-text resize-none"
-            />
-          </FormField>
-        </form>
-      </Modal>
     </div>
   );
 }
