@@ -167,17 +167,11 @@ class AuthController extends Controller
             ], 401)->withCookie(cookie()->forget($cookieName));
         }
 
-        // Enforce strict Role vs Endpoint Scope verification on refresh
+        // Enforce strict Role vs Endpoint Scope verification on refresh (Admin scope requires admin role)
         $userIsAdmin = ((int) $user->Id_roles === 1);
         if ($isAdminScope && !$userIsAdmin) {
             return response()->json([
                 'message' => 'Refresh token tidak sah untuk portal Admin.',
-            ], 403)->withCookie(cookie()->forget($cookieName));
-        }
-
-        if (!$isAdminScope && $userIsAdmin) {
-            return response()->json([
-                'message' => 'Refresh token tidak sah untuk portal Tenant.',
             ], 403)->withCookie(cookie()->forget($cookieName));
         }
 

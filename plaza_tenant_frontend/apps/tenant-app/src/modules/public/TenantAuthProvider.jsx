@@ -46,22 +46,40 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     });
   }, [apiBaseUrl, handleLogout, setTokenState]); // accessToken removed from deps — client is now stable
 
+  // Ref to lock hydration and prevent React StrictMode double-execution race condition
+  const hydrationPromiseRef = useRef(null);
+
   // Silent Refresh on App Hydration / F5 Refresh
   const { isHydrated } = useAuthHydration({
     onHydrate: async () => {
-      try {
-        const storedRt = typeof window !== 'undefined' ? localStorage.getItem('bunsay_tenant_rt') : null;
-        const response = await httpClient.post('/api/v1/tenant/auth/refresh', { refresh_token: storedRt });
-        const { accessToken: token, refreshToken: newRt, user: userData } = response.data || {};
-        if (newRt) {
-          try { localStorage.setItem('bunsay_tenant_rt', newRt); } catch (_) {}
-        }
-        if (token) {
-          setTokenState(token, userData ?? null);
-        }
-      } catch (e) {
-        handleLogout();
+      if (hydrationPromiseRef.current) {
+        return hydrationPromiseRef.current;
       }
+
+      hydrationPromiseRef.current = (async () => {
+        try {
+          const storedRt = typeof window !== 'undefined' ? localStorage.getItem('bunsay_tenant_rt') : null;
+          if (!storedRt) {
+            return;
+          }
+          const response = await httpClient.post(
+            '/api/v1/tenant/auth/refresh',
+            { refresh_token: storedRt },
+            { headers: { 'X-Refresh-Token': storedRt } }
+          );
+          const { accessToken: token, refreshToken: newRt, user: userData } = response.data || {};
+          if (newRt) {
+            try { localStorage.setItem('bunsay_tenant_rt', newRt); } catch (_) {}
+          }
+          if (token) {
+            setTokenState(token, userData ?? null);
+          }
+        } catch (e) {
+          handleLogout();
+        }
+      })();
+
+      return hydrationPromiseRef.current;
     },
   });
 
