@@ -239,10 +239,32 @@ function BayarSekarang() {
           ) : (
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-6">
               <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
-                <FormField label="Nominal Pembayaran" id="input-nominal-pembayaran" required error={nominalError}>
+                {/* Banner Izin Cicil via WhatsApp */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 text-sm">
+                  <div className="flex items-start gap-2.5">
+                    <Icon icon="heroicons:information-circle-20-solid" width="22" height="22" className="text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-extrabold text-amber-900">Ingin Mengajukan Pembayaran Cicilan?</div>
+                      <p className="text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
+                        Pembayaran standar disarankan <strong>Lunas</strong>. Jika Anda ingin mencicil, Anda <strong>wajib berdiskusi &amp; meminta izin Pengelola Bunsay</strong> via WhatsApp sebelum mentransfer.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi dan mengajukan izin pembayaran cicilan sewa kios.')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0 shadow-sm transition-colors cursor-pointer"
+                  >
+                    <Icon icon="heroicons:chat-bubble-left-right-20-solid" width="16" height="16" />
+                    <span>Hubungi Pengelola (WA)</span>
+                  </a>
+                </div>
+
+                <FormField label="Nominal Pembayaran (Rp)" id="input-nominal-pembayaran" required error={nominalError}>
                   <input 
                     type="number" 
-                    placeholder="Contoh: 2000000" 
+                    placeholder="Contoh: 7500000" 
                     value={nominal} 
                     onChange={(e) => { setNominal(e.target.value); if (nominalError) setNominalError(null); }} 
                     className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
