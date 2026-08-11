@@ -271,8 +271,6 @@ function BayarSekarang() {
                   />
                 </FormField>
 
-                <FIFOPreview allocations={fifoAllocations} nominal={Number(nominal) || 0} />
-
                 <div className="flex flex-col gap-2 pt-2">
                   <span id="label-metode-pembayaran" className="text-sm font-bold text-text-2">
                     Pilih Metode Pembayaran
