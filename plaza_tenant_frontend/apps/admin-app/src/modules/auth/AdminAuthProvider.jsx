@@ -31,6 +31,7 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
     accessTokenRef.current = null;
     setAccessToken(null);
     setAdminUser(null);
+    try { localStorage.removeItem('bunsay_admin_rt'); } catch (_) {}
   }, []);
 
   // Initialize Admin Auth HTTP Client — stable across token refreshes (BUG-NEW-03)
@@ -48,8 +49,12 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
   const { isHydrated } = useAuthHydration({
     onHydrate: async () => {
       try {
-        const response = await httpClient.post('/api/v1/admin/auth/refresh', {});
-        const { accessToken: token, user: userData } = response.data || {};
+        const storedRt = typeof window !== 'undefined' ? localStorage.getItem('bunsay_admin_rt') : null;
+        const response = await httpClient.post('/api/v1/admin/auth/refresh', { refresh_token: storedRt });
+        const { accessToken: token, refreshToken: newRt, user: userData } = response.data || {};
+        if (newRt) {
+          try { localStorage.setItem('bunsay_admin_rt', newRt); } catch (_) {}
+        }
         if (token) {
           setTokenState(token, userData ?? null);
         }
@@ -69,7 +74,10 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
       m = username.mfaCode;
     }
     const response = await httpClient.post('/api/v1/admin/auth/login', { username: u, password: p, mfaCode: m });
-    const { accessToken: token, user: userData } = response.data;
+    const { accessToken: token, refreshToken: rt, user: userData } = response.data;
+    if (rt) {
+      try { localStorage.setItem('bunsay_admin_rt', rt); } catch (_) {}
+    }
     setTokenState(token, userData ?? null);
     return response.data;
   }, [httpClient, setTokenState]);

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Icon, FormField, Button, Card, useToast } from '@bunsay/shared-ui';
+import { downloadExcelRekap } from '@bunsay/shared-core';
+import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function EksporData() {
   const { addToast } = useToast();
+  const { httpClient } = useAdminAuth();
   const [bulanFilter, setBulanFilter] = useState('Mei');
   const [tahunFilter, setTahunFilter] = useState('2026');
   const [isDownloading, setIsDownloading] = useState(false);
@@ -10,10 +13,21 @@ function EksporData() {
   const handleDownloadExcel = async (e) => {
     e.preventDefault();
     setIsDownloading(true);
-    setTimeout(() => {
+    try {
+      let dataTransaksi = [];
+      try {
+        const response = await httpClient.get('/api/v1/admin/pembayaran');
+        dataTransaksi = Array.isArray(response?.data) ? response.data : (response?.data?.data || []);
+      } catch (_) {}
+
+      downloadExcelRekap(dataTransaksi, bulanFilter, tahunFilter);
+      addToast(`Berkas rekap keuangan ${bulanFilter} ${tahunFilter} berhasil diunduh!`, 'success');
+    } catch (err) {
+      console.error('Error downloading Excel:', err);
+      addToast('Gagal memproses berkas Excel.', 'error');
+    } finally {
       setIsDownloading(false);
-      addToast(`Berkas rekap keuangan ${bulanFilter} ${tahunFilter} berhasil diunduh.`, 'success');
-    }, 800);
+    }
   };
 
   return (

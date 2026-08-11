@@ -32,6 +32,7 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     accessTokenRef.current = null;
     setAccessToken(null);
     setUser(null);
+    try { localStorage.removeItem('bunsay_tenant_rt'); } catch (_) {}
   }, []);
 
   // Initialize Tenant Auth HTTP Client — stable across token refreshes (BUG-NEW-03)
@@ -49,8 +50,12 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
   const { isHydrated } = useAuthHydration({
     onHydrate: async () => {
       try {
-        const response = await httpClient.post('/api/v1/tenant/auth/refresh', {});
-        const { accessToken: token, user: userData } = response.data || {};
+        const storedRt = typeof window !== 'undefined' ? localStorage.getItem('bunsay_tenant_rt') : null;
+        const response = await httpClient.post('/api/v1/tenant/auth/refresh', { refresh_token: storedRt });
+        const { accessToken: token, refreshToken: newRt, user: userData } = response.data || {};
+        if (newRt) {
+          try { localStorage.setItem('bunsay_tenant_rt', newRt); } catch (_) {}
+        }
         if (token) {
           setTokenState(token, userData ?? null);
         }
@@ -62,7 +67,10 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
 
   const login = useCallback(async (username, password) => {
     const response = await httpClient.post('/api/v1/tenant/auth/login', { username, password });
-    const { accessToken: token, user: userData } = response.data;
+    const { accessToken: token, refreshToken: rt, user: userData } = response.data;
+    if (rt) {
+      try { localStorage.setItem('bunsay_tenant_rt', rt); } catch (_) {}
+    }
     setTokenState(token, userData ?? null);
     return response.data;
   }, [httpClient, setTokenState]);

@@ -46,9 +46,11 @@ class DashboardController extends Controller
             return response()->json(['message' => 'Data pemilik tidak ditemukan.'], 404);
         }
 
-        // Ambil sewa aktif paling baru (bulan berjalan)
+        // Ambil sewa aktif paling baru
         $sewaTerbaru = $pemilik->sewa->sortByDesc('Tanggal_Mulai')->first();
-        $tagihanBerjalan = $sewaTerbaru?->tagihan?->sortByDesc('Periode')->first();
+        $allTagihan = $pemilik->sewa->flatMap->tagihan;
+        $tagihanBerjalan = $allTagihan->where('Status_Tagihan', '!=', 'Lunas')->sortByDesc('Id_Tagihan')->first()
+            ?? $allTagihan->sortByDesc('Id_Tagihan')->first();
 
         // Kumpulkan semua nomor kios yang dimiliki pemilik ini
         $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();

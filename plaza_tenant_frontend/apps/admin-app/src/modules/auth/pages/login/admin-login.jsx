@@ -7,6 +7,7 @@ function AdminLoginPage() {
   const navigate = useNavigate();
   const { login, isLoading } = useAdminAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
@@ -70,15 +71,25 @@ function AdminLoginPage() {
           </FormField>
 
           <FormField label="Kata Sandi" id="admin-login-password" required>
-            <input
-              type="password"
-              name="password"
-              placeholder="Masukkan kata sandi"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-              autoComplete="current-password"
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
-            />
+            <div className="relative w-full">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Masukkan kata sandi"
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                autoComplete="current-password"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-11 text-base focus:bg-white transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none"
+                aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+              >
+                <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} width="20" height="20" />
+              </button>
+            </div>
           </FormField>
 
           <Button

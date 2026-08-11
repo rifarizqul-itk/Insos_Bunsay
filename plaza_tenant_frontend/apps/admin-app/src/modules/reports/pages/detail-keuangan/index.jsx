@@ -246,7 +246,6 @@ function DetailKeuanganTenant() {
               className="w-full h-11 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text"
             >
               <option value="Lunas">Lunas</option>
-              <option value="Dicicil">Dicicil</option>
               <option value="Belum Bayar">Belum Bayar</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
             </select>

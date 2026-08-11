@@ -44,7 +44,7 @@ function KetersediaanKios() {
       const raw = response?.data?.data || (Array.isArray(response?.data) ? response.data : null);
       if (Array.isArray(raw) && raw.length > 0) {
         const mapped = raw.map((item, idx) => {
-          const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0 ? item.sewa[0] : null;
+          const activeSewa = item.sewa ? (Array.isArray(item.sewa) ? item.sewa[0] : item.sewa) : null;
           const pemilik = activeSewa?.pemilik || null;
           const lantaiStr = typeof item.Lantai === 'number' ? `Lantai ${item.Lantai}` : (item.Lantai || 'Lantai 1');
           

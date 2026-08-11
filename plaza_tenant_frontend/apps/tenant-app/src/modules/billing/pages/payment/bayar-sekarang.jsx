@@ -122,29 +122,44 @@ function BayarSekarang() {
     setShowReview(true);
   };
 
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+
   const handleProsesPembayaran = async () => {
     setIsLoading(true);
     try {
-      const result = await MockTransactionAdapter.execute({
-        type: 'SUBMIT_PAYMENT',
-        payload: {
-          tenantId: 1,
-          jenisTagihan,
-          nominal: Number(nominal),
-          metode: metode === 'transfer_manual' ? 'Transfer' : 'Midtrans',
-          bukti: buktiTransfer?.name || 'bukti_transfer.jpg'
-        }
-      });
+      const base64Bukti = buktiTransfer ? await fileToBase64(buktiTransfer) : null;
+      const targetTagihanId = unpaidBills[0]?.idTagihan || 1;
+      const metodeBayar = metode === 'transfer_manual' ? 'Transfer' : 'Midtrans';
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const payload = {
+        Id_Tagihan: targetTagihanId,
+        Tanggal_Bayar: todayStr,
+        Total_Bayar: Number(nominal),
+        Metode_Bayar: metodeBayar,
+        Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
+        Verifikasi_Pembayaran: metode === 'transfer_manual' ? 'Menunggu' : 'Diterima'
+      };
+
+      await httpClient.post('/api/v1/pembayaran', payload);
       setIsLoading(false);
-      if (result && result.success !== false) {
-        addToast('Bukti pembayaran terkirim! Menunggu verifikasi admin.', 'success');
-        navigate('/tenant/histori');
-      } else {
-        addToast(result?.message || 'Gagal mengirimkan bukti transfer.', 'error');
-      }
-    } catch (_) {
+      addToast(
+        metode === 'transfer_manual'
+          ? 'Bukti pembayaran terkirim! Menunggu verifikasi admin.'
+          : 'Pembayaran berhasil dikonfirmasi!',
+        'success'
+      );
+      navigate('/tenant/histori');
+    } catch (err) {
       setIsLoading(false);
-      addToast('Gagal memproses pembayaran.', 'error');
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal memproses pembayaran.';
+      addToast(errMsg, 'error');
     }
   };
 

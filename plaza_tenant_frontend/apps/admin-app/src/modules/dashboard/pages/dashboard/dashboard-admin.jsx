@@ -187,7 +187,6 @@ function DashboardAdmin() {
             >
               <option value="Semua">Semua Status</option>
               <option value="Lunas">Lunas</option>
-              <option value="Dicicil">Dicicil</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
               <option value="Belum Bayar">Belum Bayar</option>
             </select>

@@ -40,10 +40,16 @@ class PemilikController extends Controller
         $validatedData = $request->validate([
             'Id_User'    => 'nullable',
             'Nama'       => 'required|string|max:255',
-            'No_Telepon' => 'required|string|max:20',
-            'No_KTP'     => 'required|string|max:20|unique:pemilik,No_KTP',
-            'Alamat'     => 'required|string',
+            'No_Telepon' => 'nullable|string|max:20',
+            'No_KTP'     => 'nullable|string|max:20',
+            'Alamat'     => 'nullable|string',
+            'Jenis_Usaha'=> 'nullable|string|max:255',
         ]);
+
+        $validatedData['No_Telepon'] = $request->No_Telepon ?: ($request->Telepon ?: '081234567890');
+        $validatedData['No_KTP']     = $request->No_KTP ?: ('6471' . rand(1000000000, 9999999999));
+        $validatedData['Alamat']     = $request->Alamat ?: 'Plaza Kebun Sayur';
+        $validatedData['Jenis_Usaha']= $request->Jenis_Usaha ?: 'Perdagangan Umum';
 
         try {
             // Otomatis buatkan akun User jika Id_User belum ada
@@ -62,14 +68,30 @@ class PemilikController extends Controller
             // 2. Simpan Data ke Database
             $pemilik = Pemilik::create($validatedData);
             $pemilik->load('user');
-            if (isset($plainPassword)) {
-                $pemilik->user->plain_password = $plainPassword;
+
+            // 3. Link ke Kios jika No_Kios disertakan
+            if ($request->filled('No_Kios')) {
+                $kiosTarget = \App\Models\Kios::where('No_Kios', $request->No_Kios)->first();
+                if ($kiosTarget) {
+                    \App\Models\Sewa::create([
+                        'Id_Kios'        => $kiosTarget->Id_Kios,
+                        'Id_Pemilik'     => $pemilik->Id_Pemilik,
+                        'Tanggal_Mulai'  => date('Y-m-d'),
+                        'Tanggal_Selesai'=> date('Y-m-d', strtotime('+1 year')),
+                        'Jenis_Usaha'    => $validatedData['Jenis_Usaha'],
+                    ]);
+                    $kiosTarget->update(['Status' => 'Terisi']);
+                }
             }
+
+            $responseData = $pemilik->toArray();
+            $responseData['Username'] = $pemilik->user?->Username ?? $username ?? 'tenant';
+            $responseData['tempPassword'] = $plainPassword ?? 'bunsay1234';
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data pemilik berhasil ditambahkan',
-                'data'    => $pemilik
+                'data'    => $responseData
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

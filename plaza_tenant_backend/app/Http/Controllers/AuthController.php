@@ -73,8 +73,8 @@ class AuthController extends Controller
 
         // 3. Construct HttpOnly Host-Only Secure Cookie
         $cookieName = ($portalScope === 'admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
-        $isSecure = $request->isSecure() || (bool) config('session.secure', false);
-        $sameSite = config('session.same_site', 'lax') ?? 'Lax';
+        $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
+        $sameSite = 'none';
 
         $refreshCookie = cookie(
             $cookieName,
@@ -114,6 +114,7 @@ class AuthController extends Controller
 
         return response()->json([
             'accessToken' => $accessToken,
+            'refreshToken' => $refreshTokenObj->plainTextToken,
             'user' => [
                 'Id_user'      => $user->Id_user,
                 'Username'     => $user->Username,
@@ -128,7 +129,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Silent Refresh handler reading HttpOnly Cookie without Authorization header requirement.
+     * Silent Refresh handler reading HttpOnly Cookie or fallback header/body without Authorization header requirement.
      */
     public function refresh(Request $request): JsonResponse
     {
@@ -136,11 +137,11 @@ class AuthController extends Controller
         $isAdminScope = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
         $cookieName = $isAdminScope ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
 
-        $refreshTokenString = $request->cookie($cookieName);
+        $refreshTokenString = $request->cookie($cookieName) ?: ($request->input('refresh_token') ?: $request->header('X-Refresh-Token'));
 
         if (!$refreshTokenString) {
             return response()->json([
-                'message' => 'Refresh token cookie tidak ditemukan.',
+                'message' => 'Refresh token tidak ditemukan.',
             ], 401)->withCookie(cookie()->forget($cookieName));
         }
 
@@ -184,8 +185,8 @@ class AuthController extends Controller
         $tokenInstance->delete();
 
         // Issue new Refresh Token (7 days) and send as rotated HttpOnly Cookie
-        $isSecure = $request->isSecure() || (bool) config('session.secure', false);
-        $sameSite = config('session.same_site', 'lax') ?? 'Lax';
+        $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
+        $sameSite = 'none';
         $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(7));
         $newRefreshCookie = cookie(
             $cookieName,
@@ -214,6 +215,7 @@ class AuthController extends Controller
 
         return response()->json([
             'accessToken' => $newAccessToken,
+            'refreshToken' => $newRefreshTokenObj->plainTextToken,
             'user' => [
                 'Id_user'      => $user->Id_user,
                 'Username'     => $user->Username,

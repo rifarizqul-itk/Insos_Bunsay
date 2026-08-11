@@ -144,6 +144,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
   const antreanHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
+    { label: 'Waktu/Tanggal', sortKey: 'waktu' },
     { label: 'Jenis Tagihan', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Status Sanggahan', sortKey: 'teksSanggahan' },
@@ -259,7 +260,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               caption="Antrean Verifikasi Bukti Transfer Tenant"
               ariaLabel="Tabel Antrean Verifikasi Pembayaran Transfer Manual"
               headers={antreanHeaders}
-              colSpan={5}
+              colSpan={6}
               sortConfig={sortConfigAntrean}
               onSort={handleSortAntrean}
             >
@@ -269,6 +270,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                     <div className="font-bold text-text text-sm">{item.nama}</div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </th>
+                  <td data-label="Waktu/Tanggal" className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
+                    {item.waktu}
+                  </td>
                   <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
                     {item.tagihan}
                   </td>
