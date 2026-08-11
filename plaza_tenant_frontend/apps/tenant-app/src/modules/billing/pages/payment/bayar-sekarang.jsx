@@ -21,6 +21,7 @@ function BayarSekarang() {
   const [previewBukti, setPreviewBukti] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [unpaidBills, setUnpaidBills] = useState([]);
+  const [isUnpaidLoaded, setIsUnpaidLoaded] = useState(false);
   const [fifoAllocations, setFifoAllocations] = useState([]);
   const [showReview, setShowReview] = useState(false);
 
@@ -47,6 +48,8 @@ function BayarSekarang() {
         }
       } catch (err) {
         console.error('Error fetching unpaid bills:', err);
+      } finally {
+        setIsUnpaidLoaded(true);
       }
     };
 
@@ -185,7 +188,39 @@ function BayarSekarang() {
 
       <div className="bayar-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-7 flex flex-col gap-6">
-          {showReview ? (
+          {isUnpaidLoaded && unpaidBills.length === 0 ? (
+            <Card variant="elevated" className="flex flex-col items-center justify-center text-center p-8 sm:p-10 page-fade-in border-emerald-200 bg-emerald-50/40">
+              <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
+                <Icon icon="heroicons:check-circle-20-solid" width="40" height="40" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-text tracking-tight text-balance mb-2">
+                Semua Tagihan Sewa Anda Sudah Lunas!
+              </h2>
+              <p className="text-text-2 text-sm sm:text-base font-medium max-w-md mb-6 leading-relaxed">
+                Tidak ada tagihan atau tunggakan sewa kios yang perlu dibayar saat ini. Terima kasih telah melakukan pembayaran tepat waktu!
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+                <Button
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  onClick={() => navigate('/tenant/dashboard')}
+                  className="font-extrabold shadow-sm bg-green hover:bg-green/90 h-11"
+                >
+                  Kembali ke Dashboard
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  fullWidth
+                  onClick={() => navigate('/tenant/histori')}
+                  className="font-extrabold h-11"
+                >
+                  Lihat Histori Pembayaran
+                </Button>
+              </div>
+            </Card>
+          ) : showReview ? (
             <Card variant="glow" className="flex flex-col gap-5 p-6 sm:p-7 page-fade-in" role="region" aria-label="Tinjauan Konfirmasi Pembayaran">
               <div className="flex items-center gap-2 border-b border-border pb-3">
                 <Icon icon="heroicons:shield-check-20-solid" width="24" height="24" className="text-green" />
