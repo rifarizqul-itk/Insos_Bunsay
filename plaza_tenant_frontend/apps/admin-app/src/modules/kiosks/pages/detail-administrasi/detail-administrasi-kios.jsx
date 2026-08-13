@@ -18,16 +18,16 @@ function DetailAdministrasiKios() {
   const [editData, setEditData] = useState({
     nomorKios: displayKiosNo,
     lantai: 'Lantai 1',
-    tenant: 'Hj. Yuliana',
-    nik: '6471012345670001',
-    telepon: '0812-5544-3322',
-    email: 'yuliana@bunsay.id',
-    usaha: 'Sembako & Kelontong',
-    sp: 'SP-084/BP-KBS/2026',
-    ppjb: 'PPJB-102/2026',
-    ukuran: '3m x 4m (12 m²)',
-    sertifikat: 'SHMRT-0492',
-    keterangan: 'Izin usaha aktif. Retribusi bulanan tepat waktu.',
+    tenant: 'Memuat data tenant...',
+    nik: '—',
+    telepon: '—',
+    email: '—',
+    usaha: '—',
+    sp: '—',
+    ppjb: '—',
+    ukuran: '4x4 m²',
+    sertifikat: '—',
+    keterangan: 'Izin usaha aktif.',
     statusKios: 'Terisi',
     statusPemilik: 'Aktif'
   });
@@ -45,28 +45,36 @@ function DetailAdministrasiKios() {
       const response = await httpClient.get(`/api/v1/admin/kios/${id}`);
       if (response?.data?.data) {
         const item = response.data.data;
-        const activeSewa = item.sewa && item.sewa.length > 0 ? item.sewa[0] : null;
+        const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0 
+          ? (item.sewa.find(s => s.Status === 'Aktif') || item.sewa[0])
+          : null;
         const pemilik = activeSewa?.pemilik || null;
+        const userObj = pemilik?.user || null;
+        const dokumenList = item.dokumen || pemilik?.dokumen || activeSewa?.dokumen || [];
 
-        setPemilikId(pemilik?.Id_Pemilik || null);
+        const spDoc = Array.isArray(dokumenList) ? dokumenList.find(d => d.Jenis_Dokumen === 'SP') : null;
+        const ppjbDoc = Array.isArray(dokumenList) ? dokumenList.find(d => d.Jenis_Dokumen === 'PPJB') : null;
+
+        const targetPemilikId = pemilik?.Id_Pemilik || item.Id_Pemilik || null;
+        setPemilikId(targetPemilikId);
         setIzinkanCicilanAdmin(Boolean(pemilik?.izinkan_cicilan));
 
         setEditData({
           nomorKios: item.No_Kios || id,
           lantai: typeof item.Lantai === 'number' ? `Lantai ${item.Lantai}` : (item.Lantai || 'Lantai 1'),
-          tenant: pemilik?.Nama || 'Hj. Yuliana',
-          nik: pemilik?.NIK || '6471012345670001',
-          telepon: pemilik?.Telepon || '0812-5544-3322',
-          email: pemilik?.Email || 'yuliana@bunsay.id',
-          usaha: pemilik?.Jenis_Usaha || 'Sembako & Kelontong',
+          tenant: pemilik?.Nama || (item.Status === 'Terisi' ? 'Penyewa Kios' : 'Belum Ada Tenant'),
+          nik: pemilik?.No_KTP || pemilik?.NIK || '—',
+          telepon: pemilik?.No_Telepon || pemilik?.Telepon || '—',
+          email: userObj?.email || userObj?.Username || pemilik?.Email || '—',
+          usaha: activeSewa?.Jenis_Usaha || '—',
           tarifBulanan: activeSewa?.Tarif_Bulanan || 750000,
-          sp: item.No_SP || 'SP-084/BP-KBS/2026',
-          ppjb: item.No_PPJB || 'PPJB-102/2026',
-          ukuran: item.Ukuran || '3m x 4m (12 m²)',
-          sertifikat: item.Sertifikat || 'SHMRT-0492',
+          sp: spDoc?.Nomor_Dokumen || `SP/BUNSAY/${item.Id_Kios || 101}/2026`,
+          ppjb: ppjbDoc?.Nomor_Dokumen || `PPJB/BUNSAY/${item.Id_Kios || 101}/2026`,
+          ukuran: item.Ukuran || '4x4 m²',
+          sertifikat: item.Sertifikat || `SHMRT-${item.Id_Kios || 101}`,
           keterangan: item.Catatan || 'Izin usaha aktif. Retribusi bulanan tepat waktu.',
           statusKios: item.Status || 'Terisi',
-          statusPemilik: pemilik?.Status_Pemilik || 'Aktif'
+          statusPemilik: (item.Status === 'Terisi' && pemilik) ? 'Aktif' : 'Nonaktif'
         });
       }
     } catch (err) {
