@@ -320,6 +320,19 @@ function DetailAdministrasiKios() {
           <FormField label="Jenis Usaha" id="edit-usaha">
             <input type="text" name="usaha" value={editData.usaha} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white" />
           </FormField>
+          <FormField label="Nominal Tagihan per Bulan (Rp)" id="edit-tarifBulanan">
+            <input 
+              type="text" 
+              inputMode="numeric"
+              name="tarifBulanan" 
+              value={editData.tarifBulanan ? Number(editData.tarifBulanan).toLocaleString('id-ID') : ''} 
+              onChange={(e) => {
+                const cleanDigits = e.target.value.replace(/\D/g, '');
+                setEditData(prev => ({ ...prev, tarifBulanan: cleanDigits }));
+              }} 
+              className="w-full h-10 px-3 rounded border border-border bg-white font-extrabold font-tabular-nums text-emerald-800" 
+            />
+          </FormField>
           <FormField label="Status Pemilik" id="edit-status">
             <select name="statusPemilik" value={editData.statusPemilik} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-bold">
               <option value="Aktif">Aktif (Berjualan)</option>

@@ -74,7 +74,8 @@ class KiosController extends Controller
      */
     public function show($id)
     {
-        $kios = Kios::with(['sewa.pemilik.dokumen'])->find($id);
+        $kios = Kios::with(['sewa.pemilik.dokumen'])->find($id)
+            ?? Kios::with(['sewa.pemilik.dokumen'])->where('No_Kios', $id)->first();
 
         if (!$kios) {
             return response()->json([
@@ -96,7 +97,8 @@ class KiosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $kios = Kios::with('sewa.pemilik')->find($id);
+        $kios = Kios::with('sewa.pemilik')->find($id)
+            ?? Kios::with('sewa.pemilik')->where('No_Kios', $id)->first();
 
         if (!$kios) {
             return response()->json([
