@@ -154,7 +154,7 @@ function BayarSekarang() {
         Verifikasi_Pembayaran: metode === 'transfer_manual' ? 'Menunggu' : 'Diterima'
       };
 
-      await httpClient.post('/api/v1/pembayaran', payload);
+      await httpClient.post('/api/v1/tenant/pembayaran', payload);
       setIsLoading(false);
       addToast(
         metode === 'transfer_manual'

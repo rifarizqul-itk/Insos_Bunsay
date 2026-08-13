@@ -87,6 +87,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
         });
         Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
+
+        // Alias Routes for backward compatibility (/api/v1/pembayaran)
+        Route::get('/v1/pembayaran', [PembayaranController::class, 'index']);
+        Route::post('/v1/pembayaran', [PembayaranController::class, 'store']);
+        Route::post('/v1/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
     });
 
     // ============================================================
