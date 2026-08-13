@@ -23,6 +23,6 @@ class Kios extends Model
      */
     public function sewa()
     {
-        return $this->hasOne(Sewa::class, 'Id_Kios', 'Id_Kios');
+        return $this->hasOne(Sewa::class, 'Id_Kios', 'Id_Kios')->latestOfMany('Id_Sewa');
     }
 }

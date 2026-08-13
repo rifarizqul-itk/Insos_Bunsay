@@ -58,10 +58,10 @@ class DashboardController extends Controller
         return response()->json([
             'idPemilik'      => $pemilik->Id_Pemilik,
             'nama'           => $pemilik->Nama,
-            'nik'            => $pemilik->No_KTP,
-            'telepon'        => $pemilik->No_Telepon,
+            'nik'            => $pemilik->No_KTP ?: '—',
+            'telepon'        => $pemilik->No_Telepon ?: '—',
             'email'          => $user->email ?? $user->Username,
-            'alamat'         => $pemilik->Alamat,
+            'alamat'         => $pemilik->Alamat ?: '—',
             'kios'           => $kiosList->implode(', '),
             'kiosList'       => $kiosList,
             'statusPemilik'  => $pemilik->Status_Pemilik,
@@ -69,10 +69,10 @@ class DashboardController extends Controller
             'detailAdministrasi' => [
                 'lantai'     => is_numeric($sewaTerbaru?->kios?->Lantai) ? "Lantai " . $sewaTerbaru->kios->Lantai : ($sewaTerbaru?->kios?->Lantai ?? 'Lantai 1'),
                 'ukuran'     => $sewaTerbaru?->kios?->Ukuran ?? '4x4 m²',
-                'sertifikat' => $sewaTerbaru?->kios?->Sertifikat ?? ('SHMRT-' . ($sewaTerbaru?->kios?->Id_Kios ?? 101)),
-                'sp'         => "SP/BUNSAY/" . ($sewaTerbaru?->kios?->Id_Kios ?? 101) . "/2026",
-                'ppjb'       => "PPJB/BUNSAY/" . ($sewaTerbaru?->kios?->Id_Kios ?? 101) . "/2026",
-                'catatan'    => $sewaTerbaru?->kios?->Catatan ?? 'Izin usaha aktif. Retribusi bulanan tepat waktu.'
+                'sertifikat' => $sewaTerbaru?->kios?->Sertifikat ?? '—',
+                'sp'         => '—',
+                'ppjb'       => '—',
+                'catatan'    => $sewaTerbaru?->kios?->Catatan ?? 'Izin usaha aktif.'
             ],
             'siklusSewa' => $sewaTerbaru ? [
                 'idSewa'         => $sewaTerbaru->Id_Sewa,

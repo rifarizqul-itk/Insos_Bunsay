@@ -19,6 +19,8 @@ function KetersediaanKios() {
   const [createdCredential, setCreatedCredential] = useState(null);
   const initialFormState = {
     nama: '',
+    nik: '',
+    alamat: '',
     kios: '',
     email: '',
     telepon: '',
@@ -148,6 +150,14 @@ function KetersediaanKios() {
       setFieldError({ field: 'nama', message: 'Nama lengkap tenant wajib diisi.' });
       return;
     }
+    if (!formTenant.nik.trim()) {
+      setFieldError({ field: 'nik', message: 'NIK (Nomor KTP) tenant wajib diisi (16 digit).' });
+      return;
+    }
+    if (!formTenant.alamat.trim()) {
+      setFieldError({ field: 'alamat', message: 'Alamat tempat tinggal tenant wajib diisi.' });
+      return;
+    }
     if (!formTenant.kios.trim()) {
       setFieldError({ field: 'kios', message: 'Nomor kios wajib diisi.' });
       return;
@@ -165,6 +175,8 @@ function KetersediaanKios() {
     try {
       const payload = {
         Nama: formTenant.nama,
+        No_KTP: formTenant.nik.trim(),
+        Alamat: formTenant.alamat.trim(),
         Telepon: formTenant.telepon,
         Email: formTenant.email,
         Jenis_Usaha: formTenant.usaha,
@@ -385,6 +397,26 @@ function KetersediaanKios() {
               value={formTenant.nama} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, nama: e.target.value }))} 
               className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+            />
+          </FormField>
+
+          <FormField label="NIK (KTP Tenant)" id="tambah-tenant-nik" required error={fieldError?.field === 'nik' ? fieldError.message : undefined}>
+            <input 
+              type="text" 
+              placeholder="Contoh: 6471012345670001 (16 digit)" 
+              value={formTenant.nik} 
+              onChange={(e) => setFormTenant(prev => ({ ...prev, nik: e.target.value }))} 
+              className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base font-tabular-nums focus:bg-white transition-colors ${fieldError?.field === 'nik' ? 'border-red' : 'border-border'}`} 
+            />
+          </FormField>
+
+          <FormField label="Alamat Tempat Tinggal Tenant" id="tambah-tenant-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
+            <textarea
+              placeholder="Contoh: Jl. Letjen Suprapto No. 45, Balikpapan Barat" 
+              value={formTenant.alamat} 
+              onChange={(e) => setFormTenant(prev => ({ ...prev, alamat: e.target.value }))} 
+              rows={2}
+              className={`w-full rounded-md border bg-warm-gray/50 p-3 text-base focus:bg-white transition-colors resize-none ${fieldError?.field === 'alamat' ? 'border-red' : 'border-border'}`} 
             />
           </FormField>
 

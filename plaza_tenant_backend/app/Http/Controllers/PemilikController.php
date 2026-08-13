@@ -40,14 +40,15 @@ class PemilikController extends Controller
         $validatedData = $request->validate([
             'Id_User'    => 'nullable',
             'Nama'       => 'required|string|max:255',
-            'No_Telepon' => 'nullable|string|max:20',
-            'No_KTP'     => 'nullable|string|max:20',
-            'Alamat'     => 'nullable|string',
+            'No_Telepon' => 'required|string|max:20',
+            'No_KTP'     => 'required|string|max:20',
+            'Alamat'     => 'required|string',
             'Jenis_Usaha'=> 'nullable|string|max:255',
         ]);
 
-        $validatedData['No_Telepon'] = $request->No_Telepon ?: ($request->Telepon ?: '081234567890');
-        $validatedData['No_KTP']     = $request->No_KTP ?: ('6471' . rand(1000000000, 9999999999));
+        $validatedData['No_Telepon'] = $request->No_Telepon ?: $request->Telepon;
+        $validatedData['No_KTP']     = $request->No_KTP ?: $request->nik;
+        $validatedData['Alamat']     = $request->Alamat ?: $request->alamat;
         $jenisUsaha = $request->Jenis_Usaha ?: 'Perdagangan Umum';
         unset($validatedData['Jenis_Usaha']);
 

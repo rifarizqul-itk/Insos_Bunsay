@@ -68,11 +68,11 @@ function DetailAdministrasiKios() {
           email: userObj?.email || userObj?.Username || pemilik?.Email || '—',
           usaha: activeSewa?.Jenis_Usaha || '—',
           tarifBulanan: activeSewa?.Tarif_Bulanan || 750000,
-          sp: spDoc?.Nomor_Dokumen || `SP/BUNSAY/${item.Id_Kios || 101}/2026`,
-          ppjb: ppjbDoc?.Nomor_Dokumen || `PPJB/BUNSAY/${item.Id_Kios || 101}/2026`,
+          sp: spDoc?.Nomor_Dokumen || '—',
+          ppjb: ppjbDoc?.Nomor_Dokumen || '—',
           ukuran: item.Ukuran || '4x4 m²',
-          sertifikat: item.Sertifikat || `SHMRT-${item.Id_Kios || 101}`,
-          keterangan: item.Catatan || 'Izin usaha aktif. Retribusi bulanan tepat waktu.',
+          sertifikat: item.Sertifikat || '—',
+          keterangan: item.Catatan || 'Izin usaha aktif.',
           statusKios: item.Status || 'Terisi',
           statusPemilik: (item.Status === 'Terisi' && pemilik) ? 'Aktif' : 'Nonaktif'
         });
@@ -340,6 +340,18 @@ function DetailAdministrasiKios() {
               }} 
               className="w-full h-10 px-3 rounded border border-border bg-white font-extrabold font-tabular-nums text-emerald-800" 
             />
+          </FormField>
+          <FormField label="Nomor Surat Perjanjian (SP)" id="edit-sp" hint="Opsional - Diisi jika dokumen fisik SP sudah diterbitkan pengelola">
+            <input type="text" name="sp" placeholder="Kosongkan jika belum ada" value={editData.sp === '—' ? '' : editData.sp} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-tabular-nums" />
+          </FormField>
+          <FormField label="Nomor Dokumen PPJB" id="edit-ppjb" hint="Opsional - Diisi jika dokumen PPJB sudah terbit">
+            <input type="text" name="ppjb" placeholder="Kosongkan jika belum ada" value={editData.ppjb === '—' ? '' : editData.ppjb} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-tabular-nums" />
+          </FormField>
+          <FormField label="Sertifikat Hak Guna (SHMRT)" id="edit-sertifikat" hint="Opsional">
+            <input type="text" name="sertifikat" placeholder="Kosongkan jika belum ada" value={editData.sertifikat === '—' ? '' : editData.sertifikat} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-tabular-nums" />
+          </FormField>
+          <FormField label="Catatan Administrasi Pengelola" id="edit-keterangan">
+            <textarea name="keterangan" rows={2} value={editData.keterangan} onChange={handleEditChange} className="w-full p-2.5 rounded border border-border bg-white resize-none" />
           </FormField>
           <FormField label="Status Pemilik" id="edit-status">
             <select name="statusPemilik" value={editData.statusPemilik} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-bold">
