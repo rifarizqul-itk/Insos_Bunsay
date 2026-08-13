@@ -36,14 +36,18 @@ function BayarSekarang() {
           
           const activeUnpaid = tagihan
             .filter(t => t.Status_Tagihan !== 'Lunas')
-            .map(t => ({
-              idTagihan: t.Id_Tagihan,
-              periode: t.Periode,
-              tarifSewa: parseFloat(t.Tarif_Sewa || 0),
-              totalTagihan: parseFloat(t.Total_Tagihan || 0),
-              totalTerbayar: 0,
-              statusTagihan: t.Status_Tagihan
-            }));
+            .map(t => {
+              const totalTagihan = parseFloat(t.Total_Tagihan || 0);
+              const sisaTagihan = parseFloat(t.Sisa_Tagihan ?? totalTagihan);
+              return {
+                idTagihan: t.Id_Tagihan,
+                periode: t.Periode,
+                tarifSewa: parseFloat(t.Tarif_Sewa || 0),
+                totalTagihan,
+                totalTerbayar: Math.max(0, totalTagihan - sisaTagihan),
+                statusTagihan: t.Status_Tagihan
+              };
+            });
           setUnpaidBills(activeUnpaid);
         }
       } catch (err) {

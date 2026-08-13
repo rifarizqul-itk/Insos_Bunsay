@@ -1,25 +1,114 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Badge, EmptyState } from '@bunsay/shared-ui';
+import { Icon, Card, Button, Badge, EmptyState, SkeletonCard, SkeletonText } from '@bunsay/shared-ui';
+import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function TunggakanAR() {
   const navigate = useNavigate();
+  const { httpClient } = useTenantAuth();
 
-  const data = {
-    totalHutangTunggakan: 3500000,
-    tagihanMenunggak: [
-      { idTagihan: 95, periode: '2026-04', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 500000, statusTagihan: 'Dicicil', jatuhTempo: '10 Apr 2026' },
-      { idTagihan: 101, periode: '2026-05', tarifSewa: 4000000, totalTagihan: 4000000, totalTerbayar: 0, statusTagihan: 'Belum Bayar', jatuhTempo: '10 Mei 2026' }
-    ]
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalTunggakanVal, setTotalTunggakanVal] = useState(0);
+  const [listTagihan, setListTagihan] = useState([]);
+
+  const fetchTunggakanData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Step 1: Ambil idPemilik dari dashboard
+      const dashRes = await httpClient.get('/api/v1/tenant/dashboard');
+      const idPemilik = dashRes.data?.idPemilik;
+
+      if (!idPemilik) {
+        throw new Error('Data pemilik tidak ditemukan.');
+      }
+
+      // Step 2: Ambil semua tagihan milik pemilik ini
+      const tagihanRes = await httpClient.get(`/api/v1/admin/tagihan?Id_Pemilik=${idPemilik}`);
+      const semuaTagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
+
+      // Filter hanya yang belum lunas
+      const tagihanMenunggak = semuaTagihan
+        .filter(t => t.Status_Tagihan !== 'Lunas')
+        .map(t => {
+          const totalTagihan = parseFloat(t.Total_Tagihan || 0);
+          const sisaTagihan = parseFloat(t.Sisa_Tagihan ?? totalTagihan);
+          const totalTerbayar = Math.max(0, totalTagihan - sisaTagihan);
+          // Format jatuh tempo: "YYYY-MM-DD" → "DD Mon YYYY"
+          let jatuhTempo = t.Jatuh_Tempo || '—';
+          if (jatuhTempo && jatuhTempo.includes('-')) {
+            const parts = jatuhTempo.split('-');
+            if (parts.length === 3) {
+              const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+              const month = parseInt(parts[1], 10) - 1;
+              jatuhTempo = `${parseInt(parts[2], 10)} ${months[month]} ${parts[0]}`;
+            }
+          }
+          return {
+            idTagihan: t.Id_Tagihan,
+            periode: t.Periode,
+            tarifSewa: parseFloat(t.Tarif_Sewa || 0),
+            totalTagihan,
+            totalTerbayar,
+            statusTagihan: t.Status_Tagihan,
+            jatuhTempo,
+          };
+        });
+
+      // Total tunggakan = jumlah sisa dari semua tagihan belum lunas
+      const totalTunggakan = tagihanMenunggak.reduce((sum, t) => {
+        return sum + Math.max(0, t.totalTagihan - t.totalTerbayar);
+      }, 0);
+
+      setListTagihan(tagihanMenunggak);
+      setTotalTunggakanVal(totalTunggakan);
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Gagal memuat data tunggakan.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const { totalHutangTunggakan, tagihanMenunggak } = data || {};
-  const totalTunggakanVal = totalHutangTunggakan ?? 0;
-  const listTagihan = tagihanMenunggak || [];
+  useEffect(() => {
+    fetchTunggakanData();
+  }, []);
 
   const handleBayar = () => {
     navigate('/tenant/pembayaran');
   };
+
+  if (loading) {
+    return (
+      <div className="page-fade-in flex flex-col gap-8 font-sans" role="status" aria-live="polite">
+        <div className="flex flex-col gap-2">
+          <SkeletonText className="h-8 w-52" />
+          <SkeletonText className="h-5 w-72 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SkeletonCard className="h-48" />
+          <SkeletonCard className="h-48" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-fade-in flex flex-col items-center justify-center p-8 sm:p-12 bg-red-50/50 border-2 border-dashed border-red/20 rounded-xl gap-4 font-sans text-center max-w-xl mx-auto my-8">
+        <div className="size-16 rounded-full bg-red-50 text-red flex items-center justify-center mb-2">
+          <Icon icon="heroicons:exclamation-triangle" width="36" height="36" />
+        </div>
+        <div>
+          <h3 className="text-xl font-extrabold text-text tracking-tight">Gagal Memuat Tunggakan</h3>
+          <p className="text-text-2 text-sm font-semibold mt-1.5 leading-relaxed text-balance">{error}</p>
+        </div>
+        <Button variant="primary" size="md" onClick={fetchTunggakanData} className="px-6 h-11 font-bold shadow-sm mt-2">
+          Coba Muat Ulang
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="page-fade-in flex flex-col gap-8 font-sans">
