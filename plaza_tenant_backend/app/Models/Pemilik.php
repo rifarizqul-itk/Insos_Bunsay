@@ -12,6 +12,9 @@ class Pemilik extends Model
     protected $primaryKey = 'Id_Pemilik';
     public $timestamps = false;
     protected $guarded = [];
+    protected $casts = [
+        'izinkan_cicilan' => 'boolean',
+    ];
 
     // ============================================================
     // RELASI ELOQUENT (Sesuai ERD kalian)

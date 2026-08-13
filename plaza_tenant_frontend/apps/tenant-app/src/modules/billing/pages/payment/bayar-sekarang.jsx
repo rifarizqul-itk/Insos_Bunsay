@@ -24,12 +24,16 @@ function BayarSekarang() {
   const [isUnpaidLoaded, setIsUnpaidLoaded] = useState(false);
   const [fifoAllocations, setFifoAllocations] = useState([]);
   const [showReview, setShowReview] = useState(false);
+  const [izinkanCicilan, setIzinkanCicilan] = useState(false);
 
   useEffect(() => {
     const fetchUnpaidBills = async () => {
       try {
         const dashRes = await httpClient.get('/api/v1/tenant/dashboard');
         const idPemilik = dashRes.data?.idPemilik;
+        const isAllowedCicil = Boolean(dashRes.data?.izinkanCicilan);
+        setIzinkanCicilan(isAllowedCicil);
+
         if (idPemilik) {
           const tagihanRes = await httpClient.get(`/api/v1/admin/tagihan?Id_Pemilik=${idPemilik}`);
           const tagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
@@ -49,6 +53,13 @@ function BayarSekarang() {
               };
             });
           setUnpaidBills(activeUnpaid);
+
+          if (!isAllowedCicil && activeUnpaid.length > 0) {
+            const sumUnpaid = activeUnpaid.reduce((sum, b) => sum + Math.max(0, b.totalTagihan - b.totalTerbayar), 0);
+            if (sumUnpaid > 0) {
+              setNominal(String(sumUnpaid));
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching unpaid bills:', err);
@@ -307,14 +318,39 @@ function BayarSekarang() {
                   </a>
                 </div>
 
-                <FormField label="Nominal Pembayaran (Rp)" id="input-nominal-pembayaran" required error={nominalError}>
+                <FormField 
+                  label={
+                    <span className="flex items-center justify-between w-full">
+                      <span>Nominal Pembayaran (Rp)</span>
+                      {!izinkanCicilan ? (
+                        <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">🔒 Wajib Pelunasan Full</span>
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">✅ Cicilan Diizinkan</span>
+                      )}
+                    </span>
+                  } 
+                  id="input-nominal-pembayaran" 
+                  required 
+                  error={nominalError}
+                >
                   <input 
                     type="number" 
-                    placeholder="Contoh: 7500000" 
+                    placeholder="Nominal pembayaran" 
                     value={nominal} 
-                    onChange={(e) => { setNominal(e.target.value); if (nominalError) setNominalError(null); }} 
-                    className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                    readOnly={!izinkanCicilan}
+                    onChange={(e) => { 
+                      if (izinkanCicilan) {
+                        setNominal(e.target.value); 
+                        if (nominalError) setNominalError(null); 
+                      }
+                    }} 
+                    className={`w-full h-11 rounded-md border border-border px-3.5 text-base font-bold font-tabular-nums transition-colors ${!izinkanCicilan ? 'bg-amber-50/40 cursor-not-allowed text-gray-800' : 'bg-warm-gray/50 text-text focus:bg-white'}`}
                   />
+                  {!izinkanCicilan && (
+                    <p className="text-xs text-text-3 font-medium mt-1">
+                      Nominal otomatis dikunci pada tagihan lunas. Hubungi Pengelola via WA untuk membuka izin cicilan.
+                    </p>
+                  )}
                 </FormField>
 
                 <div className="flex flex-col gap-2 pt-2">

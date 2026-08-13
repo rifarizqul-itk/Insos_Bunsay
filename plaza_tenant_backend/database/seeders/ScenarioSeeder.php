@@ -355,7 +355,7 @@ class ScenarioSeeder extends Seeder
         for ($m = 0; $m < $monthsCount; $m++) {
             $currMonthDate = $startDate->copy()->addMonths($m);
             $periodeStr    = $currMonthDate->format('Y-m');
-            $dueDateStr    = $currMonthDate->copy()->day(25)->format('Y-m-d');
+            $dueDateStr    = $currMonthDate->copy()->day(12)->format('Y-m-d');
 
             $isOverdue = ($m >= ($monthsCount - $overdueCount));
 
@@ -484,10 +484,11 @@ class ScenarioSeeder extends Seeder
         $pemilik = Pemilik::firstOrCreate(
             ['Id_User' => $user->Id_user],
             [
-                'Nama'       => $name,
-                'No_Telepon' => '0813' . fake()->numerify('########'),
-                'No_KTP'     => fake()->numerify('6471############'),
-                'Alamat'     => 'Kios Kuliner Bunsay',
+                'Nama'            => $name,
+                'No_Telepon'      => '0813' . fake()->numerify('########'),
+                'No_KTP'          => fake()->numerify('6471############'),
+                'Alamat'          => 'Kios Kuliner Bunsay',
+                'izinkan_cicilan' => true,
             ]
         );
 

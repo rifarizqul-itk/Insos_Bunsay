@@ -124,13 +124,37 @@ function TunggakanAR() {
       <div className="tunggakan-layout-grid mobile-stack grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
           <div>
-            <h2 className="label-micro text-balance">Total Tunggakan Sewa</h2>
+            <h2 className="label-micro text-balance">Total Tagihan Kumulatif & Tunggakan</h2>
             <div className={`text-3xl sm:text-4xl font-extrabold font-tabular-nums tracking-tight mt-1.5 ${totalTunggakanVal > 0 ? 'text-orange' : 'text-green'}`}>
               Rp {totalTunggakanVal.toLocaleString('id-ID')}
             </div>
           </div>
           
-          <div className="text-xs sm:text-sm text-text-2 leading-relaxed border-t border-border/80 pt-4">
+          {/* Box Rincian Nominal Sebelum & Sesudah Ditambahkan Tarif Bulan Ini */}
+          {totalTunggakanVal > 0 && listTagihan.length > 0 && (() => {
+            const latestBill = listTagihan[0]; // Tagihan berjalan / bulan ini
+            const tarifBulanIni = latestBill ? Math.max(0, latestBill.totalTagihan - latestBill.totalTerbayar) : 0;
+            const tunggakanLalu = Math.max(0, totalTunggakanVal - tarifBulanIni);
+
+            return (
+              <div className="bg-warm-gray/60 border border-border rounded-xl p-4 flex flex-col gap-2.5 text-xs sm:text-sm">
+                <div className="flex justify-between items-center text-text-2">
+                  <span className="font-semibold">📌 Tunggakan Sebelum Bulan Ini:</span>
+                  <span className="font-tabular-nums font-bold text-text">Rp {tunggakanLalu.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between items-center text-text-2">
+                  <span className="font-semibold">➕ Tarif Sewa Bulan Ini ({latestBill?.periode || 'Berjalan'}):</span>
+                  <span className="font-tabular-nums font-bold text-text">Rp {tarifBulanIni.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between items-center font-extrabold text-text text-sm">
+                  <span>🧾 Total Tagihan Kumulatif:</span>
+                  <span className="font-tabular-nums text-orange text-base">Rp {totalTunggakanVal.toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="text-xs sm:text-sm text-text-2 leading-relaxed border-t border-border/80 pt-3">
             <p className="margin-0 font-medium text-pretty">
               Nominal pembayaran bebas. Pembayaran Anda otomatis memotong tagihan bulan paling lama yang belum lunas.
             </p>
@@ -143,7 +167,7 @@ function TunggakanAR() {
             disabled={totalTunggakanVal <= 0}
             onClick={handleBayar}
             aria-label={`Bayar cicilan atau pelunasan sebesar total Rp ${totalTunggakanVal.toLocaleString('id-ID')}`}
-            className="h-12 text-base font-extrabold gap-2 shadow-md mt-2"
+            className="h-12 text-base font-extrabold gap-2 shadow-md mt-1"
           >
             {totalTunggakanVal > 0 ? (
               <>

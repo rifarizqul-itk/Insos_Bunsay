@@ -17,6 +17,86 @@ const formatDateIndo = (dateStr) => {
   return `${day} ${months[month]} ${year}`;
 };
 
+const formatMonthYearText = (periodeStr) => {
+  if (!periodeStr) return 'Periode Berjalan';
+
+  if (/^\d{4}-\d{2}$/.test(periodeStr)) {
+    const [year, monthNum] = periodeStr.split('-');
+    const monthIdx = parseInt(monthNum, 10) - 1;
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return `${months[monthIdx]} ${year}`;
+  }
+
+  return periodeStr;
+};
+
+const getMonthlyRangeText = (periodeStr, siklusSewa) => {
+  let year = new Date().getFullYear();
+  let monthIdx = new Date().getMonth();
+
+  if (periodeStr) {
+    if (/^\d{4}-\d{2}$/.test(periodeStr)) {
+      const [y, m] = periodeStr.split('-');
+      year = parseInt(y, 10);
+      monthIdx = parseInt(m, 10) - 1;
+    } else {
+      const months = [
+        'januari', 'februari', 'maret', 'april', 'mei', 'juni',
+        'juli', 'agustus', 'september', 'oktober', 'november', 'desember'
+      ];
+      const parts = periodeStr.split(' ');
+      if (parts.length === 2) {
+        const idx = months.indexOf(parts[0].toLowerCase());
+        if (idx !== -1) {
+          monthIdx = idx;
+          year = parseInt(parts[1], 10);
+        }
+      }
+    }
+  } else if (siklusSewa?.tanggalMulai) {
+    const parts = siklusSewa.tanggalMulai.split('-');
+    if (parts.length === 3) {
+      year = parseInt(parts[0], 10);
+      monthIdx = parseInt(parts[1], 10) - 1;
+    }
+  }
+
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+  return `1 ${months[monthIdx]} ${year} s/d ${lastDay} ${months[monthIdx]} ${year}`;
+};
+
+const getFixedJatuhTempo = (periodeStr, rawJatuhTempo) => {
+  let year = new Date().getFullYear();
+  let monthIdx = new Date().getMonth();
+
+  if (rawJatuhTempo && rawJatuhTempo.includes('-')) {
+    const parts = rawJatuhTempo.split('-');
+    if (parts.length === 3) {
+      year = parseInt(parts[0], 10);
+      monthIdx = parseInt(parts[1], 10) - 1;
+    }
+  } else if (periodeStr && /^\d{4}-\d{2}$/.test(periodeStr)) {
+    const [y, m] = periodeStr.split('-');
+    year = parseInt(y, 10);
+    monthIdx = parseInt(m, 10) - 1;
+  }
+
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  return `12 ${months[monthIdx]} ${year}`;
+};
+
 function DashboardTenant() {
   const navigate = useNavigate();
   const { httpClient } = useTenantAuth();
@@ -88,7 +168,7 @@ function DashboardTenant() {
   const jatuhTempo = siklusSewa?.jatuhTempo ? formatDateIndo(siklusSewa.jatuhTempo) : '—';
   const tarifSewaVal = tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0;
   const hutangTunggakanVal = tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0;
-  const totalTagihanVal = tagihanBerjalan ? (tagihanBerjalan.totalTagihan ?? (tarifSewaVal + hutangTunggakanVal)) : 0;
+  const totalTagihanVal = tarifSewaVal + hutangTunggakanVal;
   const statusTagihan = tagihanBerjalan?.statusTagihan || 'Lunas';
 
   const perluBayar = (statusTagihan === 'Belum Bayar' || statusTagihan === 'Dicicil') && totalTagihanVal > 0;
@@ -115,7 +195,7 @@ function DashboardTenant() {
               Tagihan Sewa & Tunggakan Bulan Ini
             </span>
             <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
-              Total tagihan yang perlu dibayar bulan ini adalah <span className="font-tabular-nums text-red font-extrabold">Rp {totalTagihanVal.toLocaleString('id-ID')}</span> (sewa bulan ini Rp {tarifSewaVal.toLocaleString('id-ID')} + sisa tunggakan Rp {hutangTunggakanVal.toLocaleString('id-ID')}).
+              Total tagihan yang perlu dibayar bulan ini adalah <span className="font-tabular-nums text-red font-extrabold text-xl">Rp {totalTagihanVal.toLocaleString('id-ID')}</span>.
             </p>
           </div>
           <div className="w-full md:w-auto">
@@ -176,44 +256,57 @@ function DashboardTenant() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card variant="elevated" className="flex flex-col justify-between">
           <div>
-            <h2 className="label-micro text-balance">Masa Sewa Bulanan</h2>
-            <div className="font-tabular-nums text-lg sm:text-xl font-extrabold text-text mt-2 mb-2 leading-tight">
-              {periodeText}
+            <h2 className="label-micro text-balance">Tagihan Bulan Aktif</h2>
+            <div className="font-tabular-nums text-xl sm:text-2xl font-extrabold text-text mt-1.5 mb-1 leading-tight">
+              {formatMonthYearText(tagihanBerjalan?.periode)}
+            </div>
+            <div className="text-xs sm:text-sm text-text-2 font-medium font-tabular-nums">
+              {getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}
             </div>
           </div>
-          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
-            Jatuh tempo pelunasan: <strong className="font-tabular-nums text-text">{jatuhTempo}</strong>
-          </p>
+          <div className="border-t border-border/60 pt-3 mt-4 text-xs sm:text-sm text-text-2 font-semibold text-pretty">
+            {statusTagihan !== 'Lunas' ? (
+              <span>Jatuh tempo pelunasan: <strong className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</strong></span>
+            ) : (
+              <span className="text-green font-bold flex items-center gap-1.5">
+                <Icon icon="heroicons:check-circle-20-solid" width="18" height="18" className="text-green shrink-0" />
+                <span>Kewajiban sewa bulan ini telah lunas</span>
+              </span>
+            )}
+          </div>
         </Card>
 
         <Card variant="elevated" className="flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h2 className="label-micro text-balance">Tarif Sewa Bulan Ini</h2>
+              <h2 className="label-micro text-balance">Total Tagihan Sewa</h2>
               <Badge status={statusTagihan} />
             </div>
             <div className="font-tabular-nums text-2xl sm:text-3xl font-extrabold text-text tracking-tight my-2">
-              Rp {tarifSewaVal.toLocaleString('id-ID')}
+              Rp {totalTagihanVal.toLocaleString('id-ID')}
             </div>
           </div>
-          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
-            Sewa unit kios berjalan
-          </p>
-        </Card>
 
-        <Card variant="elevated" className="flex flex-col justify-between">
-          <div>
-            <h2 className="label-micro text-balance">Total Tunggakan Sewa</h2>
-            <div className={`font-tabular-nums text-2xl sm:text-3xl font-extrabold tracking-tight my-2 ${hutangTunggakanVal > 0 ? 'text-orange' : 'text-green'}`}>
-              Rp {hutangTunggakanVal.toLocaleString('id-ID')}
-            </div>
+          <div className="border-t border-border/60 pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs sm:text-sm">
+            <span className="text-text-2 font-semibold text-pretty">
+              {hutangTunggakanVal > 0 
+                ? `Rincian: Rp ${tarifSewaVal.toLocaleString('id-ID')} (Sewa Bulan Ini) + Rp ${hutangTunggakanVal.toLocaleString('id-ID')} (Sisa Tunggakan Lalu)`
+                : (statusTagihan === 'Lunas' ? 'Semua kewajiban sewa periode ini telah lunas' : 'Sewa unit kios berjalan')}
+            </span>
+            {hutangTunggakanVal > 0 && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => navigate('/tenant/tunggakan')}
+                className="text-xs font-extrabold text-orange hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange/30 px-3 py-1.5 shrink-0"
+              >
+                Rincian Tunggakan →
+              </Button>
+            )}
           </div>
-          <p className="text-xs sm:text-sm text-text-2 font-semibold border-t border-border/60 pt-3 mt-4 text-pretty">
-            Sisa tunggakan dari bulan-bulan sebelumnya
-          </p>
         </Card>
       </div>
     </div>

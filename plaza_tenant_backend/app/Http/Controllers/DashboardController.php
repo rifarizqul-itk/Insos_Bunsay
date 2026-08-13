@@ -56,11 +56,12 @@ class DashboardController extends Controller
         $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
 
         return response()->json([
-            'idPemilik'  => $pemilik->Id_Pemilik,
-            'nama'       => $pemilik->Nama,
-            'kios'       => $kiosList->implode(', '),
-            'kiosList'   => $kiosList,
-            'statusPemilik' => $pemilik->Status_Pemilik,
+            'idPemilik'      => $pemilik->Id_Pemilik,
+            'nama'           => $pemilik->Nama,
+            'kios'           => $kiosList->implode(', '),
+            'kiosList'       => $kiosList,
+            'statusPemilik'  => $pemilik->Status_Pemilik,
+            'izinkanCicilan' => (bool) ($pemilik->izinkan_cicilan ?? false),
             'siklusSewa' => $sewaTerbaru ? [
                 'idSewa'         => $sewaTerbaru->Id_Sewa,
                 'tanggalMulai'   => $sewaTerbaru->Tanggal_Mulai,

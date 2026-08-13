@@ -31,8 +31,11 @@ function DetailAdministrasiKios() {
     statusKios: 'Terisi',
     statusPemilik: 'Aktif'
   });
+  const [pemilikId, setPemilikId] = useState(null);
+  const [izinkanCicilanAdmin, setIzinkanCicilanAdmin] = useState(false);
+  const [isTogglingCicilan, setIsTogglingCicilan] = useState(false);
 
-  const fetchKiosDetail = useCallback(async () => {
+  const fetchKioskDetail = useCallback(async () => {
     if (!id) {
       setIsLoading(false);
       return;
@@ -44,6 +47,9 @@ function DetailAdministrasiKios() {
         const item = response.data.data;
         const activeSewa = item.sewa && item.sewa.length > 0 ? item.sewa[0] : null;
         const pemilik = activeSewa?.pemilik || null;
+
+        setPemilikId(pemilik?.Id_Pemilik || null);
+        setIzinkanCicilanAdmin(Boolean(pemilik?.izinkan_cicilan));
 
         setEditData({
           nomorKios: item.No_Kios || id,
@@ -69,9 +75,32 @@ function DetailAdministrasiKios() {
     }
   }, [id, httpClient]);
 
+  const handleToggleCicilan = async () => {
+    if (!pemilikId) {
+      addToast('Data pemilik tidak ditemukan untuk kios ini.', 'error');
+      return;
+    }
+    setIsTogglingCicilan(true);
+    try {
+      const res = await httpClient.put(`/api/v1/admin/pemilik/${pemilikId}/toggle-cicilan`);
+      const newValue = Boolean(res.data?.izinkan_cicilan);
+      setIzinkanCicilanAdmin(newValue);
+      addToast(
+        newValue
+          ? 'Akses cicilan berhasil DIBUKA untuk tenant ini.'
+          : 'Akses cicilan berhasil DICABUT/DIKUNCI untuk tenant ini.',
+        'success'
+      );
+    } catch (err) {
+      addToast('Gagal mengubah status izin cicilan.', 'error');
+    } finally {
+      setIsTogglingCicilan(false);
+    }
+  };
+
   useEffect(() => {
-    fetchKiosDetail();
-  }, [fetchKiosDetail]);
+    fetchKioskDetail();
+  }, [fetchKioskDetail]);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -201,6 +230,24 @@ function DetailAdministrasiKios() {
             <Card variant="elevated" className="p-6 flex flex-col gap-4">
               <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3">Aksi Cepat Admin</h3>
               
+              <Button
+                variant={izinkanCicilanAdmin ? "warning" : "secondary"}
+                fullWidth
+                disabled={isTogglingCicilan || !pemilikId}
+                onClick={handleToggleCicilan}
+                className={`h-11 text-xs font-bold gap-2 ${izinkanCicilanAdmin ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100' : ''}`}
+              >
+                <Icon
+                  icon={izinkanCicilanAdmin ? "heroicons:lock-open-20-solid" : "heroicons:lock-closed-20-solid"}
+                  width="18"
+                  height="18"
+                  className={izinkanCicilanAdmin ? "text-amber-600" : "text-gray-500"}
+                />
+                <span>
+                  {isTogglingCicilan ? 'Memproses Status...' : (izinkanCicilanAdmin ? 'Cabut / Kunci Akses Cicilan' : 'Buka Akses Cicilan Tenant')}
+                </span>
+              </Button>
+
               <Button
                 variant="secondary"
                 fullWidth

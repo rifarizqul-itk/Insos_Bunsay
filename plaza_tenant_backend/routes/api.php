@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/kios/kosong', [KiosController::class, 'getKosong']);
             Route::post('/sewa/{id}/akhiri', [SewaController::class, 'akhiriSewa']);
             Route::apiResource('pemilik', PemilikController::class);
+            Route::put('/pemilik/{id}/toggle-cicilan', [PemilikController::class, 'toggleCicilan']);
             Route::apiResource('kios', KiosController::class);
             Route::apiResource('sewa', SewaController::class);
             Route::apiResource('dokumen', DokumenController::class);

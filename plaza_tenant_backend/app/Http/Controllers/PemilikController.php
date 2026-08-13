@@ -199,4 +199,38 @@ class PemilikController extends Controller
             ], 500);
         }
     }
+
+    public function toggleCicilan(Request $request, $id)
+    {
+        try {
+            $pemilik = Pemilik::find($id);
+            if (!$pemilik) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pemilik tidak ditemukan'
+                ], 404);
+            }
+
+            $newValue = !$pemilik->izinkan_cicilan;
+            $pemilik->update(['izinkan_cicilan' => $newValue]);
+
+            \App\Models\ActivityLog::record(
+                $request,
+                'Pemilik',
+                'Toggle Izin Cicilan',
+                "Admin " . ($newValue ? "MENGIZINKAN" : "MENCABUT") . " akses cicilan untuk tenant {$pemilik->Nama} (ID: {$pemilik->Id_Pemilik})."
+            );
+
+            return response()->json([
+                'success'         => true,
+                'message'         => 'Akses cicilan berhasil ' . ($newValue ? 'diberikan' : 'dicabut'),
+                'izinkan_cicilan' => (bool) $newValue
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status izin cicilan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
