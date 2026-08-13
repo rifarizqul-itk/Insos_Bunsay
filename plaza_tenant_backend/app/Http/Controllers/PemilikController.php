@@ -73,14 +73,27 @@ class PemilikController extends Controller
             if ($request->filled('No_Kios')) {
                 $kiosTarget = \App\Models\Kios::where('No_Kios', $request->No_Kios)->first();
                 if ($kiosTarget) {
-                    \App\Models\Sewa::create([
+                    $newSewa = \App\Models\Sewa::create([
                         'Id_Kios'        => $kiosTarget->Id_Kios,
                         'Id_Pemilik'     => $pemilik->Id_Pemilik,
                         'Tanggal_Mulai'  => date('Y-m-d'),
                         'Tanggal_Selesai'=> date('Y-m-d', strtotime('+1 year')),
                         'Jenis_Usaha'    => $validatedData['Jenis_Usaha'],
+                        'Status'         => 'Aktif',
                     ]);
                     $kiosTarget->update(['Status' => 'Terisi']);
+
+                    // Automatically generate first month's invoice (due on the 12th)
+                    \App\Models\Tagihan::create([
+                        'Id_Sewa'          => $newSewa->Id_Sewa,
+                        'Periode'          => date('Y-m'),
+                        'Jatuh_Tempo'      => date('Y-m-12'),
+                        'Tarif_Sewa'       => 750000,
+                        'Hutang_Tunggakan' => 0,
+                        'Total_Tagihan'    => 750000,
+                        'Sisa_Tagihan'     => 750000,
+                        'Status_Tagihan'   => 'Belum Bayar',
+                    ]);
                 }
             }
 

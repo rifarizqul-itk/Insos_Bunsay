@@ -215,7 +215,9 @@ class SewaController extends Controller
     public function akhiriSewa($id)
     {
         try {
-            $sewa = Sewa::find($id);
+            $sewa = Sewa::where('Id_Sewa', $id)->first()
+                ?? Sewa::where('Id_Kios', $id)->where('Status', 'Aktif')->first()
+                ?? Sewa::whereHas('kios', fn($q) => $q->where('No_Kios', $id))->where('Status', 'Aktif')->first();
 
             if (!$sewa) {
                 return response()->json([
