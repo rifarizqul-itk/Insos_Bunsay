@@ -80,11 +80,12 @@ class PembayaranController extends Controller
         }
 
         // ============================================================
-        // Keputusan bisnis #3 (dikonfirmasi 2026-08-12):
-        // Midtrans = auto Diterima (tanpa antrian verifikasi manual admin).
-        // Transfer/Tunai = tetap Menunggu verifikasi manual.
+        // Keputusan bisnis (dikonfirmasi 2026-08-13):
+        // - Midtrans: auto Diterima (Gateway otomatis).
+        // - Tunai: auto Diterima (karena diinput langsung oleh admin/kasir di loket).
+        // - Transfer: Menunggu verifikasi manual bukti foto.
         // ============================================================
-        if ($request->Metode_Bayar === 'Midtrans') {
+        if (in_array($request->Metode_Bayar, ['Midtrans', 'Tunai'])) {
             $statusVerifikasi = 'Diterima';
         } else {
             $statusVerifikasi = $request->Verifikasi_Pembayaran ?? 'Menunggu';

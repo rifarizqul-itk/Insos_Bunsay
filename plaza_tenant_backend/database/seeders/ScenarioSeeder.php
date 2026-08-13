@@ -237,7 +237,7 @@ class ScenarioSeeder extends Seeder
                 [
                     'Tanggal_Bayar'        => now()->subDays(rand(1, 10))->toDateString(),
                     'Total_Bayar'          => $t->Total_Tagihan,
-                    'Metode_Bayar'         => rand(0, 1) ? 'Transfer' : 'Tunai',
+                    'Metode_Bayar'         => 'Transfer',
                     'Bukti_Pembayaran'      => 'storage/bukti/bukti_pending_' . ($idx + 1) . '.png',
                 ]
             );
