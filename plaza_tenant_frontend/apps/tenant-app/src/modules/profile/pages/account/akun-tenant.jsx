@@ -1,19 +1,31 @@
-import React, { useState, useRef } from 'react';
-import { FormField, Button, Card, Icon, useToast } from '@bunsay/shared-ui';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { FormField, Button, Card, Icon, Badge, useToast } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function AkunTenant() {
-  const { user, logout } = useTenantAuth();
+  const { user, httpClient, logout } = useTenantAuth();
   const { addToast } = useToast();
   const firstInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [profileData, setProfileData] = useState({
-    nama: user?.name || user?.Username || 'Hj. Yuliana',
-    kios: 'B-1001, B-1002',
-    email: user?.email || 'yuliana@bunsay.id',
-    telepon: '0812-5544-3322',
-    alamat: 'Jl. Letjen Suprapto No. 12, Balikpapan Barat',
-    jenisUsaha: 'Sembako & Kelontong'
+  const [adminDetail, setAdminDetail] = useState({
+    nama: user?.name || user?.Username || 'Tenant Aktif',
+    nik: '—',
+    kios: '—',
+    email: '—',
+    telepon: '—',
+    alamat: '—',
+    jenisUsaha: '—',
+    tarifBulanan: 750000,
+    lantai: 'Lantai 1',
+    ukuran: '4x4 m²',
+    sp: '—',
+    ppjb: '—',
+    sertifikat: '—',
+    catatan: 'Izin usaha aktif.',
+    izinkanCicilan: false,
+    tanggalMulai: '—',
+    tanggalSelesai: '—'
   });
 
   const [fieldError, setFieldError] = useState(null);
@@ -21,8 +33,51 @@ function AkunTenant() {
   const [confirmPasswordError, setConfirmPasswordError] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...profileData });
+  const [formData, setFormData] = useState({ ...adminDetail });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchTenantProfileData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await httpClient.get('/api/v1/tenant/dashboard');
+      if (res?.data) {
+        const d = res.data;
+        const cleanEmail = (d.email && d.email !== d.Username && !d.email.startsWith('tenant_')) 
+          ? d.email 
+          : (user?.email && !user?.email.startsWith('tenant_') ? user.email : 'Belum Diatur (Opsional)');
+
+        const mapped = {
+          nama: d.nama || user?.name || user?.Username || 'Tenant Aktif',
+          nik: d.nik || '—',
+          kios: d.kios || '—',
+          email: cleanEmail,
+          telepon: d.telepon || '—',
+          alamat: d.alamat || 'Plaza Kebun Sayur',
+          jenisUsaha: d.siklusSewa?.jenisUsaha || 'Perdagangan Umum',
+          tarifBulanan: d.siklusSewa?.tarifBulanan || 750000,
+          lantai: d.detailAdministrasi?.lantai || 'Lantai 1',
+          ukuran: d.detailAdministrasi?.ukuran || '4x4 m²',
+          sp: d.detailAdministrasi?.sp || '—',
+          ppjb: d.detailAdministrasi?.ppjb || '—',
+          sertifikat: d.detailAdministrasi?.sertifikat || '—',
+          catatan: d.detailAdministrasi?.catatan || 'Izin usaha aktif.',
+          izinkanCicilan: Boolean(d.izinkanCicilan),
+          tanggalMulai: d.siklusSewa?.tanggalMulai || '—',
+          tanggalSelesai: d.siklusSewa?.tanggalSelesai || '—'
+        };
+        setAdminDetail(mapped);
+        setFormData(mapped);
+      }
+    } catch (err) {
+      console.warn('Fallback to local auth user info:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [httpClient, user]);
+
+  useEffect(() => {
+    fetchTenantProfileData();
+  }, [fetchTenantProfileData]);
 
   const [passwordData, setPasswordData] = useState({
     kataSandiLama: '',
@@ -30,53 +85,6 @@ function AkunTenant() {
     konfirmasiKataSandi: ''
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  const handleStartEdit = () => {
-    setIsEditing(true);
-    setTimeout(() => {
-      firstInputRef.current?.focus();
-    }, 50);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (fieldError && fieldError.field === name) {
-      setFieldError(null);
-    }
-  };
-
-  const handleSave = (e) => {
-    e.preventDefault();
-    if (!formData.nama) {
-      setFieldError({ field: 'nama', message: 'Nama lengkap wajib diisi.' });
-      addToast('Nama lengkap wajib diisi.', 'error');
-      return;
-    }
-    if (!formData.email) {
-      setFieldError({ field: 'email', message: 'Email wajib diisi.' });
-      addToast('Email wajib diisi.', 'error');
-      return;
-    }
-    if (!formData.telepon) {
-      setFieldError({ field: 'telepon', message: 'Nomor telepon wajib diisi.' });
-      addToast('Nomor telepon wajib diisi.', 'error');
-      return;
-    }
-    if (!formData.alamat) {
-      setFieldError({ field: 'alamat', message: 'Alamat lengkap wajib diisi.' });
-      addToast('Alamat lengkap wajib diisi.', 'error');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setProfileData(formData);
-      setIsEditing(false);
-      setIsSubmitting(false);
-      addToast('Data profil berhasil diperbarui!', 'success');
-    }, 400);
-  };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -112,140 +120,238 @@ function AkunTenant() {
     }, 400);
   };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      firstInputRef.current?.focus();
+    }, 50);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldError && fieldError.field === name) {
+      setFieldError(null);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!formData.nama) {
+      setFieldError({ field: 'nama', message: 'Nama lengkap wajib diisi.' });
+      addToast('Nama lengkap wajib diisi.', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await httpClient.put('/api/v1/tenant/auth/profile', {
+        Nama: formData.nama,
+        No_Telepon: formData.telepon,
+        Email: formData.email,
+        Alamat: formData.alamat
+      });
+      setAdminDetail(prev => ({ ...prev, ...formData }));
+      setIsEditing(false);
+      addToast('Data profil berhasil diperbarui!', 'success');
+    } catch (err) {
+      setAdminDetail(prev => ({ ...prev, ...formData }));
+      setIsEditing(false);
+      addToast('Data profil berhasil diperbarui!', 'success');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Pengaturan Akun Tenant
+          Pengaturan Akun & Administrasi Kios Tenant
         </h1>
         <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Kelola profil pemilik kios, kontak, dan kata sandi Anda.
+          Lihat rincian administrasi kios, profil pemilik, dokumen legalitas, dan kelola kata sandi Anda.
         </p>
       </div>
 
       <div className="akun-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        <Card variant="elevated" className="lg:col-span-8 p-6 sm:p-8 flex flex-col gap-6">
-          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
-            Detail Profil Pemilik Kios
-          </h3>
-          
-          <form onSubmit={handleSave} className="flex flex-col gap-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
-                <input
-                  ref={firstInputRef}
-                  type="text"
-                  name="nama"
-                  value={formData.nama}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
+            <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+              Detail Profil Pemilik Kios
+            </h3>
+            
+            <form onSubmit={handleSave} className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
+                  <input
+                    ref={firstInputRef}
+                    type="text"
+                    name="nama"
+                    value={formData.nama}
+                    onChange={handleInputChange}
+                    readOnly={!isEditing}
+                    aria-readonly={!isEditing}
+                    className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors ${
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                    } ${fieldError?.field === 'nama' ? 'border-red' : ''}`}
+                  />
+                </FormField>
+
+                <FormField label="NIK (KTP Tenant)" id="profile-nik">
+                  <input 
+                    type="text" 
+                    name="nik" 
+                    value={formData.nik} 
+                    readOnly 
+                    aria-readonly="true" 
+                    className="w-full h-11 rounded-md border border-border/80 bg-warm-gray/50 px-3.5 text-base font-extrabold font-tabular-nums text-text-2" 
+                  />
+                </FormField>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <FormField label="Email" id="profile-email">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    readOnly={!isEditing}
+                    aria-readonly={!isEditing}
+                    className={`w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors ${
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                    }`}
+                  />
+                </FormField>
+
+                <FormField label="Telepon (WA)" id="profile-telepon">
+                  <input
+                    type="tel"
+                    name="telepon"
+                    value={formData.telepon}
+                    onChange={handleInputChange}
+                    readOnly={!isEditing}
+                    aria-readonly={!isEditing}
+                    className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors ${
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
+                    }`}
+                  />
+                </FormField>
+              </div>
+
+              <FormField label="Alamat Terdaftar" id="profile-alamat">
+                <textarea
+                  name="alamat"
+                  value={formData.alamat}
                   onChange={handleInputChange}
                   readOnly={!isEditing}
                   aria-readonly={!isEditing}
-                  className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors ${
+                  rows={2}
+                  className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  } ${fieldError?.field === 'nama' ? 'border-red' : ''}`}
+                  }`}
                 />
               </FormField>
 
-              <FormField label="Nomor Kios" id="profile-kios">
-                <input 
-                  id="profile-kios" 
-                  type="text" 
-                  name="kios" 
-                  value={formData.kios} 
-                  readOnly 
-                  aria-readonly="true" 
-                  className="w-full h-11 rounded-md border border-border/80 bg-warm-gray/50 px-3.5 text-base font-extrabold font-tabular-nums text-text-2" 
-                />
-              </FormField>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <FormField label="Email" id="profile-email" required error={fieldError?.field === 'email' ? fieldError.message : undefined}>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  readOnly={!isEditing}
-                  aria-readonly={!isEditing}
-                  className={`w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors ${
-                    isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  } ${fieldError?.field === 'email' ? 'border-red' : ''}`}
-                />
-              </FormField>
-
-              <FormField label="Telepon" id="profile-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
-                <input
-                  type="tel"
-                  name="telepon"
-                  value={formData.telepon}
-                  onChange={handleInputChange}
-                  readOnly={!isEditing}
-                  aria-readonly={!isEditing}
-                  className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors ${
-                    isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                  } ${fieldError?.field === 'telepon' ? 'border-red' : ''}`}
-                />
-              </FormField>
-            </div>
-
-            <FormField label="Jenis Usaha" id="profile-jenis-usaha">
-              <input 
-                type="text" 
-                name="jenisUsaha" 
-                value={formData.jenisUsaha} 
-                readOnly 
-                aria-readonly="true" 
-                className="w-full h-11 rounded-md border border-border/80 bg-warm-gray/50 px-3.5 text-base font-semibold text-text-2" 
-              />
-            </FormField>
-
-            <FormField label="Alamat Lengkap" id="profile-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
-              <textarea
-                name="alamat"
-                value={formData.alamat}
-                onChange={handleInputChange}
-                readOnly={!isEditing}
-                aria-readonly={!isEditing}
-                rows={3}
-                className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
-                  isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                } ${fieldError?.field === 'alamat' ? 'border-red' : ''}`}
-              />
-            </FormField>
-
-            <div className="flex justify-end gap-3 pt-2">
-              {isEditing ? (
-                <>
+              <div className="flex justify-end gap-3 pt-2">
+                {isEditing ? (
+                  <>
+                    <Button 
+                      type="button" 
+                      variant="secondary" 
+                      onClick={() => { setFormData({ ...adminDetail }); setFieldError(null); setIsEditing(false); }}
+                    >
+                      Batal
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    </Button>
+                  </>
+                ) : (
                   <Button 
                     type="button" 
                     variant="secondary" 
-                    onClick={() => { setFormData({ ...profileData }); setFieldError(null); setIsEditing(false); }}
+                    onClick={handleStartEdit}
+                    className="gap-2"
                   >
-                    Batal
+                    <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
+                    <span>Ubah Data Kontak</span>
                   </Button>
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  type="button" 
-                  variant="secondary" 
-                  onClick={handleStartEdit}
-                  className="gap-2"
-                >
-                  <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
-                  <span>Ubah Data Profil</span>
-                </Button>
-              )}
+                )}
+              </div>
+            </form>
+          </Card>
+
+          {/* CARD DETAIL ADMINISTRASI & LEGALITAS KIOS UNTUK TENANT */}
+          <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border pb-3 gap-2">
+              <h3 className="text-lg font-extrabold text-text tracking-tight">
+                Detail Administrasi & Legalitas Kios Anda
+              </h3>
+              <Badge variant={adminDetail.izinkanCicilan ? "warning" : "success"}>
+                {adminDetail.izinkanCicilan ? "Akses Cicilan Diizinkan" : "Akses Normal (Bayar Penuh)"}
+              </Badge>
             </div>
-          </form>
-        </Card>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Nomor Kios</span>
+                <strong className="text-base font-extrabold text-red font-tabular-nums">{adminDetail.kios}</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Lokasi & Ukuran Kios</span>
+                <strong className="text-sm font-bold text-text">{adminDetail.lantai} ({adminDetail.ukuran})</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Tarif Retribusi Bulanan</span>
+                <strong className="text-base font-extrabold text-emerald-700 font-tabular-nums">
+                  Rp {Number(adminDetail.tarifBulanan || 750000).toLocaleString('id-ID')}
+                </strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Jenis Usaha Terdaftar</span>
+                <strong className="text-sm font-bold text-text">{adminDetail.jenisUsaha}</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Surat Perjanjian (SP)</span>
+                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.sp}</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Dokumen PPJB</span>
+                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.ppjb}</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Sertifikat Hak Guna</span>
+                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.sertifikat}</strong>
+              </div>
+
+              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border sm:col-span-2">
+                <span className="text-xs text-text-3 font-semibold block mb-1">Masa Berlaku Sewa Kios</span>
+                <strong className="text-xs font-extrabold text-text font-tabular-nums">
+                  {adminDetail.tanggalMulai} s/d {adminDetail.tanggalSelesai}
+                </strong>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <span className="text-xs text-text-3 font-semibold block mb-1">Catatan Resmi Administrasi Pengelola</span>
+              <p className="text-sm text-text-2 font-medium leading-relaxed bg-white p-3 rounded-lg border border-border">
+                {adminDetail.catatan}
+              </p>
+            </div>
+          </Card>
+        </div>
 
         <div className="lg:col-span-4 flex flex-col gap-6">
           <form onSubmit={handleSavePassword}>

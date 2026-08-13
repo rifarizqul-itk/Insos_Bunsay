@@ -48,21 +48,37 @@ class PemilikController extends Controller
 
         $validatedData['No_Telepon'] = $request->No_Telepon ?: ($request->Telepon ?: '081234567890');
         $validatedData['No_KTP']     = $request->No_KTP ?: ('6471' . rand(1000000000, 9999999999));
-        $validatedData['Alamat']     = $request->Alamat ?: 'Plaza Kebun Sayur';
-        $validatedData['Jenis_Usaha']= $request->Jenis_Usaha ?: 'Perdagangan Umum';
+        $jenisUsaha = $request->Jenis_Usaha ?: 'Perdagangan Umum';
+        unset($validatedData['Jenis_Usaha']);
 
         try {
             // Otomatis buatkan akun User jika Id_User belum ada
             if (empty($validatedData['Id_User'])) {
-                $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($request->Nama));
-                $username = 'tenant_' . (strlen($cleanName) > 0 ? substr($cleanName, 0, 10) : 'user') . '_' . rand(100, 999);
+                $customUsername = trim($request->Username ?? $request->username ?? '');
+                if (!empty($customUsername)) {
+                    $finalUsername = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($customUsername));
+                    if (\App\Models\User::where('Username', $finalUsername)->exists()) {
+                        $finalUsername = $finalUsername . rand(10, 99);
+                    }
+                } else {
+                    $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($request->Nama));
+                    $prefix = (strlen($cleanName) > 0 ? substr($cleanName, 0, 10) : 'user');
+                    $finalUsername = 'tenant_' . $prefix . '_' . rand(100, 999);
+                }
+
                 $plainPassword = 'bunsay' . rand(1000, 9999);
+
                 $newUser = \App\Models\User::create([
-                    'Id_roles' => 2,
-                    'Username' => $username,
-                    'Password' => \Illuminate\Support\Facades\Hash::make($plainPassword)
+                    'Id_roles'    => 2,
+                    'sub_role'    => 'tenant',
+                    'status_aktif'=> 1,
+                    'Username'    => $finalUsername,
+                    'Password'    => \Illuminate\Support\Facades\Hash::make($plainPassword),
+                    'nama_lengkap'=> $request->Nama,
+                    'email'       => $request->Email ?? $request->email ?? null,
                 ]);
                 $validatedData['Id_User'] = $newUser->Id_user;
+                $username = $finalUsername;
             }
 
             // 2. Simpan Data ke Database
@@ -79,7 +95,7 @@ class PemilikController extends Controller
                         'Id_Pemilik'     => $pemilik->Id_Pemilik,
                         'Tanggal_Mulai'  => date('Y-m-d'),
                         'Tanggal_Selesai'=> date('Y-m-d', strtotime('+1 year')),
-                        'Jenis_Usaha'    => $validatedData['Jenis_Usaha'],
+                        'Jenis_Usaha'    => $jenisUsaha,
                         'Tarif_Bulanan'  => $tarifCustom,
                         'Status'         => 'Aktif',
                     ]);
@@ -96,6 +112,17 @@ class PemilikController extends Controller
                         'Sisa_Tagihan'     => $tarifCustom,
                         'Status_Tagihan'   => 'Belum Bayar',
                     ]);
+                    // Generate personalized welcome notification for the newly registered tenant
+                    if (!empty($pemilik->Id_User)) {
+                        \App\Models\Notification::send(
+                            'tenant',
+                            $pemilik->Id_User,
+                            'Selamat Datang di Portal Tenant Bunsay',
+                            "Halo Bpk/Ibu {$pemilik->Nama}, akun tenant Anda untuk Kios {$request->No_Kios} telah aktif.",
+                            'success',
+                            '/tenant/dashboard'
+                        );
+                    }
                 }
             }
 

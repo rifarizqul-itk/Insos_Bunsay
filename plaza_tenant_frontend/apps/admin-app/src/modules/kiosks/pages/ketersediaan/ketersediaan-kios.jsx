@@ -17,14 +17,17 @@ function KetersediaanKios() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [createdCredential, setCreatedCredential] = useState(null);
-  const [formTenant, setFormTenant] = useState({
+  const initialFormState = {
     nama: '',
     kios: '',
     email: '',
     telepon: '',
     usaha: '',
-    tarifBulanan: '750000'
-  });
+    tarifBulanan: '750000',
+    usernameMode: 'auto',
+    username: ''
+  };
+  const [formTenant, setFormTenant] = useState(initialFormState);
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -149,54 +152,48 @@ function KetersediaanKios() {
       setFieldError({ field: 'kios', message: 'Nomor kios wajib diisi.' });
       return;
     }
-    if (!formTenant.email.trim()) {
-      setFieldError({ field: 'email', message: 'Alamat email wajib diisi.' });
+    if (!formTenant.telepon.trim()) {
+      setFieldError({ field: 'telepon', message: 'Nomor telepon (WA) wajib diisi.' });
+      return;
+    }
+    if (formTenant.usernameMode === 'custom' && !formTenant.username.trim()) {
+      setFieldError({ field: 'username', message: 'Username custom wajib diisi jika memilih opsi manual.' });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Hit real backend endpoint to create Pemilik / Kios tenant
       const payload = {
         Nama: formTenant.nama,
-        Email: formTenant.email,
         Telepon: formTenant.telepon,
+        Email: formTenant.email,
         Jenis_Usaha: formTenant.usaha,
         No_Kios: formTenant.kios,
-        Tarif_Bulanan: Number(formTenant.tarifBulanan) || 750000
+        Tarif_Bulanan: Number(formTenant.tarifBulanan) || 750000,
+        Username: formTenant.usernameMode === 'custom' ? formTenant.username.trim() : ''
       };
       
       const res = await httpClient.post('/api/v1/admin/pemilik', payload);
-      const createdData = res?.data?.data || {};
+      const createdData = res?.data?.data || res?.data || {};
 
       const tempCred = {
         nama: formTenant.nama,
         kios: formTenant.kios,
-        username: createdData.Username || formTenant.email.split('@')[0],
-        tempPassword: createdData.tempPassword || `Bunsay#${Math.floor(1000 + Math.random() * 9000)}`,
-        email: formTenant.email,
+        username: createdData.Username || (formTenant.usernameMode === 'custom' ? formTenant.username.trim() : 'tenant'),
+        tempPassword: createdData.tempPassword || 'bunsay1234',
+        email: formTenant.email || '-',
         telepon: formTenant.telepon
       };
 
       setCreatedCredential(tempCred);
       setIsDrawerOpen(false);
-      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '', tarifBulanan: '750000' });
+      setFormTenant(initialFormState);
       addToast(`Pendaftaran tenant ${tempCred.nama} berhasil disimpan ke database!`, 'success');
       fetchKiosData();
     } catch (err) {
-      // Local fallback in case backend endpoint is undergoing migration
-      const tempCred = {
-        nama: formTenant.nama,
-        kios: formTenant.kios,
-        username: formTenant.email.split('@')[0],
-        tempPassword: `Bunsay#${Math.floor(1000 + Math.random() * 9000)}`,
-        email: formTenant.email,
-        telepon: formTenant.telepon
-      };
-      setCreatedCredential(tempCred);
-      setIsDrawerOpen(false);
-      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '', tarifBulanan: '750000' });
-      addToast(`Pendaftaran tenant ${tempCred.nama} berhasil!`, 'success');
+      console.error('Error creating tenant:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal mendaftarkan tenant baru.';
+      addToast(errMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -408,17 +405,7 @@ function KetersediaanKios() {
             </select>
           </FormField>
 
-          <FormField label="Email" id="tambah-tenant-email" required error={fieldError?.field === 'email' ? fieldError.message : undefined}>
-            <input 
-              type="email" 
-              placeholder="email@tenant.com" 
-              value={formTenant.email} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, email: e.target.value }))} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-            />
-          </FormField>
-
-          <FormField label="Nomor Telepon" id="tambah-tenant-telepon">
+          <FormField label="Nomor Telepon (WA)" id="tambah-tenant-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
             <input 
               type="tel" 
               placeholder="Contoh: 081234567890" 
@@ -427,6 +414,56 @@ function KetersediaanKios() {
               className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
             />
           </FormField>
+
+          <FormField label="Email Tenant (Opsional)" id="tambah-tenant-email" error={fieldError?.field === 'email' ? fieldError.message : undefined}>
+            <input 
+              type="email" 
+              placeholder="email@tenant.com (Opsional)" 
+              value={formTenant.email} 
+              onChange={(e) => setFormTenant(prev => ({ ...prev, email: e.target.value }))} 
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+            />
+          </FormField>
+
+          <div className="flex flex-col gap-2.5 p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+            <label className="text-xs font-bold text-text-2">Pilihan Username Login Tenant:</label>
+            <div className="flex gap-4 text-xs font-bold">
+              <label className="flex items-center gap-1.5 cursor-pointer text-text">
+                <input 
+                  type="radio" 
+                  name="usernameMode" 
+                  value="auto" 
+                  checked={formTenant.usernameMode === 'auto'} 
+                  onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'auto', username: '' }))} 
+                />
+                <span>⚡ Otomatis Sistem</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer text-text">
+                <input 
+                  type="radio" 
+                  name="usernameMode" 
+                  value="custom" 
+                  checked={formTenant.usernameMode === 'custom'} 
+                  onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'custom' }))} 
+                />
+                <span>✏️ Input Custom Username</span>
+              </label>
+            </div>
+
+            {formTenant.usernameMode === 'custom' && (
+              <div className="mt-1">
+                <FormField label="Username Custom" id="tambah-tenant-username" required error={fieldError?.field === 'username' ? fieldError.message : undefined}>
+                  <input 
+                    type="text" 
+                    placeholder="Contoh: maryam_kios102" 
+                    value={formTenant.username} 
+                    onChange={(e) => setFormTenant(prev => ({ ...prev, username: e.target.value }))} 
+                    className="w-full h-10 rounded-md border border-border bg-white px-3.5 text-sm font-bold font-tabular-nums focus:border-red" 
+                  />
+                </FormField>
+              </div>
+            )}
+          </div>
 
           <FormField label="Jenis Usaha" id="tambah-tenant-usaha">
             <input 

@@ -269,21 +269,8 @@ class ScenarioSeeder extends Seeder
             }
         }
 
-        // Generate 40 Notifications if not seeded
-        if (Notification::count() < 10) {
-            for ($i = 0; $i < 40; $i++) {
-                Notification::create([
-                    'target_type' => rand(0, 1) ? 'tenant' : 'admin',
-                    'id_user'     => null,
-                    'title'       => rand(0, 1) ? 'Pemberitahuan Tagihan Sewa' : 'Pembayaran Perlu Verifikasi',
-                    'message'     => 'Sistem mencatat transaksi baru pada unit kios Plaza Kebun Sayur.',
-                    'type'        => ['info', 'success', 'warning', 'danger'][rand(0, 3)],
-                    'is_read'     => (bool) rand(0, 1),
-                    'link'        => '/admin/verifikasi-bukti',
-                    'created_at'  => now()->subDays(rand(1, 20)),
-                ]);
-            }
-        }
+        // Generate Notifications dynamically via NotificationSeeder
+        $this->call(NotificationSeeder::class);
 
         $totalUsers = User::where('Id_roles', 2)->count();
         $this->command->info("SUCCESS! Seeded total of {$totalUsers} tenant accounts into database.");

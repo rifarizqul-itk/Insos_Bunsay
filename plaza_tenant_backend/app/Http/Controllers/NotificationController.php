@@ -15,20 +15,22 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
+        if (!$user) {
+            return response()->json([
+                'status'      => 'success',
+                'unreadCount' => 0,
+                'data'        => [],
+            ]);
+        }
+
         $notifications = Notification::where('target_type', 'tenant')
-            ->where(function ($q) use ($user) {
-                $q->where('id_user', $user ? $user->Id_user : null)
-                  ->orWhereNull('id_user');
-            })
+            ->where('id_user', $user->Id_user)
             ->orderBy('id', 'desc')
             ->limit(50)
             ->get();
 
         $unreadCount = Notification::where('target_type', 'tenant')
-            ->where(function ($q) use ($user) {
-                $q->where('id_user', $user ? $user->Id_user : null)
-                  ->orWhereNull('id_user');
-            })
+            ->where('id_user', $user->Id_user)
             ->where('is_read', false)
             ->count();
 

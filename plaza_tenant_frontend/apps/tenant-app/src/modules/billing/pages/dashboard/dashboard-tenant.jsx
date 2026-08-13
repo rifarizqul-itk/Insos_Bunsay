@@ -176,13 +176,25 @@ function DashboardTenant() {
 
   return (
     <div className="page-fade-in flex flex-col gap-8 font-sans">
-      <div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight text-balance">
-          Halo, {nama}
-        </h1>
-        <p className="text-text-2 text-base font-semibold mt-1 text-pretty">
-          Pemilik Kios <span className="font-tabular-nums font-bold text-red">{kios}</span> — Selamat datang di akun Bunsay Anda.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight text-balance">
+            Halo, {nama}
+          </h1>
+          <p className="text-text-2 text-base font-semibold mt-1 text-pretty">
+            Pemilik Kios <span className="font-tabular-nums font-bold text-red">{kios}</span> — Selamat datang di akun Bunsay Anda.
+          </p>
+        </div>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate('/tenant/akun')}
+          className="h-10 text-xs font-bold gap-1.5 border-border hover:bg-warm-gray shadow-xs shrink-0"
+        >
+          <Icon icon="heroicons:document-text-20-solid" width="16" height="16" className="text-red" />
+          <span>Detail Administrasi & Legalitas Kios</span>
+        </Button>
       </div>
 
       {perluBayar && (

@@ -9,7 +9,7 @@ function TenantLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, logout } = useTenantAuth();
 
-  const userTitle = user?.name ?? user?.Username ?? 'Hj. Yuliana (Kios B-1001)';
+  const userTitle = user?.nama ?? user?.name ?? user?.Username ?? 'Tenant Aktif';
 
   return (
     <div className="min-h-dvh bg-[#FAF6F0] relative overflow-x-hidden">

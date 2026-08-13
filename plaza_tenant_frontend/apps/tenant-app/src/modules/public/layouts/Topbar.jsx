@@ -19,23 +19,14 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         setNotifikasiList(res.data.data);
         setUnreadCount(res.data.unreadCount ?? res.data.data.filter(n => !n.is_read).length);
       } else {
-        setNotifikasiList(fallbackTenantNotif);
-        setUnreadCount(fallbackTenantNotif.length);
+        setNotifikasiList([]);
+        setUnreadCount(0);
       }
     } catch (err) {
-      setNotifikasiList(fallbackTenantNotif);
-      setUnreadCount(fallbackTenantNotif.length);
+      setNotifikasiList([]);
+      setUnreadCount(0);
     }
   }, [httpClient]);
-
-  useEffect(() => {
-    fetchNotifikasi();
-  }, [fetchNotifikasi]);
-
-  const fallbackTenantNotif = [
-    { id: 1, title: 'Pembayaran Diterima', message: 'Pembayaran sewa periode Mei 2026 telah diverifikasi dan DITERIMA.', created_at: 'Hari ini', type: 'success', is_read: false, link: '/tenant/histori' },
-    { id: 2, title: 'Tagihan Baru Diterbitkan', message: 'Tagihan sewa kios periode Juni 2026 telah diterbitkan.', created_at: '2 hari lalu', type: 'warning', is_read: true, link: '/tenant/pembayaran' }
-  ];
 
   const handleMarkAllRead = async () => {
     try {

@@ -9,42 +9,52 @@ class NotificationSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Notifikasi Sampel Tenant
-        Notification::send(
-            'tenant',
-            null,
-            'Pembayaran Sewa Diterima',
-            'Pembayaran sewa periode Mei 2026 sebesar Rp 450.000 telah diverifikasi dan DITERIMA oleh kasir pengelola.',
-            'success',
-            '/tenant/histori'
-        );
+        $pemilikList = \App\Models\Pemilik::with(['user', 'sewa.kios'])->take(5)->get();
 
-        Notification::send(
-            'tenant',
-            null,
-            'Tagihan Sewa Baru Diterbitkan',
-            'Tagihan sewa kios periode Juni 2026 telah diterbitkan. Harap lakukan pembayaran sebelum tanggal jatuh tempo.',
-            'warning',
-            '/tenant/pembayaran'
-        );
+        foreach ($pemilikList as $p) {
+            $userId = $p->user?->Id_user;
+            $nama = $p->Nama ?? 'Tenant';
+            $kiosNo = $p->sewa->first()?->kios?->No_Kios ?? 'Kios';
 
-        // 2. Notifikasi Sampel Admin
+            Notification::send(
+                'tenant',
+                $userId,
+                'Tagihan Sewa Bulan Berjalan',
+                "Yth. Bpk/Ibu {$nama}, tagihan sewa rutin bulanan untuk Kios {$kiosNo} telah diterbitkan. Harap lakukan pembayaran sebelum tanggal 12.",
+                'info',
+                '/tenant/pembayaran'
+            );
+
+            Notification::send(
+                'tenant',
+                $userId,
+                'Status Sistem Pembayaran',
+                "Pengingat: Seluruh pembayaran sewa kios Plaza Kebun Sayur jatuh tempo setiap tanggal 12 bulan berjalan.",
+                'success',
+                '/tenant/dashboard'
+            );
+        }
+
+        // Notifikasi Admin
+        $firstPemilik = $pemilikList->first()?->Nama ?? 'Penyewa Kios';
+        $firstKios = $pemilikList->first()?->sewa->first()?->kios?->No_Kios ?? 'A-101';
+
         Notification::send(
             'admin',
             null,
             'Bukti Transfer Baru Menunggu Verifikasi',
-            'Ada 3 bukti transfer baru dari tenant (Hj. Yuliana & Bpk. Hendra) yang memerlukan verifikasi kasir.',
-            'info',
+            "Terdapat setoran transfer dari tenant {$firstPemilik} ({$firstKios}) yang memerlukan verifikasi kasir admin.",
+            'warning',
             '/admin/verifikasi-bukti'
         );
 
         Notification::send(
             'admin',
             null,
-            'Sanggahan Pembayaran Tenant',
-            'Tenant Hj. Yuliana (Kios B-1001) mengirimkan sanggahan pembayaran beserta foto resi transfer baru.',
-            'warning',
-            '/admin/verifikasi-bukti'
+            'Laporan Keuangan & Retribusi Updated',
+            'Laporan rekapitulasi data pembayaran retribusi bulanan seluruh tenant telah berhasil diperbarui secara otomatis.',
+            'success',
+            '/admin/ekspor'
         );
     }
 }

@@ -19,23 +19,14 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
         setNotifikasiList(res.data.data);
         setUnreadCount(res.data.unreadCount ?? res.data.data.filter(n => !n.is_read).length);
       } else {
-        setNotifikasiList(fallbackAdminNotif);
-        setUnreadCount(fallbackAdminNotif.length);
+        setNotifikasiList([]);
+        setUnreadCount(0);
       }
     } catch (err) {
-      setNotifikasiList(fallbackAdminNotif);
-      setUnreadCount(fallbackAdminNotif.length);
+      setNotifikasiList([]);
+      setUnreadCount(0);
     }
   }, [httpClient]);
-
-  useEffect(() => {
-    fetchNotifikasi();
-  }, [fetchNotifikasi]);
-
-  const fallbackAdminNotif = [
-    { id: 1, title: 'Bukti Transfer Baru', message: '2 Bukti transfer baru dari tenant menunggu verifikasi admin.', created_at: 'Baru saja', type: 'warning', is_read: false, link: '/admin/verifikasi-bukti' },
-    { id: 2, title: 'Rekapitulasi Data', message: 'Laporan keuangan bulanan telah diperbarui.', created_at: '1 hari lalu', type: 'success', is_read: true, link: '/admin/ekspor' }
-  ];
 
   const handleMarkAllRead = async () => {
     try {
