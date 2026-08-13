@@ -59,6 +59,7 @@ function DetailAdministrasiKios() {
           telepon: pemilik?.Telepon || '0812-5544-3322',
           email: pemilik?.Email || 'yuliana@bunsay.id',
           usaha: pemilik?.Jenis_Usaha || 'Sembako & Kelontong',
+          tarifBulanan: activeSewa?.Tarif_Bulanan || 750000,
           sp: item.No_SP || 'SP-084/BP-KBS/2026',
           ppjb: item.No_PPJB || 'PPJB-102/2026',
           ukuran: item.Ukuran || '3m x 4m (12 m²)',
@@ -185,6 +186,12 @@ function DetailAdministrasiKios() {
               <div>
                 <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Jenis Usaha</span>
                 <strong className="text-text font-bold">{editData.usaha}</strong>
+              </div>
+              <div>
+                <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Nominal Tagihan per Bulan</span>
+                <strong className="text-emerald-700 font-extrabold font-tabular-nums text-base">
+                  Rp {Number(editData.tarifBulanan || 750000).toLocaleString('id-ID')}
+                </strong>
               </div>
               <div>
                 <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Kontak Telepon</span>

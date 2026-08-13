@@ -55,6 +55,7 @@ class SewaController extends Controller
             'Jenis_Usaha'    => 'required|string|max:255',
             'Tanggal_Mulai'  => 'required|date',
             'Tanggal_Selesai'=> 'required|date|after_or_equal:Tanggal_Mulai',
+            'Tarif_Bulanan'  => 'nullable|numeric|min:0',
             'Keterangan'     => 'nullable|string',
         ]);
 
@@ -149,6 +150,7 @@ class SewaController extends Controller
             'Jenis_Usaha'    => 'sometimes|required|string|max:255',
             'Tanggal_Mulai'  => 'sometimes|required|date',
             'Tanggal_Selesai'=> 'sometimes|required|date',
+            'Tarif_Bulanan'  => 'sometimes|nullable|numeric|min:0',
             'Keterangan'     => 'nullable|string',
         ]);
 

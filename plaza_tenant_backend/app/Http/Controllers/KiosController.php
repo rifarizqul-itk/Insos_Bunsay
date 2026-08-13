@@ -118,6 +118,13 @@ class KiosController extends Controller
             ]);
         }
 
+        if ($request->has('tarifBulanan') && $kios->sewa) {
+            $activeSewa = is_iterable($kios->sewa) ? $kios->sewa->first() : $kios->sewa;
+            if ($activeSewa) {
+                $activeSewa->update(['Tarif_Bulanan' => (float) $request->input('tarifBulanan')]);
+            }
+        }
+
         $kios->load(['sewa.pemilik.dokumen']);
 
         return response()->json([

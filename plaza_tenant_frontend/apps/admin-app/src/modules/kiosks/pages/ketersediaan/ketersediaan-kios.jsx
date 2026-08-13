@@ -22,7 +22,8 @@ function KetersediaanKios() {
     kios: '',
     email: '',
     telepon: '',
-    usaha: ''
+    usaha: '',
+    tarifBulanan: '750000'
   });
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -158,7 +159,8 @@ function KetersediaanKios() {
         Email: formTenant.email,
         Telepon: formTenant.telepon,
         Jenis_Usaha: formTenant.usaha,
-        No_Kios: formTenant.kios
+        No_Kios: formTenant.kios,
+        Tarif_Bulanan: Number(formTenant.tarifBulanan) || 750000
       };
       
       const res = await httpClient.post('/api/v1/admin/pemilik', payload);
@@ -175,7 +177,7 @@ function KetersediaanKios() {
 
       setCreatedCredential(tempCred);
       setIsDrawerOpen(false);
-      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '' });
+      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '', tarifBulanan: '750000' });
       addToast(`Pendaftaran tenant ${tempCred.nama} berhasil disimpan ke database!`, 'success');
       fetchKiosData();
     } catch (err) {
@@ -190,7 +192,7 @@ function KetersediaanKios() {
       };
       setCreatedCredential(tempCred);
       setIsDrawerOpen(false);
-      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '' });
+      setFormTenant({ nama: '', kios: '', email: '', telepon: '', usaha: '', tarifBulanan: '750000' });
       addToast(`Pendaftaran tenant ${tempCred.nama} berhasil!`, 'success');
     } finally {
       setIsSubmitting(false);
@@ -430,6 +432,20 @@ function KetersediaanKios() {
               value={formTenant.usaha} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, usaha: e.target.value }))} 
               className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+            />
+          </FormField>
+
+          <FormField label="Nominal Tagihan per Bulan (Rp)" id="tambah-tenant-tarif" required hint="Nominal sewa rutin bulanan yang akan ditagihkan ke tenant ini">
+            <input 
+              type="text" 
+              inputMode="numeric"
+              placeholder="Contoh: 750.000" 
+              value={formTenant.tarifBulanan ? Number(formTenant.tarifBulanan).toLocaleString('id-ID') : ''} 
+              onChange={(e) => {
+                const cleanDigits = e.target.value.replace(/\D/g, '');
+                setFormTenant(prev => ({ ...prev, tarifBulanan: cleanDigits }));
+              }} 
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
             />
           </FormField>
         </form>

@@ -19,8 +19,13 @@ class Sewa extends Model
      * Cast kolom Status ke string agar konsisten.
      * Default: 'Aktif' (sesuai migrasi 2026_08_12_000001)
      */
+    protected $casts = [
+        'Tarif_Bulanan' => 'float',
+    ];
+
     protected $attributes = [
-        'Status' => 'Aktif',
+        'Status'        => 'Aktif',
+        'Tarif_Bulanan' => 750000.00,
     ];
 
     // ============================================================

@@ -7,6 +7,13 @@ import { useTenantAuth } from '../../../public/useTenantAuth';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+const formatRibuanDot = (val) => {
+  if (val === null || val === undefined || val === '') return '';
+  const cleanDigits = String(val).replace(/\D/g, '');
+  if (!cleanDigits) return '';
+  return Number(cleanDigits).toLocaleString('id-ID');
+};
+
 function BayarSekarang() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -334,13 +341,15 @@ function BayarSekarang() {
                   error={nominalError}
                 >
                   <input 
-                    type="number" 
-                    placeholder="Nominal pembayaran" 
-                    value={nominal} 
+                    type="text" 
+                    inputMode="numeric"
+                    placeholder="Contoh: 750.000" 
+                    value={formatRibuanDot(nominal)} 
                     readOnly={!izinkanCicilan}
                     onChange={(e) => { 
                       if (izinkanCicilan) {
-                        setNominal(e.target.value); 
+                        const cleanDigits = e.target.value.replace(/\D/g, '');
+                        setNominal(cleanDigits); 
                         if (nominalError) setNominalError(null); 
                       }
                     }} 

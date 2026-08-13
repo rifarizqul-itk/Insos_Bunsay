@@ -73,12 +73,14 @@ class PemilikController extends Controller
             if ($request->filled('No_Kios')) {
                 $kiosTarget = \App\Models\Kios::where('No_Kios', $request->No_Kios)->first();
                 if ($kiosTarget) {
+                    $tarifCustom = (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 750000);
                     $newSewa = \App\Models\Sewa::create([
                         'Id_Kios'        => $kiosTarget->Id_Kios,
                         'Id_Pemilik'     => $pemilik->Id_Pemilik,
                         'Tanggal_Mulai'  => date('Y-m-d'),
                         'Tanggal_Selesai'=> date('Y-m-d', strtotime('+1 year')),
                         'Jenis_Usaha'    => $validatedData['Jenis_Usaha'],
+                        'Tarif_Bulanan'  => $tarifCustom,
                         'Status'         => 'Aktif',
                     ]);
                     $kiosTarget->update(['Status' => 'Terisi']);
@@ -88,10 +90,10 @@ class PemilikController extends Controller
                         'Id_Sewa'          => $newSewa->Id_Sewa,
                         'Periode'          => date('Y-m'),
                         'Jatuh_Tempo'      => date('Y-m-12'),
-                        'Tarif_Sewa'       => 750000,
+                        'Tarif_Sewa'       => $tarifCustom,
                         'Hutang_Tunggakan' => 0,
-                        'Total_Tagihan'    => 750000,
-                        'Sisa_Tagihan'     => 750000,
+                        'Total_Tagihan'    => $tarifCustom,
+                        'Sisa_Tagihan'     => $tarifCustom,
                         'Status_Tagihan'   => 'Belum Bayar',
                     ]);
                 }

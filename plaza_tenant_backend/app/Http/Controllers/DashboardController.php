@@ -68,11 +68,12 @@ class DashboardController extends Controller
                 'tanggalSelesai' => $sewaTerbaru->Tanggal_Selesai,
                 'jatuhTempo'     => optional($tagihanBerjalan)->Jatuh_Tempo,
                 'jenisUsaha'     => $sewaTerbaru->Jenis_Usaha,
+                'tarifBulanan'   => (float) ($sewaTerbaru->Tarif_Bulanan ?? 750000),
             ] : null,
             'tagihanBerjalan' => $tagihanBerjalan ? [
                 'idTagihan'       => $tagihanBerjalan->Id_Tagihan,
                 'periode'         => $tagihanBerjalan->Periode,
-                'tarifSewa'       => (float) $tagihanBerjalan->Tarif_Sewa,
+                'tarifSewa'       => (float) ($tagihanBerjalan->Tarif_Sewa ?? $sewaTerbaru->Tarif_Bulanan ?? 750000),
                 'hutangTunggakan' => (float) ($tagihanBerjalan->Hutang_Tunggakan ?? 0),
                 'totalTagihan'    => (float) $tagihanBerjalan->Total_Tagihan,
                 'statusTagihan'   => $tagihanBerjalan->Status_Tagihan,
