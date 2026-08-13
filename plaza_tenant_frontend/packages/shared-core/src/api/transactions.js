@@ -141,8 +141,8 @@ export const MockTransactionAdapter = {
     const { scope, tenantId, status } = params || {};
     try {
       const endpoint = scope === 'QUEUE' 
-        ? '/v1/admin/pembayaran?status=Menunggu'
-        : '/v1/admin/pembayaran';
+        ? '/api/v1/admin/pembayaran?status=Menunggu'
+        : '/api/v1/admin/pembayaran';
       const realData = await httpClient.get(endpoint);
       if (Array.isArray(realData) && realData.length > 0) {
         return realData.map(item => ({
@@ -344,7 +344,7 @@ export const MockTransactionAdapter = {
     if (type === 'EXPORT_REPORT') {
       const { bulan, tahun } = payload || {};
       try {
-        const response = await httpClient.get(`/v1/admin/ekspor?bulan=${encodeURIComponent(bulan || 'Mei')}&tahun=${encodeURIComponent(tahun || '2026')}`);
+        const response = await httpClient.get(`/api/v1/admin/ekspor?bulan=${encodeURIComponent(bulan || 'Mei')}&tahun=${encodeURIComponent(tahun || '2026')}`);
         if (response && response.success) {
           return response;
         }
