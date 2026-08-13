@@ -320,11 +320,43 @@ class PembayaranController extends Controller
         }
 
         if ($request->status === 'Diterima') {
-            Tagihan::where('Id_Tagihan', $pembayaran->Id_Tagihan)
-                ->update([
-                    'Status_Tagihan' => 'Lunas',
-                    'Sisa_Tagihan'   => 0,  // Isu I5: sinkronkan Sisa_Tagihan saat konfirmasi manual
-                ]);
+            $tagihanAnchor = Tagihan::find($pembayaran->Id_Tagihan);
+            if ($tagihanAnchor) {
+                $sewaId = $tagihanAnchor->Id_Sewa;
+                $nominalTersisa = (float) $pembayaran->Total_Bayar;
+
+                $tagihanBelumLunas = Tagihan::where('Id_Sewa', $sewaId)
+                    ->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi'])
+                    ->orderBy('Id_Tagihan', 'asc')
+                    ->get();
+
+                if ($tagihanBelumLunas->count() > 0) {
+                    foreach ($tagihanBelumLunas as $tagihan) {
+                        if ($nominalTersisa <= 0) break;
+
+                        $sisa = (float) ($tagihan->Sisa_Tagihan ?? $tagihan->Total_Tagihan ?? 0);
+
+                        if ($nominalTersisa >= $sisa) {
+                            $nominalTersisa -= $sisa;
+                            $tagihan->update([
+                                'Sisa_Tagihan'   => 0,
+                                'Status_Tagihan' => 'Lunas',
+                            ]);
+                        } else {
+                            $tagihan->update([
+                                'Sisa_Tagihan'   => max(0, $sisa - $nominalTersisa),
+                                'Status_Tagihan' => 'Dicicil',
+                            ]);
+                            $nominalTersisa = 0;
+                        }
+                    }
+                } else {
+                    $tagihanAnchor->update([
+                        'Status_Tagihan' => 'Lunas',
+                        'Sisa_Tagihan'   => 0,
+                    ]);
+                }
+            }
         } else {
             // Tolak: kembalikan tagihan ke Belum Bayar
             // Sisa_Tagihan TIDAK diubah (biarkan sesuai nilai sebelumnya)
