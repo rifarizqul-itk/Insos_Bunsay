@@ -42,17 +42,58 @@ class PembayaranController extends Controller
         $request->validate([
             'Id_Tagihan'           => 'required|exists:tagihan,Id_Tagihan',
             'Tanggal_Bayar'        => 'required|date',
-            'Total_Bayar'          => 'required|numeric',
+            'Total_Bayar'          => 'required|numeric|min:1',
             'Metode_Bayar'         => 'required|in:Transfer,Tunai,Midtrans',
             'Bukti_Pembayaran'     => 'nullable|string',
             'Verifikasi_Pembayaran'=> 'nullable|in:Menunggu,Diterima,Ditolak,Belum Bayar',
         ]);
 
-        $statusVerifikasi = $request->Verifikasi_Pembayaran ?? 'Menunggu';
-        $idTagihanTarget = $request->Id_Tagihan;
-        $tagihanTarget = Tagihan::find($idTagihanTarget);
+        // ============================================================
+        // Isu I4 dari schema audit (2026-08-12):
+        // Isolasi tenant — verifikasi bahwa tagihan yang dibayar benar-benar
+        // milik tenant yang sedang login. Tanpa ini, tenant A bisa membayar
+        // (atau mengekspos data) tagihan milik tenant B hanya dengan menebak Id_Tagihan.
+        //
+        // Admin (Id_roles = 1) dikecualikan — admin boleh input untuk siapapun.
+        // ============================================================
+        $user = $request->user();
+        if ($user && $user->Id_roles != 1) {
+            $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
 
-        // 1. Cabut Foreign Key & Unique Index pada 'tagihan.Id_Sewa' dan 'pembayaran.Id_Tagihan' secara aman
+            if (!$pemilik) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Profil pemilik tidak ditemukan. Hubungi admin.',
+                ], 403);
+            }
+
+            $isOwner = Tagihan::where('Id_Tagihan', $request->Id_Tagihan)
+                ->whereHas('sewa', fn($q) => $q->where('Id_Pemilik', $pemilik->Id_Pemilik))
+                ->exists();
+
+            if (!$isOwner) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke tagihan ini.',
+                ], 403);
+            }
+        }
+
+        // ============================================================
+        // Keputusan bisnis #3 (dikonfirmasi 2026-08-12):
+        // Midtrans = auto Diterima (tanpa antrian verifikasi manual admin).
+        // Transfer/Tunai = tetap Menunggu verifikasi manual.
+        // ============================================================
+        if ($request->Metode_Bayar === 'Midtrans') {
+            $statusVerifikasi = 'Diterima';
+        } else {
+            $statusVerifikasi = $request->Verifikasi_Pembayaran ?? 'Menunggu';
+        }
+
+        $idTagihanTarget = $request->Id_Tagihan;
+        $tagihanTarget   = Tagihan::find($idTagihanTarget);
+
+        // 1. Cabut Foreign Key & Unique Index secara aman (backward compat)
         try {
             DB::statement("ALTER TABLE tagihan DROP FOREIGN KEY tagihan_ibfk_1");
             DB::statement("ALTER TABLE tagihan DROP INDEX id_sewa");
@@ -67,39 +108,12 @@ class PembayaranController extends Controller
             DB::statement("ALTER TABLE pembayaran ADD CONSTRAINT pembayaran_ibfk_1 FOREIGN KEY (Id_Tagihan) REFERENCES tagihan(Id_Tagihan) ON UPDATE CASCADE ON DELETE CASCADE");
         } catch (\Throwable $th) {}
 
-        // 2. Ubah kolom Bukti_Pembayaran di database menjadi LONGTEXT agar dapat menyimpan Base64 foto bukti transfer
+        // 2. Ubah kolom Bukti_Pembayaran menjadi LONGTEXT agar bisa simpan Base64
         try {
             DB::statement("ALTER TABLE pembayaran MODIFY COLUMN Bukti_Pembayaran LONGTEXT NULL");
         } catch (\Throwable $th) {}
 
-        // Jika tagihan target sudah Lunas, buat tagihan baru untuk periode bulan berikutnya (Advance Payment)
-        if ($tagihanTarget && $tagihanTarget->Status_Tagihan === 'Lunas') {
-            $latestTagihan = Tagihan::where('Id_Sewa', $tagihanTarget->Id_Sewa)
-                ->orderBy('Id_Tagihan', 'desc')
-                ->first();
-
-            $nextPeriode = '2025-05';
-            if ($latestTagihan && $latestTagihan->Periode) {
-                try {
-                    $nextPeriode = Carbon::createFromFormat('Y-m', $latestTagihan->Periode)->addMonth()->format('Y-m');
-                } catch (\Throwable $th) {
-                    $nextPeriode = date('Y-m');
-                }
-            }
-
-            $newTagihan = Tagihan::create([
-                'Id_Sewa'          => $tagihanTarget->Id_Sewa,
-                'Periode'          => $nextPeriode,
-                'Jatuh_Tempo'      => Carbon::now()->addMonth()->format('Y-m-d'),
-                'Tarif_Sewa'       => $tagihanTarget->Tarif_Sewa ?: $request->Total_Bayar,
-                'Hutang_Tunggakan' => 0,
-                'Total_Tagihan'    => $request->Total_Bayar ?: $tagihanTarget->Tarif_Sewa,
-                'Status_Tagihan'   => $statusVerifikasi === 'Diterima' ? 'Lunas' : 'Belum Bayar',
-            ]);
-
-            $idTagihanTarget = $newTagihan->Id_Tagihan;
-        }
-
+        // 3. Proses upload bukti pembayaran (Base64 → file)
         $buktiPath = $request->Bukti_Pembayaran;
         if (is_string($request->Bukti_Pembayaran) && str_starts_with($request->Bukti_Pembayaran, 'data:image/')) {
             try {
@@ -107,7 +121,7 @@ class PembayaranController extends Controller
                 if (isset($matches['data'])) {
                     $imageType = strtolower($matches['type'] ?? 'png');
                     $imageData = base64_decode($matches['data']);
-                    $filename = 'bukti_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
+                    $filename  = 'bukti_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
 
                     $destinationPath = public_path('storage/bukti');
                     if (!file_exists($destinationPath)) {
@@ -119,7 +133,93 @@ class PembayaranController extends Controller
             } catch (\Throwable $e) {}
         }
 
-        // 3. Selalu buatkan record Pembayaran baru (selalu bertambah di riwayat transaksi)
+        // ============================================================
+        // Keputusan bisnis #1 (dikonfirmasi 2026-08-12):
+        // Partial Payment dengan algoritma FIFO.
+        // Jika Total_Bayar < Sisa_Tagihan tagihan target:
+        //   → Alokasikan ke tagihan tertua yang belum lunas (urutan Id_Tagihan ASC).
+        //   → Update Sisa_Tagihan di setiap tagihan yang tersentuh.
+        //   → Status 'Dicicil' jika belum lunas sepenuhnya, 'Lunas' jika lunas.
+        // Jika Total_Bayar >= Total_Tagihan: proses normal (full payment).
+        // ============================================================
+        $nominalTersisa = (float) $request->Total_Bayar;
+        $isPartialPayment = false;
+
+        if ($tagihanTarget && $statusVerifikasi === 'Diterima') {
+            // Ambil semua tagihan belum lunas dari sewa yang sama, urutan tertua dulu (FIFO)
+            $sewaId = $tagihanTarget->Id_Sewa;
+            $tagihanBelumLunas = Tagihan::where('Id_Sewa', $sewaId)
+                ->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi'])
+                ->orderBy('Id_Tagihan', 'asc')
+                ->get();
+
+            $sisaTagihanTarget = (float) ($tagihanTarget->Sisa_Tagihan ?? $tagihanTarget->Total_Tagihan ?? 0);
+
+            // Cek apakah ini partial payment
+            if ($nominalTersisa < $sisaTagihanTarget && $tagihanBelumLunas->count() > 0) {
+                $isPartialPayment = true;
+            }
+
+            if ($isPartialPayment) {
+                // Distribusikan nominal ke tagihan-tagihan tertua (FIFO)
+                foreach ($tagihanBelumLunas as $tagihan) {
+                    if ($nominalTersisa <= 0) break;
+
+                    $sisaTagihan = (float) ($tagihan->Sisa_Tagihan ?? $tagihan->Total_Tagihan ?? 0);
+
+                    if ($nominalTersisa >= $sisaTagihan) {
+                        // Tagihan ini bisa dilunasi sepenuhnya
+                        $nominalTersisa -= $sisaTagihan;
+                        $tagihan->update([
+                            'Sisa_Tagihan'   => 0,
+                            'Status_Tagihan' => 'Lunas',
+                        ]);
+                    } else {
+                        // Tagihan ini hanya terbayar sebagian
+                        $tagihan->update([
+                            'Sisa_Tagihan'   => $sisaTagihan - $nominalTersisa,
+                            'Status_Tagihan' => 'Dicicil',
+                        ]);
+                        $nominalTersisa = 0;
+                    }
+                }
+
+                // Gunakan tagihan target sebagai anchor record pembayaran
+                $idTagihanTarget = $tagihanTarget->Id_Tagihan;
+
+            } else {
+                // Full payment: cek apakah tagihan target sudah lunas (advance payment)
+                if ($tagihanTarget->Status_Tagihan === 'Lunas') {
+                    $latestTagihan = Tagihan::where('Id_Sewa', $tagihanTarget->Id_Sewa)
+                        ->orderBy('Id_Tagihan', 'desc')
+                        ->first();
+
+                    $nextPeriode = '2025-05';
+                    if ($latestTagihan && $latestTagihan->Periode) {
+                        try {
+                            $nextPeriode = Carbon::createFromFormat('Y-m', $latestTagihan->Periode)->addMonth()->format('Y-m');
+                        } catch (\Throwable $th) {
+                            $nextPeriode = date('Y-m');
+                        }
+                    }
+
+                    $newTagihan = Tagihan::create([
+                        'Id_Sewa'          => $tagihanTarget->Id_Sewa,
+                        'Periode'          => $nextPeriode,
+                        'Jatuh_Tempo'      => Carbon::now()->addMonth()->format('Y-m-d'),
+                        'Tarif_Sewa'       => $tagihanTarget->Tarif_Sewa ?: $request->Total_Bayar,
+                        'Hutang_Tunggakan' => 0,
+                        'Total_Tagihan'    => $request->Total_Bayar ?: $tagihanTarget->Tarif_Sewa,
+                        'Sisa_Tagihan'     => $statusVerifikasi === 'Diterima' ? 0 : ($request->Total_Bayar ?: $tagihanTarget->Tarif_Sewa),
+                        'Status_Tagihan'   => $statusVerifikasi === 'Diterima' ? 'Lunas' : 'Belum Bayar',
+                    ]);
+
+                    $idTagihanTarget = $newTagihan->Id_Tagihan;
+                }
+            }
+        }
+
+        // 4. Buat record Pembayaran baru (selalu bertambah di riwayat transaksi)
         $pembayaran = Pembayaran::create([
             'Id_Tagihan'            => $idTagihanTarget,
             'Tanggal_Bayar'         => $request->Tanggal_Bayar,
@@ -129,10 +229,12 @@ class PembayaranController extends Controller
             'Verifikasi_Pembayaran' => $statusVerifikasi,
         ]);
 
-        if ($statusVerifikasi === 'Diterima') {
+        // 5. Untuk full payment yang diterima (non-FIFO): update tagihan target ke Lunas
+        if ($statusVerifikasi === 'Diterima' && !$isPartialPayment) {
             Tagihan::where('Id_Tagihan', $idTagihanTarget)
                 ->update([
                     'Status_Tagihan' => 'Lunas',
+                    'Sisa_Tagihan'   => 0,
                 ]);
         }
 
@@ -220,8 +322,11 @@ class PembayaranController extends Controller
             Tagihan::where('Id_Tagihan', $pembayaran->Id_Tagihan)
                 ->update([
                     'Status_Tagihan' => 'Lunas',
+                    'Sisa_Tagihan'   => 0,  // Isu I5: sinkronkan Sisa_Tagihan saat konfirmasi manual
                 ]);
         } else {
+            // Tolak: kembalikan tagihan ke Belum Bayar
+            // Sisa_Tagihan TIDAK diubah (biarkan sesuai nilai sebelumnya)
             Tagihan::where('Id_Tagihan', $pembayaran->Id_Tagihan)
                 ->update([
                     'Status_Tagihan' => 'Belum Bayar',

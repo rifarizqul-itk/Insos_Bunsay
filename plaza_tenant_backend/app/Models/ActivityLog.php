@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 class ActivityLog extends Model
 {
+    use HasFactory;
     protected $table = 'activity_logs';
     public $timestamps = false;
     protected $guarded = [];

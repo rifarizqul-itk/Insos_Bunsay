@@ -2,34 +2,55 @@
 
 namespace Database\Seeders;
 
+use App\Models\Kios;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Seeder to generate ~300 Kios units across Blocks A-H on Lantai 1 & Lantai 2.
+ */
 class KiosSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('kios')->insertOrIgnore([
-            ['Id_Kios' => 1, 'No_Kios' => 'B-1001', 'Lantai' => 1, 'Ukuran' => '4x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 2, 'No_Kios' => 'B-1002', 'Lantai' => 1, 'Ukuran' => '3x3 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 3, 'No_Kios' => 'B-1003', 'Lantai' => 1, 'Ukuran' => '3x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 4, 'No_Kios' => 'B-1004', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 5, 'No_Kios' => 'B-1005', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 6, 'No_Kios' => 'B-1006', 'Lantai' => 1, 'Ukuran' => '4x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 7, 'No_Kios' => 'B-1007', 'Lantai' => 1, 'Ukuran' => '3x3 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 8, 'No_Kios' => 'B-1008', 'Lantai' => 1, 'Ukuran' => '3x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 9, 'No_Kios' => 'B-1009', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 10, 'No_Kios' => 'B-1010', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 11, 'No_Kios' => 'B-1011', 'Lantai' => 1, 'Ukuran' => '4x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 12, 'No_Kios' => 'B-1012', 'Lantai' => 1, 'Ukuran' => '3x3 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 13, 'No_Kios' => 'B-1013', 'Lantai' => 1, 'Ukuran' => '3x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 14, 'No_Kios' => 'B-1014', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 15, 'No_Kios' => 'B-1015', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 16, 'No_Kios' => 'B-1016', 'Lantai' => 1, 'Ukuran' => '4x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 17, 'No_Kios' => 'B-1017', 'Lantai' => 1, 'Ukuran' => '3x3 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 18, 'No_Kios' => 'B-1018', 'Lantai' => 1, 'Ukuran' => '3x4 m', 'Status' => 'Terisi'],
-            ['Id_Kios' => 19, 'No_Kios' => 'B-1019', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Kosong'],
-            ['Id_Kios' => 20, 'No_Kios' => 'B-1020', 'Lantai' => 1, 'Ukuran' => '4x5 m', 'Status' => 'Kosong'],
-        ]);
+        $blocks = [
+            'A' => ['floor1' => 20, 'floor2' => 15],
+            'B' => ['floor1' => 20, 'floor2' => 15],
+            'C' => ['floor1' => 20, 'floor2' => 15],
+            'D' => ['floor1' => 20, 'floor2' => 15],
+            'E' => ['floor1' => 20, 'floor2' => 15],
+            'F' => ['floor1' => 20, 'floor2' => 15],
+            'G' => ['floor1' => 20, 'floor2' => 15],
+            'H' => ['floor1' => 20, 'floor2' => 20],
+        ];
+
+        $sizes = ['3x3 m²', '3x4 m²', '4x4 m²', '4x5 m²', '5x6 m²'];
+
+        foreach ($blocks as $block => $floors) {
+            // Lantai 1
+            for ($i = 1; $i <= $floors['floor1']; $i++) {
+                $noKios = sprintf('%s1-%02d', $block, $i);
+                Kios::updateOrInsert(
+                    ['No_Kios' => $noKios],
+                    [
+                        'Lantai' => 1,
+                        'Ukuran' => $sizes[array_rand($sizes)],
+                        'Status' => 'Kosong',
+                    ]
+                );
+            }
+
+            // Lantai 2
+            for ($i = 1; $i <= $floors['floor2']; $i++) {
+                $noKios = sprintf('%s2-%02d', $block, $i);
+                Kios::updateOrInsert(
+                    ['No_Kios' => $noKios],
+                    [
+                        'Lantai' => 2,
+                        'Ukuran' => $sizes[array_rand($sizes)],
+                        'Status' => 'Kosong',
+                    ]
+                );
+            }
+        }
     }
 }
