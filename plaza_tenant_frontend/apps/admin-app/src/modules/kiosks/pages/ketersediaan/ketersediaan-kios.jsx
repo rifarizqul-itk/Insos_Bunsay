@@ -45,17 +45,20 @@ function KetersediaanKios() {
       const raw = response?.data?.data || (Array.isArray(response?.data) ? response.data : null);
       if (Array.isArray(raw) && raw.length > 0) {
         const mapped = raw.map((item, idx) => {
-          const activeSewa = item.sewa ? (Array.isArray(item.sewa) ? item.sewa[0] : item.sewa) : null;
+          const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0
+            ? (item.sewa.find(s => s.Status === 'Aktif') || item.sewa[0])
+            : (item.sewa || null);
           const pemilik = activeSewa?.pemilik || null;
+          const statusNorm = (item.Status === 'Kosong' || !activeSewa) ? 'Tersedia' : 'Terisi';
           const lantaiStr = typeof item.Lantai === 'number' ? `Lantai ${item.Lantai}` : (item.Lantai || 'Lantai 1');
           
           return {
             id: item.Id_Kios || item.id || idx + 1,
             noKios: String(item.No_Kios || item.noKios || `B-${1000 + idx}`),
             lantai: String(lantaiStr),
-            penyewa: String(pemilik?.Nama || (item.Status === 'Terisi' ? 'Penyewa Aktif' : '-')),
-            usaha: String(pemilik?.Jenis_Usaha || (item.Status === 'Terisi' ? 'Usaha Kios' : '-')),
-            status: String(item.Status || (activeSewa ? 'Terisi' : 'Tersedia')),
+            penyewa: String(pemilik?.Nama || (statusNorm === 'Terisi' ? 'Penyewa Aktif' : '-')),
+            usaha: String(activeSewa?.Jenis_Usaha || (statusNorm === 'Terisi' ? 'Usaha Kios' : '-')),
+            status: statusNorm,
             masaSewa: String(activeSewa?.Tanggal_Selesai || '-')
           };
         });
@@ -107,7 +110,7 @@ function KetersediaanKios() {
     });
   }, [dataKios, filterLantai, filterStatus, searchQuery, sortConfig]);
 
-  const totalTersedia = dataKios.filter(k => k.status === 'Tersedia').length;
+  const totalTersedia = dataKios.filter(k => k.status === 'Tersedia' || k.status === 'Kosong').length;
   const totalTerisi = dataKios.filter(k => k.status === 'Terisi').length;
 
   const handleAkhiriSewa = async (kios) => {

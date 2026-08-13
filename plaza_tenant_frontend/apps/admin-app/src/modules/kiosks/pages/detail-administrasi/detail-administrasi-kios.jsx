@@ -45,9 +45,9 @@ function DetailAdministrasiKios() {
       const response = await httpClient.get(`/api/v1/admin/kios/${id}`);
       if (response?.data?.data) {
         const item = response.data.data;
-        const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0 
-          ? (item.sewa.find(s => s.Status === 'Aktif') || item.sewa[0])
-          : null;
+        const activeSewa = Array.isArray(item.sewa)
+          ? (item.sewa.find(s => s.Status === 'Aktif') || item.sewa[0] || null)
+          : (item.sewa || null);
         const pemilik = activeSewa?.pemilik || null;
         const userObj = pemilik?.user || null;
         const dokumenList = item.dokumen || pemilik?.dokumen || activeSewa?.dokumen || [];
