@@ -366,10 +366,15 @@ function SetoranTunai() {
 
             <FormField label="Nominal Tunai (Rp)" id="setoran-nominal" required error={nominalError}>
               <input
-                type="number"
-                placeholder="Contoh: 1500000"
-                value={nominalTunai}
-                onChange={(e) => { setNominalTunai(e.target.value); if (nominalError) setNominalError(null); }}
+                type="text"
+                inputMode="numeric"
+                placeholder="Contoh: 1.500.000"
+                value={nominalTunai ? Number(String(nominalTunai).replace(/\D/g, '')).toLocaleString('id-ID') : ''}
+                onChange={(e) => { 
+                  const cleanDigits = e.target.value.replace(/\D/g, '');
+                  setNominalTunai(cleanDigits); 
+                  if (nominalError) setNominalError(null); 
+                }}
                 className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-extrabold font-tabular-nums text-text focus:bg-white transition-colors"
               />
             </FormField>

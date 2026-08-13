@@ -412,7 +412,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               {previewItem.buktiUrl ? (
                 <div className="w-full max-h-64 bg-black/5 rounded-xl border border-border overflow-hidden flex items-center justify-center p-2">
                   <img
-                    src={previewItem.buktiUrl.startsWith('http') ? previewItem.buktiUrl : `/${previewItem.buktiUrl}`}
+                    src={(previewItem.buktiUrl.startsWith('http') || previewItem.buktiUrl.startsWith('data:')) ? previewItem.buktiUrl : (previewItem.buktiUrl.startsWith('/') ? previewItem.buktiUrl : `/${previewItem.buktiUrl}`)}
                     alt={`Bukti Transfer ${previewItem.trxCode}`}
                     className="max-h-60 max-w-full object-contain rounded-lg shadow-sm"
                   />
