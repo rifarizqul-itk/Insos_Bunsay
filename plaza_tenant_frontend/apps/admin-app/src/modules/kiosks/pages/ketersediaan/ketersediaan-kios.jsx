@@ -176,8 +176,9 @@ function KetersediaanKios() {
       const payload = {
         Nama: formTenant.nama,
         No_KTP: formTenant.nik.trim(),
+        No_Telepon: formTenant.telepon.trim(),
+        Telepon: formTenant.telepon.trim(),
         Alamat: formTenant.alamat.trim(),
-        Telepon: formTenant.telepon,
         Email: formTenant.email,
         Jenis_Usaha: formTenant.usaha,
         No_Kios: formTenant.kios,

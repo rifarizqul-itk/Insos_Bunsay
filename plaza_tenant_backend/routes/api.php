@@ -74,65 +74,46 @@ Route::post('/register', fn () => response()->json([
 // ============================================================
 // 4. PROTECTED TENANT BUSINESS ROUTES
 // ============================================================
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
+    // Tenant Dashboard & Payment Endpoints
+    Route::get('/dashboard', [DashboardController::class, 'tenantDashboard']);
+    Route::get('/pembayaran', [PembayaranController::class, 'index']);
+    Route::post('/pembayaran', [PembayaranController::class, 'store']);
+    Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
+    Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+});
 
-        // Tenant Dashboard & Payment Endpoints
-        Route::prefix('v1/tenant')->group(function () {
-            Route::get('/dashboard', [DashboardController::class, 'tenantDashboard']);
-            Route::get('/pembayaran', [PembayaranController::class, 'index']);
-            Route::post('/pembayaran', [PembayaranController::class, 'store']);
-            Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
-            Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
-            Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
-        });
-        Route::get('/dashboard/tenant', [DashboardController::class, 'tenantDashboard']);
-
-        // Alias Routes for backward compatibility (/api/v1/pembayaran)
-        Route::get('/v1/pembayaran', [PembayaranController::class, 'index']);
-        Route::post('/v1/pembayaran', [PembayaranController::class, 'store']);
-        Route::post('/v1/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
-    });
-
-    // ============================================================
-    // 5. PROTECTED ADMIN BUSINESS & MASTER DATA ROUTES (Admin Role Required)
-    // ============================================================
-    Route::middleware(['auth:sanctum'])->group(function () {
-        // Admin Dashboard & Management Endpoints under v1/admin
-        Route::prefix('v1/admin')->group(function () {
-            Route::get('/dashboard', [DashboardController::class, 'adminDashboard']);
-            Route::get('/ekspor', [PembayaranController::class, 'ekspor']);
-            
-            Route::get('/kios/kosong', [KiosController::class, 'getKosong']);
-            Route::post('/sewa/{id}/akhiri', [SewaController::class, 'akhiriSewa']);
-            Route::apiResource('pemilik', PemilikController::class);
-            Route::put('/pemilik/{id}/toggle-cicilan', [PemilikController::class, 'toggleCicilan']);
-            Route::apiResource('kios', KiosController::class);
-            Route::apiResource('sewa', SewaController::class);
-            Route::apiResource('dokumen', DokumenController::class);
-            Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
-            Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
-            Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
-
-            // Audit Logs & Staff Management (RBAC & Audit Trail)
-            Route::get('/logs', [\App\Http\Controllers\ActivityLogController::class, 'index']);
-            Route::get('/staf', [\App\Http\Controllers\StafManagementController::class, 'index']);
-            Route::post('/staf', [\App\Http\Controllers\StafManagementController::class, 'store']);
-            Route::put('/staf/{id}', [\App\Http\Controllers\StafManagementController::class, 'update']);
-            Route::put('/staf/{id}/toggle-status', [\App\Http\Controllers\StafManagementController::class, 'toggleStatus']);
-
-            // Notifications
-            Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'adminNotifications']);
-            Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
-            Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
-        });
+// ============================================================
+// 5. PROTECTED ADMIN BUSINESS & MASTER DATA ROUTES (Admin Role Required)
+// ============================================================
+Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function () {
+    // Admin Dashboard & Reports
+    Route::get('/dashboard', [DashboardController::class, 'adminDashboard']);
+    Route::get('/ekspor', [PembayaranController::class, 'ekspor']);
     
-    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
+    // Master Data & Kiosk Management
+    Route::get('/kios/kosong', [KiosController::class, 'getKosong']);
+    Route::post('/sewa/{id}/akhiri', [SewaController::class, 'akhiriSewa']);
     Route::apiResource('pemilik', PemilikController::class);
+    Route::put('/pemilik/{id}/toggle-cicilan', [PemilikController::class, 'toggleCicilan']);
     Route::apiResource('kios', KiosController::class);
     Route::apiResource('sewa', SewaController::class);
     Route::apiResource('dokumen', DokumenController::class);
     Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
     Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
     Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
+
+    // Audit Logs & Staff Management (RBAC & Audit Trail)
+    Route::get('/logs', [\App\Http\Controllers\ActivityLogController::class, 'index']);
+    Route::get('/staf', [\App\Http\Controllers\StafManagementController::class, 'index']);
+    Route::post('/staf', [\App\Http\Controllers\StafManagementController::class, 'store']);
+    Route::put('/staf/{id}', [\App\Http\Controllers\StafManagementController::class, 'update']);
+    Route::put('/staf/{id}/toggle-status', [\App\Http\Controllers\StafManagementController::class, 'toggleStatus']);
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'adminNotifications']);
+    Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 });
+

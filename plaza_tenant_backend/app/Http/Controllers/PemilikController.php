@@ -36,6 +36,13 @@ class PemilikController extends Controller
      */
     public function store(Request $request)
     {
+        // Merge field aliases before validation
+        $request->merge([
+            'No_Telepon' => $request->No_Telepon ?: ($request->Telepon ?: null),
+            'No_KTP'     => $request->No_KTP ?: ($request->nik ?: null),
+            'Alamat'     => $request->Alamat ?: ($request->alamat ?: null),
+        ]);
+
         // 1. Validasi Input
         $validatedData = $request->validate([
             'Id_User'    => 'nullable',
@@ -46,9 +53,6 @@ class PemilikController extends Controller
             'Jenis_Usaha'=> 'nullable|string|max:255',
         ]);
 
-        $validatedData['No_Telepon'] = $request->No_Telepon ?: $request->Telepon;
-        $validatedData['No_KTP']     = $request->No_KTP ?: $request->nik;
-        $validatedData['Alamat']     = $request->Alamat ?: $request->alamat;
         $jenisUsaha = $request->Jenis_Usaha ?: 'Perdagangan Umum';
         unset($validatedData['Jenis_Usaha']);
 
