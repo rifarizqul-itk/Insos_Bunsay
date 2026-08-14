@@ -171,8 +171,10 @@ function SetoranTunai() {
         Tanggal_Bayar: new Date().toISOString().split('T')[0],
         Total_Bayar: parseInt(nominalTunai, 10),
         Metode_Bayar: 'Tunai',
+        Bukti_Pembayaran: previewBukti || `LOKET-CASH-${Date.now()}`,
         Verifikasi_Pembayaran: 'Diterima'
       });
+
       setToastMsg('Setoran tunai loket berhasil dicatat di database SQL!');
       setNominalTunai('');
       setSelectedTenantId('');

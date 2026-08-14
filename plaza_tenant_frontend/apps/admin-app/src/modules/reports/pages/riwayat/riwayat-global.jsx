@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Modal, Card, Badge, Button, Table, AlokasiBreakdown, EmptyState, SkeletonTable } from '@bunsay/shared-ui';
+import { Card, Badge, Button, Table, AlokasiBreakdown, EmptyState, SkeletonTable, BuktiPembayaranModal } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function RiwayatTransaksiAdmin() {
@@ -31,6 +31,7 @@ function RiwayatTransaksiAdmin() {
             labelMetode: `${p.Metode_Bayar || 'Transfer Bank'} (SQL DB)`,
             waktu: p.Tanggal_Bayar || 'Terbaru',
             status: p.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (p.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : 'Menunggu Verifikasi'),
+            buktiUrl: p.Bukti_Pembayaran || '',
             alokasi: []
           }));
           setRiwayat(mapped);
@@ -43,6 +44,7 @@ function RiwayatTransaksiAdmin() {
     }
     fetchRiwayatGlobal();
   }, [httpClient]);
+
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
@@ -178,38 +180,15 @@ function RiwayatTransaksiAdmin() {
         )}
       </Card>
 
-      <Modal
-        isOpen={!!selectedBukti}
+      {/* Modal Detail & Resi/Bukti Transaksi */}
+      <BuktiPembayaranModal
+        isOpen={Boolean(selectedBukti)}
         onClose={() => setSelectedBukti(null)}
-        title={selectedBukti ? `Detail Transaksi ${selectedBukti.id}` : ''}
-        size="md"
-        footer={
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => setSelectedBukti(null)}
-          >
-            Tutup
-          </Button>
-        }
-      >
-        {selectedBukti && (
-          <div className="flex flex-col gap-4 text-sm font-sans">
-            <Card variant="inset" className="p-4 flex flex-col gap-2">
-              <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{selectedBukti.nama} (<span className="font-tabular-nums">{selectedBukti.kios}</span>)</strong></div>
-              <div><span className="text-text-3 font-semibold">Nominal Bayar:</span> <strong className="text-text font-bold font-tabular-nums">{selectedBukti.nominal}</strong></div>
-              <div><span className="text-text-3 font-semibold">Metode:</span> <strong className="text-text font-bold">{selectedBukti.labelMetode || selectedBukti.metode}</strong></div>
-              <div><span className="text-text-3 font-semibold">Waktu:</span> <strong className="text-text font-bold font-tabular-nums">{selectedBukti.waktu}</strong></div>
-              <div><span className="text-text-3 font-semibold">Status:</span> <Badge status={selectedBukti.status} /></div>
-              {selectedBukti.alasan && <div><span className="text-text-3 font-semibold">Alasan Tolak:</span> <strong className="text-red font-bold">{selectedBukti.alasan}</strong></div>}
-            </Card>
-
-            <AlokasiBreakdown alokasiList={selectedBukti.alokasi} />
-          </div>
-        )}
-      </Modal>
+        item={selectedBukti}
+      />
     </div>
   );
 }
 
 export default RiwayatTransaksiAdmin;
+

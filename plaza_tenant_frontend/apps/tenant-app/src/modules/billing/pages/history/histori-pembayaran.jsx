@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable } from '@bunsay/shared-ui';
+import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function HistoriPembayaran() {
@@ -8,6 +8,7 @@ function HistoriPembayaran() {
   const [loading, setLoading] = useState(true);
   const [selectedMetode, setSelectedMetode] = useState('Semua');
   const [toastMsg, setToastMsg] = useState(null);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   // Table Sort State
   const [sortConfig, setSortConfig] = useState({ key: 'idReal', direction: 'desc' });
@@ -32,6 +33,9 @@ function HistoriPembayaran() {
           nominalAngka: Number(item.Total_Bayar || 0),
           metode: item.Metode_Bayar || 'Transfer',
           status: item.Verifikasi_Pembayaran || 'Menunggu',
+          buktiUrl: item.Bukti_Pembayaran || '',
+          nama: item.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
+          kios: item.tagihan?.sewa?.kios?.No_Kios || '',
           catatanAdmin: item.catatan_admin || '',
           teksSanggahan: item.teks_sanggahan || '',
           alokasi: []
@@ -44,6 +48,7 @@ function HistoriPembayaran() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchHistory();
@@ -123,6 +128,7 @@ function HistoriPembayaran() {
     { label: 'Tanggal', sortKey: 'tanggal' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Metode Pembayaran', sortKey: 'metode' },
+    { label: 'Resi & Bukti', align: 'center', sortable: false },
     { label: 'Status & Catatan Admin', sortKey: 'status' },
     { label: 'Aksi Sanggahan', align: 'center', sortable: false }
   ];
@@ -180,7 +186,7 @@ function HistoriPembayaran() {
             caption="Tabel Histori Pembayaran Tenant"
             ariaLabel="Daftar Histori Transaksi Pembayaran Tenant"
             headers={tableHeaders}
-            colSpan={6}
+            colSpan={7}
             sortConfig={sortConfig}
             onSort={handleSort}
           >
@@ -197,6 +203,32 @@ function HistoriPembayaran() {
                 </td>
                 <td data-label="Metode Pembayaran" className="p-3 text-text font-bold">
                   {row.metode === 'Midtrans' ? 'Midtrans Gateway' : row.metode === 'Transfer' ? 'Transfer Bank' : row.metode === 'Tunai' ? 'Tunai Loket' : row.metode}
+                </td>
+                <td data-label="Resi & Bukti" className="p-3 text-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedReceipt(row)}
+                    aria-label={`Lihat bukti atau resi transaksi ${row.id}`}
+                    className="h-8 text-xs font-bold gap-1.5 px-3 border-border hover:border-red hover:text-red transition-all"
+                  >
+                    {row.metode === 'Midtrans' ? (
+                      <>
+                        <Icon icon="heroicons:bolt-20-solid" width="14" height="14" className="text-indigo-600" />
+                        <span>Resi Digital</span>
+                      </>
+                    ) : row.metode === 'Tunai' ? (
+                      <>
+                        <Icon icon="heroicons:document-text-20-solid" width="14" height="14" className="text-amber-600" />
+                        <span>Kuitansi</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon="heroicons:photo-20-solid" width="14" height="14" className="text-emerald-600" />
+                        <span>Foto Bukti</span>
+                      </>
+                    )}
+                  </Button>
                 </td>
                 <td data-label="Status & Catatan Admin" className="p-3">
                   <div className="flex flex-col gap-1">
@@ -234,6 +266,14 @@ function HistoriPembayaran() {
           </Table>
         )}
       </Card>
+
+      {/* Modal Resi & Bukti Pembayaran */}
+      <BuktiPembayaranModal
+        isOpen={Boolean(selectedReceipt)}
+        onClose={() => setSelectedReceipt(null)}
+        item={selectedReceipt}
+      />
+
 
       {/* Modal Form Sanggahan */}
       {sanggahanModalItem && (

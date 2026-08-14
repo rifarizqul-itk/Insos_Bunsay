@@ -13,5 +13,7 @@ export { AlokasiBreakdown } from './components/AlokasiBreakdown';
 export { FIFOPreview } from './components/FIFOPreview';
 export { Toast, ToastProvider, useToast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
+export { BuktiPembayaranModal } from './components/BuktiPembayaranModal';
+
 
 
