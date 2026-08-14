@@ -1,9 +1,10 @@
 // ============================================================
-// ERD VERSI 4 — Bunsay (Plaza Kebun Sayur Balikpapan)
-// Revisi dari v3: Pembayaran cicilan (FIFO, nominal bebas)
-// dikonfirmasi oleh tim database (Indri), menggantikan asumsi
-// "harus lunas sekaligus" di v3 yang ternyata salah tafsir.
-// Import di https://dbdiagram.io/d — paste kode ini di editor
+// ERD VERSI 6.0 — Bunsay Hub (Plaza Kebun Sayur Balikpapan)
+// Rilis Monorepo, RBAC, Audit Trail, & Notifikasi Dinamis
+// 11 Tabel SQL Sesuai Laravel Migrations Backend (plaza_tenant_backend)
+//
+// Cara Penggunaan:
+// Copy seluruh isi file ini dan paste di https://dbdiagram.io/d
 // ============================================================
 
 // ---------------- ENUM DEFINITIONS ----------------
@@ -18,10 +19,28 @@ Enum status_kios_enum {
   Kosong
 }
 
+Enum status_sewa_enum {
+  Aktif
+  Selesai
+}
+
+Enum status_aktif_user_enum {
+  Aktif
+  Nonaktif
+}
+
+Enum sub_role_enum {
+  superadmin
+  admin
+  staff_loket
+  auditor
+}
+
 Enum jenis_dokumen_enum {
   SP
   PPJB
   Sertifikat
+  AJB
   KTP
 }
 
@@ -44,56 +63,69 @@ Enum verifikasi_pembayaran_enum {
   Ditolak
 }
 
+Enum notif_target_enum {
+  tenant
+  admin
+  all
+}
+
+Enum notif_type_enum {
+  info
+  success
+  warning
+  danger
+}
+
 // ---------------- TABLES ----------------
 
 Table Roles {
-  Id_Roles int [pk, increment]
-  Nama_Role varchar(30)
+  Id_roles int [pk, increment]
+  Nama_Role varchar(30) [not null]
 
-  Note: 'Menyimpan daftar hak akses/peran pengguna (Tenant, Admin).'
+  Note: 'Master data peran pengguna: 1 = Admin, 2 = Tenant.'
 }
 
 Table User {
-  Id_User int [pk, increment]
-  Id_Roles int [ref: > Roles.Id_Roles, not null]
+  Id_user int [pk, increment]
+  Id_roles int [ref: > Roles.Id_roles, not null]
   Username varchar(50) [not null, unique]
-  Email varchar(100) [not null, unique]
   Password varchar(255) [not null]
+  nama_lengkap varchar(100) [null]
+  email varchar(100) [null]
+  sub_role sub_role_enum [null, note: 'Khusus staf admin: superadmin, admin, staff_loket, auditor']
+  permissions text [null, note: 'JSON matrix perizinan hak akses modul']
+  status_aktif status_aktif_user_enum [not null, default: 'Aktif']
+  last_login_at datetime [null]
 
   Note: '''
   Akun login terpusat (Tenant & Admin) berbasis Username.
-  Email disimpan di tabel User untuk formalitas administrasi &
-  pengiriman tautan reset kata sandi (Lupa Sandi).
-  Menggunakan model Single Official Admin Account (Shared Account)
-  untuk staf pengelola kantor tanpa memerlukan tabel terpisah.
+  Mendukung granular RBAC untuk staf pengelola & single tenant accounts.
   '''
 }
 
 Table Pemilik {
   Id_Pemilik int [pk, increment]
-  Id_User int [ref: - User.Id_User, not null]
-  Nama varchar(50) [not null]
-  No_Telepon varchar(255) [not null]
-  No_KTP char(16) [not null, unique]
+  Id_User int [ref: - User.Id_user, not null]
+  Nama varchar(100) [not null]
+  No_Telepon varchar(30) [not null]
+  No_KTP char(16) [not null]
   Alamat text [not null]
   Status_Pemilik status_pemilik_enum [not null, default: 'Aktif']
+  izinkan_cicilan boolean [not null, default: false, note: 'Toggle persetujuan cicilan oleh pengelola']
 
-  Note: '''
-  Status_Pemilik membedakan tenant aktif vs riwayat lama.
-  Tenant yang benar-benar berhenti (bukan menunggak) diubah
-  jadi Nonaktif. Kalau sewa lagi di kemudian hari, dianggap
-  Pemilik baru (row baru), bukan reaktivasi row lama.
-  '''
+  Note: 'Data profil resmi penyewa kios perorangan / penanggung jawab.'
 }
 
 Table Kios {
   Id_Kios int [pk, increment]
   No_Kios varchar(10) [not null, unique]
   Lantai int [not null]
-  Ukuran varchar(20)
+  Ukuran varchar(20) [null]
   Status status_kios_enum [not null, default: 'Kosong']
+  Sertifikat varchar(100) [null]
+  Catatan text [null]
 
-  Note: 'Master data seluruh unit kios di Plaza Kebun Sayur.'
+  Note: 'Master data 285+ unit kios fisik di Plaza Kebun Sayur.'
 }
 
 Table Dokumen {
@@ -105,12 +137,7 @@ Table Dokumen {
   Tanggal date [null]
   Keterangan text [null]
 
-  Note: '''
-  Dokumen generik & opsional (kecuali KTP yang wajib di Pemilik).
-  Id_Kios diisi untuk dokumen per-kios (SP, PPJB, Sertifikat);
-  dikosongkan untuk dokumen per-pemilik (KTP).
-  Satu baris per jenis dokumen yang dimiliki.
-  '''
+  Note: 'Berkas legalitas sewa kios (SP, PPJB, AJB, Sertifikat, KTP).'
 }
 
 Table Sewa {
@@ -120,27 +147,26 @@ Table Sewa {
   Jenis_Usaha varchar(100) [not null]
   Tanggal_Mulai date [not null]
   Tanggal_Selesai date [not null]
+  Tarif_Bulanan decimal(12,2) [not null, default: 750000.00]
+  Status status_sewa_enum [not null, default: 'Aktif', note: 'Soft-delete status: Aktif vs Selesai']
   Keterangan text [null]
 
   Note: '''
-  SIKLUS SEWA BULANAN — bukan kontrak jangka panjang.
-  Satu baris = satu bulan siklus sewa. Reset tiap bulan
-  (baris baru dibuat, bukan update di tempat).
-  Relasi ke siklus sebelumnya TIDAK eksplisit (tanpa FK) —
-  cukup ditelusuri lewat Id_Pemilik + Id_Kios yang sama,
-  karena tenant yang berhenti beneran akan dapat Id_Pemilik
-  baru saat sewa lagi (lihat Pemilik.Status_Pemilik).
+  Kontrak sewa kios. Saat masa sewa berakhir (Status = 'Selesai'),
+  kios otomatis kembali menjadi 'Kosong', tetapi seluruh riwayat tagihan
+  dan pembayaran tetap tersimpan utuh di database.
   '''
 }
 
 Table Tagihan {
   Id_Tagihan int [pk, increment]
-  Id_Sewa int [ref: - Sewa.Id_Sewa, not null]
-  Periode char(7) [not null, note: 'format YYYY-MM']
-  Jatuh_Tempo date [not null]
+  Id_Sewa int [ref: > Sewa.Id_Sewa, not null]
+  Periode char(7) [not null, note: 'Format YYYY-MM']
+  Jatuh_Tempo date [not null, note: 'Standard tanggal 12 tiap bulan']
   Tarif_Sewa decimal(12,2) [not null]
   Hutang_Tunggakan decimal(12,2) [not null, default: 0]
   Total_Tagihan decimal(12,2) [not null, note: 'Tarif_Sewa + Hutang_Tunggakan']
+  Sisa_Tagihan decimal(12,2) [not null, default: 0, note: 'Sisa kewajiban setelah dicicil parsial']
   Status_Tagihan status_tagihan_enum [not null, default: 'Belum Bayar']
 
   indexes {
@@ -148,53 +174,24 @@ Table Tagihan {
     Status_Tagihan
   }
 
-  Note: '''
-  Satu Tagihan per siklus Sewa (1:1, karena Sewa sudah per-bulan).
-  Hutang_Tunggakan = akumulasi Total_Tagihan dari siklus Sewa
-  sebelumnya yang masih belum Lunas (dicari via Id_Pemilik + Id_Kios).
-  Total_Tagihan = Tarif_Sewa bulan ini + Hutang_Tunggakan.
-
-  Total_Terbayar TIDAK disimpan sebagai kolom — dihitung on-the-fly
-  lewat SUM(Alokasi_Pembayaran.Nominal_Teralokasi) WHERE Id_Tagihan
-  = Tagihan ini, untuk menghindari risiko data tidak sinkron antara
-  kolom tersimpan vs baris Alokasi_Pembayaran yang sebenarnya.
-  Status_Tagihan diturunkan dari perbandingan hasil SUM itu vs
-  Total_Tagihan:
-    SUM = 0                         -> "Belum Bayar"
-    0 < SUM < Total_Tagihan         -> "Dicicil"
-    SUM >= Total_Tagihan            -> "Lunas"
-  (Selama ada Pembayaran yang masih "Menunggu" verifikasi terkait
-  Tagihan ini, status ditahan di "Menunggu Verifikasi".)
-
-  Index ditambahkan di Periode & Status_Tagihan karena keduanya
-  jadi kolom filter utama di fitur EksporData.jsx dan tabel admin.
-  '''
+  Note: 'Tagihan sewa bulanan. Total_Tagihan = Tarif_Sewa + Akumulasi Tunggakan sebelumnya.'
 }
 
 Table Pembayaran {
   Id_Pembayaran int [pk, increment]
-  Id_Pemilik int [ref: > Pemilik.Id_Pemilik, not null]
+  Id_Tagihan int [ref: > Tagihan.Id_Tagihan, not null]
   Tanggal_Bayar date [not null]
   Total_Bayar decimal(12,2) [not null]
   Metode_Bayar metode_bayar_enum [not null]
   Bukti_Pembayaran varchar(255) [null]
   Verifikasi_Pembayaran verifikasi_pembayaran_enum [not null, default: 'Menunggu']
+  catatan_admin text [null, note: 'Alasan penolakan dari admin']
+  teks_sanggahan text [null, note: 'Keterangan sanggahan dari tenant']
+  bukti_sanggahan varchar(255) [null, note: 'Bukti perbaikan transfer dari tenant']
 
   Note: '''
-  TIDAK LAGI 1:1 dengan Tagihan (revisi dari v3). Tenant boleh
-  mencicil dengan NOMINAL BEBAS (dikonfirmasi tim database):
-  tidak harus pas kelipatan satu bulan tagihan.
-
-  Satu Pembayaran dialokasikan ke satu atau lebih Tagihan lewat
-  Alokasi_Pembayaran, memakai aturan FIFO (First-In-First-Out):
-  tagihan dengan Periode tertua yang belum Lunas dilunasi/dicicil
-  duluan. Kelebihan nominal (jika ada) mengalir ke Tagihan
-  berikutnya yang masih belum Lunas.
-
-  Id_Pemilik (bukan Id_Tagihan) menjadi FK utama karena satu
-  Pembayaran bisa menyentuh banyak Tagihan sekaligus.
-  Bukti_Pembayaran nullable karena pembayaran Tunai/Midtrans
-  tidak selalu perlu upload bukti.
+  Pencatatan transaksi pembayaran sewa via Transfer Bank, Tunai Loket, atau Midtrans.
+  Mendukung alur penolakan, sanggahan/dispute, dan alokasi cicilan FIFO.
   '''
 }
 
@@ -205,20 +202,36 @@ Table Alokasi_Pembayaran {
   Nominal_Teralokasi decimal(12,2) [not null]
 
   Note: '''
-  Junction table BARU (menggantikan Tagihan_Terlunasi versi v3):
-  mencatat berapa RUPIAH persis dari satu Pembayaran yang
-  teralokasi ke satu Tagihan tertentu — bukan cuma penanda
-  lunas/tidak, karena sekarang alokasinya bisa PARSIAL.
-
-  WAJIB diproses backend dengan algoritma FIFO setiap kali
-  Pembayaran diverifikasi (Verifikasi_Pembayaran = "Diterima"):
-    1. Ambil semua Tagihan milik Pemilik itu dengan
-       Status_Tagihan != "Lunas", urutkan Periode tertua dulu.
-    2. Loop: alokasikan sisa nominal Pembayaran ke Tagihan
-       tertua sampai habis atau semua Tagihan lunas.
-    3. Tiap alokasi dicatat sebagai satu baris di sini.
-    4. Setelah insert, hitung ulang SUM Alokasi_Pembayaran per
-       Tagihan yang tersentuh untuk menentukan Status_Tagihan
-       barunya (lihat Note di Tagihan).
+  Junction table alokasi FIFO (First-In-First-Out):
+  Memetakan setiap nominal rupiah pembayaran ke tagihan-tagihan tertua
+  secara berurutan.
   '''
+}
+
+Table ActivityLog {
+  id int [pk, increment]
+  id_user int [ref: > User.Id_user, null]
+  username varchar(50) [not null]
+  role varchar(50) [not null]
+  modul varchar(50) [not null]
+  aksi varchar(50) [not null]
+  deskripsi text [not null]
+  ip_address varchar(45) [null]
+  created_at datetime [not null]
+
+  Note: 'Audit trail log untuk mencatat seluruh aksi sensitif pengelola plaza.'
+}
+
+Table Notification {
+  id int [pk, increment]
+  target_type notif_target_enum [not null, default: 'tenant']
+  id_user int [ref: > User.Id_user, null]
+  title varchar(150) [not null]
+  message text [not null]
+  type notif_type_enum [not null, default: 'info']
+  is_read boolean [not null, default: false]
+  link varchar(255) [null]
+  created_at datetime [not null]
+
+  Note: 'Notifikasi dinamis real-time untuk tenant dan staf pengelola admin.'
 }
