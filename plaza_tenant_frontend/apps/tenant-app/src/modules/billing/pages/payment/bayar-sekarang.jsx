@@ -159,35 +159,92 @@ function BayarSekarang() {
   const handleProsesPembayaran = async () => {
     setIsLoading(true);
     try {
-      const base64Bukti = buktiTransfer ? await fileToBase64(buktiTransfer) : null;
       const targetTagihanId = unpaidBills[0]?.idTagihan || 1;
-      const metodeBayar = metode === 'transfer_manual' ? 'Transfer' : 'Midtrans';
       const todayStr = new Date().toISOString().split('T')[0];
 
-      const payload = {
-        Id_Tagihan: targetTagihanId,
-        Tanggal_Bayar: todayStr,
-        Total_Bayar: Number(nominal),
-        Metode_Bayar: metodeBayar,
-        Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
-        Verifikasi_Pembayaran: metode === 'transfer_manual' ? 'Menunggu' : 'Diterima'
-      };
+      // JIKA METODE: Transfer Bank Manual
+      if (metode === 'transfer_manual') {
+        const base64Bukti = buktiTransfer ? await fileToBase64(buktiTransfer) : null;
+        const payload = {
+          Id_Tagihan: targetTagihanId,
+          Tanggal_Bayar: todayStr,
+          Total_Bayar: Number(nominal),
+          Metode_Bayar: 'Transfer',
+          Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
+          Verifikasi_Pembayaran: 'Menunggu'
+        };
 
-      await httpClient.post('/api/v1/tenant/pembayaran', payload);
+        await httpClient.post('/api/v1/tenant/pembayaran', payload);
+        setIsLoading(false);
+        addToast('Bukti pembayaran terkirim! Menunggu verifikasi admin.', 'success');
+        navigate('/tenant/histori');
+        return;
+      }
+
+      // JIKA METODE: Pembayaran Otomatis Midtrans (Snap Gateway Popup)
+      // 1. Minta Snap Token dari server backend
+      const tokenRes = await httpClient.post('/api/v1/tenant/midtrans/token', {
+        Id_Tagihan: targetTagihanId,
+        nominal: Number(nominal),
+      });
+
+      const snapToken = tokenRes.data?.token;
+      if (!snapToken) {
+        throw new Error(tokenRes.data?.message || 'Gagal memperoleh Snap Token dari Midtrans Gateway.');
+      }
+
       setIsLoading(false);
-      addToast(
-        metode === 'transfer_manual'
-          ? 'Bukti pembayaran terkirim! Menunggu verifikasi admin.'
-          : 'Pembayaran berhasil dikonfirmasi!',
-        'success'
-      );
-      navigate('/tenant/histori');
+      setShowReview(false);
+
+      // 2. Buka popup modal Snap resmi
+      if (window.snap && typeof window.snap.pay === 'function') {
+        window.snap.pay(snapToken, {
+          onSuccess: async (result) => {
+            try {
+              const confirmPayload = {
+                Id_Tagihan: targetTagihanId,
+                Tanggal_Bayar: todayStr,
+                Total_Bayar: Number(nominal),
+                Metode_Bayar: 'Midtrans',
+                Bukti_Pembayaran: result?.transaction_id || result?.order_id || `MIDTRANS-${Date.now()}`,
+                Verifikasi_Pembayaran: 'Diterima'
+              };
+
+              await httpClient.post('/api/v1/tenant/pembayaran', confirmPayload);
+              addToast('Pembayaran Midtrans Berhasil! Tagihan sewa kios telah diperbarui.', 'success');
+              navigate('/tenant/histori');
+            } catch (postErr) {
+              console.error('Error confirming midtrans payment:', postErr);
+              addToast('Pembayaran selesai. Mengalihkan ke halaman riwayat...', 'info');
+              navigate('/tenant/histori');
+            }
+          },
+          onPending: (result) => {
+            addToast('Transaksi dibuat. Silakan selesaikan pembayaran sesuai panduan Midtrans.', 'info');
+          },
+          onError: (result) => {
+            addToast('Pembayaran Midtrans gagal atau dibatalkan.', 'error');
+          },
+          onClose: () => {
+            addToast('Popup pembayaran Midtrans ditutup.', 'info');
+          }
+        });
+      } else {
+        // Fallback jika script snap.js terhambat
+        if (tokenRes.data?.redirect_url) {
+          window.location.href = tokenRes.data.redirect_url;
+        } else {
+          throw new Error('Midtrans Snap SDK tidak termuat di browser. Periksa koneksi internet Anda.');
+        }
+      }
+
     } catch (err) {
       setIsLoading(false);
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal memproses pembayaran.';
       addToast(errMsg, 'error');
     }
   };
+
 
   return (
     <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">

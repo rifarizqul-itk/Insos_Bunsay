@@ -81,9 +81,14 @@ Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
     Route::get('/pembayaran', [PembayaranController::class, 'index']);
     Route::post('/pembayaran', [PembayaranController::class, 'store']);
     Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
+    Route::post('/midtrans/token', [\App\Http\Controllers\MidtransController::class, 'createSnapToken']);
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 });
+
+// Midtrans Public Webhook Notification Callback
+Route::post('/v1/midtrans/notification', [\App\Http\Controllers\MidtransController::class, 'handleNotification']);
+
 
 
 // ============================================================

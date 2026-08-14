@@ -5,7 +5,9 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  envDir: path.resolve(__dirname, '../../'),
   publicDir: path.resolve(__dirname, '../../public'),
+
   resolve: {
     alias: {
       '@bunsay/shared-ui': path.resolve(__dirname, '../../packages/shared-ui/src'),
