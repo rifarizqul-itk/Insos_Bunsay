@@ -51,8 +51,8 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Resi & Bukti Pembayaran ${item.id || item.trxCode || ''}`}
-      size="lg"
+      title={`Detail Pembayaran ${item.id || item.trxCode || ''}`}
+      size="md"
       footer={
         <div className="flex items-center justify-between w-full gap-3 print:hidden">
           <Button
@@ -78,220 +78,215 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
       }
     >
       <div className="flex flex-col gap-4 font-sans print:p-0">
-        {/* Header Ringkasan Transaksi */}
-        <div 
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-xl text-sm border"
-          style={{ backgroundColor: '#F7F3EE', borderColor: '#E6DED6' }}
-        >
-          <div>
-            <span className="text-xs block mb-0.5" style={{ color: '#7A695E', fontWeight: 600 }}>Nama Penyewa & Kios:</span>
-            <strong className="text-sm font-bold" style={{ color: '#1C1512' }}>
-              {item.nama || 'Tenant'} {item.kios ? `(${item.kios})` : ''}
-            </strong>
-          </div>
-          <div>
-            <span className="text-xs block mb-0.5" style={{ color: '#7A695E', fontWeight: 600 }}>Total Nominal Pembayaran:</span>
-            <strong className="text-base font-extrabold font-tabular-nums" style={{ color: '#8B1A1A' }}>
-              {nominalFormatted}
-            </strong>
-          </div>
-          <div>
-            <span className="text-xs block mb-0.5" style={{ color: '#7A695E', fontWeight: 600 }}>Waktu Transaksi:</span>
-            <strong className="text-xs sm:text-sm font-bold font-tabular-nums" style={{ color: '#1C1512' }}>
-              {item.tanggal || item.waktu || '-'}
-            </strong>
-          </div>
-          <div>
-            <span className="text-xs block mb-0.5" style={{ color: '#7A695E', fontWeight: 600 }}>Metode & Status:</span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-bold text-xs" style={{ color: '#1C1512' }}>
-                {isMidtrans ? 'Midtrans Gateway' : isTunai ? 'Tunai Loket' : 'Transfer Bank'}
-              </span>
-              <Badge status={item.status || 'Diterima'} />
-            </div>
-          </div>
-        </div>
 
-        {/* 1. KONTEN KHUSUS: MIDTRANS GATEWAY */}
+        {/* 1. KONTEN KHUSUS: RESI RESMI MIDTRANS GATEWAY (CLEAN LIGHT PAPER DESIGN) */}
         {isMidtrans && (
-          <div 
-            className="flex flex-col gap-3.5 p-5 rounded-2xl border shadow-lg text-white"
-            style={{ 
-              backgroundColor: '#0F172A', 
-              borderColor: '#334155',
-              background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%)'
-            }}
-          >
-            {/* Top Bar Receipt */}
-            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: '#334155' }}>
-              <div className="flex items-center gap-2.5">
-                <div 
-                  className="size-9 rounded-xl flex items-center justify-center text-indigo-300"
-                  style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(129, 140, 248, 0.3)' }}
-                >
-                  <Icon icon="heroicons:bolt-20-solid" width="22" height="22" />
+          <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 text-text">
+            {/* Header Resi */}
+            <div className="flex items-start justify-between border-b border-border/80 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-xs">
+                  <Icon icon="heroicons:bolt-20-solid" width="24" height="24" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm tracking-wide text-white flex items-center gap-1.5">
-                    <span>E-Receipt Midtrans Gateway</span>
-                    <span className="text-[10px] px-1.5 py-0.2 bg-indigo-500/30 text-indigo-200 rounded font-mono">OFFICIAL</span>
-                  </h4>
-                  <p className="text-[11px]" style={{ color: '#94A3B8' }}>Resi Digital Pembayaran Instan Terverifikasi</p>
+                  <h3 className="font-extrabold text-base text-text tracking-tight flex items-center gap-2">
+                    <span>Resi Digital Midtrans</span>
+                  </h3>
+                  <p className="text-xs text-text-3 font-medium">Pembayaran Otomatis Terverifikasi</p>
                 </div>
               </div>
-              <span 
-                className="px-2.5 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase flex items-center gap-1"
-                style={{ 
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)', 
-                  border: '1px solid rgba(52, 211, 153, 0.4)',
-                  color: '#34D399'
-                }}
-              >
-                <Icon icon="heroicons:check-badge-20-solid" width="14" height="14" />
-                <span>SETTLED</span>
-              </span>
+
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-700 text-xs font-extrabold shadow-2xs">
+                <Icon icon="heroicons:check-badge-20-solid" width="16" height="16" className="text-emerald-600" />
+                <span>LUNAS (SETTLED)</span>
+              </div>
             </div>
 
-            {/* Receipt Table Items */}
-            <div className="space-y-2 text-xs pt-1">
-              <div className="flex justify-between items-center py-1.5 border-b" style={{ borderColor: 'rgba(51, 65, 85, 0.6)' }}>
-                <span style={{ color: '#94A3B8', fontWeight: 600 }}>Kode Transaksi / Order ID:</span>
-                <div className="flex items-center gap-1.5">
-                  <span 
-                    className="font-mono font-bold text-white px-2 py-0.5 rounded border"
-                    style={{ backgroundColor: '#1E293B', borderColor: '#475569' }}
-                  >
-                    {orderId}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyCode(orderId)}
-                    className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors"
-                    title="Salin Kode Transaksi"
-                    aria-label="Salin Kode Transaksi"
-                  >
-                    <Icon icon={copied ? "heroicons:check-20-solid" : "heroicons:clipboard-document-20-solid"} width="15" height="15" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center py-1.5 border-b" style={{ borderColor: 'rgba(51, 65, 85, 0.6)' }}>
-                <span style={{ color: '#94A3B8', fontWeight: 600 }}>Gateway Provider:</span>
-                <span className="font-bold text-white">Midtrans Snap Engine (QRIS / GoPay / VA Bank)</span>
-              </div>
-
-              <div className="flex justify-between items-center py-1.5 border-b" style={{ borderColor: 'rgba(51, 65, 85, 0.6)' }}>
-                <span style={{ color: '#94A3B8', fontWeight: 600 }}>Keaslian & Enkripsi:</span>
-                <span className="font-bold flex items-center gap-1" style={{ color: '#34D399' }}>
-                  <Icon icon="heroicons:shield-check-20-solid" width="15" height="15" />
-                  <span>Valid SHA-512 Digital Signature</span>
+            {/* Nominal Banner */}
+            <div className="bg-warm-gray/40 border border-border/60 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-text-3 block">Total Pembayaran:</span>
+                <span className="text-2xl font-extrabold text-red font-tabular-nums tracking-tight">
+                  {nominalFormatted}
                 </span>
               </div>
+              <div className="text-right">
+                <span className="text-xs font-semibold text-text-3 block">Waktu Transaksi:</span>
+                <span className="text-xs font-bold text-text font-tabular-nums">
+                  {item.tanggal || item.waktu || '-'}
+                </span>
+              </div>
+            </div>
 
-              <div className="flex justify-between items-center py-1.5 border-b" style={{ borderColor: 'rgba(51, 65, 85, 0.6)' }}>
-                <span style={{ color: '#94A3B8', fontWeight: 600 }}>Tipe Verifikasi:</span>
-                <span className="font-semibold text-slate-200">Otomatis / Real-Time Machine Settlement</span>
+            {/* Detail Transaksi Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div className="p-3 bg-cream/40 rounded-lg border border-border/50">
+                <span className="text-text-3 font-medium block mb-0.5">Penyewa & Unit Kios:</span>
+                <strong className="text-text font-bold text-sm block">
+                  {item.nama || 'Tenant'}
+                </strong>
+                <span className="text-text-2 font-semibold font-tabular-nums">Kios {item.kios || '-'}</span>
               </div>
 
-              <div className="p-2.5 rounded-lg mt-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.7)', border: '1px solid #334155' }}>
-                <p className="text-[11px] leading-relaxed italic" style={{ color: '#CBD5E1' }}>
-                  💡 <strong>Catatan:</strong> Resi digital ini diterbitkan langsung oleh sistem gateway Midtrans dan diakui secara sah oleh Pengelola Plaza Kebun Sayur sebagai bukti pelunasan sewa kios.
-                </p>
+              <div className="p-3 bg-cream/40 rounded-lg border border-border/50">
+                <span className="text-text-3 font-medium block mb-0.5">Saluran Gateway:</span>
+                <strong className="text-text font-bold text-sm block">
+                  Midtrans Snap Engine
+                </strong>
+                <span className="text-text-3 font-medium">QRIS / GoPay / VA Bank</span>
               </div>
+
+              <div className="sm:col-span-2 p-3 bg-cream/40 rounded-lg border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="text-text-3 font-medium block mb-0.5">Nomor Order / Kode Referensi:</span>
+                  <span className="font-mono font-bold text-xs text-text bg-white px-2.5 py-1 rounded border border-border inline-block shadow-2xs">
+                    {orderId}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyCode(orderId)}
+                  className="h-8 text-xs font-bold gap-1 self-start sm:self-center border-border hover:bg-white"
+                >
+                  <Icon icon={copied ? "heroicons:check-20-solid" : "heroicons:clipboard-document-20-solid"} width="14" height="14" className={copied ? "text-green" : "text-text-2"} />
+                  <span>{copied ? 'Tersalin' : 'Salin Kode'}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Footer Seal */}
+            <div className="pt-2 border-t border-dashed border-border flex items-center justify-between text-[11px] text-text-3">
+              <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
+                <Icon icon="heroicons:shield-check-20-solid" width="16" height="16" className="text-emerald-600" />
+                <span>Tanda Tangan Digital Sah (SHA-512)</span>
+              </div>
+              <span className="font-medium italic">Plaza Kebun Sayur Hub</span>
             </div>
           </div>
         )}
 
         {/* 2. KONTEN KHUSUS: TRANSFER BANK MANUAL */}
         {isTransfer && (
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#54463E' }}>
-                Foto Bukti Slip / M-Banking:
-              </label>
-              {parsedImageSrc && (
-                <button
-                  type="button"
-                  onClick={() => setIsZoomed(!isZoomed)}
-                  className="text-xs font-bold hover:underline flex items-center gap-1"
-                  style={{ color: '#8B1A1A' }}
-                >
-                  <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} width="14" height="14" />
-                  <span>{isZoomed ? 'Perkecil Gambar' : 'Perbesar Gambar'}</span>
-                </button>
-              )}
+          <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 text-text">
+            {/* Header Ringkasan */}
+            <div className="flex items-start justify-between border-b border-border/80 pb-4">
+              <div>
+                <h3 className="font-extrabold text-base text-text tracking-tight">Bukti Transfer Bank</h3>
+                <p className="text-xs text-text-3 font-medium">Unggahan Bukti Pembayaran Manual</p>
+              </div>
+              <Badge status={item.status || 'Menunggu'} />
             </div>
 
-            {parsedImageSrc ? (
-              <div 
-                className={`w-full rounded-xl border overflow-hidden flex items-center justify-center p-2 transition-all ${isZoomed ? 'max-h-[500px]' : 'max-h-72'}`}
-                style={{ backgroundColor: 'rgba(0,0,0,0.04)', borderColor: '#E6DED6' }}
-              >
-                <img
-                  src={parsedImageSrc}
-                  alt={`Bukti Transfer ${item.id}`}
-                  className="max-h-full max-w-full object-contain rounded-lg shadow-sm cursor-pointer hover:opacity-95"
-                  onClick={() => setIsZoomed(!isZoomed)}
-                />
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs bg-warm-gray/30 p-3.5 rounded-xl border border-border/60">
+              <div>
+                <span className="text-text-3 font-medium block">Penyewa:</span>
+                <strong className="text-text font-bold">{item.nama} ({item.kios})</strong>
               </div>
-            ) : (
-              <div 
-                className="w-full h-44 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4"
-                style={{ backgroundColor: '#F2ECE4', borderColor: '#C4B8B0' }}
-              >
-                <Icon icon="heroicons:photo-20-solid" width="36" height="36" className="text-text-3 opacity-60 mb-2" />
-                <span className="text-xs font-bold" style={{ color: '#54463E' }}>Lampiran Bukti Transfer Bank</span>
-                <span className="text-[11px] font-mono mt-1 italic" style={{ color: '#7A695E' }}>
-                  [{buktiUrl || `Resi_Transfer_${item.id}.jpg`}]
-                </span>
+              <div>
+                <span className="text-text-3 font-medium block">Total Bayar:</span>
+                <strong className="text-red font-extrabold text-sm font-tabular-nums">{nominalFormatted}</strong>
               </div>
-            )}
+              <div>
+                <span className="text-text-3 font-medium block">Tanggal Bayar:</span>
+                <span className="text-text font-bold font-tabular-nums">{item.tanggal || item.waktu || '-'}</span>
+              </div>
+              <div>
+                <span className="text-text-3 font-medium block">Metode:</span>
+                <span className="text-text font-bold">Transfer Bank</span>
+              </div>
+            </div>
+
+            {/* Foto Bukti Transfer */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-text-2">Lampiran Bukti Slip / Screenshot:</label>
+                {parsedImageSrc && (
+                  <button
+                    type="button"
+                    onClick={() => setIsZoomed(!isZoomed)}
+                    className="text-xs font-bold text-red hover:underline flex items-center gap-1"
+                  >
+                    <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} width="14" height="14" />
+                    <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
+                  </button>
+                )}
+              </div>
+
+              {parsedImageSrc ? (
+                <div className={`w-full bg-warm-gray/20 rounded-xl border border-border overflow-hidden flex items-center justify-center p-2 transition-all ${isZoomed ? 'max-h-[500px]' : 'max-h-72'}`}>
+                  <img
+                    src={parsedImageSrc}
+                    alt={`Bukti Transfer ${item.id}`}
+                    className="max-h-full max-w-full object-contain rounded-lg shadow-xs cursor-pointer"
+                    onClick={() => setIsZoomed(!isZoomed)}
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-40 bg-warm-gray/40 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center text-center p-4">
+                  <Icon icon="heroicons:photo-20-solid" width="36" height="36" className="text-text-3 opacity-50 mb-1" />
+                  <span className="text-xs text-text-2 font-bold">Lampiran Bukti Transfer</span>
+                  <span className="text-[11px] text-text-3 font-mono mt-0.5">[{buktiUrl || `Resi_Transfer_${item.id}.jpg`}]</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* 3. KONTEN KHUSUS: SETORAN TUNAI LOKET */}
         {isTunai && (
-          <div className="flex flex-col gap-3">
+          <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 text-text">
+            <div className="flex items-start justify-between border-b border-border/80 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-xs">
+                  <Icon icon="heroicons:document-text-20-solid" width="24" height="24" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-text tracking-tight">Kuitansi Kasir Loket</h3>
+                  <p className="text-xs text-text-3 font-medium">Pembayaran Tunai Langsung Pengelola</p>
+                </div>
+              </div>
+              <Badge status={item.status || 'Diterima'} />
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs bg-warm-gray/30 p-3.5 rounded-xl border border-border/60">
+              <div>
+                <span className="text-text-3 font-medium block">Penyewa:</span>
+                <strong className="text-text font-bold">{item.nama} ({item.kios})</strong>
+              </div>
+              <div>
+                <span className="text-text-3 font-medium block">Total Bayar:</span>
+                <strong className="text-red font-extrabold text-sm font-tabular-nums">{nominalFormatted}</strong>
+              </div>
+              <div>
+                <span className="text-text-3 font-medium block">Tanggal Setor:</span>
+                <span className="text-text font-bold font-tabular-nums">{item.tanggal || item.waktu || '-'}</span>
+              </div>
+              <div>
+                <span className="text-text-3 font-medium block">Metode:</span>
+                <span className="text-text font-bold">Tunai (Kasir Loket)</span>
+              </div>
+            </div>
+
+            {/* Foto Kuitansi jika ada */}
             {parsedImageSrc ? (
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider" style={{ color: '#54463E' }}>
-                  Foto Kuitansi Fisik Loket Kasir:
-                </label>
-                <div 
-                  className="w-full max-h-72 rounded-xl border overflow-hidden flex items-center justify-center p-2"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.04)', borderColor: '#E6DED6' }}
-                >
+                <label className="text-xs font-bold text-text-2">Foto Kuitansi Fisik Loket:</label>
+                <div className="w-full max-h-72 bg-warm-gray/20 rounded-xl border border-border overflow-hidden flex items-center justify-center p-2">
                   <img
                     src={parsedImageSrc}
                     alt={`Kuitansi Kasir ${item.id}`}
-                    className="max-h-64 max-w-full object-contain rounded-lg shadow-sm"
+                    className="max-h-64 max-w-full object-contain rounded-lg shadow-xs"
                   />
                 </div>
               </div>
             ) : (
-              <div 
-                className="p-5 border-2 border-dashed rounded-2xl flex flex-col gap-3 text-sm"
-                style={{ backgroundColor: '#FFFBEB', borderColor: '#FCD34D' }}
-              >
-                <div className="flex items-center justify-between border-b pb-2.5" style={{ borderColor: '#FDE68A' }}>
-                  <div className="flex items-center gap-2">
-                    <Icon icon="heroicons:document-text-20-solid" width="22" height="22" className="text-amber-700" />
-                    <strong className="font-extrabold text-amber-950">Tanda Terima Loket Kasir Resmi</strong>
-                  </div>
-                  <span className="px-2 py-0.5 bg-amber-200/80 text-amber-900 rounded text-xs font-extrabold font-mono">
-                    LOKET-CASH
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-xs text-amber-900">
-                  <p>Pembayaran tunai diterima langsung di Loket Pengelola Plaza Kebun Sayur.</p>
-                  <p className="font-medium">
-                    Nomor Referensi Kasir: <span className="font-mono font-bold">{buktiUrl || `LOKET-${item.id || 'CASH'}-${item.tanggal || 'PAID'}`}</span>
-                  </p>
-                  <div className="pt-2 flex items-center gap-2 text-emerald-800 font-bold">
-                    <Icon icon="heroicons:check-badge-20-solid" width="18" height="18" />
-                    <span>Telah diverifikasi dan disetor ke kas pengelola.</span>
-                  </div>
-                </div>
+              <div className="p-4 bg-amber-50/50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                <p className="font-semibold">Pembayaran tunai diterima dan dicatat langsung di loket kasir pengelola.</p>
+                <p className="font-mono text-[11px] text-amber-800">No. Bukti Kasir: {buktiUrl || `LOKET-TRX-${item.id}`}</p>
               </div>
             )}
           </div>
