@@ -18,6 +18,30 @@ class TagihanController extends Controller
         return response()->json($query->get());
     }
 
+    /**
+     * Display a listing of bills for the currently authenticated tenant.
+     * GET /api/v1/tenant/tagihan
+     */
+    public function tenantTagihan(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([], 401);
+        }
+
+        $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
+        if (!$pemilik) {
+            return response()->json([]);
+        }
+
+        $tagihan = Tagihan::whereHas('sewa', function($q) use ($pemilik) {
+            $q->where('Id_Pemilik', $pemilik->Id_Pemilik);
+        })->with(['sewa.kios', 'sewa.pemilik'])->orderBy('Periode', 'asc')->get();
+
+        return response()->json($tagihan);
+    }
+
+
     public function store(Request $request)
     {
         $request->validate([

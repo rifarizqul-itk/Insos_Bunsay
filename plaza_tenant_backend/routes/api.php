@@ -77,12 +77,14 @@ Route::post('/register', fn () => response()->json([
 Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
     // Tenant Dashboard & Payment Endpoints
     Route::get('/dashboard', [DashboardController::class, 'tenantDashboard']);
+    Route::get('/tagihan', [TagihanController::class, 'tenantTagihan']);
     Route::get('/pembayaran', [PembayaranController::class, 'index']);
     Route::post('/pembayaran', [PembayaranController::class, 'store']);
     Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 });
+
 
 // ============================================================
 // 5. PROTECTED ADMIN BUSINESS & MASTER DATA ROUTES (Admin Role Required)

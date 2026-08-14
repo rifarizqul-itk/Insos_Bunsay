@@ -24,9 +24,10 @@ function TunggakanAR() {
         throw new Error('Data pemilik tidak ditemukan.');
       }
 
-      // Step 2: Ambil semua tagihan milik pemilik ini
-      const tagihanRes = await httpClient.get(`/api/v1/admin/tagihan?Id_Pemilik=${idPemilik}`);
+      // Step 2: Ambil semua tagihan milik penyewa ini
+      const tagihanRes = await httpClient.get('/api/v1/tenant/tagihan');
       const semuaTagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
+
 
       // Filter hanya yang belum lunas
       const tagihanMenunggak = semuaTagihan

@@ -42,8 +42,9 @@ function BayarSekarang() {
         setIzinkanCicilan(isAllowedCicil);
 
         if (idPemilik) {
-          const tagihanRes = await httpClient.get(`/api/v1/admin/tagihan?Id_Pemilik=${idPemilik}`);
+          const tagihanRes = await httpClient.get('/api/v1/tenant/tagihan');
           const tagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
+
           
           const activeUnpaid = tagihan
             .filter(t => t.Status_Tagihan !== 'Lunas')
