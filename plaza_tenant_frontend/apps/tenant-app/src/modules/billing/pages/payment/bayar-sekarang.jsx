@@ -32,6 +32,8 @@ function BayarSekarang() {
   const [fifoAllocations, setFifoAllocations] = useState([]);
   const [showReview, setShowReview] = useState(false);
   const [izinkanCicilan, setIzinkanCicilan] = useState(false);
+  const [processError, setProcessError] = useState(null);
+
 
   useEffect(() => {
     const fetchUnpaidBills = async () => {
@@ -158,6 +160,7 @@ function BayarSekarang() {
 
   const handleProsesPembayaran = async () => {
     setIsLoading(true);
+    setProcessError(null);
     try {
       const targetTagihanId = unpaidBills[0]?.idTagihan || 1;
       const todayStr = new Date().toISOString().split('T')[0];
@@ -241,9 +244,11 @@ function BayarSekarang() {
     } catch (err) {
       setIsLoading(false);
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal memproses pembayaran.';
+      setProcessError(errMsg);
       addToast(errMsg, 'error');
     }
   };
+
 
 
   return (
@@ -329,7 +334,26 @@ function BayarSekarang() {
 
               <FIFOPreview allocations={fifoAllocations} nominal={Number(nominal) || 0} />
 
+              {processError && (
+                <div className="bg-red-50 border border-red/30 rounded-xl p-4 flex items-start gap-3 text-xs sm:text-sm text-red font-medium leading-relaxed">
+                  <Icon icon="heroicons:exclamation-triangle" width="22" height="22" className="shrink-0 mt-0.5 text-red" />
+                  <div className="flex flex-col gap-1.5">
+                    <strong className="font-extrabold text-sm text-red">Gagal Menghubungi Midtrans Gateway:</strong>
+                    <span className="text-text font-semibold">{processError}</span>
+                    {processError.includes('Access denied') && (
+                      <div className="mt-1 p-2.5 bg-white/80 border border-red/20 rounded-lg text-xs text-text-2 space-y-1">
+                        <p className="font-bold text-red">⚠️ Kunci API Midtrans Sandbox Anda belum sesuai:</p>
+                        <p>1. Buka <strong>dashboard.sandbox.midtrans.com</strong> &rarr; <em>Settings</em> &rarr; <em>Access Keys</em>.</p>
+                        <p>2. Salin <strong>Server Key</strong> ke <code>plaza_tenant_backend/.env</code> (<code>MIDTRANS_SERVER_KEY=SB-Mid-server-...</code>).</p>
+                        <p>3. Salin <strong>Client Key</strong> ke <code>plaza_tenant_frontend/.env</code> (<code>VITE_MIDTRANS_CLIENT_KEY=SB-Mid-client-...</code>).</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-2">
+
                 <Button
                   type="button"
                   variant="secondary"
