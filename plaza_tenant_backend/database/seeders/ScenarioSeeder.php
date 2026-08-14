@@ -230,19 +230,87 @@ class ScenarioSeeder extends Seeder
         $this->command->info('Seeding Verification Queue, Audit Logs & Notifications...');
 
         // 15 Payments in 'Menunggu' status for Admin Verification Queue (SC-23)
-        $pendingTagihans = Tagihan::where('Status_Tagihan', 'Belum Bayar')->limit(15)->get();
-        foreach ($pendingTagihans as $idx => $t) {
-            Pembayaran::firstOrCreate(
-                ['Id_Tagihan' => $t->Id_Tagihan, 'Verifikasi_Pembayaran' => 'Menunggu'],
+        // Created specifically as dedicated accounts (tenant_verif_1 .. tenant_verif_15)
+        // to keep tenant_tunggak1 (1..40) as pure 1-month overdue accounts without pending payments.
+        for ($i = 1; $i <= 15; $i++) {
+            $u = User::firstOrCreate(
+                ['Username' => "tenant_verif_{$i}"],
                 [
-                    'Tanggal_Bayar'        => now()->subDays(rand(1, 10))->toDateString(),
-                    'Total_Bayar'          => $t->Total_Tagihan,
-                    'Metode_Bayar'         => 'Transfer',
-                    'Bukti_Pembayaran'      => 'storage/bukti/bukti_pending_' . ($idx + 1) . '.png',
+                    'Id_roles'    => 2,
+                    'Password'    => $this->passwordHash,
+                    'sub_role'    => 'tenant',
+                    'status_aktif'=> 1,
+                    'nama_lengkap'=> fake()->name() . " (Antrean Verifikasi {$i})",
+                    'email'       => "tenant.verif.{$i}@bunsay.id",
                 ]
             );
-            $t->update(['Status_Tagihan' => 'Menunggu Verifikasi']);
+            $pemilik = Pemilik::firstOrCreate(
+                ['Id_User' => $u->Id_user],
+                [
+                    'Nama'       => $u->nama_lengkap,
+                    'No_Telepon' => '08' . fake()->numerify('##########'),
+                    'No_KTP'     => fake()->numerify('6471############'),
+                    'Alamat'     => 'Plaza Kebun Sayur, Balikpapan',
+                ]
+            );
+            if (!Sewa::where('Id_Pemilik', $pemilik->Id_Pemilik)->exists()) {
+                $kios = $getKiosk();
+                $kios->update(['Status' => 'Terisi']);
+                $startDate = Carbon::now()->subMonths(3)->startOfMonth();
+                $sewa = Sewa::create([
+                    'Id_Pemilik'     => $pemilik->Id_Pemilik,
+                    'Id_Kios'        => $kios->Id_Kios,
+                    'Jenis_Usaha'    => 'Usaha Dagang Pasar',
+                    'Tanggal_Mulai'  => $startDate->toDateString(),
+                    'Tanggal_Selesai'=> $startDate->copy()->addYear()->toDateString(),
+                    'Keterangan'     => 'Sewa aktif unit toko',
+                    'Status'         => 'Aktif',
+                ]);
+                // 2 months paid
+                for ($m = 0; $m < 2; $m++) {
+                    $tDate = $startDate->copy()->addMonths($m);
+                    $t = Tagihan::create([
+                        'Id_Sewa'          => $sewa->Id_Sewa,
+                        'Periode'          => $tDate->format('Y-m'),
+                        'Jatuh_Tempo'      => $tDate->copy()->day(12)->format('Y-m-d'),
+                        'Tarif_Sewa'       => 750000,
+                        'Hutang_Tunggakan' => 0,
+                        'Total_Tagihan'    => 750000,
+                        'Sisa_Tagihan'     => 0,
+                        'Status_Tagihan'   => 'Lunas',
+                    ]);
+                    Pembayaran::create([
+                        'Id_Tagihan'           => $t->Id_Tagihan,
+                        'Tanggal_Bayar'        => $tDate->copy()->day(15)->toDateString(),
+                        'Total_Bayar'          => 750000,
+                        'Metode_Bayar'         => 'Transfer',
+                        'Bukti_Pembayaran'      => 'storage/bukti/bukti_' . $t->Id_Tagihan . '.png',
+                        'Verifikasi_Pembayaran'=> 'Diterima',
+                    ]);
+                }
+                // Month 3: Menunggu Verifikasi
+                $curDate = $startDate->copy()->addMonths(2);
+                $curTagihan = Tagihan::create([
+                    'Id_Sewa'          => $sewa->Id_Sewa,
+                    'Periode'          => $curDate->format('Y-m'),
+                    'Jatuh_Tempo'      => $curDate->copy()->day(12)->format('Y-m-d'),
+                    'Tarif_Sewa'       => 750000,
+                    'Hutang_Tunggakan' => 0,
+                    'Total_Tagihan'    => 750000,
+                    'Sisa_Tagihan'     => 750000,
+                    'Status_Tagihan'   => 'Menunggu Verifikasi',
+                ]);
+                Pembayaran::create([
+                    'Id_Tagihan'           => $curTagihan->Id_Tagihan,
+                    'Tanggal_Bayar'        => now()->subDays(rand(1, 10))->toDateString(),
+                    'Total_Bayar'          => 750000,
+                    'Metode_Bayar'         => 'Transfer',
+                    'Bukti_Pembayaran'      => 'storage/bukti/bukti_pending_' . $i . '.png',
+                    'Verifikasi_Pembayaran'=> 'Menunggu',
+                ]);
+            }
         }
+
 
         // Generate 30 ActivityLog entries if not seeded
         if (ActivityLog::count() < 10) {
