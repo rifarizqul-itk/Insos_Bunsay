@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon } from '@bunsay/shared-ui';
+import { Icon, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
@@ -58,27 +58,30 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
       }
     }
     document.addEventListener('mousedown', handleKlikLuar);
-    document.addEventListener('touchstart', handleKlikLuar);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleKlikLuar);
-      document.removeEventListener('touchstart', handleKlikLuar);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
 
   return (
-    <header className="topbar-container min-h-[64px] py-2 flex justify-between items-center bg-white border-b border-border font-sans">
-      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
+    <header
+      data-slot="topbar-admin"
+      aria-label="Topbar Navigasi Admin"
+      className="topbar-container h-16 px-4 md:px-8 flex items-center justify-between font-sans"
+    >
+      <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={onToggleSidebar}
-          aria-label="Buka menu navigasi admin"
-          className="topbar-hamburger-admin bg-transparent border border-border rounded-md px-3 cursor-pointer items-center justify-center h-11 text-text shrink-0"
+          aria-label="Buka Menu Navigasi Admin"
+          className="md:hidden size-11 flex items-center justify-center -ms-2 rounded-md text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors"
         >
-          <Icon icon="ph:list-bold" width="22" height="22" />
+          <Icon icon="heroicons:bars-3-20-solid" className="size-6" />
         </button>
 
-        <div className="text-[15px] font-bold text-text-2 leading-tight min-w-0 break-words">
+        <div className="text-sm font-bold text-text-2 leading-tight min-w-0 break-words">
           <span className="hidden sm:inline">Konsol Admin: </span>
           <span className="text-red font-extrabold">{userTitle}</span>
         </div>
@@ -86,16 +89,17 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
 
       <div ref={notifikasiRef} className="relative">
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Notifikasi Admin"
           aria-expanded={isOpen}
-          className={`
-            h-11 px-4 text-[15px] font-extrabold cursor-pointer flex items-center gap-2 rounded-md border border-border transition-colors
-            ${isOpen ? 'bg-warm-gray text-text' : 'bg-transparent text-text hover:bg-warm-gray/50'}
-          `}
+          className={cn(
+            'h-11 px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-md border border-border transition-colors',
+            isOpen ? 'bg-mono-100 text-text' : 'bg-transparent text-text hover:bg-mono-100/60'
+          )}
         >
           <span>Notifikasi</span>
-          <span className={`text-white text-xs font-extrabold px-2 py-0.5 rounded-full inline-block font-tabular-nums ${unreadCount > 0 ? 'bg-red' : 'bg-slate-400'}`}>
+          <span className={cn('text-white text-xs font-extrabold px-2 py-0.5 rounded-full inline-block font-tabular-nums', unreadCount > 0 ? 'bg-red' : 'bg-slate-400')}>
             {unreadCount}
           </span>
         </button>
@@ -104,10 +108,10 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
           <div
             role="region"
             aria-label="Panel Notifikasi Admin"
-            className="topbar-dropdown absolute top-14 -right-2 w-[calc(100vw-32px)] max-w-[380px] bg-white border border-border rounded-2xl shadow-card-elevated p-4 flex flex-col gap-3 z-40 animate-[fadeIn_0.15s_ease-out]"
+            className="topbar-dropdown"
           >
-            <div className="flex items-center justify-between border-b-2 border-warm-gray pb-2.5">
-              <span className="text-[15px] font-extrabold text-text">Notifikasi Pengelola</span>
+            <div className="flex items-center justify-between border-b-2 border-mono-100 pb-2.5">
+              <span className="text-sm font-extrabold text-text">Notifikasi Pengelola</span>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
@@ -118,7 +122,7 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
               )}
             </div>
 
-            <div role="list" className="flex flex-col gap-2 max-h-[320px] overflow-y-auto">
+            <div role="list" className="flex flex-col gap-2 max-h-80 overflow-y-auto">
               {notifikasiList.length === 0 ? (
                 <div className="text-xs text-text-3 font-semibold text-center py-4">Belum ada notifikasi.</div>
               ) : (
@@ -129,8 +133,8 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
                     role="button"
                     tabIndex={0}
                     className={`
-                      p-3 rounded-lg flex flex-col gap-1 text-left border cursor-pointer transition-colors
-                      ${!notif.is_read ? 'bg-amber-50/70 border-amber-200 hover:bg-amber-100/70' : 'bg-white border-border hover:bg-warm-gray/30'}
+                      p-3 rounded-lg flex flex-col gap-1 text-start border cursor-pointer transition-colors
+                      ${!notif.is_read ? 'bg-amber-50/70 border-amber-200 hover:bg-amber-100/70' : 'bg-white border-border hover:bg-mono-100/40'}
                     `}
                   >
                     <div className="text-xs font-extrabold text-text leading-snug flex items-center justify-between gap-2">
@@ -142,12 +146,12 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
                         )}
                         <span>{notif.title || 'Informasi Notifikasi'}</span>
                       </span>
-                      {!notif.is_read && <span className="w-2 h-2 rounded-full bg-red shrink-0" />}
+                      {!notif.is_read && <span className="size-2 rounded-full bg-red shrink-0" />}
                     </div>
                     <p className="text-xs text-text-2 font-medium leading-relaxed m-0">
                       {notif.message || notif.teks}
                     </p>
-                    <span className="text-[10px] text-text-3 font-semibold pt-1">
+                    <span className="text-2.5 text-text-3 font-semibold pt-1">
                       {notif.created_at || 'Baru Saja'}
                     </span>
                   </div>

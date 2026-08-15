@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Badge, Drawer, Modal, FormField, SkeletonCard, useToast } from '@bunsay/shared-ui';
+import { Icon, Card, Button, Badge, Drawer, Modal, FormField, SkeletonCard, useToast, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DetailAdministrasiKios() {
@@ -136,7 +136,7 @@ function DetailAdministrasiKios() {
   };
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="detail-administrasi-kios" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <Button
           variant="secondary"
@@ -144,7 +144,7 @@ function DetailAdministrasiKios() {
           onClick={() => navigate('/admin/kios')}
           className="mb-4 gap-2 font-bold"
         >
-          <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
+          <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
           <span>Kembali ke Ketersediaan Kios</span>
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -162,7 +162,7 @@ function DetailAdministrasiKios() {
             onClick={() => setShowEditDrawer(true)}
             className="gap-2 self-start sm:self-auto shadow-md"
           >
-            <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
+            <Icon icon="heroicons:pencil-square-20-solid" className="size-4.5" />
             <span>Edit Data Administrasi</span>
           </Button>
         </div>
@@ -211,34 +211,36 @@ function DetailAdministrasiKios() {
               </div>
             </div>
 
-            <div className="border-t border-border pt-6 flex flex-col gap-4">
+            <div className="border-t border-border/80 pt-6 flex flex-col gap-4">
               <h3 className="text-base font-extrabold text-text tracking-tight">Legalitas & Berkas Kios</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-warm-gray/40 p-4 rounded-xl border border-border">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                 <div>
-                  <span className="text-xs text-text-3 font-semibold block mb-0.5">Nomor SP (Surat Penunjukan)</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.sp}</strong>
+                  <span className="label-micro text-text-3 block mb-1">Nomor SP (Surat Penunjukan)</span>
+                  <strong className="text-sm font-bold text-text font-tabular-nums">{editData.sp}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold block mb-0.5">Nomor PPJB</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.ppjb}</strong>
+                  <span className="label-micro text-text-3 block mb-1">Nomor PPJB</span>
+                  <strong className="text-sm font-bold text-text font-tabular-nums">{editData.ppjb}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold block mb-0.5">Ukuran Kios</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.ukuran}</strong>
+                  <span className="label-micro text-text-3 block mb-1">Ukuran Kios</span>
+                  <strong className="text-sm font-bold text-text font-tabular-nums">{editData.ukuran}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold block mb-0.5">Sertifikat Hak Guna</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.sertifikat}</strong>
+                  <span className="label-micro text-text-3 block mb-1">Sertifikat Hak Guna</span>
+                  <strong className="text-sm font-bold text-text font-tabular-nums">{editData.sertifikat}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-border pt-4">
-              <span className="text-xs text-text-3 font-semibold block mb-1">Catatan Administrasi</span>
-              <p className="text-sm text-text-2 leading-relaxed bg-white p-3 rounded-lg border border-border">
-                {editData.keterangan}
-              </p>
-            </div>
+            {editData.keterangan && (
+              <div className="border-t border-border/60 pt-5">
+                <span className="label-micro text-text-3 block mb-1.5">Catatan Administrasi</span>
+                <p className="text-sm text-text-2 font-medium leading-relaxed bg-mono-100/60 p-3.5 rounded-md border border-border/60">
+                  {editData.keterangan}
+                </p>
+              </div>
+            )}
           </Card>
 
           <div className="lg:col-span-4 flex flex-col gap-6">
@@ -250,13 +252,14 @@ function DetailAdministrasiKios() {
                 fullWidth
                 disabled={isTogglingCicilan || !pemilikId}
                 onClick={handleToggleCicilan}
-                className={`h-11 text-xs font-bold gap-2 ${izinkanCicilanAdmin ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100' : ''}`}
+                className={cn(
+                  "h-11 text-xs font-bold gap-2",
+                  izinkanCicilanAdmin && "bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
+                )}
               >
                 <Icon
                   icon={izinkanCicilanAdmin ? "heroicons:lock-open-20-solid" : "heroicons:lock-closed-20-solid"}
-                  width="18"
-                  height="18"
-                  className={izinkanCicilanAdmin ? "text-amber-600" : "text-gray-500"}
+                  className={cn("size-4.5", izinkanCicilanAdmin ? "text-amber-600" : "text-gray-500")}
                 />
                 <span>
                   {isTogglingCicilan ? 'Memproses Status...' : (izinkanCicilanAdmin ? 'Cabut / Kunci Akses Cicilan' : 'Buka Akses Cicilan Tenant')}
@@ -269,7 +272,7 @@ function DetailAdministrasiKios() {
                 onClick={() => navigate(`/admin/keuangan/${displayKiosNo}`)}
                 className="h-11 text-xs font-bold gap-2"
               >
-                <Icon icon="heroicons:banknotes-20-solid" width="18" height="18" className="text-green" />
+                <Icon icon="heroicons:banknotes-20-solid" className="size-4.5 text-green" />
                 <span>Lihat Detail Keuangan Tenant</span>
               </Button>
 
@@ -279,7 +282,7 @@ function DetailAdministrasiKios() {
                 onClick={() => navigate(`/admin/riwayat/${displayKiosNo}`)}
                 className="h-11 text-xs font-bold gap-2"
               >
-                <Icon icon="heroicons:clock-20-solid" width="18" height="18" className="text-blue-600" />
+                <Icon icon="heroicons:clock-20-solid" className="size-4.5 text-amber-700" />
                 <span>Riwayat Kepemilikan Kios</span>
               </Button>
 
@@ -293,7 +296,7 @@ function DetailAdministrasiKios() {
                 }}
                 className="h-11 text-xs font-bold gap-2 text-red hover:bg-red-50"
               >
-                <Icon icon="heroicons:key-20-solid" width="18" height="18" />
+                <Icon icon="heroicons:key-20-solid" className="size-4.5" />
                 <span>Reset Password Tenant</span>
               </Button>
             </Card>
@@ -354,7 +357,7 @@ function DetailAdministrasiKios() {
             <textarea name="keterangan" rows={2} value={editData.keterangan} onChange={handleEditChange} className="w-full p-2.5 rounded border border-border bg-white resize-none" />
           </FormField>
           <FormField label="Status Pemilik" id="edit-status">
-            <select name="statusPemilik" value={editData.statusPemilik} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white font-bold">
+            <select name="statusPemilik" value={editData.statusPemilik} onChange={handleEditChange} className="w-full h-10 pl-3.5 pr-9 rounded border border-border bg-white font-bold cursor-pointer">
               <option value="Aktif">Aktif (Berjualan)</option>
               <option value="Nonaktif">Nonaktif (Berhenti)</option>
             </select>

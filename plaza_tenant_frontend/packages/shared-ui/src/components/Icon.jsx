@@ -13,6 +13,7 @@ const Icon = memo(function Icon({ icon, className = '', style, width, height, ar
 
   return (
     <IconifyIcon
+      data-slot="icon"
       icon={icon}
       width={width}
       height={height}

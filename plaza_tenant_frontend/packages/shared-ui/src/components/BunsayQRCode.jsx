@@ -1,0 +1,37 @@
+import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+
+// Official Plaza Kebun Sayur Logo URL served directly from Vite public assets
+const BUNSAY_OFFICIAL_LOGO_PATH = '/assets/main_logo_transparent_for_light_bg.png';
+
+export function BunsayQRCode({
+  value,
+  size = 110,
+  className = '',
+  includeMargin = false,
+  logoSrc = BUNSAY_OFFICIAL_LOGO_PATH,
+}) {
+  const logoWidth = Math.round(size * 0.28);
+  const logoHeight = Math.round(size * 0.28);
+
+  return (
+    <div className={`inline-flex items-center justify-center p-2 bg-white rounded-lg border border-border/80 shadow-xs ${className}`}>
+      <QRCodeSVG
+        value={value || 'https://bunsay.balikpapan.go.id/verifikasi'}
+        size={size}
+        level="H"
+        includeMargin={includeMargin}
+        fgColor="#1F1010"
+        bgColor="#FFFFFF"
+        imageSettings={{
+          src: logoSrc,
+          width: logoWidth,
+          height: logoHeight,
+          excavate: true,
+        }}
+      />
+    </div>
+  );
+}
+
+export default BunsayQRCode;

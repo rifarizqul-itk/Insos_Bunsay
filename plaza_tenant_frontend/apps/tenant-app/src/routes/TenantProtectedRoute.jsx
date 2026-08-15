@@ -9,5 +9,9 @@ export default function TenantProtectedRoute() {
     return <Navigate to="/auth" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <div data-slot="tenant-protected-route" className="contents">
+      <Outlet />
+    </div>
+  );
 }

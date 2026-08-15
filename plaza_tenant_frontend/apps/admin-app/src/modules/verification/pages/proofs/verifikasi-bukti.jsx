@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable } from '@bunsay/shared-ui';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { Icon, Table, Card, Button, Badge, Modal, Sheet, EmptyState, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
@@ -14,6 +14,12 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
   // Active tab state: 'antrean' or 'riwayat'
   const [activeTab, setActiveTab] = useState('antrean');
+
+  // Pagination state
+  const [currentPageAntrean, setCurrentPageAntrean] = useState(1);
+  const [pageSizeAntrean, setPageSizeAntrean] = useState(10);
+  const [currentPageRiwayat, setCurrentPageRiwayat] = useState(1);
+  const [pageSizeRiwayat, setPageSizeRiwayat] = useState(10);
 
   // Sorting state
   const [sortConfigAntrean, setSortConfigAntrean] = useState({ key: 'id', direction: 'desc' });
@@ -142,6 +148,16 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     });
   }, [riwayatProses, selectedTenant, sortConfigRiwayat]);
 
+  const paginatedAntrean = useMemo(() => {
+    const startIndex = (currentPageAntrean - 1) * pageSizeAntrean;
+    return sortedAntrean.slice(startIndex, startIndex + pageSizeAntrean);
+  }, [sortedAntrean, currentPageAntrean, pageSizeAntrean]);
+
+  const paginatedRiwayat = useMemo(() => {
+    const startIndex = (currentPageRiwayat - 1) * pageSizeRiwayat;
+    return sortedRiwayat.slice(startIndex, startIndex + pageSizeRiwayat);
+  }, [sortedRiwayat, currentPageRiwayat, pageSizeRiwayat]);
+
   const antreanHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
     { label: 'Waktu/Tanggal', sortKey: 'waktu' },
@@ -196,14 +212,21 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   };
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="verifikasi-bukti-transfer" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       {toastMessage && (
-        <div className="bg-emerald-500 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
+        <div className="bg-emerald-600 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
-            <Icon icon="heroicons:check-circle-20-solid" width="20" height="20" />
+            <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
             <span>{toastMessage}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-white hover:opacity-80">✕</button>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            aria-label="Tutup notifikasi"
+            className="text-white hover:opacity-80 p-1 cursor-pointer"
+          >
+            <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+          </button>
         </div>
       )}
 
@@ -222,8 +245,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         {/* Tab Switcher */}
         <div className="flex bg-warm-gray/60 p-1 rounded-xl border border-border self-start sm:self-auto">
           <button
+            type="button"
             onClick={() => setActiveTab('antrean')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === 'antrean'
                 ? 'bg-red text-white shadow-sm'
                 : 'text-text-2 hover:text-text hover:bg-white/50'
@@ -232,8 +256,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             Antrean Menunggu ({antrean.length})
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('riwayat')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === 'riwayat'
                 ? 'bg-red text-white shadow-sm'
                 : 'text-text-2 hover:text-text hover:bg-white/50'
@@ -245,10 +270,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       </div>
 
       {/* Main Table Card */}
-      <Card variant="elevated" className="w-full p-4 sm:p-6">
+      <Card variant="elevated" className="w-full p-4 sm:p-6 flex flex-col gap-5">
         {activeTab === 'antrean' ? (
           isLoading ? (
-            <SkeletonTable rows={3} cols={5} />
+            <SkeletonTable rows={5} cols={6} />
           ) : sortedAntrean.length === 0 ? (
             <EmptyState
               icon="heroicons:document-check-20-solid"
@@ -263,10 +288,20 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               colSpan={6}
               sortConfig={sortConfigAntrean}
               onSort={handleSortAntrean}
+              footer={
+                <Pagination
+                  currentPage={currentPageAntrean}
+                  totalItems={sortedAntrean.length}
+                  pageSize={pageSizeAntrean}
+                  onPageChange={setCurrentPageAntrean}
+                  onPageSizeChange={setPageSizeAntrean}
+                  itemName="antrean"
+                />
+              }
             >
-              {sortedAntrean.map((item, index) => (
-                <tr key={item.id || index} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-left">
+              {paginatedAntrean.map((item, index) => (
+                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-start">
                     <div className="font-bold text-text text-sm">{item.nama}</div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </th>
@@ -281,8 +316,8 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   </td>
                   <td data-label="Status Sanggahan" className="p-3">
                     {item.teksSanggahan ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                        <Icon icon="heroicons:chat-bubble-left-right-20-solid" width="14" height="14" />
+                      <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
+                        <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5" />
                         Ada Sanggahan
                       </span>
                     ) : (
@@ -295,7 +330,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                       size="sm"
                       onClick={() => setPreviewItem(item)}
                       aria-label={`Periksa bukti transfer ${item.nama} (${item.kios})`}
-                      className="min-h-[44px] sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
+                      className="min-h-11 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
                     >
                       Periksa Bukti
                     </Button>
@@ -306,7 +341,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           )
         ) : (
           isLoading ? (
-            <SkeletonTable rows={3} cols={6} />
+            <SkeletonTable rows={5} cols={6} />
           ) : sortedRiwayat.length === 0 ? (
             <EmptyState
               icon="heroicons:clock-20-solid"
@@ -321,10 +356,20 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               colSpan={6}
               sortConfig={sortConfigRiwayat}
               onSort={handleSortRiwayat}
+              footer={
+                <Pagination
+                  currentPage={currentPageRiwayat}
+                  totalItems={sortedRiwayat.length}
+                  pageSize={pageSizeRiwayat}
+                  onPageChange={setCurrentPageRiwayat}
+                  onPageSizeChange={setPageSizeRiwayat}
+                  itemName="riwayat"
+                />
+              }
             >
-              {sortedRiwayat.map((item, index) => (
-                <tr key={item.id || index} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-left">
+              {paginatedRiwayat.map((item, index) => (
+                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-start">
                     <div className="font-bold text-text text-sm">{item.nama}</div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </th>
@@ -346,12 +391,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   </td>
                   <td data-label="Aksi" className="p-3 text-center">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => setPreviewItem(item)}
-                      className="min-h-[44px] sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
+                      aria-label={`Lihat rincian riwayat ${item.nama} (${item.kios})`}
+                      className="min-h-11 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
                     >
-                      Edit Keputusan
+                      Lihat
                     </Button>
                   </td>
                 </tr>
@@ -361,104 +407,115 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         )}
       </Card>
 
-      {/* POP-UP MODAL OVERLAY: Detail Verification Modal */}
+      {/* SLIDE-OVER SHEET: Detail Verification Sheet */}
       {previewItem && (
-        <Modal
+        <Sheet
           isOpen={Boolean(previewItem)}
           onClose={() => setPreviewItem(null)}
-          title={`Detail Transaksi ${previewItem.trxCode || previewItem.id}`}
-        >
-          <div className="flex flex-col gap-5 font-sans">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-warm-gray/30 p-4 rounded-xl text-sm border border-border">
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Tenant:</span>
-                <strong className="text-text font-bold">{previewItem.nama} (<span className="font-tabular-nums">{previewItem.kios}</span>)</strong>
-              </div>
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Jenis Tagihan:</span>
-                <strong className="text-text font-bold">{previewItem.tagihan}</strong>
-              </div>
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Nominal Bayar:</span>
-                <strong className="text-text font-bold font-tabular-nums text-emerald-700">{previewItem.nominal}</strong>
-              </div>
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Metode Pembayaran:</span>
-                <strong className="text-text font-bold">{previewItem.labelMetode || 'Transfer Bank Manual'}</strong>
-              </div>
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Waktu Kirim:</span>
-                <strong className="text-text font-bold font-tabular-nums">{previewItem.waktu}</strong>
-              </div>
-              <div>
-                <span className="text-text-3 font-semibold text-xs block">Status Saat Ini:</span>
-                <Badge status={previewItem.status} />
-              </div>
-            </div>
-
-            {previewItem.teksSanggahan && (
-              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl flex flex-col gap-1 text-xs">
-                <div className="font-bold text-amber-800 flex items-center gap-1.5">
-                  <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" width="16" height="16" />
-                  <span>Catatan Sanggahan dari Tenant:</span>
-                </div>
-                <p className="text-amber-950 italic font-semibold pl-5">"{previewItem.teksSanggahan}"</p>
-              </div>
-            )}
-
-            {/* Receipt Image Preview */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-text-2">Lampiran Bukti Transfer:</label>
-              {previewItem.buktiUrl ? (
-                <div className="w-full max-h-64 bg-black/5 rounded-xl border border-border overflow-hidden flex items-center justify-center p-2">
-                  <img
-                    src={(previewItem.buktiUrl.startsWith('http') || previewItem.buktiUrl.startsWith('data:')) ? previewItem.buktiUrl : (previewItem.buktiUrl.startsWith('/') ? previewItem.buktiUrl : `/${previewItem.buktiUrl}`)}
-                    alt={`Bukti Transfer ${previewItem.trxCode}`}
-                    className="max-h-60 max-w-full object-contain rounded-lg shadow-sm"
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-40 bg-warm-gray/60 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center text-center p-4">
-                  <Icon icon="heroicons:photo-20-solid" width="32" height="32" className="text-text-3 opacity-50 mb-1" />
-                  <span className="text-xs text-text-3 font-medium italic">
-                    [Lampiran Resi Transfer_{previewItem.trxCode || previewItem.id}.jpg]
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-border">
+          title="Verifikasi Bukti Transfer"
+          subtitle={`ID: ${previewItem.trxCode || previewItem.id}`}
+          badge={<Badge status={previewItem.status} />}
+          width="lg"
+          footer={
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
               <Button
                 variant="primary"
                 fullWidth
-                className="bg-green hover:bg-green/90 h-11 text-sm font-extrabold gap-1.5 shadow-sm"
+                size="md"
+                className="bg-green hover:bg-green/90 min-h-11 py-2.5 px-4 text-xs sm:text-sm font-extrabold gap-2 shadow-sm whitespace-nowrap"
                 onClick={() => triggerActionModal(previewItem, 'konfirmasi')}
               >
-                <Icon icon="heroicons:check-circle-20-solid" width="18" height="18" />
+                <Icon icon="heroicons:check-circle-20-solid" className="size-4.5 shrink-0" />
                 <span>Terima & Konfirmasi Lunas</span>
               </Button>
               <Button
                 variant="danger"
                 fullWidth
-                className="h-11 text-sm font-bold gap-1.5"
+                size="md"
+                className="min-h-11 py-2.5 px-4 text-xs sm:text-sm font-bold gap-2 whitespace-nowrap"
                 onClick={() => triggerActionModal(previewItem, 'tolak')}
               >
-                <Icon icon="heroicons:x-circle-20-solid" width="18" height="18" />
-                <span>Tolak Bukti Transfer</span>
+                <Icon icon="heroicons:x-circle-20-solid" className="size-4.5 shrink-0" />
+                <span>Tolak Bukti</span>
               </Button>
             </div>
+          }
+        >
+          <div className="flex flex-col gap-5 font-sans">
+            <div className="bg-mono-100/60 border border-border/80 rounded-xl p-4 flex flex-col gap-1.5">
+              <span className="label-micro text-text-3">Total Pembayaran</span>
+              <span className="text-2xl font-extrabold text-red font-tabular-nums tracking-tight">
+                {previewItem.nominal}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h4 className="label-micro text-text-3">Informasi Transaksi</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 bg-white p-4 rounded-lg text-xs border border-border/80">
+                <div>
+                  <span className="text-text-3 font-medium block mb-0.5">Nama Tenant</span>
+                  <strong className="text-text font-bold text-sm block">{previewItem.nama} (<span className="font-tabular-nums">{previewItem.kios}</span>)</strong>
+                </div>
+                <div>
+                  <span className="text-text-3 font-medium block mb-0.5">Jenis Tagihan</span>
+                  <strong className="text-text font-bold text-sm block">{previewItem.tagihan}</strong>
+                </div>
+                <div>
+                  <span className="text-text-3 font-medium block mb-0.5">Metode Pembayaran</span>
+                  <strong className="text-text font-bold text-xs block">{previewItem.labelMetode || 'Transfer Bank Manual'}</strong>
+                </div>
+                <div>
+                  <span className="text-text-3 font-medium block mb-0.5">Waktu Kirim</span>
+                  <strong className="text-text font-bold font-tabular-nums text-xs block">{previewItem.waktu}</strong>
+                </div>
+              </div>
+            </div>
+
+            {previewItem.teksSanggahan && (
+              <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg flex flex-col gap-1 text-xs">
+                <div className="font-bold text-amber-800 flex items-center gap-1.5">
+                  <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4" />
+                  <span>Catatan Sanggahan dari Tenant:</span>
+                </div>
+                <p className="text-amber-950 italic font-semibold ps-5">"{previewItem.teksSanggahan}"</p>
+              </div>
+            )}
+
+            {/* Receipt Image Preview */}
+            <div className="flex flex-col gap-2">
+              <label className="label-micro text-text-3">Lampiran Bukti Transfer</label>
+              {previewItem.buktiUrl ? (
+                <div className="w-full max-h-64 bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2">
+                  <img
+                    src={(previewItem.buktiUrl.startsWith('http') || previewItem.buktiUrl.startsWith('data:')) ? previewItem.buktiUrl : (previewItem.buktiUrl.startsWith('/') ? previewItem.buktiUrl : `/${previewItem.buktiUrl}`)}
+                    alt={`Bukti Transfer ${previewItem.trxCode}`}
+                    loading="lazy"
+                    className="max-h-60 max-w-full object-contain rounded-md shadow-xs"
+                  />
+                </div>
+              ) : (
+                <div className="w-full bg-mono-100/50 border border-border/70 rounded-lg flex items-center gap-3 p-3.5">
+                  <div className="size-9 rounded-md bg-mono-200/80 flex items-center justify-center text-mono-500 shrink-0">
+                    <Icon icon="heroicons:document-text-20-solid" className="size-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-text font-bold block">Dokumen Bukti Transfer</span>
+                    <span className="text-xs text-text-3 font-mono font-medium">[Resi Transfer_{previewItem.trxCode || previewItem.id}.jpg]</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </Modal>
+        </Sheet>
       )}
 
       {/* Confirmation & Rejection Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-text/45 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 animate-scale-in font-sans">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red'}`}>
-                <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} width="24" height="24" />
+              <div className={cn('size-10 rounded-full flex items-center justify-center', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
+                <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
               </div>
               <div>
                 <h3 className="font-extrabold text-lg text-text">

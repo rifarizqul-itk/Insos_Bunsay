@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useId } from 'react';
+import { cn } from '../utils/cn';
 import Icon from './Icon';
 
 function Drawer({
@@ -48,7 +49,8 @@ function Drawer({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex justify-end bg-black/45 backdrop-blur-sm transition-opacity page-fade-in"
+      data-slot="drawer"
+      className="fixed inset-0 z-40 flex justify-end bg-text/45 backdrop-blur-sm transition-opacity page-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -58,11 +60,10 @@ function Drawer({
     >
       <div
         ref={drawerRef}
-        className={`
-          w-full bg-white h-full shadow-2xl flex flex-col justify-between
-          transform transition-transform duration-300 ease-out
-          border-l border-border ${sizeClasses[size]}
-        `}
+        className={cn(
+          'w-full bg-white h-full shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-out border-s border-border',
+          sizeClasses[size]
+        )}
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-5 bg-cream/30">
           <div>
@@ -77,10 +78,10 @@ function Drawer({
           </div>
           <button
             onClick={onClose}
-            className="text-text-3 hover:text-text hover:bg-warm-gray/60 transition-colors flex items-center justify-center size-11 rounded-md -mr-1"
+            className="text-text-3 hover:text-text hover:bg-warm-gray/60 transition-colors flex items-center justify-center size-11 rounded-md -me-1 cursor-pointer"
             aria-label="Tutup panel"
           >
-            <Icon icon="heroicons:x-mark-20-solid" width="22" height="22" />
+            <Icon icon="heroicons:x-mark-20-solid" className="size-5.5" />
           </button>
         </div>
 

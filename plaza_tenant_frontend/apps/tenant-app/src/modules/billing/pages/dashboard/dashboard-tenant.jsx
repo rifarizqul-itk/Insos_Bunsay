@@ -175,7 +175,7 @@ function DashboardTenant() {
   const sedangVerifikasi = statusTagihan === 'Menunggu Verifikasi';
 
   return (
-    <div className="page-fade-in flex flex-col gap-8 font-sans">
+    <div data-slot="dashboard-tenant" className="page-fade-in flex flex-col gap-8 font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight text-balance">
@@ -190,9 +190,9 @@ function DashboardTenant() {
           variant="secondary"
           size="sm"
           onClick={() => navigate('/tenant/akun')}
-          className="h-10 text-xs font-bold gap-1.5 border-border hover:bg-warm-gray shadow-xs shrink-0"
+          className="h-10 text-xs font-bold gap-1.5 border-border hover:bg-mono-100 shadow-xs shrink-0"
         >
-          <Icon icon="heroicons:document-text-20-solid" width="16" height="16" className="text-red" />
+          <Icon icon="heroicons:document-text-20-solid" className="size-4 text-red" />
           <span>Detail Administrasi & Legalitas Kios</span>
         </Button>
       </div>
@@ -202,7 +202,7 @@ function DashboardTenant() {
           role="alert"
           className="p-6 sm:p-7 md:p-8 bg-red-50 border-2 border-red rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-glow-maroon"
         >
-          <div className="flex-1 min-w-[280px]">
+          <div className="flex-1 min-w-72">
             <span className="label-micro text-red">
               Tagihan Sewa & Tunggakan Bulan Ini
             </span>
@@ -219,7 +219,7 @@ function DashboardTenant() {
               onClick={() => handleBayar(totalTagihanVal)}
             >
               Bayar Sekarang
-              <Icon icon="heroicons:arrow-right-20-solid" width="20" height="20" />
+              <Icon icon="heroicons:arrow-right-20-solid" className="size-5" />
             </Button>
           </div>
         </div>
@@ -230,7 +230,7 @@ function DashboardTenant() {
           role="status"
           className="p-6 sm:p-7 md:p-8 bg-orange-bg border-2 border-orange rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-card"
         >
-          <div className="flex-1 min-w-[280px]">
+          <div className="flex-1 min-w-72">
             <span className="label-micro text-orange">
               Pembayaran Sedang Diverifikasi
             </span>
@@ -255,9 +255,9 @@ function DashboardTenant() {
       {!perluBayar && !sedangVerifikasi && (
         <div 
           role="status"
-          className="p-6 sm:p-7 md:p-8 bg-green-50 border-2 border-green/30 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-card"
+          className="p-6 sm:p-7 md:p-8 bg-green-bg border-2 border-green/30 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-card"
         >
-          <div className="flex-1 min-w-[280px]">
+          <div className="flex-1 min-w-72">
             <span className="label-micro text-green font-bold">
               Status Tagihan Sewa
             </span>

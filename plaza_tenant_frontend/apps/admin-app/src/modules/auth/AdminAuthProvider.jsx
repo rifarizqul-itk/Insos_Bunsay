@@ -127,10 +127,10 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
   return (
     <AdminAuthContext.Provider value={value}>
       {!isHydrated ? (
-        <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
+        <div data-slot="admin-auth-provider" className="flex min-h-screen items-center justify-center bg-cream text-text">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-            <p className="text-sm font-medium text-slate-300">Verifikasi Konsol Pengelola Plaza...</p>
+            <div className="size-10 animate-spin rounded-full border-4 border-red border-t-transparent" />
+            <p className="text-sm font-bold text-text-2">Verifikasi Konsol Pengelola Plaza...</p>
           </div>
         </div>
       ) : (

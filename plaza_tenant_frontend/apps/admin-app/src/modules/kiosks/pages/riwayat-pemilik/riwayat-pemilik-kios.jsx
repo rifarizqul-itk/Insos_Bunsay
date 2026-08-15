@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, Table, Card, Badge, Button, EmptyState } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Badge, Button, EmptyState, Pagination } from '@bunsay/shared-ui';
 
 function RiwayatPemilikKios() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -47,8 +51,13 @@ function RiwayatPemilikKios() {
     });
   }, [exTenants, searchQuery, sortConfig]);
 
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredData.slice(startIndex, startIndex + pageSize);
+  }, [filteredData, currentPage, pageSize]);
+
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="riwayat-pemilik-kios" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <Button
@@ -57,7 +66,7 @@ function RiwayatPemilikKios() {
             onClick={() => navigate('/admin/kios')}
             className="mb-3 gap-2 font-bold"
           >
-            <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
+            <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
             <span>Kembali ke Ketersediaan Kios</span>
           </Button>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
@@ -72,12 +81,15 @@ function RiwayatPemilikKios() {
           type="text"
           placeholder="Cari mantan pemilik..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red self-start sm:self-auto"
         />
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6">
+      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
         {filteredData.length === 0 ? (
           <EmptyState
             icon="heroicons:user-minus-20-solid"
@@ -91,37 +103,47 @@ function RiwayatPemilikKios() {
             colSpan={6}
             sortConfig={sortConfig}
             onSort={handleSort}
-          >
-            {filteredData.map((tenant, idx) => (
-              <tr key={tenant.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                <th scope="row" className="p-3 font-bold text-left text-text">
-                  {tenant.nama}
-                </th>
-                <td className="font-tabular-nums font-extrabold p-3 text-red">
-                  {tenant.kios}
-                </td>
-                <td className="p-3 text-text-2 font-medium">
-                  {tenant.usaha || '—'}
-                </td>
-                <td className="p-3">
-                  <Badge status="Belum Bayar" customText="Nonaktif" />
-                </td>
-                <td className="p-3 text-xs text-text-2 font-medium">
-                  {tenant.rincianTunggakan}
-                </td>
-                <td className="p-3 text-center">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
-                    className="h-8 px-3 text-xs font-bold"
-                  >
-                    Detail Legalitas
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </Table>
+            footer={
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredData.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                  itemName="arsip"
+                />
+              }
+            >
+              {paginatedData.map((tenant, idx) => (
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" className="p-3 font-bold text-start text-text">
+                    {tenant.nama}
+                  </th>
+                  <td className="font-tabular-nums font-extrabold p-3 text-red">
+                    {tenant.kios}
+                  </td>
+                  <td className="p-3 text-text-2 font-medium">
+                    {tenant.usaha || '—'}
+                  </td>
+                  <td className="p-3">
+                    <Badge status="Belum Bayar" customText="Nonaktif" />
+                  </td>
+                  <td className="p-3 text-xs text-text-2 font-medium">
+                    {tenant.rincianTunggakan}
+                  </td>
+                  <td className="p-3 text-center">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
+                      className="h-8 px-3 text-xs font-bold"
+                    >
+                      Detail Legalitas
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
         )}
       </Card>
     </div>

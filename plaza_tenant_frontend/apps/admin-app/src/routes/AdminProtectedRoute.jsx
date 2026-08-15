@@ -9,8 +9,8 @@ export default function AdminProtectedRoute() {
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
-        <p className="text-sm text-slate-400 font-medium animate-pulse">Verifikasi kredensial pengelola...</p>
+      <div data-slot="admin-protected-route" className="flex min-h-screen items-center justify-center bg-cream text-text">
+        <p className="text-sm text-text-2 font-bold animate-pulse">Verifikasi kredensial pengelola...</p>
       </div>
     );
   }
@@ -21,5 +21,9 @@ export default function AdminProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <div data-slot="admin-protected-route" className="contents">
+      <Outlet />
+    </div>
+  );
 }

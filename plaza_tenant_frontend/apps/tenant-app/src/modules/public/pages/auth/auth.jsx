@@ -95,8 +95,8 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-[440px] p-6 sm:p-8 border-border/80">
+    <div data-slot="auth-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
+      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <img 
@@ -130,7 +130,7 @@ function AuthPage() {
                 value={formData.username}
                 onChange={handleInputChange}
                 autoComplete="username"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
               />
             </FormField>
 
@@ -143,15 +143,15 @@ function AuthPage() {
                   value={formData.kataSandi}
                   onChange={handleInputChange}
                   autoComplete="current-password"
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-11 text-base focus:bg-white transition-colors"
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-11 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none cursor-pointer"
                   aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                 >
-                  <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} width="20" height="20" />
+                  <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
                 </button>
               </div>
             </FormField>
@@ -164,7 +164,7 @@ function AuthPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="size-4 accent-red cursor-pointer rounded"
                 />
-                Ingat Saya
+                <span>Ingat Saya</span>
               </label>
               <Link
                 to="/auth/lupa-sandi"
@@ -184,7 +184,7 @@ function AuthPage() {
             >
               {isLoginLoading ? (
                 <span className="flex items-center gap-2">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="18" height="18" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
                   <span>Memproses...</span>
                 </span>
               ) : 'Masuk'}
@@ -194,15 +194,15 @@ function AuthPage() {
               to="/"
               className="inline-flex items-center justify-center gap-2 text-text-2 hover:text-red font-semibold text-sm transition-colors py-1 mt-1"
             >
-              <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
+              <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
               <span>Kembali ke Beranda Utama</span>
             </Link>
           </form>
         ) : isForgotSent ? (
           <div key="form-forgot-sent" className="flex flex-col gap-4 text-center page-fade-in" role="status" aria-live="polite">
-            <div className="bg-green-bg/60 border border-green/30 rounded-xl p-4 text-left flex flex-col gap-2">
+            <div className="bg-green-bg/60 border border-green/30 rounded-xl p-4 text-start flex flex-col gap-2">
               <div className="flex items-center gap-2 text-green font-bold text-sm sm:text-base">
-                <Icon icon="heroicons:check-circle-20-solid" width="20" height="20" />
+                <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
                 <span className="text-balance">Instruksi Pemulihan Dikirim</span>
               </div>
               <p className="text-xs sm:text-sm text-text leading-relaxed text-pretty">
@@ -243,7 +243,7 @@ function AuthPage() {
             >
               {isForgotSubmitting ? (
                 <span role="status" className="flex items-center gap-2">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="18" height="18" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
                   <span>Mengirim Tautan...</span>
                 </span>
               ) : (
@@ -252,7 +252,7 @@ function AuthPage() {
             </Button>
 
             <div className="bg-cream/60 border border-border rounded-xl p-3.5 flex gap-2.5 items-start">
-              <Icon icon="heroicons:information-circle-20-solid" width="20" height="20" className="text-red flex-shrink-0 mt-0.5" />
+              <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-red shrink-0 mt-0.5" />
               <div className="text-xs text-text-2 leading-relaxed">
                 <strong className="text-text font-bold block mb-0.5">Butuh Bantuan Pengelola?</strong>
                 Hubungi <strong>WhatsApp (0811-5901-119)</strong> atau datang ke <strong>Kantor Pengelola Lt. 3</strong>.
@@ -263,7 +263,7 @@ function AuthPage() {
               to="/auth"
               className="inline-flex items-center justify-center gap-2 text-text-2 hover:text-red font-semibold text-sm transition-colors py-1 mt-1"
             >
-              <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
+              <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
               <span>Kembali ke Halaman Login</span>
             </Link>
           </form>

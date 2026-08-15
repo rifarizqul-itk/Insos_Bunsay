@@ -14,17 +14,11 @@ function AdminLayout() {
     : 'Administrator Utama';
 
   return (
-    <div className="min-h-dvh bg-[#FAF6F0] relative overflow-x-hidden">
+    <div data-slot="admin-layout" className="min-h-dvh bg-cream relative overflow-x-hidden">
       <SidebarAdmin
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onLogout={logoutAdmin}
-      />
-
-      <Topbar
-        userTitle={userTitle}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        variant="admin"
       />
 
       {isSidebarOpen && (
@@ -34,11 +28,17 @@ function AdminLayout() {
         />
       )}
 
-      <main className="main-layout">
-        <div className="main-content-inner">
+      <div className="main-layout">
+        <Topbar
+          userTitle={userTitle}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          variant="admin"
+        />
+
+        <main className="main-content-inner">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
 
       <BottomNav role="admin" />
     </div>

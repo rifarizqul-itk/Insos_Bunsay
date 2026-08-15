@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { cn } from '../utils/cn';
 import Icon from './Icon';
 
 function Table({
@@ -14,10 +14,11 @@ function Table({
   colSpan = 6,
   sortConfig = null, // { key: string, direction: 'asc' | 'desc' }
   onSort = null, // function(key)
+  footer = null,
 }) {
   return (
-    <div className={`w-full overflow-hidden rounded-lg border border-border bg-white shadow-sm ${className}`}>
-      <table className="w-full text-left border-collapse" aria-label={ariaLabel}>
+    <div data-slot="table" className={cn('w-full overflow-hidden rounded-lg border border-border bg-white shadow-card', className)}>
+      <table className="w-full text-start border-collapse" aria-label={ariaLabel}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
           <tr className={headerClassName}>
@@ -32,25 +33,28 @@ function Table({
                   key={idx}
                   scope="col"
                   onClick={isSortable ? () => onSort(key) : undefined}
-                  className={`
-                    py-3 px-4 font-bold text-sm select-none transition-colors
-                    ${head.align === 'center' ? 'text-center' : head.align === 'right' ? 'text-right' : 'text-left'}
-                    ${isSortable ? 'cursor-pointer hover:bg-black/15 group' : ''}
-                    ${isSorted ? 'bg-[#6B1414] text-white shadow-inner' : ''}
-                    ${head.className || ''}
-                  `}
+                  className={cn(
+                    'py-3 px-4 font-bold text-sm select-none transition-colors',
+                    head.align === 'center' ? 'text-center' : head.align === 'right' ? 'text-end' : 'text-start',
+                    isSortable && 'cursor-pointer hover:bg-white/20 group',
+                    isSorted && 'bg-red-rich text-white shadow-inner',
+                    head.className
+                  )}
                   title={isSortable ? `Urutkan berdasarkan ${head.label}` : undefined}
                 >
-                  <div className={`inline-flex items-center gap-1.5 ${head.align === 'center' ? 'justify-center' : head.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={cn(
+                    'inline-flex items-center gap-1.5',
+                    head.align === 'center' ? 'justify-center' : head.align === 'right' ? 'justify-end' : 'justify-start'
+                  )}>
                     <span>{head.label}</span>
                     {isSortable && (
                       <span className="opacity-70 group-hover:opacity-100 transition-opacity">
                         {sortDirection === 'asc' ? (
-                          <Icon icon="heroicons:chevron-up-20-solid" width="14" height="14" />
+                          <Icon icon="heroicons:chevron-up-20-solid" className="size-3.5" />
                         ) : sortDirection === 'desc' ? (
-                          <Icon icon="heroicons:chevron-down-20-solid" width="14" height="14" />
+                          <Icon icon="heroicons:chevron-down-20-solid" className="size-3.5" />
                         ) : (
-                          <Icon icon="heroicons:chevron-up-down-20-solid" width="14" height="14" />
+                          <Icon icon="heroicons:chevron-up-down-20-solid" className="size-3.5" />
                         )}
                       </span>
                     )}
@@ -72,6 +76,7 @@ function Table({
           )}
         </tbody>
       </table>
+      {footer}
     </div>
   );
 }

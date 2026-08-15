@@ -20,7 +20,8 @@ function BottomNav() {
 
   return (
     <nav 
-      className="md:hidden fixed bottom-2 left-2 right-2 z-40 bg-slate-900/90 backdrop-blur-md border border-slate-800 shadow-2xl rounded-2xl overflow-hidden text-slate-100"
+      data-slot="bottom-nav-admin"
+      className="md:hidden fixed bottom-2 left-2 right-2 z-40 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
       style={{
         marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
         fontFamily: "'Plus Jakarta Sans', sans-serif"
@@ -56,7 +57,7 @@ function BottomNav() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '100%',
-                color: active ? '#F87171' : '#94A3B8',
+                color: active ? 'var(--red)' : 'var(--text-2)',
                 fontWeight: active ? '700' : '600',
                 textDecoration: 'none',
                 boxSizing: 'border-box',
@@ -67,7 +68,7 @@ function BottomNav() {
                 icon={item.icon} 
                 className="size-6 mb-0.5 shrink-0"
               />
-              <span className="text-[10px] xs:text-[11px] leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
+              <span className="text-2.5 xs:text-xs leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
                 {item.label}
               </span>
             </Link>

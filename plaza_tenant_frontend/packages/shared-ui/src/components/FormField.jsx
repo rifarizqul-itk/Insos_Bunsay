@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import { cn } from '../utils/cn';
 
 function FormField({
   label,
@@ -22,16 +23,16 @@ function FormField({
   ].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div data-slot="formfield" className={cn('flex flex-col gap-1.5', className)}>
       {label && (
         <label
           htmlFor={fieldId}
-          className={`text-sm font-semibold text-text-2 ${labelClassName}`}
+          className={cn('text-sm font-semibold text-text-2', labelClassName)}
         >
           {label}
           {required && (
             <>
-              <span className="text-red ml-1" aria-hidden="true">*</span>
+              <span className="text-red ms-1" aria-hidden="true">*</span>
               <span className="sr-only"> (wajib diisi)</span>
             </>
           )}

@@ -31,7 +31,7 @@ function EksporData() {
   };
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="ekspor-data" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Ekspor Laporan Keuangan
@@ -53,7 +53,7 @@ function EksporData() {
                 <select 
                   value={bulanFilter} 
                   onChange={(e) => setBulanFilter(e.target.value)} 
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-semibold text-text focus:bg-white transition-colors cursor-pointer"
                 >
                   {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map(b => (
                     <option key={b} value={b}>{b}</option>
@@ -65,7 +65,7 @@ function EksporData() {
                 <select 
                   value={tahunFilter} 
                   onChange={(e) => setTahunFilter(e.target.value)} 
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors cursor-pointer"
                 >
                   {['2024','2025','2026'].map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -83,12 +83,12 @@ function EksporData() {
             >
               {isDownloading ? (
                 <span role="status" className="flex items-center gap-2">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="20" height="20" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="size-5 animate-spin" />
                   <span>Memproses Rekap...</span>
                 </span>
               ) : (
                 <>
-                  <Icon icon="heroicons:arrow-down-tray-20-solid" width="22" height="22" />
+                  <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-5.5" />
                   <span>Unduh Rekap Excel (.xlsx)</span>
                 </>
               )}
@@ -98,7 +98,7 @@ function EksporData() {
 
         <Card variant="elevated" className="lg:col-span-4 p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-3">
-            <Icon icon="heroicons:table-cells-20-solid" width="22" height="22" className="text-red" />
+            <Icon icon="heroicons:table-cells-20-solid" className="size-5.5 text-red" />
             <h3 className="text-base font-extrabold text-text tracking-tight text-balance">Lembar Kerja (.xlsx)</h3>
           </div>
           

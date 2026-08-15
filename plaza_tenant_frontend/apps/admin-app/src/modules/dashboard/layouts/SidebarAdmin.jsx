@@ -1,6 +1,6 @@
 import React, { startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon } from '@bunsay/shared-ui';
+import { Icon, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function SidebarAdmin({ isOpen, onClose, onLogout }) {
@@ -38,8 +38,9 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
 
   return (
     <aside 
+      data-slot="sidebar-admin"
       aria-label="Navigasi Utama Admin"
-      className={`sidebar-admin-container ${isOpen ? 'mobile-open' : ''}`}
+      className={cn('sidebar-admin-container', isOpen && 'mobile-open')}
       style={{
         display: 'flex',
         flexDirection: 'column'
@@ -68,16 +69,16 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
               style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
             />
           </picture>
-          <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
+          <span style={{ fontSize: '24px', fontWeight: '800', color: 'var(--red)', letterSpacing: '-0.5px' }}>
             Admin
           </span>
         </div>
         <button
           onClick={onClose}
           aria-label="Tutup menu navigasi"
-          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform size-11 flex items-center justify-center"
         >
-          <Icon icon="ph:x-bold" width="22" height="22" />
+          <Icon icon="ph:x-bold" className="size-5.5" />
         </button>
       </div>
 
@@ -93,7 +94,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
                 width: '100%',
                 backgroundColor: active ? 'var(--red-50)' : 'transparent',
                 color: active ? 'var(--red)' : 'var(--text-2)',
-                textAlign: 'left',
+                textAlign: 'start',
                 padding: '12px 24px',
                 borderRadius: '0',
                 fontWeight: active ? '700' : '500',
@@ -101,7 +102,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
                 display: 'flex',
                 alignItems: 'center',
                 border: 'none',
-                borderLeft: active ? '4px solid var(--red)' : '4px solid transparent',
+                borderInlineStart: active ? '4px solid var(--red)' : '4px solid transparent',
                 transition: 'all 0.2s ease',
                 cursor: 'pointer',
               }}

@@ -12,17 +12,11 @@ function TenantLayout() {
   const userTitle = user?.nama ?? user?.name ?? user?.Username ?? 'Tenant Aktif';
 
   return (
-    <div className="min-h-dvh bg-[#FAF6F0] relative overflow-x-hidden">
+    <div data-slot="tenant-layout" className="min-h-dvh bg-cream relative overflow-x-hidden">
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onLogout={logout}
-      />
-
-      <Topbar
-        userTitle={userTitle}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        variant="tenant"
       />
 
       {isSidebarOpen && (
@@ -32,11 +26,17 @@ function TenantLayout() {
         />
       )}
 
-      <main className="main-layout">
-        <div className="main-content-inner">
+      <div className="main-layout">
+        <Topbar
+          userTitle={userTitle}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          variant="tenant"
+        />
+
+        <main className="main-content-inner">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
 
       <BottomNav role="tenant" />
     </div>

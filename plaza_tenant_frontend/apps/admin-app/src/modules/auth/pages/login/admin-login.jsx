@@ -5,14 +5,17 @@ import { useAdminAuth } from '../../useAdminAuth';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const { login, isLoading } = useAdminAuth();
+  const { login } = useAdminAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
+    setIsSubmitting(true);
     try {
       const res = await login(formData);
       if (res?.accessToken) {
@@ -21,12 +24,14 @@ function AdminLoginPage() {
     } catch (err) {
       const errMsg = err?.response?.data?.message || err?.message;
       setError(errMsg || 'Login Gagal. Periksa username & kata sandi.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-[440px] p-6 sm:p-8 border-border/80">
+    <div data-slot="admin-login-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
+      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <picture>
@@ -57,7 +62,16 @@ function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 page-fade-in">
+        <form 
+          onSubmit={handleSubmit} 
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+          className="flex flex-col gap-4 page-fade-in"
+        >
           <FormField label="Username Admin" id="admin-login-username" required>
             <input
               type="text"
@@ -79,15 +93,15 @@ function AdminLoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 autoComplete="current-password"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-11 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-11 text-base focus:bg-white transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none cursor-pointer"
                 aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
               >
-                <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} width="20" height="20" />
+                <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
               </button>
             </div>
           </FormField>
@@ -97,12 +111,12 @@ function AdminLoginPage() {
             variant="primary"
             size="md"
             fullWidth
-            disabled={isLoading}
+            disabled={isSubmitting}
             className="mt-2 h-12 text-base font-extrabold shadow-md"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <span className="flex items-center gap-2">
-                <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="18" height="18" />
+                <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
                 <span>Memproses...</span>
               </span>
             ) : 'Masuk Konsol Admin'}

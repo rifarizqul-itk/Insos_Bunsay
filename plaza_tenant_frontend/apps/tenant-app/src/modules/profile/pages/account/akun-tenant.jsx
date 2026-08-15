@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FormField, Button, Card, Icon, Badge, useToast } from '@bunsay/shared-ui';
+import { FormField, Button, Card, Icon, Badge, useToast, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function AkunTenant() {
@@ -164,7 +164,7 @@ function AkunTenant() {
   };
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="akun-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Pengaturan Akun & Administrasi Kios Tenant
@@ -192,9 +192,11 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
-                    className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors ${
-                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                    } ${fieldError?.field === 'nama' ? 'border-red' : ''}`}
+                    className={cn(
+                      'w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors',
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
+                      fieldError?.field === 'nama' && 'border-red'
+                    )}
                   />
                 </FormField>
 
@@ -289,74 +291,78 @@ function AkunTenant() {
 
           {/* CARD DETAIL ADMINISTRASI & LEGALITAS KIOS UNTUK TENANT */}
           <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border pb-3 gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/80 pb-4 gap-2">
               <h3 className="text-lg font-extrabold text-text tracking-tight">
                 Detail Administrasi & Legalitas Kios Anda
               </h3>
-              <Badge variant={adminDetail.izinkanCicilan ? "warning" : "success"}>
-                {adminDetail.izinkanCicilan ? "Akses Cicilan Diizinkan" : "Akses Normal (Bayar Penuh)"}
-              </Badge>
+              {adminDetail.izinkanCicilan && (
+                <Badge variant="warning">
+                  Cicilan Diizinkan
+                </Badge>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Nomor Kios</span>
-                <strong className="text-base font-extrabold text-red font-tabular-nums">{adminDetail.kios}</strong>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Nomor Kios</span>
+                <strong className="text-lg font-extrabold text-red font-tabular-nums tracking-tight">{adminDetail.kios}</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Lokasi & Ukuran Kios</span>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Lokasi & Ukuran Kios</span>
                 <strong className="text-sm font-bold text-text">{adminDetail.lantai} ({adminDetail.ukuran})</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Tarif Retribusi Bulanan</span>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Tarif Retribusi Bulanan</span>
                 <strong className="text-base font-extrabold text-emerald-700 font-tabular-nums">
                   Rp {Number(adminDetail.tarifBulanan || 750000).toLocaleString('id-ID')}
                 </strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Jenis Usaha Terdaftar</span>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Jenis Usaha Terdaftar</span>
                 <strong className="text-sm font-bold text-text">{adminDetail.jenisUsaha}</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Surat Perjanjian (SP)</span>
-                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.sp}</strong>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Surat Perjanjian (SP)</span>
+                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.sp}</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Dokumen PPJB</span>
-                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.ppjb}</strong>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Dokumen PPJB</span>
+                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.ppjb}</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Sertifikat Hak Guna</span>
-                <strong className="text-xs font-bold text-text font-tabular-nums">{adminDetail.sertifikat}</strong>
+              <div>
+                <span className="label-micro text-text-3 block mb-1">Sertifikat Hak Guna</span>
+                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.sertifikat}</strong>
               </div>
 
-              <div className="p-3.5 bg-warm-gray/40 rounded-xl border border-border sm:col-span-2">
-                <span className="text-xs text-text-3 font-semibold block mb-1">Masa Berlaku Sewa Kios</span>
-                <strong className="text-xs font-extrabold text-text font-tabular-nums">
+              <div className="sm:col-span-2">
+                <span className="label-micro text-text-3 block mb-1">Masa Berlaku Sewa Kios</span>
+                <strong className="text-sm font-extrabold text-text font-tabular-nums">
                   {adminDetail.tanggalMulai} s/d {adminDetail.tanggalSelesai}
                 </strong>
               </div>
             </div>
 
-            <div className="border-t border-border pt-4">
-              <span className="text-xs text-text-3 font-semibold block mb-1">Catatan Resmi Administrasi Pengelola</span>
-              <p className="text-sm text-text-2 font-medium leading-relaxed bg-white p-3 rounded-lg border border-border">
-                {adminDetail.catatan}
-              </p>
-            </div>
+            {adminDetail.catatan && (
+              <div className="border-t border-border/60 pt-5">
+                <span className="label-micro text-text-3 block mb-1.5">Catatan Resmi Administrasi Pengelola</span>
+                <p className="text-sm text-text-2 font-medium leading-relaxed bg-mono-100/60 p-3.5 rounded-md border border-border/60">
+                  {adminDetail.catatan}
+                </p>
+              </div>
+            )}
           </Card>
         </div>
 
         <div className="lg:col-span-4 flex flex-col gap-6">
           <form onSubmit={handleSavePassword}>
-            <Card variant="elevated" className="flex flex-col gap-4 p-6">
-              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+            <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
+              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border/80 pb-3 text-balance">
                 Ubah Kata Sandi
               </h3>
               
@@ -378,7 +384,10 @@ function AkunTenant() {
                   placeholder="Minimal 6 karakter"
                   value={passwordData.kataSandiBaru}
                   onChange={handlePasswordChange}
-                  className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors ${passwordError ? 'border-red' : 'border-border'}`}
+                  className={cn(
+                    'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors',
+                    passwordError ? 'border-red' : 'border-border'
+                  )}
                 />
               </FormField>
 
@@ -389,7 +398,10 @@ function AkunTenant() {
                   placeholder="Ulangi kata sandi baru"
                   value={passwordData.konfirmasiKataSandi}
                   onChange={handlePasswordChange}
-                  className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors ${confirmPasswordError ? 'border-red' : 'border-border'}`}
+                  className={cn(
+                    'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors',
+                    confirmPasswordError ? 'border-red' : 'border-border'
+                  )}
                 />
               </FormField>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Drawer, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable } from '@bunsay/shared-ui';
+import { Drawer, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DashboardAdmin() {
@@ -17,6 +17,10 @@ function DashboardAdmin() {
 
   const [antrean, setAntrean] = useState([]);
   const [tenants, setTenants] = useState([]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'kios', direction: 'asc' });
@@ -123,14 +127,21 @@ function DashboardAdmin() {
   const belumBayarCount = metrics?.tagihan_pending ?? tenants.filter(t => t.statusPembayaran === 'Belum Bayar').length;
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="dashboard-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       {errorMsg && (
-        <div className="bg-red-500 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between">
+        <div className="bg-red text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
-            <Icon icon="heroicons:exclamation-triangle-20-solid" width="20" height="20" />
+            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg(null)} className="text-white hover:opacity-80">✕</button>
+          <button
+            type="button"
+            onClick={() => setErrorMsg(null)}
+            aria-label="Tutup notifikasi error"
+            className="text-white hover:opacity-80 p-1 cursor-pointer"
+          >
+            <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+          </button>
         </div>
       )}
 
@@ -148,19 +159,19 @@ function DashboardAdmin() {
           label="Total Kios Terisi"
           value={metrics?.kios_terisi ?? totalTenant}
           color="red"
-          icon={<Icon icon="heroicons:home-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:home-20-solid" className="size-6" />}
         />
         <StatCard
           label="Menunggu Verifikasi Transfer"
           value={verifikasiCount}
           color="orange"
-          icon={<Icon icon="heroicons:clock-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:clock-20-solid" className="size-6" />}
         />
         <StatCard
           label="Belum Bayar Bulan Ini"
           value={belumBayarCount}
           color="red"
-          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-6" />}
         />
       </div>
 
@@ -175,15 +186,21 @@ function DashboardAdmin() {
               type="text"
               placeholder="Cari nama atau no kios..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               aria-label="Cari nama tenant atau nomor kios"
               className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-red"
             />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               aria-label="Filter status pembayaran bulan ini"
-              className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
             >
               <option value="Semua">Semua Status</option>
               <option value="Lunas">Lunas</option>
@@ -194,7 +211,7 @@ function DashboardAdmin() {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={4} cols={6} />
+          <SkeletonTable rows={5} cols={6} />
         ) : filteredTenants.length === 0 ? (
           <EmptyState
             icon="heroicons:user-minus-20-solid"
@@ -209,12 +226,22 @@ function DashboardAdmin() {
             colSpan={6}
             sortConfig={sortConfig}
             onSort={handleSort}
+            footer={
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredTenants.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemName="tenant"
+              />
+            }
           >
-            {filteredTenants.map((tenant, idx) => {
+            {filteredTenants.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((tenant, idx) => {
               const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
               return (
-                <tr key={tenant.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-left text-text">
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-start text-text">
                     {tenant.nama}
                   </th>
                   <td data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text">
@@ -223,7 +250,7 @@ function DashboardAdmin() {
                   <td data-label="Jenis Usaha" className="p-3 text-text-2 font-medium">
                     {tenant.usaha}
                   </td>
-                  <td data-label="Tunggakan" className={`font-tabular-nums p-3 font-extrabold ${(tenant.tunggakan > 0) ? 'text-orange' : 'text-text'}`}>
+                  <td data-label="Tunggakan" className={cn("font-tabular-nums p-3 font-extrabold", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
                     Rp {tenant.tunggakan.toLocaleString('id-ID')}
                   </td>
                   <td data-label="Status Bulan Ini" className="p-3">
@@ -238,7 +265,7 @@ function DashboardAdmin() {
                       variant="secondary"
                       size="sm"
                       onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
-                      className="min-h-[44px] sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
+                      className="min-h-11 sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
                     >
                       Detail
                     </Button>

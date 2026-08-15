@@ -116,10 +116,10 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
   return (
     <TenantAuthContext.Provider value={value}>
       {!isHydrated ? (
-        <div className="flex min-h-screen items-center justify-center bg-[#FBF7F2]">
+        <div data-slot="tenant-auth-loading" className="flex min-h-screen items-center justify-center bg-cream">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2563EB] border-t-transparent" />
-            <p className="text-sm font-medium text-gray-600">Memuat Portal Tenant Bunsay...</p>
+            <div className="size-10 animate-spin rounded-full border-4 border-red border-t-transparent" />
+            <p className="text-sm font-medium text-text-2">Memuat Portal Tenant Bunsay...</p>
           </div>
         </div>
       ) : (

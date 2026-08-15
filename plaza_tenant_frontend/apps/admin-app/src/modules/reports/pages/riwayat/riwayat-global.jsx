@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Badge, Button, Table, AlokasiBreakdown, EmptyState, SkeletonTable, BuktiPembayaranModal } from '@bunsay/shared-ui';
+import { Card, Badge, Button, Table, AlokasiBreakdown, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function RiwayatTransaksiAdmin() {
@@ -8,6 +8,10 @@ function RiwayatTransaksiAdmin() {
   const [filterMetode, setFilterMetode] = useState('Semua');
   const [riwayat, setRiwayat] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'idRaw', direction: 'desc' });
@@ -45,7 +49,6 @@ function RiwayatTransaksiAdmin() {
     fetchRiwayatGlobal();
   }, [httpClient]);
 
-
   const handleSort = (key) => {
     setSortConfig(prev => ({
       key,
@@ -73,6 +76,11 @@ function RiwayatTransaksiAdmin() {
     });
   }, [riwayat, filterMetode, sortConfig]);
 
+  const paginatedRiwayat = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredRiwayat.slice(startIndex, startIndex + pageSize);
+  }, [filteredRiwayat, currentPage, pageSize]);
+
   const tableHeaders = [
     { label: 'ID TRX', sortKey: 'idRaw' },
     { label: 'Tenant & Kios', sortKey: 'nama' },
@@ -85,7 +93,7 @@ function RiwayatTransaksiAdmin() {
   ];
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="riwayat-transaksi-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
@@ -102,10 +110,13 @@ function RiwayatTransaksiAdmin() {
             id="filter-metode-admin"
             aria-label="Filter Metode Pembayaran Transaksi Admin"
             value={filterMetode}
-            onChange={(e) => setFilterMetode(e.target.value)}
-            className="h-10 rounded-md border border-border bg-white px-3 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+            onChange={(e) => {
+              setFilterMetode(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 rounded-md border border-border bg-white pl-3.5 pr-9 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
           >
-            <option value="Semua">Semua Metode (3)</option>
+            <option value="Semua">Semua Metode</option>
             <option value="Transfer">Transfer Bank</option>
             <option value="Tunai">Tunai (Loket)</option>
             <option value="Midtrans">Midtrans Gateway</option>
@@ -113,9 +124,9 @@ function RiwayatTransaksiAdmin() {
         </div>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6">
+      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
         {isLoading ? (
-          <SkeletonTable rows={4} cols={8} />
+          <SkeletonTable rows={5} cols={8} />
         ) : filteredRiwayat.length === 0 ? (
           <EmptyState
             icon="heroicons:receipt-percent-20-solid"
@@ -130,53 +141,63 @@ function RiwayatTransaksiAdmin() {
             colSpan={8}
             sortConfig={sortConfig}
             onSort={handleSort}
-          >
-            {filteredRiwayat.map((item, idx) => (
-              <tr key={item.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                <th scope="row" data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text text-left">
-                  {item.id}
-                </th>
-                <td data-label="Tenant & Kios" className="p-3 text-left">
-                  <div className="font-bold text-text text-sm">{item.nama}</div>
-                  <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
-                </td>
-                <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
-                  {item.tagihan}
-                </td>
-                <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
-                  {item.nominal}
-                </td>
-                <td data-label="Metode & Waktu" className="p-3 text-text-2 text-xs">
-                  <div className="font-bold text-text text-sm">
-                    {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
-                  </div>
-                  <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
-                </td>
-                <td data-label="Alokasi Tagihan" className="p-3">
-                  <AlokasiBreakdown alokasiList={item.alokasi} compact={true} />
-                </td>
-                <td data-label="Status" className="p-3 text-center">
-                  <Badge status={item.status} />
-                  {item.alasan && (
-                    <div className="text-[11px] text-red mt-1 italic font-medium">
-                      {item.alasan}
+            footer={
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredRiwayat.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                  itemName="transaksi"
+                />
+              }
+            >
+              {paginatedRiwayat.map((item, idx) => (
+                <tr key={item.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text text-start">
+                    {item.id}
+                  </th>
+                  <td data-label="Tenant & Kios" className="p-3 text-start">
+                    <div className="font-bold text-text text-sm">{item.nama}</div>
+                    <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
+                  </td>
+                  <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
+                    {item.tagihan}
+                  </td>
+                  <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                    {item.nominal}
+                  </td>
+                  <td data-label="Metode & Waktu" className="p-3 text-text-2 text-xs">
+                    <div className="font-bold text-text text-sm">
+                      {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
                     </div>
-                  )}
-                </td>
-                <td data-label="Aksi" className="p-3 text-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedBukti(item)}
-                    aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
-                    className="h-8 px-3 text-xs font-bold"
-                  >
-                    Detail
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </Table>
+                    <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
+                  </td>
+                  <td data-label="Alokasi Tagihan" className="p-3">
+                    <AlokasiBreakdown alokasiList={item.alokasi} compact={true} />
+                  </td>
+                  <td data-label="Status" className="p-3 text-center">
+                    <Badge status={item.status} />
+                    {item.alasan && (
+                      <div className="text-xs text-red mt-1 italic font-medium">
+                        {item.alasan}
+                      </div>
+                    )}
+                  </td>
+                  <td data-label="Aksi" className="p-3 text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedBukti(item)}
+                      aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
+                      className="h-8 px-3 text-xs font-bold"
+                    >
+                      Detail
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
         )}
       </Card>
 

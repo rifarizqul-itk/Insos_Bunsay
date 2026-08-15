@@ -6,8 +6,8 @@ function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="page-fade-in bg-cream min-h-dvh font-sans">
-      <nav className="landing-navbar h-[72px] bg-white border-b border-border sticky top-0 flex items-center justify-between px-6 md:px-10 z-40 shadow-sm">
+    <div data-slot="landing-page" className="page-fade-in bg-mono-50 min-h-dvh font-sans">
+      <nav className="landing-navbar h-18 bg-white/80 backdrop-blur-xl border-b border-border/80 sticky top-0 flex items-center justify-between px-6 md:px-10 z-40 shadow-xs transition-colors">
         <div className="flex items-center gap-3">
           <picture>
             <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
@@ -23,6 +23,15 @@ function LandingPage() {
             Plaza Kebun Sayur
           </span>
         </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => navigate('/auth')}
+          className="h-10 px-5 text-sm font-bold gap-1.5 shadow-sm"
+        >
+          <Icon icon="material-symbols:login" className="size-4.5" />
+          <span>Login Portal</span>
+        </Button>
       </nav>
 
       <main id="main-app" className="landing-page-shell max-w-6xl mx-auto px-4 sm:px-6 py-8 md:py-10">
@@ -36,9 +45,12 @@ function LandingPage() {
                 <span className="label-micro text-red font-extrabold tracking-wider">
                   Pelayanan Resmi
                 </span>
-                <h1 className="text-3xl sm:text-4xl md:text-[42px] font-extrabold text-text leading-tight mt-2.5 tracking-tight text-balance">
-                  Selamat Datang<br className="hidden sm:inline" /> di Portal Plaza Bunsay
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-text leading-tight mt-2.5 tracking-tight text-balance">
+                  Selamat Datang<br className="hidden sm:inline" /> di Portal Plaza Kebun Sayur
                 </h1>
+                <p className="text-text-2 text-sm sm:text-base font-medium mt-3 text-pretty leading-relaxed">
+                  Portal resmi pembayaran sewa kios dan pengelolaan administrasi tenant Plaza Kebun Sayur Balikpapan.
+                </p>
               </div>
 
               <div className="w-full">
@@ -49,13 +61,13 @@ function LandingPage() {
                   className="sm:w-auto h-13 px-8 text-base font-extrabold gap-2.5 shadow-md"
                   onClick={() => navigate('/auth')}
                 >
-                  LOGIN PORTAL
-                  <Icon icon="material-symbols:login" width="22" height="22" />
+                  Login Portal
+                  <Icon icon="material-symbols:login" className="size-5.5" />
                 </Button>
               </div>
             </div>
             
-            <div className="h-full min-h-[280px] md:min-h-[400px] overflow-hidden bg-warm-gray/30 relative">
+            <div className="h-full min-h-72 md:min-h-96 overflow-hidden bg-mono-100/40 relative">
               <picture>
                 <source srcSet="/assets/Photograph_of_plaza_building.webp" type="image/webp" />
                 <img
@@ -66,7 +78,7 @@ function LandingPage() {
                   decoding="async"
                   width={800}
                   height={600}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  className="size-full object-cover transition-transform duration-500 hover:scale-105"
                 />
               </picture>
             </div>
@@ -75,8 +87,8 @@ function LandingPage() {
           <div className="landing-info-grid mobile-stack grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <Card variant="elevated" className="p-6 sm:p-8 flex flex-col justify-start gap-4">
               <div>
-                <div className="size-12 rounded-xl bg-red-50 text-red flex items-center justify-center mb-4">
-                  <Icon icon="heroicons:clock-20-solid" width="26" height="26" />
+                <div className="size-12 rounded-xl bg-mono-100 text-red flex items-center justify-center mb-4 border border-mono-200/60 shadow-xs">
+                  <Icon icon="heroicons:clock-20-solid" className="size-6.5" />
                 </div>
                 <h3 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
                   Jam Operasional Gedung
@@ -88,7 +100,7 @@ function LandingPage() {
                   09.00 - 21.00 WITA
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-text font-bold">
-                  <Icon icon="heroicons:calendar-days-20-solid" width="18" height="18" className="text-red flex-shrink-0" />
+                  <Icon icon="heroicons:calendar-days-20-solid" className="size-4.5 text-red shrink-0" />
                   <span>Hari Senin s/d Hari Minggu (Buka Setiap Hari)</span>
                 </div>
               </div>
@@ -96,8 +108,8 @@ function LandingPage() {
 
             <Card variant="elevated" className="flex flex-col justify-between p-6 sm:p-8 gap-5">
               <div>
-                <div className="size-12 rounded-xl bg-green-bg text-green flex items-center justify-center mb-4">
-                  <Icon icon="heroicons:building-office-20-solid" width="26" height="26" />
+                <div className="size-12 rounded-xl bg-green-bg text-green flex items-center justify-center mb-4 border border-green/20 shadow-xs">
+                  <Icon icon="heroicons:building-office-20-solid" className="size-6.5" />
                 </div>
                 <h3 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
                   Informasi Kontak Kantor Pengelola
@@ -130,7 +142,7 @@ function LandingPage() {
                 aria-label="Chat WhatsApp Pengelola Plaza Kebun Sayur (buka di tab baru)"
                 className="inline-flex items-center justify-center gap-2 bg-green-bg text-green hover:bg-green/10 border-2 border-green h-12 rounded-xl text-base font-extrabold text-decoration-none shadow-sm hover:shadow-md transition-all active:scale-[0.98] w-full"
               >
-                <Icon icon="ic:baseline-whatsapp" width="22" height="22" ariaLabel="Ikon WhatsApp" />
+                <Icon icon="ic:baseline-whatsapp" className="size-5.5" ariaLabel="Ikon WhatsApp" />
                 <span>Chat WhatsApp Pengelola</span>
               </a>
             </Card>

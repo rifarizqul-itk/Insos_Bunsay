@@ -37,6 +37,7 @@ function BottomNav({ role }) {
 
   return (
     <nav 
+      data-slot="bottom-nav"
       className="md:hidden fixed bottom-2 left-2 right-2 z-40 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
       style={{
         marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
@@ -85,7 +86,7 @@ function BottomNav({ role }) {
                 icon={item.icon} 
                 className="size-6 mb-0.5 shrink-0"
               />
-              <span className="text-[10px] xs:text-[11px] leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
+              <span className="text-2.5 xs:text-xs leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
                 {item.label}
               </span>
             </Link>

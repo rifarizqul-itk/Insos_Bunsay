@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Drawer, Modal, FormField, EmptyState, SkeletonTable, useToast } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Drawer, Modal, FormField, EmptyState, SkeletonTable, useToast, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function KetersediaanKios() {
@@ -14,6 +14,10 @@ function KetersediaanKios() {
   
   const [dataKios, setDataKios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [createdCredential, setCreatedCredential] = useState(null);
@@ -115,6 +119,11 @@ function KetersediaanKios() {
     });
   }, [dataKios, filterLantai, filterStatus, searchQuery, sortConfig]);
 
+  const paginatedKios = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredKios.slice(startIndex, startIndex + pageSize);
+  }, [filteredKios, currentPage, pageSize]);
+
   const totalTersedia = dataKios.filter(k => k.status === 'Tersedia' || k.status === 'Kosong').length;
   const totalTerisi = dataKios.filter(k => k.status === 'Terisi').length;
 
@@ -212,10 +221,8 @@ function KetersediaanKios() {
     }
   };
 
-
-
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="ketersediaan-kios" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
@@ -231,51 +238,54 @@ function KetersediaanKios() {
           onClick={() => setIsDrawerOpen(true)}
           className="gap-2 self-start sm:self-auto shadow-md"
         >
-          <Icon icon="heroicons:user-plus-20-solid" width="20" height="20" />
+          <Icon icon="heroicons:user-plus-20-solid" className="size-5" />
           <span>Daftarkan Tenant Baru</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card variant="elevated" className="p-5 flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <Card variant="elevated" className="p-6 flex items-center justify-between">
           <div>
-            <div className="text-xs text-text-3 font-semibold uppercase tracking-wider">Total Kios</div>
-            <div className="text-2xl font-extrabold text-text mt-1 font-tabular-nums">{dataKios.length} Unit</div>
+            <div className="label-micro text-text-3">Total Kios</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-text mt-1.5 font-tabular-nums">{dataKios.length} Unit</div>
           </div>
-          <div className="size-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Icon icon="heroicons:building-storefront-20-solid" width="24" height="24" />
+          <div className="size-12 rounded-md bg-mono-100 text-text flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:building-storefront-20-solid" className="size-6" />
           </div>
         </Card>
 
-        <Card variant="elevated" className="p-5 flex items-center justify-between">
+        <Card variant="elevated" className="p-6 flex items-center justify-between">
           <div>
-            <div className="text-xs text-text-3 font-semibold uppercase tracking-wider">Kios Terisi</div>
-            <div className="text-2xl font-extrabold text-green mt-1 font-tabular-nums">{totalTerisi} Unit</div>
+            <div className="label-micro text-text-3">Kios Terisi</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-green mt-1.5 font-tabular-nums">{totalTerisi} Unit</div>
           </div>
-          <div className="size-11 rounded-xl bg-green-bg text-green flex items-center justify-center">
-            <Icon icon="heroicons:check-circle-20-solid" width="24" height="24" />
+          <div className="size-12 rounded-md bg-mono-100 text-green flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:check-circle-20-solid" className="size-6" />
           </div>
         </Card>
 
-        <Card variant="elevated" className="p-5 flex items-center justify-between">
+        <Card variant="elevated" className="p-6 flex items-center justify-between">
           <div>
-            <div className="text-xs text-text-3 font-semibold uppercase tracking-wider">Kios Tersedia</div>
-            <div className="text-2xl font-extrabold text-red mt-1 font-tabular-nums">{totalTersedia} Unit</div>
+            <div className="label-micro text-text-3">Kios Tersedia</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-red mt-1.5 font-tabular-nums">{totalTersedia} Unit</div>
           </div>
-          <div className="size-11 rounded-xl bg-red-50 text-red flex items-center justify-center">
-            <Icon icon="heroicons:key-20-solid" width="24" height="24" />
+          <div className="size-12 rounded-md bg-mono-100 text-red flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:key-20-solid" className="size-6" />
           </div>
         </Card>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pb-2">
+      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+        <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
           <div className="w-full sm:w-72">
             <input
               type="text"
               placeholder="Cari kios, penyewa, jenis usaha..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full h-10 px-3.5 text-sm rounded-lg border border-border bg-warm-gray/40 focus:bg-white transition-colors"
             />
           </div>
@@ -283,8 +293,11 @@ function KetersediaanKios() {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <select
               value={filterLantai}
-              onChange={(e) => setFilterLantai(e.target.value)}
-              className="h-10 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer"
+              onChange={(e) => {
+                setFilterLantai(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 pl-3.5 pr-9 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
             >
               <option value="Semua">Semua Lantai</option>
               <option value="Lantai 1">Lantai 1</option>
@@ -293,8 +306,11 @@ function KetersediaanKios() {
 
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="h-10 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer"
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 pl-3.5 pr-9 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
             >
               <option value="Semua">Semua Status</option>
               <option value="Terisi">Terisi</option>
@@ -304,7 +320,7 @@ function KetersediaanKios() {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={4} cols={6} />
+          <SkeletonTable rows={5} cols={6} />
         ) : filteredKios.length === 0 ? (
           <EmptyState
             icon="heroicons:building-storefront-20-solid"
@@ -312,55 +328,70 @@ function KetersediaanKios() {
             description="Tidak ada kios yang cocok dengan filter atau kata kunci pencarian Anda."
           />
         ) : (
-          <Table headers={tableHeaders} colSpan={6} sortConfig={sortConfig} onSort={handleSort}>
-            {filteredKios.map((kios) => (
-              <tr key={kios.id} className="border-b border-border/80 hover:bg-warm-gray/20 transition-colors">
-                <td className="p-3 font-extrabold text-text font-tabular-nums">{kios.noKios}</td>
-                <td className="p-3 text-text-2 font-medium">{kios.lantai}</td>
-                <td className="p-3 font-semibold text-text">{kios.penyewa}</td>
-                <td className="p-3 text-text-2 font-medium">{kios.usaha}</td>
-                <td className="p-3">
-                  <Badge status={kios.status === 'Terisi' ? 'Lunas' : 'Belum Bayar'} customText={kios.status} />
-                </td>
-                <td className="p-3 text-center flex items-center justify-center gap-1.5">
-                  {kios.status === 'Terisi' ? (
-                    <>
+          <Table 
+            headers={tableHeaders} 
+            colSpan={6} 
+            sortConfig={sortConfig} 
+            onSort={handleSort}
+            footer={
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredKios.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                  itemName="kios"
+                />
+              }
+            >
+              {paginatedKios.map((kios) => (
+                <tr key={kios.id} className="border-b border-border/80 last:border-b-0 hover:bg-warm-gray/20 transition-colors">
+                  <td className="p-3 font-extrabold text-text font-tabular-nums">{kios.noKios}</td>
+                  <td className="p-3 text-text-2 font-medium">{kios.lantai}</td>
+                  <td className="p-3 font-semibold text-text">{kios.penyewa}</td>
+                  <td className="p-3 text-text-2 font-medium">{kios.usaha}</td>
+                  <td className="p-3">
+                    <Badge status={kios.status === 'Terisi' ? 'Lunas' : 'Belum Bayar'} customText={kios.status} />
+                  </td>
+                  <td className="p-3 text-center flex items-center justify-center gap-1.5">
+                    {kios.status === 'Terisi' ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/admin/kios/${kios.noKios}`)}
+                          className="h-8 text-xs font-bold gap-1"
+                        >
+                          <span>Detail</span>
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleAkhiriSewa(kios)}
+                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20"
+                        >
+                          <Icon icon="heroicons:stop-circle-20-solid" width="14" height="14" />
+                          <span>Akhiri Sewa</span>
+                        </Button>
+                      </>
+                    ) : (
                       <Button
-                        variant="secondary"
+                        variant="primary"
                         size="sm"
-                        onClick={() => navigate(`/admin/kios/${kios.noKios}`)}
+                        onClick={() => {
+                          setFormTenant(prev => ({ ...prev, kios: kios.noKios }));
+                          setIsDrawerOpen(true);
+                        }}
                         className="h-8 text-xs font-bold gap-1"
                       >
-                        <span>Detail</span>
+                        <Icon icon="heroicons:plus-20-solid" width="14" height="14" />
+                        <span>Sewa Kios</span>
                       </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleAkhiriSewa(kios)}
-                        className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20"
-                      >
-                        <Icon icon="heroicons:stop-circle-20-solid" width="14" height="14" />
-                        <span>Akhiri Sewa</span>
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => {
-                        setFormTenant(prev => ({ ...prev, kios: kios.noKios }));
-                        setIsDrawerOpen(true);
-                      }}
-                      className="h-8 text-xs font-bold gap-1"
-                    >
-                      <Icon icon="heroicons:plus-20-solid" width="14" height="14" />
-                      <span>Sewa Kios</span>
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </Table>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </Table>
         )}
       </Card>
 
@@ -407,7 +438,10 @@ function KetersediaanKios() {
               placeholder="Contoh: 6471012345670001 (16 digit)" 
               value={formTenant.nik} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, nik: e.target.value }))} 
-              className={`w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base font-tabular-nums focus:bg-white transition-colors ${fieldError?.field === 'nik' ? 'border-red' : 'border-border'}`} 
+              className={cn(
+                'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base font-tabular-nums focus:bg-white transition-colors',
+                fieldError?.field === 'nik' ? 'border-red' : 'border-border'
+              )} 
             />
           </FormField>
 
@@ -417,7 +451,10 @@ function KetersediaanKios() {
               value={formTenant.alamat} 
               onChange={(e) => setFormTenant(prev => ({ ...prev, alamat: e.target.value }))} 
               rows={2}
-              className={`w-full rounded-md border bg-warm-gray/50 p-3 text-base focus:bg-white transition-colors resize-none ${fieldError?.field === 'alamat' ? 'border-red' : 'border-border'}`} 
+              className={cn(
+                'w-full rounded-md border bg-warm-gray/50 p-3 text-base focus:bg-white transition-colors resize-none',
+                fieldError?.field === 'alamat' ? 'border-red' : 'border-border'
+              )} 
             />
           </FormField>
 
@@ -425,7 +462,7 @@ function KetersediaanKios() {
             <select
               value={formTenant.kios}
               onChange={(e) => setFormTenant(prev => ({ ...prev, kios: e.target.value }))}
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors"
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums focus:bg-white transition-colors cursor-pointer"
             >
               <option value="">-- Pilih Kios Kosong --</option>
               {dataKios
@@ -469,7 +506,8 @@ function KetersediaanKios() {
                   checked={formTenant.usernameMode === 'auto'} 
                   onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'auto', username: '' }))} 
                 />
-                <span>⚡ Otomatis Sistem</span>
+                <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600 inline" />
+                <span>Otomatis Sistem</span>
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer text-text">
                 <input 
@@ -479,7 +517,8 @@ function KetersediaanKios() {
                   checked={formTenant.usernameMode === 'custom'} 
                   onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'custom' }))} 
                 />
-                <span>✏️ Input Custom Username</span>
+                <Icon icon="heroicons:pencil-20-solid" className="size-3.5 text-text-2 inline" />
+                <span>Input Custom Username</span>
               </label>
             </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, FormField, Button, Card, FIFOPreview } from '@bunsay/shared-ui';
+import { Icon, FormField, Button, Card, FIFOPreview, BuktiPembayaranModal } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -137,6 +137,8 @@ function SetoranTunai() {
     }
   };
 
+  const [savedReceiptData, setSavedReceiptData] = useState(null);
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     let hasErr = false;
@@ -154,34 +156,49 @@ function SetoranTunai() {
       hasErr = true;
     }
 
-    if (!buktiTunai) {
-      alert('Mohon unggah foto bukti pembayaran tunai.');
-      hasErr = true;
-    }
-
     if (hasErr) return;
     setShowKonfirmasi(true);
   };
 
   const handleSimpanTunaiFinal = async () => {
     setIsSubmitting(true);
+    const nominalNum = parseInt(nominalTunai, 10);
+    const dateNow = new Date().toISOString().split('T')[0];
+    const refCode = `LOKET-CASH-${Date.now()}`;
+
     try {
-      await httpClient.post('/api/v1/admin/pembayaran', {
+      const response = await httpClient.post('/api/v1/admin/pembayaran', {
         Id_Tagihan: targetTagihanId || 101,
-        Tanggal_Bayar: new Date().toISOString().split('T')[0],
-        Total_Bayar: parseInt(nominalTunai, 10),
+        Tanggal_Bayar: dateNow,
+        Total_Bayar: nominalNum,
         Metode_Bayar: 'Tunai',
-        Bukti_Pembayaran: previewBukti || `LOKET-CASH-${Date.now()}`,
+        Bukti_Pembayaran: previewBukti || refCode,
         Verifikasi_Pembayaran: 'Diterima'
       });
 
-      setToastMsg('Setoran tunai loket berhasil dicatat di database SQL!');
+      const resData = response?.data?.data || response?.data || {};
+
+      setSavedReceiptData({
+        id: resData.Id_Pembayaran || Date.now(),
+        trxCode: `TRX-${resData.Id_Pembayaran || 'CASH'}`,
+        nama: selectedTenantObj?.nama || 'Tenant',
+        kios: selectedTenantObj?.kios || '-',
+        nominal: nominalNum,
+        nominalRaw: nominalNum,
+        metode: 'Tunai',
+        labelMetode: 'Tunai (Kasir Loket)',
+        tanggal: dateNow,
+        waktu: dateNow,
+        status: 'Diterima',
+        Bukti_Pembayaran: refCode,
+      });
+
+      setToastMsg('Setoran tunai loket berhasil dicatat di database!');
       setNominalTunai('');
       setSelectedTenantId('');
       setBuktiTunai(null);
       setPreviewBukti(null);
       setShowKonfirmasi(false);
-      setTimeout(() => setToastMsg(null), 4000);
     } catch (err) {
       alert('Gagal menyimpan setoran tunai. Coba lagi.');
     } finally {
@@ -192,14 +209,21 @@ function SetoranTunai() {
   const selectedTenantObj = tenantData.find(t => String(t.id) === selectedTenantId);
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="setoran-tunai" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       {toastMsg && (
-        <div className="bg-emerald-500 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
+        <div className="bg-emerald-600 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
-            <Icon icon="heroicons:check-circle-20-solid" width="20" height="20" />
+            <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
             <span>{toastMsg}</span>
           </div>
-          <button onClick={() => setToastMsg(null)} className="text-white hover:opacity-80">✕</button>
+          <button
+            type="button"
+            onClick={() => setToastMsg(null)}
+            aria-label="Tutup notifikasi"
+            className="text-white hover:opacity-80 p-1 cursor-pointer"
+          >
+            <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+          </button>
         </div>
       )}
 
@@ -212,11 +236,11 @@ function SetoranTunai() {
         </p>
       </div>
 
-      <Card variant="elevated" className="max-w-[640px] p-6 sm:p-8 flex flex-col gap-6">
+      <Card variant="elevated" className="max-w-2xl p-6 sm:p-8 flex flex-col gap-6">
         {showKonfirmasi ? (
           <div className="flex flex-col gap-5 page-fade-in" role="region" aria-label="Tinjauan Konfirmasi Setoran Tunai">
             <div className="flex items-center gap-2 border-b border-border pb-3">
-              <Icon icon="heroicons:shield-check-20-solid" width="24" height="24" className="text-green" />
+              <Icon icon="heroicons:shield-check-20-solid" className="size-6 text-green" />
               <h2 className="text-lg font-extrabold text-text tracking-tight text-balance">
                 Konfirmasi Setoran Tunai Loket
               </h2>
@@ -253,7 +277,7 @@ function SetoranTunai() {
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="20" height="20" />
+                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-5" />
                     <span>Menyimpan...</span>
                   </span>
                 ) : (
@@ -268,7 +292,7 @@ function SetoranTunai() {
               <select
                 value={selectedTenantId}
                 onChange={(e) => { setSelectedTenantId(e.target.value); if (tenantError) setTenantError(null); }}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors cursor-pointer"
               >
                 <option value="">-- Pilih Tenant Kios --</option>
                 {tenantData.map((t) => (
@@ -283,15 +307,15 @@ function SetoranTunai() {
             {selectedTenantId && (
               <div className="page-fade-in">
                 {isBillsLoading ? (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3 text-xs text-text-2 font-bold animate-pulse">
-                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin text-red" width="18" height="18" />
+                  <div className="p-4 bg-warm-gray/50 border border-border rounded-lg flex items-center gap-3 text-xs text-text-2 font-bold animate-pulse">
+                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin text-red size-4.5" />
                     <span>Mengambil data tagihan aktif tenant...</span>
                   </div>
                 ) : unpaidBills.length > 0 ? (
                   <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-lg flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-xs font-black text-amber-900 uppercase tracking-wider">
-                      <Icon icon="heroicons:document-text-20-solid" width="18" height="18" className="text-amber-700" />
-                      <span>📌 Tagihan Aktif Terdeteksi ({unpaidBills.length} Tagihan):</span>
+                      <Icon icon="heroicons:bookmark-20-solid" className="size-4.5 text-amber-700" />
+                      <span>Tagihan Aktif Terdeteksi ({unpaidBills.length} Tagihan):</span>
                     </div>
 
                     {unpaidBills.map((bill, idx) => {
@@ -299,24 +323,25 @@ function SetoranTunai() {
 
                       if (isPendingVerif) {
                         return (
-                          <div key={bill.idTagihan || idx} className="flex flex-col gap-2.5 bg-blue-50/90 p-3.5 rounded-lg border border-blue-200 shadow-xs">
+                          <div key={bill.idTagihan || idx} className="flex flex-col gap-2.5 bg-orange-50/90 p-3.5 rounded-lg border border-orange-200 shadow-xs">
                             <div className="flex justify-between items-start text-xs font-bold text-slate-800">
                               <div>
                                 <div className="font-extrabold text-text text-sm">{bill.periode}</div>
-                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-extrabold mt-1 inline-flex items-center gap-1 border border-blue-200">
-                                  <Icon icon="heroicons:clock-20-solid" width="14" height="14" className="text-blue-600" />
-                                  Status: Menunggu Verifikasi Transfer Bank
+                                <span className="text-xs px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-900 font-extrabold mt-1 inline-flex items-center gap-1 border border-orange-200">
+                                  <Icon icon="heroicons:clock-20-solid" className="size-3.5 text-orange" />
+                                  <span>Status: Menunggu Verifikasi Transfer Bank</span>
                                 </span>
                               </div>
-                              <div className="text-right">
+                              <div className="text-end">
                                 <span className="text-xs font-extrabold text-red font-tabular-nums">
                                   Rp {bill.totalTagihan.toLocaleString('id-ID')}
                                 </span>
                               </div>
                             </div>
 
-                            <p className="text-xs text-blue-900 font-medium leading-relaxed m-0 bg-white/70 p-2 rounded border border-blue-100">
-                              💡 <strong>Informasi:</strong> Tenant ini sudah mengunggah foto bukti transfer bank secara online dan saat ini sedang menunggu verifikasi admin.
+                            <p className="text-xs text-orange-950 font-medium leading-relaxed m-0 bg-white/70 p-2 rounded border border-orange-100">
+                              <Icon icon="heroicons:light-bulb-20-solid" className="size-4 text-amber-600 inline me-1" />
+                              <strong>Informasi:</strong> Tenant ini sudah mengunggah foto bukti transfer bank secara online dan saat ini sedang menunggu verifikasi admin.
                             </p>
 
                             <button
@@ -328,10 +353,11 @@ function SetoranTunai() {
                                   idTagihan: bill.idTagihan
                                 }
                               })}
-                              className="mt-0.5 inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-md transition-all cursor-pointer shadow-xs border-none active:scale-[0.99]"
+                              className="mt-0.5 inline-flex items-center justify-center gap-2 bg-red hover:bg-red-rich text-white font-extrabold text-xs px-4 py-2.5 rounded-md transition-all cursor-pointer shadow-xs border-none active:scale-[0.99]"
                             >
-                              <Icon icon="heroicons:arrow-top-right-on-square-20-solid" width="16" height="16" />
-                              <span>Periksa & Verifikasi Bukti Transfer Tenant Ini ➔</span>
+                              <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-4" />
+                              <span>Periksa & Verifikasi Bukti Transfer Tenant Ini</span>
+                              <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5 ms-1 inline" />
                             </button>
                           </div>
                         );
@@ -341,11 +367,11 @@ function SetoranTunai() {
                         <div key={bill.idTagihan || idx} className="flex justify-between items-center text-xs font-bold text-slate-800 bg-white p-2.5 rounded border border-amber-200">
                           <div>
                             <div className="font-extrabold text-text">{bill.periode}</div>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-extrabold mt-0.5 inline-block">
+                            <span className="text-2.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-extrabold mt-0.5 inline-block">
                               {bill.statusTagihan}
                             </span>
                           </div>
-                          <div className="text-right">
+                          <div className="text-end">
                             <span className="text-xs font-extrabold text-red font-tabular-nums">
                               Rp {bill.totalTagihan.toLocaleString('id-ID')}
                             </span>
@@ -356,7 +382,7 @@ function SetoranTunai() {
                   </div>
                 ) : (
                   <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-lg flex items-start gap-3 text-xs font-medium text-emerald-900">
-                    <Icon icon="heroicons:check-circle-20-solid" width="22" height="22" className="text-emerald-600 shrink-0 mt-0.5" />
+                    <Icon icon="heroicons:check-circle-20-solid" className="size-5.5 text-emerald-600 shrink-0 mt-0.5" />
                     <div>
                       <strong className="font-extrabold text-emerald-950 block text-sm mb-0.5">Tidak Ada Tagihan Aktif / Tunggakan</strong>
                       <span>Tenant <strong>{selectedTenantObj?.nama} ({selectedTenantObj?.kios})</strong> saat ini tidak memiliki tunggakan sewa (seluruh tagihan berstatus Lunas).</span>
@@ -383,32 +409,10 @@ function SetoranTunai() {
 
             <FIFOPreview allocations={fifoAllocations} nominal={Number(nominalTunai) || 0} />
 
-            <FormField label="Unggah Foto Bukti Setoran" id="upload-bukti-tunai-field" required={!previewBukti}>
-              <input
-                id="upload-bukti-tunai-input"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="sr-only"
-              />
-              <label
-                htmlFor="upload-bukti-tunai-input"
-                className="flex flex-col items-center justify-center gap-2 bg-warm-gray/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-[120px] hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"
-              >
-                <Icon icon="heroicons:arrow-up-tray-20-solid" width="28" height="28" className="text-red" />
-                <span className="text-sm font-bold text-text">
-                  {buktiTunai ? buktiTunai.name : 'Upload Foto Bukti Setoran'}
-                </span>
-                <span className="text-xs text-text-3 font-medium">
-                  Ketuk untuk memilih foto bukti dari komputer/HP
-                </span>
-              </label>
-              {previewBukti && (
-                <div className="mt-2 border border-border rounded-lg p-2 bg-warm-gray/30 flex justify-center">
-                  <img src={previewBukti} alt="Preview foto bukti" className="max-h-48 rounded object-contain" />
-                </div>
-              )}
-            </FormField>
+            <div className="p-3.5 bg-mono-100/60 border border-border/80 rounded-lg flex items-center gap-3 text-xs text-text-2">
+              <Icon icon="heroicons:shield-check-20-solid" className="size-5 text-emerald-700 shrink-0" />
+              <span>Setoran tunai akan otomatis dibukukan lunas dan menghasilkan Kuitansi SSRD Elektronik resmi ber-QR Code untuk dicetak seketika.</span>
+            </div>
 
             <Button
               type="submit"
@@ -422,6 +426,13 @@ function SetoranTunai() {
           </form>
         )}
       </Card>
+
+      {/* Modal Resi & Kuitansi SSRD Otomatis Pasca-Setoran */}
+      <BuktiPembayaranModal
+        isOpen={Boolean(savedReceiptData)}
+        onClose={() => setSavedReceiptData(null)}
+        item={savedReceiptData}
+      />
     </div>
   );
 }

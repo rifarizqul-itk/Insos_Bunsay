@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Icon, Table, Card, Badge, Button, Modal, EmptyState, SkeletonTable } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Badge, Button, Modal, EmptyState, SkeletonTable, Pagination } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function AuditLogPage() {
@@ -10,6 +10,10 @@ function AuditLogPage() {
   const [filterModul, setFilterModul] = useState('Semua');
   const [filterRole, setFilterRole] = useState('Semua');
   const [selectedLog, setSelectedLog] = useState(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
@@ -58,75 +62,97 @@ function AuditLogPage() {
       username: 'kasir_lisa',
       role: 'kasir',
       modul: 'Pembayaran',
-      aksi: 'Verifikasi Terima',
-      deskripsi: 'Admin memverifikasi status pembayaran TRX-20 menjadi Diterima.',
-      ip_address: '127.0.0.1',
-      created_at: '2026-08-07 22:30:00'
+      aksi: 'Input Setoran Tunai',
+      deskripsi: 'Kasir Lisa mencatat setoran tunai Rp 1.500.000 untuk Kios B-101 (Hj. Yuliana).',
+      ip_address: '192.168.1.15',
+      created_at: '2026-08-07 23:12:05'
     },
     {
       id: 103,
+      username: 'auditor_budi',
+      role: 'auditor',
+      modul: 'Ekspor',
+      aksi: 'Unduh Rekap Bulanan',
+      deskripsi: 'Auditor Budi mengunduh berkas laporan pendapatan bulan Juli format CSV/Excel.',
+      ip_address: '192.168.1.20',
+      created_at: '2026-08-07 22:30:19'
+    },
+    {
+      id: 104,
+      username: 'admin_kios_dani',
+      role: 'admin_kios',
+      modul: 'Kios',
+      aksi: 'Update Status Kios',
+      deskripsi: 'Admin Dani memperbarui status Kios A-04 menjadi Terisi (Penyewa Baru: Toko Berkah).',
+      ip_address: '192.168.1.18',
+      created_at: '2026-08-07 21:05:44'
+    },
+    {
+      id: 105,
       username: 'superadmin',
       role: 'superadmin',
       modul: 'User',
-      aksi: 'Tambah Staf',
-      deskripsi: 'Menambahkan staf baru Lisa Anggraini (@kasir_lisa) dengan role kasir.',
+      aksi: 'Tambah Staf Kasir',
+      deskripsi: 'Superadmin mendaftarkan akun baru @kasir_rina dengan hak akses Kasir Loket.',
       ip_address: '127.0.0.1',
       created_at: '2026-08-07 20:15:00'
     }
   ];
 
-  const tableHeaders = [
-    { label: 'ID Log', sortKey: 'id' },
-    { label: 'Waktu & IP', sortKey: 'created_at' },
-    { label: 'Pengelola (User)', sortKey: 'username' },
-    { label: 'Modul', sortKey: 'modul' },
-    { label: 'Jenis Aksi', sortKey: 'aksi' },
-    { label: 'Detail Deskripsi', sortKey: 'deskripsi' },
-    { label: 'Aksi', align: 'center', sortable: false }
-  ];
-
   const filteredLogs = useMemo(() => {
-    let list = logs.filter((log) => {
-      const matchModul = filterModul === 'Semua' || log.modul === filterModul;
-      const matchRole = filterRole === 'Semua' || log.role === filterRole;
+    let result = [...logs];
+
+    if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchSearch = String(log.username || '').toLowerCase().includes(q) ||
-                          String(log.deskripsi || '').toLowerCase().includes(q) ||
-                          String(log.aksi || '').toLowerCase().includes(q);
-      return matchModul && matchRole && matchSearch;
-    });
+      result = result.filter(log =>
+        log.username?.toLowerCase().includes(q) ||
+        log.aksi?.toLowerCase().includes(q) ||
+        log.deskripsi?.toLowerCase().includes(q)
+      );
+    }
+
+    if (filterModul !== 'Semua') {
+      result = result.filter(log => log.modul === filterModul);
+    }
+
+    if (filterRole !== 'Semua') {
+      result = result.filter(log => log.role === filterRole);
+    }
 
     const { key, direction } = sortConfig;
-    return list.sort((a, b) => {
+    return result.sort((a, b) => {
       let valA = a[key] ?? '';
       let valB = b[key] ?? '';
       if (valA < valB) return direction === 'asc' ? -1 : 1;
       if (valA > valB) return direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [logs, filterModul, filterRole, searchQuery, sortConfig]);
+  }, [logs, searchQuery, filterModul, filterRole, sortConfig]);
+
+  const paginatedLogs = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredLogs.slice(startIndex, startIndex + pageSize);
+  }, [filteredLogs, currentPage, pageSize]);
+
+  const tableHeaders = [
+    { label: 'ID Log', sortKey: 'id' },
+    { label: 'Waktu & IP', sortKey: 'created_at' },
+    { label: 'Pelaksana & Role', sortKey: 'username' },
+    { label: 'Modul', sortKey: 'modul' },
+    { label: 'Aksi', sortKey: 'aksi' },
+    { label: 'Deskripsi Detail', sortable: false },
+    { label: 'Detail', align: 'center', sortable: false }
+  ];
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-            Log Aktivitas Pengelola (Audit Trail)
-          </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1">
-            Rekam jejak audit digital seluruh aktivitas sensitif staf pengelola di Plaza Kebun Sayur.
-          </p>
-        </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={fetchLogs}
-          className="gap-2 font-bold self-start sm:self-auto"
-        >
-          <Icon icon="heroicons:arrow-path-20-solid" width="16" height="16" />
-          <span>Refresh Log</span>
-        </Button>
+    <div data-slot="audit-log-page" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Audit Trail Aktivitas Admin
+        </h1>
+        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
+          Rekam jejak kepatuhan dan histori tindakan seluruh staf pengelola Plaza Kebun Sayur.
+        </p>
       </div>
 
       <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
@@ -140,13 +166,19 @@ function AuditLogPage() {
               type="text"
               placeholder="Cari admin / aksi / deskripsi..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red"
             />
             <select
               value={filterModul}
-              onChange={(e) => setFilterModul(e.target.value)}
-              className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+              onChange={(e) => {
+                setFilterModul(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
             >
               <option value="Semua">Semua Modul</option>
               <option value="Pembayaran">Pembayaran</option>
@@ -157,8 +189,11 @@ function AuditLogPage() {
             </select>
             <select
               value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
             >
               <option value="Semua">Semua Role</option>
               <option value="superadmin">Superadmin</option>
@@ -184,46 +219,56 @@ function AuditLogPage() {
             colSpan={7}
             sortConfig={sortConfig}
             onSort={handleSort}
-          >
-            {filteredLogs.map((log) => (
-              <tr key={log.id} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                <td className="p-3 font-extrabold text-text font-tabular-nums text-xs">
-                  #{log.id}
-                </td>
-                <td className="p-3 text-xs text-text-2 font-medium">
-                  <div>{log.created_at}</div>
-                  <div className="text-[10px] text-text-3 font-mono">{log.ip_address || '127.0.0.1'}</div>
-                </td>
-                <td className="p-3 font-bold text-text text-sm">
-                  <div>@{log.username}</div>
-                  <span className="inline-block mt-0.5 text-[10px] px-1.5 py-0.5 rounded bg-slate-100 font-extrabold uppercase tracking-wider text-slate-700">
-                    {log.role}
-                  </span>
-                </td>
-                <td className="p-3 text-xs font-bold text-text-2">
-                  {log.modul}
-                </td>
-                <td className="p-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                    {log.aksi}
-                  </span>
-                </td>
-                <td className="p-3 text-xs text-text font-medium max-w-xs truncate" title={log.deskripsi}>
-                  {log.deskripsi}
-                </td>
-                <td className="p-3 text-center">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setSelectedLog(log)}
-                    className="h-8 px-3 text-xs font-bold"
-                  >
-                    Detail Log
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </Table>
+            footer={
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredLogs.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                  itemName="aktivitas"
+                />
+              }
+            >
+              {paginatedLogs.map((log) => (
+                <tr key={log.id} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <td className="p-3 font-extrabold text-text font-tabular-nums text-xs">
+                    #{log.id}
+                  </td>
+                  <td className="p-3 text-xs text-text-2 font-medium">
+                    <div>{log.created_at}</div>
+                    <div className="text-2.5 text-text-3 font-mono">{log.ip_address || '127.0.0.1'}</div>
+                  </td>
+                  <td className="p-3 font-bold text-text text-sm">
+                    <div>@{log.username}</div>
+                    <span className="inline-block mt-0.5 text-2.5 px-1.5 py-0.5 rounded bg-slate-100 font-extrabold uppercase tracking-wider text-slate-700">
+                      {log.role}
+                    </span>
+                  </td>
+                  <td className="p-3 text-xs font-bold text-text-2">
+                    {log.modul}
+                  </td>
+                  <td className="p-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                      {log.aksi}
+                    </span>
+                  </td>
+                  <td className="p-3 text-xs text-text font-medium max-w-xs truncate" title={log.deskripsi}>
+                    {log.deskripsi}
+                  </td>
+                  <td className="p-3 text-center">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSelectedLog(log)}
+                      className="h-8 px-3 text-xs font-bold"
+                    >
+                      Detail
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
         )}
       </Card>
 

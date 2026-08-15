@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FormField, Button, Card, Icon, Table, Modal, Badge, useToast } from '@bunsay/shared-ui';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { FormField, Button, Card, Icon, Table, Modal, Badge, useToast, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function AkunAdmin() {
   const { user, httpClient } = useAdminAuth();
   const { addToast } = useToast();
+
+  const [currentPageStaf, setCurrentPageStaf] = useState(1);
+  const [pageSizeStaf, setPageSizeStaf] = useState(10);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -271,7 +274,7 @@ function AkunAdmin() {
   };
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="akun-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Pengaturan Akun Pengelola
@@ -282,20 +285,20 @@ function AkunAdmin() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-5">
-          <div className="flex items-center gap-3 border-b border-border pb-3">
-            <Icon icon="heroicons:user-circle-20-solid" width="24" height="24" className="text-red" />
+        <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
+          <div className="flex items-center gap-3 border-b border-border/80 pb-4">
+            <Icon icon="heroicons:user-circle-20-solid" className="size-6 text-red" />
             <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Data Profil Pengelola</h3>
           </div>
 
-          <form onSubmit={handleSimpanProfil} className="flex flex-col gap-4">
+          <form onSubmit={handleSimpanProfil} className="flex flex-col gap-5">
             <FormField label="Username Login Utama" id="admin-profile-username" required>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -305,7 +308,7 @@ function AkunAdmin() {
                 name="nama"
                 value={formData.nama}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -315,7 +318,7 @@ function AkunAdmin() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -325,7 +328,7 @@ function AkunAdmin() {
                 name="telepon"
                 value={formData.telepon}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -342,13 +345,13 @@ function AkunAdmin() {
           </form>
         </Card>
 
-        <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-5">
-          <div className="flex items-center gap-3 border-b border-border pb-3">
-            <Icon icon="heroicons:lock-closed-20-solid" width="24" height="24" className="text-red" />
+        <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
+          <div className="flex items-center gap-3 border-b border-border/80 pb-4">
+            <Icon icon="heroicons:lock-closed-20-solid" className="size-6 text-red" />
             <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Ubah Kata Sandi Akun</h3>
           </div>
 
-          <form onSubmit={handleUbahSandi} className="flex flex-col gap-4">
+          <form onSubmit={handleUbahSandi} className="flex flex-col gap-5">
             <FormField label="Kata Sandi Saat Ini" id="admin-password-old">
               <input
                 type="password"
@@ -356,7 +359,7 @@ function AkunAdmin() {
                 placeholder="Masukkan kata sandi lama"
                 value={formData.kataSandiLama}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -367,7 +370,7 @@ function AkunAdmin() {
                 placeholder="Minimal 6 karakter"
                 value={formData.kataSandiBaru}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -378,7 +381,7 @@ function AkunAdmin() {
                 placeholder="Ulangi kata sandi baru"
                 value={formData.konfirmasiKataSandi}
                 onChange={handleInputChange}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -402,7 +405,7 @@ function AkunAdmin() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <Icon icon="heroicons:key-20-solid" width="22" height="22" className="text-red" />
+                <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
                 <h3 className="text-xl font-extrabold text-text tracking-tight">
                   Manajemen Staf & Otorisasi RBAC (Superadmin Panel)
                 </h3>
@@ -418,78 +421,96 @@ function AkunAdmin() {
               onClick={() => handleOpenStafModal()}
               className="gap-2 font-bold self-start sm:self-auto h-10 px-4"
             >
-              <Icon icon="heroicons:user-plus-20-solid" width="18" height="18" />
+              <Icon icon="heroicons:user-plus-20-solid" className="size-4.5" />
               <span>Tambah Staf Pengelola</span>
             </Button>
           </div>
 
-          <Table
-            caption="Daftar Akun Staf Pengelola Plaza"
-            headers={[
-              { label: 'Identitas Staf' },
-              { label: 'Username' },
-              { label: 'Peran / Sub-Role' },
-              { label: 'Cakupan Izin (Permissions)' },
-              { label: 'Status' },
-              { label: 'Aksi', align: 'center' }
-            ]}
-            colSpan={6}
-          >
-            {stafList.map((staf) => (
-              <tr key={staf.id} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                <td className="p-3 font-extrabold text-text text-sm">
-                  <div>{staf.nama_lengkap}</div>
-                  <div className="text-xs text-text-3 font-normal">{staf.email}</div>
-                </td>
-                <td className="p-3 font-bold font-mono text-xs text-red">
-                  @{staf.username}
-                </td>
-                <td className="p-3">
-                  <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded bg-slate-900 text-white">
-                    {staf.sub_role || 'admin'}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <div className="flex flex-wrap gap-1 max-w-xs">
-                    {(staf.permissions || []).map((permKey) => {
-                      const match = ALL_PERMISSIONS.find(p => p.key === permKey);
-                      return (
-                        <span key={permKey} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                          {match?.label || permKey}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td className="p-3">
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                    <span className={`w-2 h-2 rounded-full ${staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                    {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
-                  </span>
-                </td>
-                <td className="p-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleOpenStafModal(staf)}
-                      className="h-8 px-2.5 text-xs font-bold"
-                    >
-                      Edit Izin
-                    </Button>
-                    <Button
-                      variant={staf.status_aktif !== false ? 'danger' : 'secondary'}
-                      size="sm"
-                      onClick={() => handleToggleStafStatus(staf)}
-                      className="h-8 px-2 text-xs font-bold"
-                    >
-                      {staf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </Table>
+          {(() => {
+            const startIndex = (currentPageStaf - 1) * pageSizeStaf;
+            const paginatedStaf = stafList.slice(startIndex, startIndex + pageSizeStaf);
+
+            return (
+              <Table
+                caption="Daftar Akun Staf Pengelola Plaza"
+                headers={[
+                  { label: 'Identitas Staf' },
+                  { label: 'Username' },
+                  { label: 'Peran' },
+                  { label: 'Cakupan Izin' },
+                  { label: 'Status Akun' },
+                  { label: 'Aksi', align: 'center' }
+                ]}
+                colSpan={6}
+                footer={
+                  <Pagination
+                    currentPage={currentPageStaf}
+                    totalItems={stafList.length}
+                    pageSize={pageSizeStaf}
+                    pageSizeOptions={[10, 25, 50]}
+                    onPageChange={setCurrentPageStaf}
+                    onPageSizeChange={setPageSizeStaf}
+                    itemName="staf"
+                  />
+                }
+              >
+                {paginatedStaf.map((staf) => (
+                  <tr key={staf.id} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                    <td className="p-3 font-extrabold text-text text-sm">
+                      <div>{staf.nama_lengkap}</div>
+                      <div className="text-xs text-text-3 font-normal">{staf.email}</div>
+                    </td>
+                    <td className="p-3 font-bold font-mono text-xs text-red">
+                      @{staf.username}
+                    </td>
+                    <td className="p-3">
+                      <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded bg-slate-900 text-white">
+                        {staf.sub_role || 'admin'}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {(staf.permissions || []).map((permKey) => {
+                          const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                          return (
+                            <span key={permKey} className="text-2.5 font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                              {match?.label || permKey}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md", staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
+                        <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500')} />
+                        {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleOpenStafModal(staf)}
+                          className="h-8 px-2.5 text-xs font-bold"
+                        >
+                          Edit Izin
+                        </Button>
+                        <Button
+                          variant={staf.status_aktif !== false ? 'danger' : 'secondary'}
+                          size="sm"
+                          onClick={() => handleToggleStafStatus(staf)}
+                          className="h-8 px-2 text-xs font-bold"
+                        >
+                          {staf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </Table>
+            );
+          })()}
         </Card>
       )}
 
@@ -550,8 +571,9 @@ function AkunAdmin() {
 
           {/* Role Presets Section */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-2.5">
-            <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
-              ⚡ Role Presets (Sekali Klik Isi Otomatis Izin):
+            <span className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1">
+              <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600" />
+              Role Presets (Sekali Klik Isi Otomatis Izin):
             </span>
             <div className="flex flex-wrap gap-2">
               {ROLE_PRESETS.map((preset) => (
@@ -559,7 +581,12 @@ function AkunAdmin() {
                   key={preset.name}
                   type="button"
                   onClick={() => handleApplyPreset(preset)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-black transition-all border ${stafForm.sub_role === preset.role ? 'bg-red text-white border-red shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                  className={cn(
+                    'px-3 py-1.5 rounded-md text-xs font-black transition-all border',
+                    stafForm.sub_role === preset.role
+                      ? 'bg-red text-white border-red shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                  )}
                 >
                   {preset.name}
                 </button>
@@ -569,8 +596,9 @@ function AkunAdmin() {
 
           {/* Permission Matrix Section */}
           <div>
-            <span className="text-xs font-black uppercase text-slate-700 tracking-wider block mb-2">
-              🔑 Matriks Izin Fitur (Permission Matrix):
+            <span className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1 mb-2">
+              <Icon icon="heroicons:key-20-solid" className="size-3.5 text-red" />
+              Matriks Izin Fitur (Permission Matrix):
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -579,17 +607,20 @@ function AkunAdmin() {
                 return (
                   <label
                     key={perm.key}
-                    className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${isChecked ? 'bg-amber-50/80 border-amber-400' : 'bg-white border-border hover:bg-slate-50'}`}
+                    className={cn(
+                      'flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors',
+                      isChecked ? 'bg-amber-50/80 border-amber-400' : 'bg-white border-border hover:bg-slate-50'
+                    )}
                   >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handlePermissionToggle(perm.key)}
-                      className="mt-0.5 h-4 w-4 rounded text-red focus:ring-red"
+                      className="mt-0.5 size-4 rounded text-red focus:ring-red"
                     />
                     <div>
                       <div className="font-bold text-xs text-text">{perm.label}</div>
-                      <div className="text-[11px] text-text-3 font-normal mt-0.5">{perm.desc}</div>
+                      <div className="text-xs text-text-3 font-normal mt-0.5">{perm.desc}</div>
                     </div>
                   </label>
                 );
