@@ -151,7 +151,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
       return url;
     }
     const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-    return `http://localhost:8000/${cleanPath}`;
+    return `https://bunsay-backend.ddev.site/${cleanPath}`;
   };
 
   const parsedImageSrc = isFilePath ? getResolvedImageUrl(buktiUrl) : (buktiUrl.startsWith('data:') ? buktiUrl : null);
