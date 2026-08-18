@@ -97,9 +97,11 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isUsingMockFallback, setIsUsingMockFallback] = useState(false);
 
   useEffect(() => {
     setImageError(false);
+    setIsUsingMockFallback(false);
     setIsZoomed(false);
   }, [item, isOpen]);
 
@@ -151,10 +153,11 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
       return url;
     }
     const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-    return `https://bunsay-backend.ddev.site/${cleanPath}`;
+    return `/${cleanPath}`;
   };
 
-  const parsedImageSrc = isFilePath ? getResolvedImageUrl(buktiUrl) : (buktiUrl.startsWith('data:') ? buktiUrl : null);
+  const baseImageSrc = isFilePath ? getResolvedImageUrl(buktiUrl) : (buktiUrl.startsWith('data:') ? buktiUrl : null);
+  const activeImageSrc = isUsingMockFallback ? '/assets/MOCKUP_BUKTI_TF.jpg' : baseImageSrc;
 
   const handleCopyCode = (text) => {
     if (!text) return;
@@ -678,10 +681,12 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
           <div className="flex flex-col gap-3">
             <h4 className="label-micro text-text-3">Lampiran Bukti Slip Transfer</h4>
 
-            {parsedImageSrc && !imageError ? (
+            {activeImageSrc && !imageError ? (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-text-3">Pratinjau Foto Slip:</span>
+                  <span className="text-xs font-semibold text-text-3">
+                    {isUsingMockFallback ? 'Ilustrasi Bukti Slip (Data Dummy Arsip):' : 'Pratinjau Foto Slip:'}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsZoomed(!isZoomed)}
@@ -697,10 +702,16 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                   isZoomed ? "max-h-[30rem]" : "max-h-72"
                 )}>
                   <img
-                    src={parsedImageSrc}
+                    src={activeImageSrc}
                     alt={`Bukti Transfer ${trxLabel}`}
                     loading="lazy"
-                    onError={() => setImageError(true)}
+                    onError={() => {
+                      if (!isUsingMockFallback) {
+                        setIsUsingMockFallback(true);
+                      } else {
+                        setImageError(true);
+                      }
+                    }}
                     className="max-h-full max-w-full object-contain rounded-md cursor-pointer"
                     onClick={() => setIsZoomed(!isZoomed)}
                   />
@@ -717,22 +728,10 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                       {isFilePath ? buktiUrl.split('/').pop() : `Bukti_Transfer_${trxLabel}.jpg`}
                     </span>
                     <span className="text-xs text-text-3 font-medium">
-                      Lampiran Berkas Slip Transfer
+                      Lampiran Berkas Slip Transfer (Teks Arsip)
                     </span>
                   </div>
                 </div>
-
-                {parsedImageSrc && (
-                  <a
-                    href={parsedImageSrc}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-red hover:underline px-2.5 py-1.5 rounded bg-white border border-border/80 shrink-0"
-                  >
-                    <span>Buka</span>
-                    <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3.5" />
-                  </a>
-                )}
               </div>
             )}
           </div>
