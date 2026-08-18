@@ -1,0 +1,103 @@
+name: Monorepo CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - refactor/monorepo-migration
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-build:
+    name: Build & Verify Apps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: plaza_tenant_frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd plaza_tenant_frontend
+          npm ci
+
+      - name: Build Tenant App
+        run: |
+          cd plaza_tenant_frontend
+          npm run build:tenant
+        env:
+          VITE_TENANT_API_URL: https://bunsayhub.id/api/v1/tenant
+
+      - name: Build Admin App
+        run: |
+          cd plaza_tenant_frontend
+          npm run build:admin
+        env:
+          VITE_ADMIN_API_URL: https://admin.bunsayhub.id/api/v1/admin
+
+  deploy-tenant:
+    name: Deploy Tenant App (bunsayhub.id)
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: plaza_tenant_frontend/package-lock.json
+
+      - name: Build Tenant Distribution
+        run: |
+          cd plaza_tenant_frontend
+          npm ci
+          npm run build:tenant
+        env:
+          VITE_TENANT_API_URL: ${{ secrets.VITE_TENANT_API_URL }}
+
+      # Step deployment (Vercel / Cloudflare Pages / S3 static host)
+      - name: Deploy to Production (Tenant Portal)
+        run: echo "Deploying apps/tenant-app/dist to bunsayhub.id target host..."
+
+  deploy-admin:
+    name: Deploy Admin App (admin.bunsayhub.id)
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: plaza_tenant_frontend/package-lock.json
+
+      - name: Build Admin Distribution
+        run: |
+          cd plaza_tenant_frontend
+          npm ci
+          npm run build:admin
+        env:
+          VITE_ADMIN_API_URL: ${{ secrets.VITE_ADMIN_API_URL }}
+
+      # Step deployment (Vercel / Cloudflare Pages / S3 static host)
+      - name: Deploy to Production (Admin Console)
+        run: echo "Deploying apps/admin-app/dist to admin.bunsayhub.id target host..."
