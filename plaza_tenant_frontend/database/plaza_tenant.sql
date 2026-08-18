@@ -1500,6 +1500,40 @@ ADD CONSTRAINT `tagihan_ibfk_1` FOREIGN KEY (`Id_Sewa`) REFERENCES `sewa` (`Id_S
 ALTER TABLE `user`
 ADD CONSTRAINT `user_ibfk_1` FOREIGN KEY (`Id_roles`) REFERENCES `roles` (`Id_roles`) ON UPDATE CASCADE;
 
+--
+-- Table structure for table `activity_logs`
+--
+CREATE TABLE IF NOT EXISTS `activity_logs` (
+  `id_log` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `id_user` bigint unsigned DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `role` varchar(50) DEFAULT NULL,
+  `modul` varchar(100) NOT NULL,
+  `aksi` varchar(100) NOT NULL,
+  `deskripsi` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_log`),
+  KEY `idx_activity_logs_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `notifications`
+--
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `target_type` varchar(20) NOT NULL DEFAULT 'tenant',
+  `id_user` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` varchar(20) NOT NULL DEFAULT 'info',
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `link` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_target` (`target_type`, `id_user`, `is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */

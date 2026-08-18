@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 class Notification extends Model
 {
@@ -20,17 +22,35 @@ class Notification extends Model
     /**
      * Send notification to a specific tenant or to all admin staff.
      */
-    public static function send(string $targetType, ?int $idUser, string $title, string $message, string $type = 'info', ?string $link = null): self
+    public static function send(string $targetType, ?int $idUser, string $title, string $message, string $type = 'info', ?string $link = null): ?self
     {
-        return self::create([
-            'target_type' => $targetType,
-            'id_user'     => $idUser,
-            'title'       => $title,
-            'message'     => $message,
-            'type'        => $type,
-            'is_read'     => false,
-            'link'        => $link,
-            'created_at'  => now(),
-        ]);
+        try {
+            if (!Schema::hasTable('notifications')) {
+                Schema::create('notifications', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('target_type', 20)->default('tenant');
+                    $table->unsignedBigInteger('id_user')->nullable();
+                    $table->string('title');
+                    $table->text('message');
+                    $table->string('type', 20)->default('info');
+                    $table->boolean('is_read')->default(false);
+                    $table->string('link')->nullable();
+                    $table->timestamp('created_at')->useCurrent();
+                });
+            }
+
+            return self::create([
+                'target_type' => $targetType,
+                'id_user'     => $idUser,
+                'title'       => $title,
+                'message'     => $message,
+                'type'        => $type,
+                'is_read'     => false,
+                'link'        => $link,
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable $e) {
+            return null; // Fail-safe
+        }
     }
 }
