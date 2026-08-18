@@ -1,74 +1,133 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, FormField, Button, Icon } from '@bunsay/shared-ui';
-import { useAdminAuth } from '../../AdminAuthProvider';
+import { useAdminAuth } from '../../useAdminAuth';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const { loginAdmin, isLoading } = useAdminAuth();
+  const { loginAdmin } = useAdminAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!formData.username.trim() || !formData.password) {
+      setError('Username dan kata sandi wajib diisi.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await loginAdmin(formData.username, formData.password);
-      navigate('/admin/dashboard', { replace: true });
+      const res = await loginAdmin(formData.username.trim(), formData.password);
+      if (res?.accessToken) {
+        navigate('/admin/dashboard', { replace: true });
+      }
     } catch (err) {
-      setError(err.message || 'Login Gagal. Periksa username & kata sandi.');
+      const errMsg = err?.response?.data?.message || err?.message || 'Login Gagal. Periksa username & kata sandi.';
+      setError(errMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans text-slate-100">
-      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 bg-slate-900 border border-slate-800 flex flex-col gap-6">
-        <div className="flex flex-col items-center text-center gap-2">
-          <div className="w-12 h-12 rounded-xl bg-red-900/40 border border-red-700/50 flex items-center justify-center text-red-400">
-            <Icon icon="heroicons:shield-check-20-solid" width="28" height="28" />
+    <div className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
+      <Card variant="elevated" className="w-full max-w-[440px] p-6 sm:p-8 border-border/80 rounded-2xl shadow-xl bg-white">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-3">
+            <picture>
+              <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+              <img
+                src="/assets/main_logo_transparent_for_light_bg.png"
+                alt="Logo Resmi Plaza Kebun Sayur"
+                loading="lazy"
+                decoding="async"
+                className="h-12 object-contain"
+              />
+            </picture>
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Konsol Administrasi Plaza</h1>
-          <p className="text-sm text-slate-400">Masuk menggunakan kredensial pengelola resmi (admin.bunsayhub.id).</p>
+
+          <div className="page-fade-in">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-red tracking-tight mb-1 text-balance">
+              Konsol Pengelola
+            </h1>
+            <p className="text-text-2 text-sm font-medium text-pretty">
+              Masuk ke akun administrator resmi Plaza Kebun Sayur
+            </p>
+          </div>
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-lg bg-red-950/80 border border-red-800 text-red-200 text-sm font-semibold text-center">
+          <div className="p-3.5 mb-4 rounded-xl bg-red-50 border border-red-100 text-red text-sm font-semibold text-center" role="alert">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 page-fade-in">
           <FormField label="Username Admin" id="admin-login-username" required>
             <input
               type="text"
               name="username"
-              placeholder="Masukkan username"
+              placeholder="Masukkan username admin"
               value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              className="w-full h-11 rounded-md border border-slate-700 bg-slate-800 px-3.5 text-slate-100 placeholder-slate-500 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, username: e.target.value }));
+                if (error) setError('');
+              }}
+              autoComplete="username"
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
             />
           </FormField>
 
           <FormField label="Kata Sandi" id="admin-login-password" required>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-              className="w-full h-11 rounded-md border border-slate-700 bg-slate-800 px-3.5 text-slate-100 placeholder-slate-500 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Masukkan kata sandi"
+                value={formData.password}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, password: e.target.value }));
+                  if (error) setError('');
+                }}
+                autoComplete="current-password"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 pr-10 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-2 hover:text-text transition-colors p-1"
+                aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+              >
+                <Icon
+                  icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'}
+                  width="18"
+                  height="18"
+                />
+              </button>
+            </div>
           </FormField>
 
           <Button
             type="submit"
             variant="primary"
-            size="lg"
+            size="md"
             fullWidth
-            disabled={isLoading}
-            className="mt-2 h-12 text-base font-bold bg-red-700 hover:bg-red-600 text-white border-none shadow-lg"
+            disabled={isSubmitting}
+            className="mt-2 h-12 text-base font-extrabold shadow-md"
           >
-            {isLoading ? 'Authenticating...' : 'Masuk Konsol Admin'}
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="18" height="18" />
+                <span>Memproses...</span>
+              </span>
+            ) : (
+              'Masuk Konsol Admin'
+            )}
           </Button>
         </form>
       </Card>

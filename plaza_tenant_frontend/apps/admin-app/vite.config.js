@@ -5,12 +5,12 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  publicDir: path.resolve(__dirname, '../../public'),
+  publicDir: path.resolve(import.meta.dirname, '../../public'),
   resolve: {
     alias: {
-      '@bunsay/shared-ui': path.resolve(__dirname, '../../packages/shared-ui/src'),
-      '@bunsay/shared-core': path.resolve(__dirname, '../../packages/shared-core/src'),
-      '@': path.resolve(__dirname, './src')
+      '@bunsay/shared-ui': path.resolve(import.meta.dirname, '../../packages/shared-ui/src'),
+      '@bunsay/shared-core': path.resolve(import.meta.dirname, '../../packages/shared-core/src'),
+      '@': path.resolve(import.meta.dirname, './src')
     }
   },
   server: {
