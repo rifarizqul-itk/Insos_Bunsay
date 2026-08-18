@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, FormField, Button, Icon } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../AdminAuthProvider';
 
 function AdminLoginPage() {
-  const { login, isLoading } = useAdminAuth();
+  const navigate = useNavigate();
+  const { loginAdmin, isLoading } = useAdminAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
 
@@ -11,7 +13,8 @@ function AdminLoginPage() {
     e.preventDefault();
     setError('');
     try {
-      await login(formData);
+      await loginAdmin(formData.username, formData.password);
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Login Gagal. Periksa username & kata sandi.');
     }

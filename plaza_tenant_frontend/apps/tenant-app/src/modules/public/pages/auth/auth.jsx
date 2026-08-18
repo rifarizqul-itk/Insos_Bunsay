@@ -51,7 +51,7 @@ function AuthPage() {
     setIsLoginLoading(true);
     try {
       const res = await login(formData.username, formData.kataSandi);
-      if (res?.success) {
+      if (res?.accessToken) {
         navigate('/tenant/dashboard');
       } else {
         setUsernameError(res?.message || 'Username atau kata sandi salah.');
