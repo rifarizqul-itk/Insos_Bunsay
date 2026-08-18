@@ -36,65 +36,124 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Determine scope: admin (Id_roles 1) vs tenant (Id_roles 2)
-        $scope = $request->input('scope', ($user->Id_roles === 1 ? 'admin' : 'tenant'));
-        $cookieName = ($scope === 'admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
+        // Determine portal scope from request path or input
+        $routeIsAdmin = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
+        $routeIsTenant = $request->is('api/v1/tenant/*') || $request->is('v1/tenant/*');
 
-        // 1. Create short-lived Access Token for In-Memory storage
+        if ($routeIsAdmin) {
+            $portalScope = 'admin';
+        } elseif ($routeIsTenant) {
+            $portalScope = 'tenant';
+        } else {
+            $portalScope = $request->input('scope', ((int) $user->Id_roles === 1 ? 'admin' : 'tenant'));
+        }
+
+        // Enforce strict Role vs Portal Scope matching
+        $userIsAdmin = ((int) $user->Id_roles === 1);
+        if ($portalScope === 'admin' && !$userIsAdmin) {
+            return response()->json([
+                'message' => 'Akses ditolak. Akun anda bukan akun Admin.',
+            ], 403);
+        }
+
+        if ($portalScope === 'tenant' && $userIsAdmin) {
+            return response()->json([
+                'message' => 'Akses ditolak. Akun Admin tidak dapat login di portal Tenant.',
+            ], 403);
+        }
+
+        // Revoke prior tokens for security and table cleanup
+        $user->tokens()->delete();
+
+        // 1. Create short-lived Access Token for In-Memory storage (15 mins)
         $accessToken = $user->createToken('access_token', ['*'], now()->addMinutes(15))->plainTextToken;
 
-        // 2. Create Refresh Token instance in DB
+        // 2. Create Refresh Token instance in DB (7 days)
         $refreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(7));
-        $refreshTokenPlainText = $refreshTokenObj->plainTextToken;
 
         // 3. Construct HttpOnly Host-Only Secure Cookie
-        // Parameters: name, value, minutes, path, domain=null (Host-Only), secure=true, httpOnly=true, raw=false, sameSite='Strict'
-        $isSecure = config('session.secure', true);
+        $cookieName = ($portalScope === 'admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
+        $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
+        $sameSite = 'none';
+
         $refreshCookie = cookie(
             $cookieName,
-            $refreshTokenPlainText,
+            $refreshTokenObj->plainTextToken,
             self::REFRESH_COOKIE_MINUTES,
             '/',
             null,
             $isSecure,
             true,
             false,
-            'Strict'
+            $sameSite
         );
+
+        // Format permissions array safely
+        $rawPerms = $user->permissions;
+        $permsArray = [];
+        if ($rawPerms) {
+            $permsArray = is_string($rawPerms) ? json_decode($rawPerms, true) : (array)$rawPerms;
+        } else if ($userIsAdmin) {
+            $permsArray = ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+        }
+
+        $subRole = $user->sub_role ?? ($userIsAdmin ? 'superadmin' : 'tenant');
+
+        if ($userIsAdmin) {
+            \App\Models\ActivityLog::create([
+                'id_user'    => $user->Id_user,
+                'username'   => $user->Username,
+                'role'       => $subRole,
+                'modul'      => 'Auth',
+                'aksi'       => 'Login Admin',
+                'deskripsi'  => "Admin {$user->Username} (Role: {$subRole}) berhasil login ke console admin.",
+                'ip_address' => $request->ip(),
+                'created_at' => now()
+            ]);
+        }
 
         return response()->json([
             'accessToken' => $accessToken,
+            'refreshToken' => $refreshTokenObj->plainTextToken,
             'user' => [
-                'Id_user'  => $user->Id_user,
-                'Username' => $user->Username,
-                'Id_roles' => $user->Id_roles,
-                'role'     => $user->Id_roles === 1 ? 'admin' : 'tenant',
+                'Id_user'      => $user->Id_user,
+                'Username'     => $user->Username,
+                'nama_lengkap' => $user->nama_lengkap ?? $user->Username,
+                'email'        => $user->email,
+                'Id_roles'     => $user->Id_roles,
+                'role'         => $userIsAdmin ? 'admin' : 'tenant',
+                'sub_role'     => $subRole,
+                'permissions'  => $permsArray,
             ],
         ])->withCookie($refreshCookie);
     }
 
     /**
-     * Silent Refresh handler reading HttpOnly Cookie without Authorization header requirement.
+     * Silent Refresh handler reading HttpOnly Cookie or fallback header/body without Authorization header requirement.
      */
     public function refresh(Request $request): JsonResponse
     {
         // Detect domain scope from request path (/api/v1/admin/auth/refresh vs /api/v1/tenant/auth/refresh)
-        $isAdminScope = $request->is('api/v1/admin/*');
+        $isAdminScope = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
         $cookieName = $isAdminScope ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
 
-        $refreshTokenString = $request->cookie($cookieName);
+        $refreshTokenString = $request->cookie($cookieName) ?: ($request->input('refresh_token') ?: $request->header('X-Refresh-Token'));
 
         if (!$refreshTokenString) {
             return response()->json([
-                'message' => 'Refresh token cookie tidak ditemukan.',
-            ], 401);
+                'message' => 'Refresh token tidak ditemukan.',
+            ], 401)->withCookie(cookie()->forget($cookieName));
         }
 
         // Validate Refresh Token string against Sanctum PersonalAccessToken
         $tokenInstance = PersonalAccessToken::findToken($refreshTokenString);
 
-        if (!$tokenInstance || ($tokenInstance->expires_at && $tokenInstance->expires_at->isPast())) {
-            // Clear invalid cookie
+        if (
+            !$tokenInstance ||
+            ($tokenInstance->expires_at && $tokenInstance->expires_at->isPast()) ||
+            $tokenInstance->name !== 'refresh_token' ||
+            !$tokenInstance->can('issue-access-token')
+        ) {
             return response()->json([
                 'message' => 'Sesi refresh token telah kadaluwarsa atau tidak sah.',
             ], 401)->withCookie(cookie()->forget($cookieName));
@@ -108,12 +167,60 @@ class AuthController extends Controller
             ], 401)->withCookie(cookie()->forget($cookieName));
         }
 
+        // Enforce strict Role vs Endpoint Scope verification on refresh (Admin scope requires admin role)
+        $userIsAdmin = ((int) $user->Id_roles === 1);
+        if ($isAdminScope && !$userIsAdmin) {
+            return response()->json([
+                'message' => 'Refresh token tidak sah untuk portal Admin.',
+            ], 403)->withCookie(cookie()->forget($cookieName));
+        }
+
+        // Rotate: invalidate the used refresh token to prevent replay attacks
+        $tokenInstance->delete();
+
+        // Issue new Refresh Token (7 days) and send as rotated HttpOnly Cookie
+        $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
+        $sameSite = 'none';
+        $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(7));
+        $newRefreshCookie = cookie(
+            $cookieName,
+            $newRefreshTokenObj->plainTextToken,
+            self::REFRESH_COOKIE_MINUTES,
+            '/',
+            null,
+            $isSecure,
+            true,
+            false,
+            $sameSite
+        );
+
         // Issue NEW short-lived Access Token (15 mins) for in-memory frontend storage
         $newAccessToken = $user->createToken('access_token', ['*'], now()->addMinutes(15))->plainTextToken;
 
+        $rawPerms = $user->permissions;
+        $permsArray = [];
+        if ($rawPerms) {
+            $permsArray = is_string($rawPerms) ? json_decode($rawPerms, true) : (array)$rawPerms;
+        } else if ($userIsAdmin) {
+            $permsArray = ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+        }
+
+        $subRole = $user->sub_role ?? ($userIsAdmin ? 'superadmin' : 'tenant');
+
         return response()->json([
             'accessToken' => $newAccessToken,
-        ]);
+            'refreshToken' => $newRefreshTokenObj->plainTextToken,
+            'user' => [
+                'Id_user'      => $user->Id_user,
+                'Username'     => $user->Username,
+                'nama_lengkap' => $user->nama_lengkap ?? $user->Username,
+                'email'        => $user->email,
+                'Id_roles'     => $user->Id_roles,
+                'role'         => $userIsAdmin ? 'admin' : 'tenant',
+                'sub_role'     => $subRole,
+                'permissions'  => $permsArray,
+            ],
+        ])->withCookie($newRefreshCookie);
     }
 
     /**
@@ -124,13 +231,13 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|unique:user,Username',
             'password' => 'required|string|min:6',
-            'id_roles' => 'required|integer',
         ]);
 
+        // Hardcoded Id_roles = 2 (Tenant) to prevent public privilege escalation
         $user = User::create([
             'Username' => $request->username,
             'Password' => Hash::make($request->password),
-            'Id_roles' => $request->id_roles,
+            'Id_roles' => 2,
         ]);
 
         return response()->json([
@@ -148,8 +255,8 @@ class AuthController extends Controller
         $user = $request->user();
 
         if ($user) {
-            // Revoke current access token
-            $request->user()->currentAccessToken()?->delete();
+            // Revoke current access token or all tokens for this user session
+            $user->currentAccessToken()?->delete();
         }
 
         // Forget both possible refresh cookies
@@ -161,28 +268,65 @@ class AuthController extends Controller
         ])->withCookie($forgetTenantCookie)->withCookie($forgetAdminCookie);
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $request->validate([
-            'username' => 'required|string|unique:user,Username,' . $user->Id_user . ',Id_user',
+            'username'     => 'required|string|unique:user,Username,' . $user->Id_user . ',Id_user',
+            'nama_lengkap' => 'nullable|string',
+            'email'        => 'nullable|email',
         ]);
 
         $user->Username = $request->username;
+        if ($request->has('nama_lengkap')) {
+            $user->nama_lengkap = $request->nama_lengkap;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+        }
         $user->save();
+
+        $userIsAdmin = ((int) $user->Id_roles === 1);
+        $rawPerms = $user->permissions;
+        $permsArray = [];
+        if ($rawPerms) {
+            $permsArray = is_string($rawPerms) ? json_decode($rawPerms, true) : (array)$rawPerms;
+        } else if ($userIsAdmin) {
+            $permsArray = ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+        }
+
+        $subRole = $user->sub_role ?? ($userIsAdmin ? 'superadmin' : 'tenant');
+
+        if ($userIsAdmin) {
+            \App\Models\ActivityLog::create([
+                'id_user'    => $user->Id_user,
+                'username'   => $user->Username,
+                'role'       => $subRole,
+                'modul'      => 'User',
+                'aksi'       => 'Edit Profil',
+                'deskripsi'  => "Admin {$user->Username} memperbarui data profil akun pengelola.",
+                'ip_address' => $request->ip(),
+                'created_at' => now()
+            ]);
+        }
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui.',
             'user'    => [
-                'Id_user'  => $user->Id_user,
-                'Username' => $user->Username,
-                'Id_roles' => $user->Id_roles,
+                'Id_user'      => $user->Id_user,
+                'Username'     => $user->Username,
+                'nama_lengkap' => $user->nama_lengkap ?? $user->Username,
+                'email'        => $user->email,
+                'Id_roles'     => $user->Id_roles,
+                'role'         => $userIsAdmin ? 'admin' : 'tenant',
+                'sub_role'     => $subRole,
+                'permissions'  => $permsArray,
             ],
         ]);
     }
 
-    public function changePassword(Request $request)
+    public function changePassword(Request $request): JsonResponse
     {
         $request->validate([
             'kataSandiLama' => 'required|string',

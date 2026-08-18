@@ -14,13 +14,27 @@ class KiosController extends Controller
      */
     public function index()
     {
-        // 🔑 Tambahkan eager loading relasi sewa -> pemilik
         $kios = Kios::with(['sewa.pemilik'])->get();
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar data kios berhasil diambil',
             'data'    => $kios
+        ], 200);
+    }
+
+    /**
+     * Display a listing of empty/available kiosks.
+     * GET /api/v1/admin/kios/kosong
+     */
+    public function getKosong()
+    {
+        $kiosKosong = Kios::where('Status', 'Kosong')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar data kios kosong berhasil diambil',
+            'data'    => $kiosKosong
         ], 200);
     }
 
@@ -60,8 +74,8 @@ class KiosController extends Controller
      */
     public function show($id)
     {
-        // 🔑 Tambahkan eager loading relasi lengkap (sewa -> pemilik -> dokumen)
-        $kios = Kios::with(['sewa.pemilik.dokumen'])->find($id);
+        $kios = Kios::with(['sewa.pemilik.dokumen'])->find($id)
+            ?? Kios::with(['sewa.pemilik.dokumen'])->where('No_Kios', $id)->first();
 
         if (!$kios) {
             return response()->json([
@@ -83,8 +97,8 @@ class KiosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Ambil data Kios beserta relasi sewa dan pemiliknya
-        $kios = Kios::with('sewa.pemilik')->find($id);
+        $kios = Kios::with('sewa.pemilik')->find($id)
+            ?? Kios::with('sewa.pemilik')->where('No_Kios', $id)->first();
 
         if (!$kios) {
             return response()->json([
@@ -93,7 +107,6 @@ class KiosController extends Controller
             ], 404);
         }
 
-        // 1. Update data dasar Kios
         $kios->update([
             'No_Kios' => $request->input('nomorKios', $kios->No_Kios),
             'Lantai'  => $request->input('lantai', $kios->Lantai),
@@ -101,14 +114,19 @@ class KiosController extends Controller
             'Status'  => $request->input('statusKios', $kios->Status),
         ]);
 
-        // 2. Jika ada perubahan Nama Pemilik (tenant), update tabel Pemilik
         if ($request->has('tenant') && $kios->sewa && $kios->sewa->pemilik) {
             $kios->sewa->pemilik->update([
                 'Nama' => $request->input('tenant')
             ]);
         }
 
-        // 3. Load ulang data relasi terbaru
+        if ($request->has('tarifBulanan') && $kios->sewa) {
+            $activeSewa = is_iterable($kios->sewa) ? $kios->sewa->first() : $kios->sewa;
+            if ($activeSewa) {
+                $activeSewa->update(['Tarif_Bulanan' => (float) $request->input('tarifBulanan')]);
+            }
+        }
+
         $kios->load(['sewa.pemilik.dokumen']);
 
         return response()->json([

@@ -4,6 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
+/**
+ * Main DatabaseSeeder orchestrating the Plaza Kebun Sayur mock data generation.
+ * Single command execution: php artisan db:seed
+ */
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
@@ -11,13 +15,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
-            UserSeeder::class,
-            PemilikSeeder::class,
             KiosSeeder::class,
-            SewaSeeder::class,
-            TagihanSeeder::class,
-            PembayaranSeeder::class,
-            DokumenSeeder::class,
+            ScenarioSeeder::class,
         ]);
     }
 }

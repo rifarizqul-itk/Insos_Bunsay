@@ -1,3 +1,14 @@
+-- ============================================================
+-- ARSIP SQL DUMP LEGACY — PLAZA KEBUN SAYUR (24 JULI 2026)
+--
+-- PERHATIAN:
+-- Skema database aktif saat ini dikelola secara modern via Laravel Migrations
+-- & Seeders di direktori `plaza_tenant_backend/database/migrations`.
+-- Untuk membangun database terbaru (ERD V6 - 11 Tabel & 252+ Tenant):
+-- Jalankan: `php artisan migrate:fresh --seed` di folder `plaza_tenant_backend`.
+-- File .sql ini hanya dipertahankan sebagai arsip historis pra-migrasi.
+-- ============================================================
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
@@ -6,6 +17,7 @@
 -- Generation Time: Jul 24, 2026 at 09:06 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
+
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 

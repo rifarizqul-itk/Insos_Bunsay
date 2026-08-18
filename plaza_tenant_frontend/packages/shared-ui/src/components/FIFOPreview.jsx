@@ -37,15 +37,19 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      backgroundColor: 'var(--warm-gray)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      padding: '16px'
-    }} className="page-fade-in">
+    <div
+      data-slot="fifo-preview"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        backgroundColor: 'var(--warm-gray)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '16px'
+      }}
+      className="page-fade-in"
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text)' }}>
           Rincian Tagihan
@@ -67,7 +71,7 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
               <div
                 key={item.idTagihan || idx}
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'var(--color-surface)',
                   borderRadius: '6px',
                   border: '1px solid var(--border)',
                   padding: '10px 12px',
@@ -76,6 +80,7 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
                   alignItems: 'center',
                   gap: '12px'
                 }}
+                className="bg-white"
               >
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text)' }}>
@@ -86,7 +91,7 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'end' }}>
                   <span style={{
                     fontSize: '11px',
                     fontWeight: '800',

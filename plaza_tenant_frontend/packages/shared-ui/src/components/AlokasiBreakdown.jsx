@@ -19,7 +19,7 @@ const AlokasiBreakdown = React.memo(function AlokasiBreakdown({ alokasiList = []
 
   if (compact) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div data-slot="alokasi-breakdown" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {alokasiList.map((item, idx) => (
           <div key={item.idTagihan || idx} style={{ fontSize: '12px', color: 'var(--text-2)' }}>
             <span className="font-tabular-nums font-bold" style={{ color: 'var(--text)' }}>{item.periode}</span>: {' '}
@@ -30,7 +30,7 @@ const AlokasiBreakdown = React.memo(function AlokasiBreakdown({ alokasiList = []
               <span style={{
                 fontSize: '10px',
                 fontWeight: '700',
-                marginLeft: '6px',
+                marginInlineStart: '6px',
                 padding: '1px 5px',
                 borderRadius: '3px',
                 backgroundColor: item.statusAkhir === 'Lunas' ? 'var(--green-bg)' : 'var(--orange-bg)',
@@ -46,15 +46,18 @@ const AlokasiBreakdown = React.memo(function AlokasiBreakdown({ alokasiList = []
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-      backgroundColor: 'var(--warm-gray)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      padding: '12px'
-    }}>
+    <div
+      data-slot="alokasi-breakdown"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        backgroundColor: 'var(--warm-gray)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '12px'
+      }}
+    >
       <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase' }}>
         Rincian Tagihan
       </div>
@@ -66,12 +69,13 @@ const AlokasiBreakdown = React.memo(function AlokasiBreakdown({ alokasiList = []
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--color-surface)',
               padding: '6px 10px',
               borderRadius: '4px',
               border: '1px solid var(--border)',
               fontSize: '13px'
             }}
+            className="bg-white"
           >
             <span style={{ fontWeight: '700', color: 'var(--text)' }}>
               Periode <span className="font-tabular-nums">{item.periode}</span>

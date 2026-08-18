@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../utils/cn';
 import Icon from './Icon';
 import Button from './Button';
 
@@ -11,13 +12,15 @@ function EmptyState({
   className = '',
 }) {
   return (
-    <div className={`
-      flex flex-col items-center justify-center p-8 sm:p-12 text-center
-      bg-white/60 rounded-xl border border-dashed border-border/80
-      ${className}
-    `}>
+    <div
+      data-slot="empty-state"
+      className={cn(
+        'flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-white/60 rounded-xl border border-dashed border-border/80',
+        className
+      )}
+    >
       <div className="size-14 rounded-2xl bg-warm-gray/60 flex items-center justify-center text-red/80 mb-4 shadow-sm">
-        <Icon icon={icon} width="30" height="30" />
+        <Icon icon={icon} className="size-7.5" />
       </div>
       <h4 className="text-lg font-bold text-text tracking-tight text-balance mb-1">
         {title}

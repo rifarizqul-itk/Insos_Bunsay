@@ -21,6 +21,7 @@ export function createAuthHttpClient(options: IAuthHttpClientOptions): AxiosInst
     withCredentials: true,
     headers: {
       'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
     },
   });
 
@@ -88,20 +89,29 @@ export function createAuthHttpClient(options: IAuthHttpClientOptions): AxiosInst
         isRefreshing = true;
 
         try {
+          const refreshKey = refreshEndpoint.includes('admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
+          const storedRt = typeof window !== 'undefined' ? localStorage.getItem(refreshKey) : null;
+
           const refreshResponse = await client.post(
             refreshEndpoint,
-            {},
+            { refresh_token: storedRt },
             {
               headers: {
                 Authorization: '',
+                'X-Refresh-Token': storedRt || ''
               },
             }
           );
 
           const newToken = refreshResponse.data?.accessToken;
+          const newRt = refreshResponse.data?.refreshToken;
 
           if (!newToken) {
             throw new Error('Refresh response missing accessToken');
+          }
+
+          if (newRt && typeof window !== 'undefined') {
+            try { localStorage.setItem(refreshKey, newRt); } catch (_) {}
           }
 
           setToken(newToken);

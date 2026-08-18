@@ -1,20 +1,31 @@
 import React, { startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon } from '@bunsay/shared-ui';
+import { Icon, cn } from '@bunsay/shared-ui';
+import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function SidebarAdmin({ isOpen, onClose, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAdminAuth();
 
-  const menuItems = [
+  const userPerms = user?.permissions || ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+  const isSuperadmin = user?.sub_role === 'superadmin' || user?.username === 'admin' || user?.username === 'superadmin';
+
+  const rawMenuItems = [
     { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard' },
-    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti' },
-    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai' },
+    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran' },
+    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai', perm: 'input_setoran' },
     { id: 'riwayat', label: 'Riwayat Transaksi Admin', path: '/admin/riwayat' },
-    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios' },
-    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor' },
+    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios', perm: 'kelola_kios' },
+    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor', perm: 'ekspor_laporan' },
+    { id: 'audit-log', label: 'Audit Trail Log', path: '/admin/audit-log', perm: 'lihat_audit_log' },
     { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun' }
   ];
+
+  const menuItems = rawMenuItems.filter(item => {
+    if (!item.perm || isSuperadmin) return true;
+    return userPerms.includes(item.perm);
+  });
 
   const handleNavigate = (path) => {
     startTransition(() => {
@@ -27,8 +38,9 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
 
   return (
     <aside 
+      data-slot="sidebar-admin"
       aria-label="Navigasi Utama Admin"
-      className={`sidebar-admin-container ${isOpen ? 'mobile-open' : ''}`}
+      className={cn('sidebar-admin-container', isOpen && 'mobile-open')}
       style={{
         display: 'flex',
         flexDirection: 'column'
@@ -57,16 +69,16 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
               style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
             />
           </picture>
-          <span style={{ fontSize: '24px', fontWeight: '800', color: '#8B1A1A', letterSpacing: '-0.5px' }}>
+          <span style={{ fontSize: '24px', fontWeight: '800', color: 'var(--red)', letterSpacing: '-0.5px' }}>
             Admin
           </span>
         </div>
         <button
           onClick={onClose}
           aria-label="Tutup menu navigasi"
-          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform size-11 flex items-center justify-center"
         >
-          <Icon icon="ph:x-bold" width="22" height="22" />
+          <Icon icon="ph:x-bold" className="size-5.5" />
         </button>
       </div>
 
@@ -82,7 +94,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
                 width: '100%',
                 backgroundColor: active ? 'var(--red-50)' : 'transparent',
                 color: active ? 'var(--red)' : 'var(--text-2)',
-                textAlign: 'left',
+                textAlign: 'start',
                 padding: '12px 24px',
                 borderRadius: '0',
                 fontWeight: active ? '700' : '500',
@@ -90,7 +102,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
                 display: 'flex',
                 alignItems: 'center',
                 border: 'none',
-                borderLeft: active ? '4px solid var(--red)' : '4px solid transparent',
+                borderInlineStart: active ? '4px solid var(--red)' : '4px solid transparent',
                 transition: 'all 0.2s ease',
                 cursor: 'pointer',
               }}

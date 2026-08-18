@@ -1,48 +1,118 @@
-import React, { useState } from 'react';
-import { Drawer, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable } from '@bunsay/shared-ui';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Drawer, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
+import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DashboardAdmin() {
+  const navigate = useNavigate();
+  const { httpClient } = useAdminAuth();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [showVerifikasiDrawer, setShowVerifikasiDrawer] = useState(false);
   const [verifikasiTarget, setVerifikasiTarget] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-  const antrean = [
-    {
-      id: 'TRX-1092',
-      nama: 'Eva Tauresea',
-      kios: 'B-1004',
-      tagihan: 'Sewa Kios Mei 2026',
-      nominal: 'Rp 4.000.000',
-      labelMetode: 'Transfer Bank (BNI)',
-      waktu: '19 Mei 2026, 14:20 WITA',
-      status: 'Menunggu Verifikasi',
-      alokasi: [{ idTagihan: 102, periode: '2026-05', nominalTeralokasi: 4000000, totalTagihan: 4000000, statusAkhir: 'Lunas' }]
+  const [antrean, setAntrean] = useState([]);
+  const [tenants, setTenants] = useState([]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState({ key: 'kios', direction: 'asc' });
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  useEffect(() => {
+    async function loadRealDashboardData() {
+      setIsLoading(true);
+      setErrorMsg(null);
+      try {
+        const resDashboard = await httpClient.get('/api/v1/admin/dashboard');
+        if (resDashboard?.data) {
+          setMetrics(resDashboard.data);
+        }
+
+        const resKios = await httpClient.get('/api/v1/admin/kios');
+        const rawKios = resKios?.data?.data || resKios?.data;
+        if (Array.isArray(rawKios)) {
+          const fetchedTenants = rawKios.map((item, idx) => {
+            const namaTenant = item.sewa?.pemilik?.Nama || item.sewa?.[0]?.pemilik?.Nama || item.tenant || item.Nama || 'Kios Tanpa Nama';
+            const jenisUsaha = item.sewa?.Jenis_Usaha || item.sewa?.[0]?.Jenis_Usaha || item.usaha || 'Perdagangan Umum';
+            return {
+              id: item.Id_Kios || idx + 1,
+              nama: namaTenant,
+              kios: item.No_Kios || `Kios-${idx + 1}`,
+              usaha: jenisUsaha,
+              tunggakan: 0,
+              statusPembayaran: item.Status === 'Terisi' ? 'Lunas' : 'Belum Bayar'
+            };
+          });
+          setTenants(fetchedTenants);
+        }
+
+        const resPembayaran = await httpClient.get('/api/v1/admin/pembayaran');
+        const rawPembayaran = resPembayaran?.data?.data || resPembayaran?.data;
+        if (Array.isArray(rawPembayaran)) {
+          const mappedQueue = rawPembayaran.map(p => ({
+            id: `TRX-${p.Id_Pembayaran}`,
+            nama: p.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
+            kios: p.tagihan?.sewa?.kios?.No_Kios || 'Kios',
+            tagihan: `Sewa Kios ${p.tagihan?.Periode || 'Berjalan'}`,
+            nominal: `Rp ${Number(p.Total_Bayar || 0).toLocaleString('id-ID')}`,
+            labelMetode: `${p.Metode_Bayar || 'Transfer Bank'} (SQL DB)`,
+            waktu: p.Tanggal_Bayar || 'Baru Saja',
+            status: p.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : 'Menunggu Verifikasi',
+            alokasi: []
+          }));
+          setAntrean(mappedQueue);
+        }
+      } catch (err) {
+        console.error('Gagal mengambil data dari database backend:', err);
+        setErrorMsg('Gagal terhubung ke database backend SQL. Silakan periksa koneksi server.');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  ];
 
-  const tenants = [
-    { id: 1, nama: 'Hj. Yuliana', kios: 'B-1001, B-1002', usaha: 'Sembako & Kelontong', tunggakan: 3500000, statusPembayaran: 'Belum Bayar' },
-    { id: 2, nama: 'Eva Tauresea', kios: 'B-1004', usaha: 'Pakaian & Tekstil', tunggakan: 0, statusPembayaran: 'Menunggu Verifikasi' },
-    { id: 3, nama: 'H. Ahmad', kios: 'B-1013', usaha: 'Warung Kopi & Makanan', tunggakan: 1500000, statusPembayaran: 'Dicicil' },
-    { id: 4, nama: 'Toko Kalimantan', kios: 'A-1002', usaha: 'Kerajinan Khas Kaltim', tunggakan: 0, statusPembayaran: 'Lunas' }
-  ];
+    loadRealDashboardData();
+  }, [httpClient]);
 
   const tableHeaders = [
-    { label: 'Nama Tenant' },
-    { label: 'No. Kios' },
-    { label: 'Jenis Usaha' },
-    { label: 'Tunggakan' },
-    { label: 'Status Bulan Ini' },
-    { label: 'Aksi', align: 'center' }
+    { label: 'Nama Tenant', sortKey: 'nama' },
+    { label: 'No. Kios', sortKey: 'kios' },
+    { label: 'Jenis Usaha', sortKey: 'usaha' },
+    { label: 'Tunggakan', sortKey: 'tunggakan' },
+    { label: 'Status Bulan Ini', sortKey: 'statusPembayaran' },
+    { label: 'Aksi', align: 'center', sortable: false }
   ];
 
-  const filteredTenants = tenants.filter(tenant => {
-    const matchesSearch = (tenant.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (tenant.kios || '').toLowerCase().includes(searchQuery.toLowerCase());
-    if (statusFilter === 'Semua') return matchesSearch;
-    return matchesSearch && tenant.statusPembayaran === statusFilter;
-  });
+  const filteredTenants = useMemo(() => {
+    let list = tenants.filter(tenant => {
+      const matchesSearch = (tenant.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (tenant.kios || '').toLowerCase().includes(searchQuery.toLowerCase());
+      if (statusFilter === 'Semua') return matchesSearch;
+      return matchesSearch && tenant.statusPembayaran === statusFilter;
+    });
+
+    const { key, direction } = sortConfig;
+    return list.sort((a, b) => {
+      let valA = a[key] ?? '';
+      let valB = b[key] ?? '';
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [tenants, searchQuery, statusFilter, sortConfig]);
 
   const handleOpenVerifikasi = (tenant) => {
     const antreanItem = antrean.find(a => a.nama === tenant.nama);
@@ -52,11 +122,29 @@ function DashboardAdmin() {
     }
   };
 
-  const totalTenant = tenants.length;
-  const belumBayarCount = tenants.filter(t => t.statusPembayaran === 'Belum Bayar').length;
+  const totalTenant = metrics?.total_kios ?? tenants.length;
+  const verifikasiCount = metrics?.tagihan_menunggu ?? antrean.length;
+  const belumBayarCount = metrics?.tagihan_pending ?? tenants.filter(t => t.statusPembayaran === 'Belum Bayar').length;
 
   return (
-    <div className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="dashboard-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+      {errorMsg && (
+        <div className="bg-red text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />
+            <span>{errorMsg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMsg(null)}
+            aria-label="Tutup notifikasi error"
+            className="text-white hover:opacity-80 p-1 cursor-pointer"
+          >
+            <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+          </button>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Dashboard Pengelola Plaza
@@ -69,21 +157,21 @@ function DashboardAdmin() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard
           label="Total Kios Terisi"
-          value={totalTenant}
+          value={metrics?.kios_terisi ?? totalTenant}
           color="red"
-          icon={<Icon icon="heroicons:home-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:home-20-solid" className="size-6" />}
         />
         <StatCard
           label="Menunggu Verifikasi Transfer"
-          value={antrean.length}
+          value={verifikasiCount}
           color="orange"
-          icon={<Icon icon="heroicons:clock-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:clock-20-solid" className="size-6" />}
         />
         <StatCard
           label="Belum Bayar Bulan Ini"
           value={belumBayarCount}
           color="red"
-          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" width="24" height="24" />}
+          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-6" />}
         />
       </div>
 
@@ -92,36 +180,43 @@ function DashboardAdmin() {
           <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">
             Daftar Administrasi Kios
           </h3>
-          
+
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <input
               type="text"
               placeholder="Cari nama atau no kios..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               aria-label="Cari nama tenant atau nomor kios"
               className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-red"
             />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               aria-label="Filter status pembayaran bulan ini"
-              className="h-10 px-3 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
             >
               <option value="Semua">Semua Status</option>
               <option value="Lunas">Lunas</option>
-              <option value="Dicicil">Dicicil</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
               <option value="Belum Bayar">Belum Bayar</option>
             </select>
           </div>
         </div>
 
-        {filteredTenants.length === 0 ? (
+        {isLoading ? (
+          <SkeletonTable rows={5} cols={6} />
+        ) : filteredTenants.length === 0 ? (
           <EmptyState
             icon="heroicons:user-minus-20-solid"
             title="Tenant Tidak Ditemukan"
-            description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
+            description="Tidak ada data tenant dari database backend yang cocok dengan kriteria pencarian atau filter status."
           />
         ) : (
           <Table
@@ -129,12 +224,24 @@ function DashboardAdmin() {
             ariaLabel="Tabel Status Pembayaran Kios Plaza Kebun Sayur"
             headers={tableHeaders}
             colSpan={6}
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            footer={
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredTenants.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemName="tenant"
+              />
+            }
           >
-            {filteredTenants.map((tenant, idx) => {
+            {filteredTenants.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((tenant, idx) => {
               const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
               return (
-                <tr key={tenant.id || idx} className="border-b border-border/80 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-left text-text">
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-start text-text">
                     {tenant.nama}
                   </th>
                   <td data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text">
@@ -143,21 +250,22 @@ function DashboardAdmin() {
                   <td data-label="Jenis Usaha" className="p-3 text-text-2 font-medium">
                     {tenant.usaha}
                   </td>
-                  <td data-label="Tunggakan" className={`font-tabular-nums p-3 font-extrabold ${(tenant.tunggakan > 0) ? 'text-orange' : 'text-text'}`}>
+                  <td data-label="Tunggakan" className={cn("font-tabular-nums p-3 font-extrabold", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
                     Rp {tenant.tunggakan.toLocaleString('id-ID')}
                   </td>
                   <td data-label="Status Bulan Ini" className="p-3">
-                    <Badge 
-                      status={tenant.statusPembayaran} 
+                    <Badge
+                      status={tenant.statusPembayaran}
                       clickable={isVerifikasiPending}
                       onClick={isVerifikasiPending ? () => handleOpenVerifikasi(tenant) : undefined}
                     />
                   </td>
                   <td data-label="Aksi" className="p-3 text-center">
-                    <Button 
+                    <Button
                       variant="secondary"
                       size="sm"
-                      className="min-h-[44px] sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
+                      onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
+                      className="min-h-11 sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
                     >
                       Detail
                     </Button>
@@ -178,14 +286,14 @@ function DashboardAdmin() {
         footer={
           verifikasiTarget && (
             <>
-              <Button 
+              <Button
                 variant="danger"
                 size="md"
                 onClick={() => { setShowVerifikasiDrawer(false); setVerifikasiTarget(null); }}
               >
                 Tolak Bukti
               </Button>
-              <Button 
+              <Button
                 variant="primary"
                 size="md"
                 onClick={() => { setShowVerifikasiDrawer(false); setVerifikasiTarget(null); }}

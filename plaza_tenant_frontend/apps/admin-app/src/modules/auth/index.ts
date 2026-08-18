@@ -1,2 +1,3 @@
 export { default as AdminLoginPage } from './pages/login';
-export { AdminAuthProvider, useAdminAuth } from './AdminAuthProvider';
+export { AdminAuthProvider } from './AdminAuthProvider';
+export { useAdminAuth } from './useAdminAuth';
