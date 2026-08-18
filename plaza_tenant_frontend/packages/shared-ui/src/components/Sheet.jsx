@@ -64,8 +64,8 @@ export function Sheet({
   const sheetContent = (
     <div
       data-slot="sheet-overlay"
-      style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 9999, display: 'flex', justifyContent: 'flex-end' }}
-      className="fixed inset-0 z-50 flex justify-end bg-mono-900/40 backdrop-blur-xs transition-opacity page-fade-in"
+      style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 9000, display: 'flex', justifyContent: 'flex-end' }}
+      className="fixed inset-0 z-[9000] flex justify-end bg-mono-900/40 backdrop-blur-xs transition-opacity page-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -510,65 +510,75 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       )}
 
       {/* Confirmation & Rejection Modal */}
-      {confirmModal.open && (
-        <div className="fixed inset-0 z-50 bg-text/45 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 animate-scale-in font-sans">
-            <div className="flex items-center gap-3">
-              <div className={cn('size-10 rounded-full flex items-center justify-center', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
-                <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-lg text-text">
-                  Konfirmasi {confirmModal.type === 'konfirmasi' ? 'Penerimaan' : 'Penolakan'}
-                </h3>
-                <p className="text-xs text-text-3 font-medium">
-                  {confirmModal.item?.nama} ({confirmModal.item?.kios})
-                </p>
-              </div>
+      <Modal
+        isOpen={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
+        size="md"
+        className="font-sans"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
+            >
+              Batal
+            </Button>
+            <Button
+              variant={confirmModal.type === 'konfirmasi' ? 'primary' : 'danger'}
+              size="sm"
+              onClick={handleExecuteAksi}
+              className={confirmModal.type === 'konfirmasi' ? 'bg-green hover:bg-green/90' : ''}
+            >
+              {confirmModal.type === 'konfirmasi' ? 'Ya, Konfirmasi Lunas' : 'Ya, Tolak Bukti Ini'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className={cn('size-10 rounded-full flex items-center justify-center shrink-0', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
+              <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
             </div>
-
-            {confirmModal.type === 'tolak' && (
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-text flex items-center justify-between">
-                  <span>Catatan Alasan Penolakan <span className="text-red">*</span></span>
-                  <span className="text-text-3 font-normal">Wajib diisi</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={catatanRejection}
-                  onChange={(e) => {
-                    setCatatanRejection(e.target.value);
-                    setRejectionError('');
-                  }}
-                  placeholder="Contoh: Nominal transfer kurang Rp 50.000, atau resi buram tidak terbaca."
-                  className="w-full text-sm p-3 border border-border rounded-xl focus:border-red focus:outline-none bg-warm-gray/10"
-                />
-                {rejectionError && (
-                  <p className="text-xs font-bold text-red">{rejectionError}</p>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 pt-2 border-t border-border/60">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
-              >
-                Batal
-              </Button>
-              <Button
-                variant={confirmModal.type === 'konfirmasi' ? 'primary' : 'danger'}
-                size="sm"
-                onClick={handleExecuteAksi}
-                className={confirmModal.type === 'konfirmasi' ? 'bg-green hover:bg-green/90' : ''}
-              >
-                {confirmModal.type === 'konfirmasi' ? 'Ya, Konfirmasi Lunas' : 'Ya, Tolak Bukti Ini'}
-              </Button>
+            <div>
+              <h3 className="font-extrabold text-lg text-text">
+                Konfirmasi {confirmModal.type === 'konfirmasi' ? 'Penerimaan' : 'Penolakan'}
+              </h3>
+              <p className="text-xs text-text-3 font-medium">
+                {confirmModal.item?.nama} ({confirmModal.item?.kios})
+              </p>
             </div>
           </div>
+
+          <p className="text-sm text-text-2">
+            {confirmModal.type === 'konfirmasi'
+              ? `Apakah Anda yakin ingin menyetujui bukti transfer ini? Status tagihan ${confirmModal.item?.tagihan || ''} akan otomatis diubah menjadi LUNAS.`
+              : 'Harap berikan catatan alasan penolakan agar tenant dapat memperbaiki bukti atau metode pembayarannya.'}
+          </p>
+
+          {confirmModal.type === 'tolak' && (
+            <div className="flex flex-col gap-2 pt-1">
+              <label className="text-xs font-bold text-text flex items-center justify-between">
+                <span>Catatan Alasan Penolakan <span className="text-red">*</span></span>
+                <span className="text-text-3 font-normal">Wajib diisi</span>
+              </label>
+              <textarea
+                rows={3}
+                value={catatanRejection}
+                onChange={(e) => {
+                  setCatatanRejection(e.target.value);
+                  setRejectionError('');
+                }}
+                placeholder="Contoh: Nominal transfer kurang Rp 50.000, atau resi buram tidak terbaca."
+                className="w-full text-sm p-3 border border-border rounded-xl focus:border-red focus:outline-none bg-warm-gray/10"
+              />
+              {rejectionError && (
+                <p className="text-xs font-bold text-red">{rejectionError}</p>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
