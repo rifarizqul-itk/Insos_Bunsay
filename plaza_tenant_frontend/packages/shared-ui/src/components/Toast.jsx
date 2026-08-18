@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import Icon from './Icon';
 
 const ToastContext = createContext({
@@ -25,8 +25,14 @@ export const ToastProvider = ({ children }) => {
     }
   }, [removeToast]);
 
+  const contextValue = useMemo(() => ({
+    toasts,
+    addToast,
+    removeToast
+  }), [toasts, addToast, removeToast]);
+
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <Toast toasts={toasts} removeToast={removeToast} />
     </ToastContext.Provider>

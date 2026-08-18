@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon, FormField, Button, Card, FIFOPreview, Badge, useToast, cn } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
@@ -12,6 +12,36 @@ const formatRibuanDot = (val) => {
   const cleanDigits = String(val).replace(/\D/g, '');
   if (!cleanDigits) return '';
   return Number(cleanDigits).toLocaleString('id-ID');
+};
+
+const loadSnapScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.snap) {
+      resolve(window.snap);
+      return;
+    }
+    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || '';
+    const isProd = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true';
+    const scriptUrl = isProd
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js';
+
+    const existingScript = document.querySelector(`script[src*="snap/snap.js"]`);
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(window.snap));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    if (clientKey) {
+      script.setAttribute('data-client-key', clientKey);
+    }
+    script.async = true;
+    script.onload = () => resolve(window.snap);
+    script.onerror = () => resolve(null);
+    document.body.appendChild(script);
+  });
 };
 
 function BayarSekarang() {
@@ -28,7 +58,6 @@ function BayarSekarang() {
   const [isLoading, setIsLoading] = useState(false);
   const [unpaidBills, setUnpaidBills] = useState([]);
   const [isUnpaidLoaded, setIsUnpaidLoaded] = useState(false);
-  const [fifoAllocations, setFifoAllocations] = useState([]);
   const [showReview, setShowReview] = useState(false);
   const [izinkanCicilan, setIzinkanCicilan] = useState(false);
   const [processError, setProcessError] = useState(null);
@@ -78,15 +107,13 @@ function BayarSekarang() {
     fetchUnpaidBills();
   }, [httpClient]);
 
-  useEffect(() => {
+  const fifoAllocations = useMemo(() => {
     const nominalNum = Number(nominal) || 0;
     if (nominalNum > 0 && unpaidBills.length > 0) {
       const activeUnpaid = unpaidBills.filter(b => b.statusTagihan !== 'Lunas');
-      const fifo = allocatePaymentFIFO(activeUnpaid, nominalNum);
-      setFifoAllocations(fifo.allocations);
-    } else {
-      setFifoAllocations([]);
+      return allocatePaymentFIFO(activeUnpaid, nominalNum).allocations;
     }
+    return [];
   }, [nominal, unpaidBills]);
 
   useEffect(() => {
@@ -193,8 +220,10 @@ function BayarSekarang() {
       setIsLoading(false);
       setShowReview(false);
 
-      if (window.snap && typeof window.snap.pay === 'function') {
-        window.snap.pay(snapToken, {
+      const snapInstance = window.snap || (await loadSnapScript());
+
+      if (snapInstance && typeof snapInstance.pay === 'function') {
+        snapInstance.pay(snapToken, {
           onSuccess: async (result) => {
             try {
               const confirmPayload = {

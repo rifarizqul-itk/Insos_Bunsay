@@ -28,6 +28,10 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
     }
   }, [httpClient]);
 
+  useEffect(() => {
+    fetchNotifikasi();
+  }, [fetchNotifikasi]);
+
   const handleMarkAllRead = async () => {
     try {
       await httpClient.put('/api/v1/tenant/notifications/read-all', { target_type: 'tenant' });
@@ -130,7 +134,7 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
                     tabIndex={0}
                     className={`
                       p-3 rounded-lg flex flex-col gap-1 text-start border cursor-pointer transition-colors
-                      ${!notif.is_read ? 'bg-amber-50/70 border-amber-200 hover:bg-amber-100/70' : 'bg-white border-border hover:bg-mono-100/40'}
+                      ${!notif.is_read ? 'bg-amber-50 border-amber-300 hover:bg-amber-100' : 'bg-white border-border hover:bg-mono-100'}
                     `}
                   >
                     <div className="text-xs font-extrabold text-text leading-snug flex items-center justify-between gap-2">

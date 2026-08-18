@@ -124,13 +124,26 @@ function KetersediaanKios() {
     return filteredKios.slice(startIndex, startIndex + pageSize);
   }, [filteredKios, currentPage, pageSize]);
 
-  const totalTersedia = dataKios.filter(k => k.status === 'Tersedia' || k.status === 'Kosong').length;
-  const totalTerisi = dataKios.filter(k => k.status === 'Terisi').length;
-
-  const handleAkhiriSewa = async (kios) => {
-    if (!window.confirm(`Apakah Anda yakin ingin mengakhiri masa sewa kios ${kios.noKios} (${kios.penyewa})? Kios akan kembali Kosong dan tersedia untuk disewa.`)) {
-      return;
+  const { totalTersedia, totalTerisi } = useMemo(() => {
+    let tersedia = 0;
+    let terisi = 0;
+    for (const k of dataKios) {
+      if (k.status === 'Tersedia' || k.status === 'Kosong') tersedia++;
+      else if (k.status === 'Terisi') terisi++;
     }
+    return { totalTersedia: tersedia, totalTerisi: terisi };
+  }, [dataKios]);
+
+  const [confirmAkhiriKios, setConfirmAkhiriKios] = useState(null);
+
+  const handleAkhiriSewa = (kios) => {
+    setConfirmAkhiriKios(kios);
+  };
+
+  const executeAkhiriSewa = async () => {
+    if (!confirmAkhiriKios) return;
+    const kios = confirmAkhiriKios;
+    setConfirmAkhiriKios(null);
     try {
       await httpClient.post(`/api/v1/admin/sewa/${kios.id}/akhiri`);
       addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri. Status kios kembali Kosong/Tersedia.`, 'success');
@@ -623,6 +636,50 @@ function KetersediaanKios() {
               <Icon icon="heroicons:document-duplicate-20-solid" width="16" height="16" />
               <span>Salin Kredensial</span>
             </Button>
+          </div>
+        )}
+      </Modal>
+
+      {/* MODAL KONFIRMASI AKHIRI MASA SEWA KIOS */}
+      <Modal
+        isOpen={Boolean(confirmAkhiriKios)}
+        onClose={() => setConfirmAkhiriKios(null)}
+        title="Konfirmasi Akhiri Sewa Kios"
+        size="sm"
+        footer={
+          <div className="flex gap-3 w-full">
+            <Button
+              variant="outline"
+              size="md"
+              fullWidth
+              onClick={() => setConfirmAkhiriKios(null)}
+              className="h-11 font-bold"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              fullWidth
+              onClick={executeAkhiriSewa}
+              className="h-11 font-extrabold"
+            >
+              Akhiri Sewa
+            </Button>
+          </div>
+        }
+      >
+        {confirmAkhiriKios && (
+          <div className="flex flex-col gap-3 text-sm text-text font-sans">
+            <div className="flex items-start gap-3 p-3.5 bg-red-50 border border-red/20 rounded-xl text-red-900">
+              <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5 text-red shrink-0 mt-0.5" />
+              <div className="text-xs leading-relaxed">
+                Apakah Anda yakin ingin mengakhiri masa sewa kios <strong>{confirmAkhiriKios.noKios}</strong> atas nama tenant <strong>{confirmAkhiriKios.penyewa}</strong>?
+              </div>
+            </div>
+            <p className="text-xs text-text-3 font-medium px-1">
+              Unit kios ini akan kembali berstatus <strong>Tersedia (Kosong)</strong> dan dapat didaftarkan untuk tenant baru di masa mendatang.
+            </p>
           </div>
         )}
       </Modal>

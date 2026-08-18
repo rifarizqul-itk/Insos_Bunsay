@@ -7,6 +7,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "sideEffects": [
+    "**/*.css"
+  ],
   "dependencies": {
     "@iconify/react": "^6.0.2",
     "qrcode.react": "^4.2.0",

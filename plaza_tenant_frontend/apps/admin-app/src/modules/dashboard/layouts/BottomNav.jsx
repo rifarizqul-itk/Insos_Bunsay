@@ -21,7 +21,7 @@ function BottomNav() {
   return (
     <nav 
       data-slot="bottom-nav-admin"
-      className="md:hidden fixed bottom-2 left-2 right-2 z-40 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
+      className="md:hidden fixed bottom-2 left-2 right-2 z-30 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
       style={{
         marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
         fontFamily: "'Plus Jakarta Sans', sans-serif"

@@ -1,13 +1,13 @@
-import ExcelJS from 'exceljs';
-
 /**
- * Utility to format transaction records into a formatted .xlsx file using ExcelJS and trigger browser download.
+ * Utility to format transaction records into a formatted .xlsx file using dynamic ExcelJS import and trigger browser download.
  *
  * @param {Array} dataTransaksi
  * @param {string|number} bulan
  * @param {string|number} tahun
  */
 export const downloadExcelRekap = async (dataTransaksi, bulan, tahun) => {
+  const excelModule = await import('exceljs');
+  const ExcelJS = excelModule.default || excelModule;
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Bunsay Hub - Plaza Kebun Sayur';
   workbook.created = new Date();

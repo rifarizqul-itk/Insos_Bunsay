@@ -109,7 +109,7 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
     }
   }, [httpClient, handleLogout]);
 
-  const value = {
+  const value = useMemo(() => ({
     isLoggedIn: !!accessToken,
     // BUG-NEW-05: ?? null instead of || 'admin' — never default to a privileged role value.
     // AdminProtectedRoute guards against null role explicitly.
@@ -122,7 +122,7 @@ export function AdminAuthProvider({ children, apiBaseUrl }) {
     loginAdmin,
     logout: logoutAdmin,
     logoutAdmin,
-  };
+  }), [accessToken, adminUser, httpClient, isHydrated, loginAdmin, logoutAdmin]);
 
   return (
     <AdminAuthContext.Provider value={value}>

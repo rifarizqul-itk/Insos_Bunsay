@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination } from '@bunsay/shared-ui';
+import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function HistoriPembayaran() {
   const { httpClient } = useTenantAuth();
+  const { addToast } = useToast();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetode, setSelectedMetode] = useState('Semua');
@@ -117,11 +118,10 @@ function HistoriPembayaran() {
       });
 
       setSanggahanModalItem(null);
-      setToastMsg('Sanggahan pembayaran Anda berhasil dikirim! Status kembali Menunggu Verifikasi.');
-      setTimeout(() => setToastMsg(null), 4000);
+      addToast('Sanggahan pembayaran Anda berhasil dikirim! Status kembali Menunggu Verifikasi.', 'success');
       await fetchHistory();
     } catch (err) {
-      alert('Gagal mengirim sanggahan. Coba lagi.');
+      addToast(err?.response?.data?.message || 'Gagal mengirim sanggahan. Coba lagi.', 'error');
     } finally {
       setIsSubmittingSanggahan(false);
     }
@@ -133,8 +133,7 @@ function HistoriPembayaran() {
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Metode', sortKey: 'metode', className: 'hidden md:table-cell' },
     { label: 'Resi & Bukti', align: 'center', sortable: false },
-    { label: 'Status', sortKey: 'status' },
-    { label: 'Sanggahan', align: 'center', sortable: false }
+    { label: 'Status & Keterangan', sortKey: 'status' }
   ];
 
   const paginatedHistory = useMemo(() => {
@@ -206,7 +205,7 @@ function HistoriPembayaran() {
             caption="Tabel Histori Pembayaran Tenant"
             ariaLabel="Daftar Histori Transaksi Pembayaran Tenant"
             headers={tableHeaders}
-            colSpan={7}
+            colSpan={6}
             sortConfig={sortConfig}
             onSort={handleSort}
             footer={
@@ -225,7 +224,7 @@ function HistoriPembayaran() {
                   <th scope="row" data-label="ID Transaksi" className="hidden sm:table-cell font-tabular-nums font-bold p-3 text-text text-start">
                     {row.id}
                   </th>
-                  <td data-label="Tanggal" className="p-3 text-text-2 font-medium">
+                  <td data-label="Tanggal" className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
                     {row.tanggal}
                   </td>
                   <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
@@ -240,7 +239,7 @@ function HistoriPembayaran() {
                       size="sm"
                       onClick={() => setSelectedReceipt(row)}
                       aria-label={`Lihat bukti atau resi transaksi ${row.id}`}
-                      className="h-8 text-xs font-bold gap-1.5 px-3 border-border hover:border-red hover:text-red transition-all"
+                      className="min-h-10 sm:min-h-8 sm:h-8 text-xs font-bold gap-1.5 px-3 border-border hover:border-red hover:text-red transition-all"
                     >
                       {row.metode === 'Midtrans' ? (
                         <>
@@ -260,36 +259,35 @@ function HistoriPembayaran() {
                       )}
                     </Button>
                   </td>
-                  <td data-label="Status & Catatan Admin" className="p-3">
-                    <div className="flex flex-col gap-1">
-                      <Badge status={row.status} />
+                  <td data-label="Status & Keterangan" className="p-3">
+                    <div className="flex flex-col gap-2 items-start">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge status={row.status} />
+                        {row.status === 'Ditolak' && (
+                          <Button
+                            variant="warning"
+                            size="sm"
+                            onClick={() => handleOpenSanggahanModal(row)}
+                            className="min-h-8 h-8 text-xs font-extrabold gap-1.5 px-2.5 shadow-2xs"
+                          >
+                            <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5" />
+                            <span>Ajukan Sanggahan</span>
+                          </Button>
+                        )}
+                      </div>
                       {row.status === 'Ditolak' && row.catatanAdmin && (
-                        <div className="p-2 bg-red-50 border border-red/20 rounded-md text-xs text-red font-bold flex items-center gap-1">
-                          <Icon icon="heroicons:exclamation-circle-20-solid" width="14" height="14" />
+                        <div className="p-2 bg-red-50 border border-red/20 rounded-md text-xs text-red font-bold flex items-center gap-1.5 w-full">
+                          <Icon icon="heroicons:exclamation-circle-20-solid" className="size-4 shrink-0 text-red" />
                           <span>Alasan Tolak: "{row.catatanAdmin}"</span>
                         </div>
                       )}
                       {row.teksSanggahan && (
-                        <div className="text-xs text-amber-700 font-semibold italic">
-                          Sanggahan Anda: "{row.teksSanggahan}"
+                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 font-semibold flex items-start gap-1.5 w-full">
+                          <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4 text-amber-700 shrink-0 mt-0.5" />
+                          <span>Sanggahan Anda: "{row.teksSanggahan}"</span>
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td data-label="Aksi Sanggahan" className="p-3 text-center">
-                    {row.status === 'Ditolak' ? (
-                      <Button
-                        variant="warning"
-                        size="sm"
-                        onClick={() => handleOpenSanggahanModal(row)}
-                        className="h-8 text-xs font-extrabold gap-1 px-3 shadow-sm"
-                      >
-                        <Icon icon="heroicons:chat-bubble-left-right-20-solid" width="14" height="14" />
-                        <span>Ajukan Sanggahan</span>
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-text-3 font-medium">-</span>
-                    )}
                   </td>
                 </tr>
               ))}

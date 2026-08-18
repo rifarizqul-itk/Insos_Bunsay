@@ -18,64 +18,66 @@ function Table({
 }) {
   return (
     <div data-slot="table" className={cn('w-full overflow-hidden rounded-lg border border-border bg-white shadow-card', className)}>
-      <table className="w-full text-start border-collapse" aria-label={ariaLabel}>
-        {caption && <caption className="sr-only">{caption}</caption>}
-        <thead>
-          <tr className={headerClassName}>
-            {headers.map((head, idx) => {
-              const key = head.key || head.sortKey || head.label;
-              const isSortable = head.sortable !== false && onSort;
-              const isSorted = sortConfig && sortConfig.key === key;
-              const sortDirection = isSorted ? sortConfig.direction : null;
+      <div className="w-full overflow-x-auto custom-scrollbar touch-pan-x">
+        <table className="w-full text-start border-collapse min-w-full" aria-label={ariaLabel}>
+          {caption && <caption className="sr-only">{caption}</caption>}
+          <thead>
+            <tr className={headerClassName}>
+              {headers.map((head, idx) => {
+                const key = head.key || head.sortKey || head.label;
+                const isSortable = head.sortable !== false && onSort;
+                const isSorted = sortConfig && sortConfig.key === key;
+                const sortDirection = isSorted ? sortConfig.direction : null;
 
-              return (
-                <th
-                  key={idx}
-                  scope="col"
-                  onClick={isSortable ? () => onSort(key) : undefined}
-                  className={cn(
-                    'py-3 px-4 font-bold text-sm select-none transition-colors',
-                    head.align === 'center' ? 'text-center' : head.align === 'right' ? 'text-end' : 'text-start',
-                    isSortable && 'cursor-pointer hover:bg-white/20 group',
-                    isSorted && 'bg-red-rich text-white shadow-inner',
-                    head.className
-                  )}
-                  title={isSortable ? `Urutkan berdasarkan ${head.label}` : undefined}
-                >
-                  <div className={cn(
-                    'inline-flex items-center gap-1.5',
-                    head.align === 'center' ? 'justify-center' : head.align === 'right' ? 'justify-end' : 'justify-start'
-                  )}>
-                    <span>{head.label}</span>
-                    {isSortable && (
-                      <span className="opacity-70 group-hover:opacity-100 transition-opacity">
-                        {sortDirection === 'asc' ? (
-                          <Icon icon="heroicons:chevron-up-20-solid" className="size-3.5" />
-                        ) : sortDirection === 'desc' ? (
-                          <Icon icon="heroicons:chevron-down-20-solid" className="size-3.5" />
-                        ) : (
-                          <Icon icon="heroicons:chevron-up-down-20-solid" className="size-3.5" />
-                        )}
-                      </span>
+                return (
+                  <th
+                    key={idx}
+                    scope="col"
+                    onClick={isSortable ? () => onSort(key) : undefined}
+                    className={cn(
+                      'py-3 px-4 font-bold text-sm select-none transition-colors whitespace-nowrap',
+                      head.align === 'center' ? 'text-center' : head.align === 'right' ? 'text-end' : 'text-start',
+                      isSortable && 'cursor-pointer hover:bg-white/20 group',
+                      isSorted && 'bg-red-rich text-white shadow-inner',
+                      head.className
                     )}
-                  </div>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {isEmpty ? (
-            <tr>
-              <td colSpan={colSpan || headers.length} className="py-8 px-4 text-center text-text-3 font-semibold text-sm">
-                {emptyMessage}
-              </td>
+                    title={isSortable ? `Urutkan berdasarkan ${head.label}` : undefined}
+                  >
+                    <div className={cn(
+                      'inline-flex items-center gap-1.5',
+                      head.align === 'center' ? 'justify-center' : head.align === 'right' ? 'justify-end' : 'justify-start'
+                    )}>
+                      <span>{head.label}</span>
+                      {isSortable && (
+                        <span className="opacity-70 group-hover:opacity-100 transition-opacity">
+                          {sortDirection === 'asc' ? (
+                            <Icon icon="heroicons:chevron-up-20-solid" className="size-3.5" />
+                          ) : sortDirection === 'desc' ? (
+                            <Icon icon="heroicons:chevron-down-20-solid" className="size-3.5" />
+                          ) : (
+                            <Icon icon="heroicons:chevron-up-down-20-solid" className="size-3.5" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
-          ) : (
-            children
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {isEmpty ? (
+              <tr>
+                <td colSpan={colSpan || headers.length} className="py-8 px-4 text-center text-text-3 font-semibold text-sm">
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              children
+            )}
+          </tbody>
+        </table>
+      </div>
       {footer}
     </div>
   );

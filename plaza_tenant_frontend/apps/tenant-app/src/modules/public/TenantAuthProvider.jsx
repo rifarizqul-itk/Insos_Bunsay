@@ -102,7 +102,7 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     }
   }, [httpClient, handleLogout]);
 
-  const value = {
+  const value = useMemo(() => ({
     isLoggedIn: !!accessToken,
     role: 'tenant',
     user,
@@ -111,7 +111,7 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
     isHydrated,
     login,
     logout,
-  };
+  }), [accessToken, user, httpClient, isHydrated, login, logout]);
 
   return (
     <TenantAuthContext.Provider value={value}>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-// Official Plaza Kebun Sayur Logo URL served directly from Vite public assets
-const BUNSAY_OFFICIAL_LOGO_PATH = '/assets/main_logo_transparent_for_light_bg.png';
+// Official Plaza Kebun Sayur Logo URL served directly from Vite public assets (optimized 7.6KB asset)
+const BUNSAY_OFFICIAL_LOGO_PATH = '/assets/bunsay_qr_logo_128.png';
 
 export function BunsayQRCode({
   value,

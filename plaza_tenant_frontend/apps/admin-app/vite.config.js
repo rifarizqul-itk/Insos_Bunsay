@@ -27,5 +27,32 @@ export default defineConfig({
         secure: false,
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router') || id.includes('@remix-run')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@iconify')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('axios')) {
+              return 'vendor-http';
+            }
+            if (id.includes('qrcode.react')) {
+              return 'vendor-qrcode';
+            }
+            if (id.includes('exceljs')) {
+              return 'vendor-excel';
+            }
+          }
+        }
+      }
+    }
   }
 });
+

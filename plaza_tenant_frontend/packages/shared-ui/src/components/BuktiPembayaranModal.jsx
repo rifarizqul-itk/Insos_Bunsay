@@ -98,12 +98,14 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   const [copied, setCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  const isModalOpen = isOpen !== undefined ? isOpen : Boolean(item);
+
   useEffect(() => {
     setImageError(false);
     setIsZoomed(false);
-  }, [item, isOpen]);
+  }, [item, isModalOpen]);
 
-  if (!item) return null;
+  if (!item || !isModalOpen) return null;
 
   const rawMetode = String(item.metode || item.labelMetode || '').trim();
   const isMidtrans = /midtrans/i.test(rawMetode);
@@ -449,7 +451,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
 
   return (
     <Sheet
-      isOpen={isOpen}
+      isOpen={isModalOpen}
       onClose={onClose}
       title="Rincian Transaksi"
       subtitle={`ID: ${trxLabel}`}
@@ -545,10 +547,10 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                   type="button"
                   onClick={() => handleCopyCode(displayRefCode)}
                   aria-label="Salin kode transaksi"
-                  className="text-text-3 hover:text-red transition-colors p-1 cursor-pointer"
+                  className="text-text-3 hover:text-red hover:bg-mono-200/60 active:scale-95 transition-all min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md cursor-pointer -me-1"
                   title="Salin Kode"
                 >
-                  <Icon icon={copied ? "heroicons:check-20-solid" : "heroicons:clipboard-document-20-solid"} className={cn("size-3.5", copied ? "text-green" : "")} />
+                  <Icon icon={copied ? "heroicons:check-20-solid" : "heroicons:clipboard-document-20-solid"} className={cn("size-4", copied ? "text-green" : "")} />
                 </button>
               </div>
             </div>

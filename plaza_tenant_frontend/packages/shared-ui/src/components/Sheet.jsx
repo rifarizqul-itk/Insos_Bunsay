@@ -104,22 +104,22 @@ export function Sheet({
             <button
               type="button"
               onClick={onClose}
-              className="text-text-3 hover:text-text hover:bg-mono-100 transition-colors flex items-center justify-center size-9 rounded-md shrink-0 cursor-pointer -me-1.5"
+              className="text-text-3 hover:text-text hover:bg-mono-100 active:scale-95 transition-all flex items-center justify-center min-w-[44px] min-h-[44px] size-11 rounded-lg shrink-0 cursor-pointer -me-2"
               aria-label="Tutup panel"
             >
-              <Icon icon="heroicons:x-mark-20-solid" className="size-5" />
+              <Icon icon="heroicons:x-mark-20-solid" className="size-5.5" />
             </button>
           </div>
         )}
 
         {/* Scrollable Body Container */}
-        <div className="px-6 py-5 overflow-y-auto flex-1 custom-scrollbar flex flex-col">
+        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 custom-scrollbar flex flex-col">
           {children}
         </div>
 
         {/* Sticky Footer */}
         {footer && (
-          <div className="border-t border-border/80 px-6 py-3.5 flex gap-3 justify-end flex-shrink-0 bg-mono-50/90">
+          <div className="border-t border-border/80 px-5 sm:px-6 py-3.5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex gap-3 justify-end flex-shrink-0 bg-mono-50/90">
             {footer}
           </div>
         )}

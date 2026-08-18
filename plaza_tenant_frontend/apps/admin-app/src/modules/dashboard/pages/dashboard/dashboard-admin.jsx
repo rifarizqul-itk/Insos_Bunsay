@@ -37,48 +37,61 @@ function DashboardAdmin() {
       setIsLoading(true);
       setErrorMsg(null);
       try {
-        const resDashboard = await httpClient.get('/api/v1/admin/dashboard');
-        if (resDashboard?.data) {
-          setMetrics(resDashboard.data);
+        const [dashResult, kiosResult, bayarResult] = await Promise.allSettled([
+          httpClient.get('/api/v1/admin/dashboard'),
+          httpClient.get('/api/v1/admin/kios'),
+          httpClient.get('/api/v1/admin/pembayaran')
+        ]);
+
+        if (dashResult.status === 'fulfilled' && dashResult.value?.data) {
+          setMetrics(dashResult.value.data);
         }
 
-        const resKios = await httpClient.get('/api/v1/admin/kios');
-        const rawKios = resKios?.data?.data || resKios?.data;
-        if (Array.isArray(rawKios)) {
-          const fetchedTenants = rawKios.map((item, idx) => {
-            const namaTenant = item.sewa?.pemilik?.Nama || item.sewa?.[0]?.pemilik?.Nama || item.tenant || item.Nama || 'Kios Tanpa Nama';
-            const jenisUsaha = item.sewa?.Jenis_Usaha || item.sewa?.[0]?.Jenis_Usaha || item.usaha || 'Perdagangan Umum';
-            return {
-              id: item.Id_Kios || idx + 1,
-              nama: namaTenant,
-              kios: item.No_Kios || `Kios-${idx + 1}`,
-              usaha: jenisUsaha,
-              tunggakan: 0,
-              statusPembayaran: item.Status === 'Terisi' ? 'Lunas' : 'Belum Bayar'
-            };
-          });
-          setTenants(fetchedTenants);
+        if (kiosResult.status === 'fulfilled') {
+          const resKios = kiosResult.value;
+          const rawKios = resKios?.data?.data || resKios?.data;
+          if (Array.isArray(rawKios)) {
+            const fetchedTenants = rawKios.map((item, idx) => {
+              const namaTenant = item.sewa?.pemilik?.Nama || item.sewa?.[0]?.pemilik?.Nama || item.tenant || item.Nama || 'Kios Tanpa Nama';
+              const jenisUsaha = item.sewa?.Jenis_Usaha || item.sewa?.[0]?.Jenis_Usaha || item.usaha || 'Perdagangan Umum';
+              return {
+                id: item.Id_Kios || idx + 1,
+                nama: namaTenant,
+                kios: item.No_Kios || `Kios-${idx + 1}`,
+                usaha: jenisUsaha,
+                tunggakan: 0,
+                statusPembayaran: item.Status === 'Terisi' ? 'Lunas' : 'Belum Bayar'
+              };
+            });
+            setTenants(fetchedTenants);
+          }
         }
 
-        const resPembayaran = await httpClient.get('/api/v1/admin/pembayaran');
-        const rawPembayaran = resPembayaran?.data?.data || resPembayaran?.data;
-        if (Array.isArray(rawPembayaran)) {
-          const mappedQueue = rawPembayaran.map(p => ({
-            id: `TRX-${p.Id_Pembayaran}`,
-            nama: p.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
-            kios: p.tagihan?.sewa?.kios?.No_Kios || 'Kios',
-            tagihan: `Sewa Kios ${p.tagihan?.Periode || 'Berjalan'}`,
-            nominal: `Rp ${Number(p.Total_Bayar || 0).toLocaleString('id-ID')}`,
-            labelMetode: `${p.Metode_Bayar || 'Transfer Bank'} (SQL DB)`,
-            waktu: p.Tanggal_Bayar || 'Baru Saja',
-            status: p.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : 'Menunggu Verifikasi',
-            alokasi: []
-          }));
-          setAntrean(mappedQueue);
+        if (bayarResult.status === 'fulfilled') {
+          const resPembayaran = bayarResult.value;
+          const rawPembayaran = resPembayaran?.data?.data || resPembayaran?.data;
+          if (Array.isArray(rawPembayaran)) {
+            const mappedQueue = rawPembayaran.map(p => ({
+              id: `TRX-${p.Id_Pembayaran}`,
+              nama: p.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
+              kios: p.tagihan?.sewa?.kios?.No_Kios || 'Kios',
+              tagihan: `Sewa Kios ${p.tagihan?.Periode || 'Berjalan'}`,
+              nominal: `Rp ${Number(p.Total_Bayar || 0).toLocaleString('id-ID')}`,
+              labelMetode: p.Metode_Bayar || 'Transfer Bank',
+              waktu: p.Tanggal_Bayar || 'Baru Saja',
+              status: p.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : 'Menunggu Verifikasi',
+              alokasi: []
+            }));
+            setAntrean(mappedQueue);
+          }
+        }
+
+        if (dashResult.status === 'rejected' && kiosResult.status === 'rejected' && bayarResult.status === 'rejected') {
+          setErrorMsg('Gagal memuat data dashboard. Silakan periksa koneksi atau muat ulang halaman.');
         }
       } catch (err) {
-        console.error('Gagal mengambil data dari database backend:', err);
-        setErrorMsg('Gagal terhubung ke database backend SQL. Silakan periksa koneksi server.');
+        console.error('Gagal memuat data dashboard:', err);
+        setErrorMsg('Gagal memuat data dashboard. Silakan periksa koneksi atau muat ulang halaman.');
       } finally {
         setIsLoading(false);
       }
@@ -216,7 +229,7 @@ function DashboardAdmin() {
           <EmptyState
             icon="heroicons:user-minus-20-solid"
             title="Tenant Tidak Ditemukan"
-            description="Tidak ada data tenant dari database backend yang cocok dengan kriteria pencarian atau filter status."
+            description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
           />
         ) : (
           <Table

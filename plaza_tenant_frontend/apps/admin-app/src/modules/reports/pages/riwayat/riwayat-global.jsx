@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Badge, Button, Table, AlokasiBreakdown, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination } from '@bunsay/shared-ui';
+import { Card, Badge, Button, Table, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function RiwayatTransaksiAdmin() {
@@ -20,28 +20,51 @@ function RiwayatTransaksiAdmin() {
     async function fetchRiwayatGlobal() {
       setIsLoading(true);
       try {
-        const response = await httpClient.get('/api/v1/admin/pembayaran');
-        if (response?.data && Array.isArray(response.data)) {
-          const raw = response.data;
-          const mapped = raw.map(p => ({
-            id: `TRX-${p.Id_Pembayaran}`,
-            idRaw: p.Id_Pembayaran,
-            nama: p.tagihan?.sewa?.pemilik?.Nama || 'Hj. Yuliana',
-            kios: p.tagihan?.sewa?.kios?.No_Kios || 'B-1001',
-            tagihan: `Sewa Kios ${p.tagihan?.Periode || 'Berjalan'}`,
-            nominalRaw: Number(p.Total_Bayar || 0),
-            nominal: `Rp ${Number(p.Total_Bayar || 0).toLocaleString('id-ID')}`,
-            metode: p.Metode_Bayar || 'Transfer',
-            labelMetode: `${p.Metode_Bayar || 'Transfer Bank'} (SQL DB)`,
-            waktu: p.Tanggal_Bayar || 'Terbaru',
-            status: p.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (p.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : 'Menunggu Verifikasi'),
-            buktiUrl: p.Bukti_Pembayaran || '',
-            alokasi: []
+        const res = await httpClient.get('/api/v1/admin/pembayaran');
+        if (res?.data && Array.isArray(res.data)) {
+          const mapped = res.data.map(item => ({
+            id: `TRX-${item.Id_Pembayaran}`,
+            idRaw: item.Id_Pembayaran,
+            nama: item.tagihan?.sewa?.pemilik?.Nama || 
+                  item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 
+                  item.Nama_Tenant || 
+                  item.tenant?.Nama_Tenant || 
+                  item.tenant?.Nama || 
+                  item.tenant?.Username || 
+                  item.nama || 
+                  'Penyewa Kios',
+            kios: item.tagihan?.sewa?.kios?.No_Kios || 
+                  item.tagihan?.sewa?.kios?.Kode_Kios || 
+                  item.Nomor_Kios || 
+                  item.tenant?.Nomor_Kios || 
+                  item.kios || 
+                  '-',
+            tagihan: item.tagihan?.Periode 
+              ? `Sewa Kios ${item.tagihan.Periode}` 
+              : (item.tagihan?.Bulan_Tahun ? `Sewa Kios Periode ${item.tagihan.Bulan_Tahun}` : (item.Keterangan || 'Sewa Kios')),
+            nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
+            nominalAngka: Number(item.Total_Bayar || 0),
+            nominalRaw: Number(item.Total_Bayar || 0),
+            metode: item.Metode_Bayar || 'Transfer',
+            labelMetode: item.Metode_Bayar === 'Midtrans' 
+              ? 'Midtrans Gateway' 
+              : item.Metode_Bayar === 'Transfer' 
+                ? 'Transfer Bank' 
+                : item.Metode_Bayar === 'Tunai' 
+                  ? 'Tunai Loket' 
+                  : item.Metode_Bayar || 'Transfer Bank',
+            waktu: item.Tanggal_Bayar || item.created_at || '-',
+            status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : (item.Verifikasi_Pembayaran || 'Lunas')),
+            buktiUrl: item.Bukti_Pembayaran || '',
+            alasan: item.Catatan_Admin || '',
+            alokasi: item.alokasi || []
           }));
           setRiwayat(mapped);
+        } else {
+          setRiwayat([]);
         }
       } catch (err) {
-        console.warn('Backend fetch riwayat error:', err);
+        setRiwayat([]);
       } finally {
         setIsLoading(false);
       }
@@ -50,30 +73,34 @@ function RiwayatTransaksiAdmin() {
   }, [httpClient]);
 
   const handleSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+    let direction = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
   };
 
   const filteredRiwayat = useMemo(() => {
-    let list = riwayat.filter(item => {
+    let result = riwayat.filter(item => {
       if (filterMetode === 'Semua') return true;
       return item.metode === filterMetode;
     });
 
-    const { key, direction } = sortConfig;
-    return list.sort((a, b) => {
-      let valA = a[key] ?? '';
-      let valB = b[key] ?? '';
-      if (key === 'nominal') {
-        valA = a.nominalRaw;
-        valB = b.nominalRaw;
-      }
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
+    if (sortConfig !== null) {
+      result.sort((a, b) => {
+        let aVal = sortConfig.key === 'nominal' ? (a.nominalAngka ?? 0) : (a[sortConfig.key] ?? '');
+        let bVal = sortConfig.key === 'nominal' ? (b.nominalAngka ?? 0) : (b[sortConfig.key] ?? '');
+
+        if (typeof aVal === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aVal.localeCompare(bVal) 
+            : bVal.localeCompare(aVal);
+        }
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+    }
+
+    return result;
   }, [riwayat, filterMetode, sortConfig]);
 
   const paginatedRiwayat = useMemo(() => {
@@ -87,7 +114,6 @@ function RiwayatTransaksiAdmin() {
     { label: 'Jenis Tagihan', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Metode & Waktu', sortKey: 'metode' },
-    { label: 'Alokasi Tagihan', sortable: false },
     { label: 'Status', align: 'center', sortKey: 'status' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
@@ -126,7 +152,7 @@ function RiwayatTransaksiAdmin() {
 
       <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
         {isLoading ? (
-          <SkeletonTable rows={5} cols={8} />
+          <SkeletonTable rows={5} cols={7} />
         ) : filteredRiwayat.length === 0 ? (
           <EmptyState
             icon="heroicons:receipt-percent-20-solid"
@@ -138,7 +164,7 @@ function RiwayatTransaksiAdmin() {
             caption="Riwayat Transaksi Lintas Metode Pengelola Plaza"
             ariaLabel="Tabel Riwayat Seluruh Transaksi Admin"
             headers={tableHeaders}
-            colSpan={8}
+            colSpan={7}
             sortConfig={sortConfig}
             onSort={handleSort}
             footer={
@@ -162,7 +188,13 @@ function RiwayatTransaksiAdmin() {
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </td>
                   <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
-                    {item.tagihan}
+                    <div>{item.tagihan}</div>
+                    {item.alokasi && item.alokasi.length > 1 && (
+                      <span className="inline-flex items-center gap-1 text-2xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded mt-1 shadow-2xs">
+                        <Icon icon="heroicons:arrows-split-20-solid" className="size-3 text-blue-600" />
+                        <span>Alokasi {item.alokasi.length} Periode (Cicilan)</span>
+                      </span>
+                    )}
                   </td>
                   <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
                     {item.nominal}
@@ -172,9 +204,6 @@ function RiwayatTransaksiAdmin() {
                       {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
                     </div>
                     <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
-                  </td>
-                  <td data-label="Alokasi Tagihan" className="p-3">
-                    <AlokasiBreakdown alokasiList={item.alokasi} compact={true} />
                   </td>
                   <td data-label="Status" className="p-3 text-center">
                     <Badge status={item.status} />
@@ -190,7 +219,7 @@ function RiwayatTransaksiAdmin() {
                       size="sm"
                       onClick={() => setSelectedBukti(item)}
                       aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
-                      className="h-8 px-3 text-xs font-bold"
+                      className="min-h-10 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
                     >
                       Detail
                     </Button>
@@ -201,15 +230,14 @@ function RiwayatTransaksiAdmin() {
         )}
       </Card>
 
-      {/* Modal Detail & Resi/Bukti Transaksi */}
+      {/* Modal Detail & Kuitansi Transaksi */}
       <BuktiPembayaranModal
         isOpen={Boolean(selectedBukti)}
-        onClose={() => setSelectedBukti(null)}
         item={selectedBukti}
+        onClose={() => setSelectedBukti(null)}
       />
     </div>
   );
 }
 
 export default RiwayatTransaksiAdmin;
-

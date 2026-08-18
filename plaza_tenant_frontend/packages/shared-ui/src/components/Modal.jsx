@@ -61,7 +61,7 @@ function Modal({
     <div
       data-slot="modal"
       style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000 }}
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-mono-900/50 backdrop-blur-xs page-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-6 bg-mono-900/50 backdrop-blur-xs page-fade-in overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -72,32 +72,33 @@ function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[88vh] flex flex-col overflow-hidden my-auto',
+          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto',
           sizeClasses[size],
           className
         )}
       >
         {title && (
-          <div className="flex justify-between items-center border-b border-border/80 px-6 py-4 bg-mono-50/70 flex-shrink-0">
-            <h3 id={titleId} className="text-lg font-extrabold text-text tracking-tight text-balance">
+          <div className="flex justify-between items-center border-b border-border/80 px-5 sm:px-6 py-3.5 sm:py-4 bg-mono-50/70 flex-shrink-0 gap-3">
+            <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
               {title}
             </h3>
             <button
+              type="button"
               onClick={onClose}
-              className="text-text-3 hover:text-text hover:bg-mono-100 transition-colors flex items-center justify-center size-9 rounded-md -me-1.5 cursor-pointer"
+              className="text-text-3 hover:text-text hover:bg-mono-100 active:scale-95 transition-all flex items-center justify-center min-w-[44px] min-h-[44px] size-11 rounded-lg -me-2 cursor-pointer shrink-0"
               aria-label="Tutup modal"
             >
-              <Icon icon="heroicons:x-mark-20-solid" className="size-5" />
+              <Icon icon="heroicons:x-mark-20-solid" className="size-5.5" />
             </button>
           </div>
         )}
 
-        <div className="px-6 py-5 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
 
         {footer && (
-          <div className="border-t border-border/80 px-6 py-4 flex gap-3 justify-end flex-shrink-0 bg-mono-50/50">
+          <div className="border-t border-border/80 px-5 sm:px-6 py-3.5 sm:py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex gap-3 justify-end flex-shrink-0 bg-mono-50/50">
             {footer}
           </div>
         )}

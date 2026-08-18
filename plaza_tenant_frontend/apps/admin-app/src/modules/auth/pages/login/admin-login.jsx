@@ -93,12 +93,12 @@ function AdminLoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 autoComplete="current-password"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-11 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none cursor-pointer"
+                className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
                 aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
               >
                 <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />

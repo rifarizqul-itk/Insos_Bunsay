@@ -44,20 +44,41 @@ function AdminAppRoutes() {
               {/* Protected Admin Console Routes */}
               <Route element={<AdminProtectedRoute />}>
                 <Route element={<AdminLayout />}>
+                  {/* Common Routes */}
                   <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-                  <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
-                  <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
                   <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
                   <Route path="/admin/detail-keuangan" element={<DetailKeuanganTenant />} />
                   <Route path="/admin/keuangan/:id" element={<DetailKeuanganTenant />} />
-                  <Route path="/admin/kios" element={<KetersediaanKios />} />
-                  <Route path="/admin/kios/:id" element={<DetailAdministrasiKios />} />
-                  <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
-                  <Route path="/admin/riwayat/:id" element={<RiwayatPemilikKios />} />
-                  <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
-                  <Route path="/admin/ekspor" element={<EksporData />} />
-                  <Route path="/admin/audit-log" element={<AuditLogPage />} />
                   <Route path="/admin/akun" element={<AkunAdmin />} />
+
+                  {/* Verifikasi Bukti Transfer */}
+                  <Route element={<AdminProtectedRoute requiredPermission="verifikasi_pembayaran" />}>
+                    <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
+                  </Route>
+
+                  {/* Setoran Tunai Kasir */}
+                  <Route element={<AdminProtectedRoute requiredPermission="input_setoran" />}>
+                    <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
+                  </Route>
+
+                  {/* Manajemen Unit Kios & Legalitas */}
+                  <Route element={<AdminProtectedRoute requiredPermission="kelola_kios" />}>
+                    <Route path="/admin/kios" element={<KetersediaanKios />} />
+                    <Route path="/admin/kios/:id" element={<DetailAdministrasiKios />} />
+                    <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
+                    <Route path="/admin/riwayat/:id" element={<RiwayatPemilikKios />} />
+                    <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
+                  </Route>
+
+                  {/* Ekspor Laporan Keuangan */}
+                  <Route element={<AdminProtectedRoute requiredPermission="ekspor_laporan" />}>
+                    <Route path="/admin/ekspor" element={<EksporData />} />
+                  </Route>
+
+                  {/* Audit Trail Log */}
+                  <Route element={<AdminProtectedRoute requiredPermission="lihat_audit_log" />}>
+                    <Route path="/admin/audit-log" element={<AuditLogPage />} />
+                  </Route>
                 </Route>
               </Route>
 

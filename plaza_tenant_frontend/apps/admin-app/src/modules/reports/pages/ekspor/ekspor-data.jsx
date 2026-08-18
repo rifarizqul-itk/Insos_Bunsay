@@ -79,10 +79,10 @@ function EksporData() {
               variant="primary"
               size="lg"
               disabled={isDownloading}
-              className="h-13 px-8 text-base font-extrabold gap-2.5 shadow-md self-start"
+              className="h-13 px-8 text-base font-extrabold gap-2.5 shadow-md w-full sm:w-auto sm:self-start"
             >
               {isDownloading ? (
-                <span role="status" className="flex items-center gap-2">
+                <span role="status" className="flex items-center gap-2 justify-center">
                   <Icon icon="heroicons:arrow-path-20-solid" className="size-5 animate-spin" />
                   <span>Memproses Rekap...</span>
                 </span>

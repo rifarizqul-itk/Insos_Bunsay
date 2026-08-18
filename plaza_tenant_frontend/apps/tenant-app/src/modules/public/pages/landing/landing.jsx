@@ -7,19 +7,19 @@ function LandingPage() {
 
   return (
     <div data-slot="landing-page" className="page-fade-in bg-mono-50 min-h-dvh font-sans">
-      <nav className="landing-navbar h-18 bg-white/80 backdrop-blur-xl border-b border-border/80 sticky top-0 flex items-center justify-between px-6 md:px-10 z-40 shadow-xs transition-colors">
-        <div className="flex items-center gap-3">
-          <picture>
+      <nav className="landing-navbar h-18 bg-white/80 backdrop-blur-xl border-b border-border/80 sticky top-0 flex items-center justify-between px-4 sm:px-6 md:px-10 z-40 shadow-xs transition-colors gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <picture className="shrink-0">
             <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
             <img
               src="/assets/main_logo_transparent_for_light_bg.png"
               alt="Logo Resmi Plaza Kebun Sayur"
-              className="h-11 w-auto object-contain"
+              className="h-9 sm:h-11 w-auto object-contain shrink-0"
               width={176}
               height={44}
             />
           </picture>
-          <span className="font-extrabold text-xl md:text-2xl text-red tracking-tight text-balance">
+          <span className="font-extrabold text-base xs:text-lg sm:text-xl md:text-2xl text-red tracking-tight truncate">
             Plaza Kebun Sayur
           </span>
         </div>
@@ -27,7 +27,7 @@ function LandingPage() {
           variant="primary"
           size="sm"
           onClick={() => navigate('/auth')}
-          className="h-10 px-5 text-sm font-bold gap-1.5 shadow-sm"
+          className="h-10 px-3.5 sm:px-5 text-xs sm:text-sm font-bold gap-1.5 shadow-sm shrink-0"
         >
           <Icon icon="material-symbols:login" className="size-4.5" />
           <span>Login Portal</span>

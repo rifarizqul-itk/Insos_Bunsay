@@ -27,7 +27,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
     <aside 
       data-slot="sidebar"
       aria-label="Navigasi Utama Tenant"
-      className={cn('sidebar-tenant-container', isOpen && 'mobile-open')}
+      className={cn('sidebar-tenant-container flex flex-col justify-between h-dvh max-h-screen overflow-hidden', isOpen && 'mobile-open')}
       style={{
         display: 'flex',
         flexDirection: 'column'
@@ -41,7 +41,8 @@ function Sidebar({ isOpen, onClose, onLogout }) {
         paddingLeft: '24px', 
         paddingRight: '16px',
         borderBottom: '1px solid var(--border)',
-        gap: '12px'
+        gap: '12px',
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <picture>
@@ -69,7 +70,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
         </button>
       </div>
 
-      <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <nav className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {menuItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -106,25 +107,18 @@ function Sidebar({ isOpen, onClose, onLogout }) {
         })}
       </nav>
 
-      <div style={{ padding: '24px', borderTop: '1px solid var(--border)' }}>
+      <div 
+        className="p-5 sm:p-6 border-t border-border bg-white shrink-0"
+        style={{ 
+          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' 
+        }}
+      >
         <button
           onClick={onLogout}
-          style={{
-            width: '100%',
-            backgroundColor: 'var(--warm-gray)',
-            color: 'var(--red)',
-            padding: '10px',
-            fontSize: '14px',
-            fontWeight: '600',
-            textAlign: 'center',
-            border: 'none',
-            borderRadius: 'var(--radius-md)',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--red-100)'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--warm-gray)'}
+          className="w-full min-h-[44px] bg-warm-gray text-red hover:bg-red-100 active:scale-[0.98] transition-all p-2.5 text-sm font-bold text-center rounded-lg flex items-center justify-center gap-2 cursor-pointer border-none"
         >
-          Keluar Aplikasi
+          <Icon icon="material-symbols:logout" className="size-5" />
+          <span>Keluar Aplikasi</span>
         </button>
       </div>
     </aside>

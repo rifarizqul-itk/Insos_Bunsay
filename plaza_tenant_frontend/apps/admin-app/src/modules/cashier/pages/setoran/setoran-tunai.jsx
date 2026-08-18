@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, FormField, Button, Card, FIFOPreview, BuktiPembayaranModal } from '@bunsay/shared-ui';
+import { Icon, FormField, Button, Card, Badge, FIFOPreview, BuktiPembayaranModal, useToast, cn } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function SetoranTunai() {
   const navigate = useNavigate();
   const { httpClient } = useAdminAuth();
+  const { addToast } = useToast();
+
   const [selectedTenantId, setSelectedTenantId] = useState('');
-  const [jenisTagihan] = useState('Setoran Tunai Loket Pengelola');
   const [nominalTunai, setNominalTunai] = useState('');
   const [buktiTunai, setBuktiTunai] = useState(null);
   const [previewBukti, setPreviewBukti] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fifoAllocations, setFifoAllocations] = useState([]);
   const [tenantError, setTenantError] = useState(null);
   const [nominalError, setNominalError] = useState(null);
   const [showKonfirmasi, setShowKonfirmasi] = useState(false);
@@ -23,6 +23,24 @@ function SetoranTunai() {
   const [unpaidBills, setUnpaidBills] = useState([]);
   const [isBillsLoading, setIsBillsLoading] = useState(false);
   const [targetTagihanId, setTargetTagihanId] = useState(null);
+  const [savedReceiptData, setSavedReceiptData] = useState(null);
+
+  // Search & Filter state for Tenant Selection
+  const [tenantSearchQuery, setTenantSearchQuery] = useState('');
+  const [floorFilter, setFloorFilter] = useState('Semua'); // 'Semua' | 'Lantai 1' | 'Lantai 2' | 'Terisi'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function fetchTenants() {
@@ -31,32 +49,57 @@ function SetoranTunai() {
         const raw = response?.data?.data || (Array.isArray(response?.data) ? response.data : []);
         if (Array.isArray(raw) && raw.length > 0) {
           const mapped = raw.map((item, idx) => {
-            const activeSewa = item.sewa && Array.isArray(item.sewa) && item.sewa.length > 0 ? item.sewa[0] : null;
-            const pemilik = activeSewa?.pemilik || null;
+            const activeSewa = Array.isArray(item.sewa)
+              ? (item.sewa.find(s => s.Status === 'Aktif') || item.sewa[0] || null)
+              : (item.sewa || null);
+            const pemilik = activeSewa?.pemilik || item.pemilik || null;
             return {
               id: item.Id_Kios || item.id || idx + 1,
               idPemilik: pemilik?.Id_Pemilik || item.Id_Pemilik || idx + 1,
               nama: pemilik?.Nama || (item.Status === 'Terisi' ? 'Penyewa Kios' : 'Kios Kosong'),
-              kios: item.No_Kios || `B-${1000 + idx}`
+              kios: item.No_Kios || `Kios-${idx + 1}`,
+              lantai: item.Lantai || (String(item.No_Kios).includes('2') ? 2 : 1),
+              status: item.Status || (pemilik ? 'Terisi' : 'Kosong'),
+              usaha: activeSewa?.Jenis_Usaha || 'Perdagangan Umum'
             };
           });
           setTenantData(mapped);
         } else {
-          setTenantData(fallbackTenants);
+          setTenantData([]);
         }
       } catch (err) {
-        console.warn('Backend fetch tenant list fallback:', err);
-        setTenantData(fallbackTenants);
+        console.warn('Gagal memuat data kios:', err);
+        setTenantData([]);
       }
     }
     fetchTenants();
   }, [httpClient]);
 
-  const fallbackTenants = [
-    { id: 1, idPemilik: 1, nama: 'Hj. Yuliana', kios: 'B-1001' },
-    { id: 2, idPemilik: 2, nama: 'Bpk. Hendra Kurniawan', kios: 'B-1003' },
-    { id: 3, idPemilik: 3, nama: 'Ibu Eva Tauresea', kios: 'B-1004' }
-  ];
+  // Filtered tenants for search and quick floor tabs
+  const filteredTenants = useMemo(() => {
+    return tenantData.filter(t => {
+      const q = tenantSearchQuery.toLowerCase().trim();
+      const matchQuery = !q ||
+        (t.kios && t.kios.toLowerCase().includes(q)) ||
+        (t.nama && t.nama.toLowerCase().includes(q)) ||
+        (t.usaha && t.usaha.toLowerCase().includes(q));
+
+      let matchFilter = true;
+      if (floorFilter === 'Lantai 1') {
+        matchFilter = String(t.lantai) === '1' || (t.kios && t.kios.includes('1'));
+      } else if (floorFilter === 'Lantai 2') {
+        matchFilter = String(t.lantai) === '2' || (t.kios && t.kios.includes('2'));
+      } else if (floorFilter === 'Terisi') {
+        matchFilter = t.status === 'Terisi' && t.nama !== 'Kios Kosong';
+      }
+
+      return matchQuery && matchFilter;
+    });
+  }, [tenantData, tenantSearchQuery, floorFilter]);
+
+  const selectedTenantObj = useMemo(() => {
+    return tenantData.find(t => String(t.id) === String(selectedTenantId));
+  }, [tenantData, selectedTenantId]);
 
   // Auto-fetch active bills when tenant is selected
   useEffect(() => {
@@ -67,7 +110,7 @@ function SetoranTunai() {
       return;
     }
 
-    const selectedObj = tenantData.find(t => String(t.id) === selectedTenantId);
+    const selectedObj = tenantData.find(t => String(t.id) === String(selectedTenantId));
 
     async function fetchActiveBills() {
       setIsBillsLoading(true);
@@ -102,13 +145,6 @@ function SetoranTunai() {
         }
       } catch (err) {
         console.warn('Error fetching tenant bills:', err);
-        // Fallback sample active bill if API query fails
-        const fallbackBill = [
-          { idTagihan: 101, periode: 'Sewa Kios Periode Mei 2026', tarifSewa: 450000, totalTagihan: 450000, totalTerbayar: 0, statusTagihan: 'Belum Bayar' }
-        ];
-        setUnpaidBills(fallbackBill);
-        setTargetTagihanId(101);
-        setNominalTunai('450000');
       } finally {
         setIsBillsLoading(false);
       }
@@ -116,28 +152,30 @@ function SetoranTunai() {
     fetchActiveBills();
   }, [selectedTenantId, tenantData, httpClient]);
 
-  useEffect(() => {
+  const fifoAllocations = useMemo(() => {
     const nominalNum = Number(nominalTunai) || 0;
     if (selectedTenantId && nominalNum > 0) {
       const activeUnpaid = unpaidBills.filter(b => b.statusTagihan !== 'Lunas');
-      const fifo = allocatePaymentFIFO(activeUnpaid, nominalNum);
-      setFifoAllocations(fifo.allocations);
-    } else {
-      setFifoAllocations([]);
+      return allocatePaymentFIFO(activeUnpaid, nominalNum).allocations;
     }
+    return [];
   }, [nominalTunai, selectedTenantId, unpaidBills]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setBuktiTunai(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewBukti(reader.result);
-      reader.readAsDataURL(file);
-    }
+  const handleSelectTenant = (tenant) => {
+    setSelectedTenantId(String(tenant.id));
+    setIsDropdownOpen(false);
+    setTenantSearchQuery('');
+    if (tenantError) setTenantError(null);
   };
 
-  const [savedReceiptData, setSavedReceiptData] = useState(null);
+  const handleClearSelectedTenant = () => {
+    setSelectedTenantId('');
+    setNominalTunai('');
+    setUnpaidBills([]);
+    setTargetTagihanId(null);
+    setTenantSearchQuery('');
+    setIsDropdownOpen(true);
+  };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -193,20 +231,18 @@ function SetoranTunai() {
         Bukti_Pembayaran: refCode,
       });
 
-      setToastMsg('Setoran tunai loket berhasil dicatat di database!');
+      addToast('Setoran tunai loket berhasil dicatat di database!', 'success');
       setNominalTunai('');
       setSelectedTenantId('');
       setBuktiTunai(null);
       setPreviewBukti(null);
       setShowKonfirmasi(false);
     } catch (err) {
-      alert('Gagal menyimpan setoran tunai. Coba lagi.');
+      addToast(err?.response?.data?.message || 'Gagal menyimpan setoran tunai. Coba lagi.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const selectedTenantObj = tenantData.find(t => String(t.id) === selectedTenantId);
 
   return (
     <div data-slot="setoran-tunai" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
@@ -288,20 +324,164 @@ function SetoranTunai() {
           </div>
         ) : (
           <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
-            <FormField label="Pilih Tenant Kios" id="setoran-tenant" required error={tenantError}>
-              <select
-                value={selectedTenantId}
-                onChange={(e) => { setSelectedTenantId(e.target.value); if (tenantError) setTenantError(null); }}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors cursor-pointer"
-              >
-                <option value="">-- Pilih Tenant Kios --</option>
-                {tenantData.map((t) => (
-                  <option key={t.id} value={String(t.id)}>
-                    {t.kios} - {t.nama}
-                  </option>
-                ))}
-              </select>
-            </FormField>
+            
+            {/* SEARCHABLE & FILTERABLE TENANT COMBOMOX */}
+            <div className="flex flex-col gap-2" ref={dropdownRef}>
+              <label className="text-sm font-extrabold text-text flex items-center justify-between">
+                <span>Pilih Tenant Kios <span className="text-red">*</span></span>
+                {tenantData.length > 0 && (
+                  <span className="text-xs font-semibold text-text-3">
+                    Total {tenantData.length} Kios Terdaftar
+                  </span>
+                )}
+              </label>
+
+              {selectedTenantObj ? (
+                /* SELECTED TENANT CARD */
+                <div className="p-3.5 sm:p-4 rounded-xl border border-red/30 bg-red-50/50 flex items-center justify-between gap-3 shadow-xs animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="px-3 py-2 bg-red text-white font-extrabold text-sm rounded-lg shadow-xs font-tabular-nums">
+                      {selectedTenantObj.kios}
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-text text-sm sm:text-base leading-tight">
+                        {selectedTenantObj.nama}
+                      </h4>
+                      <p className="text-xs text-text-2 font-medium mt-0.5">
+                        Lantai {selectedTenantObj.lantai} • {selectedTenantObj.usaha}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleClearSelectedTenant}
+                    className="h-8.5 px-3 text-xs font-bold text-red border-red/20 hover:bg-red-100"
+                  >
+                    <Icon icon="heroicons:arrow-path-20-solid" className="size-3.5 me-1" />
+                    Ganti Kios
+                  </Button>
+                </div>
+              ) : (
+                /* SEARCH & FILTER CONTROLS */
+                <div className="relative flex flex-col gap-2">
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    {[
+                      { id: 'Semua', label: 'Semua Kios' },
+                      { id: 'Lantai 1', label: 'Lantai 1' },
+                      { id: 'Lantai 2', label: 'Lantai 2' },
+                      { id: 'Terisi', label: 'Hanya Kios Terisi' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          setFloorFilter(tab.id);
+                          setIsDropdownOpen(true);
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer border",
+                          floorFilter === tab.id
+                            ? "bg-red text-white border-red shadow-xs"
+                            : "bg-warm-gray/60 text-text-2 border-border hover:bg-warm-gray hover:text-text"
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Input & Dropdown Container */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none text-text-3">
+                      <Icon icon="heroicons:magnifying-glass-20-solid" className="size-5" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Cari no. kios (misal: A1-05) atau nama tenant (misal: Ahmad)..."
+                      value={tenantSearchQuery}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      onChange={(e) => {
+                        setTenantSearchQuery(e.target.value);
+                        setIsDropdownOpen(true);
+                        if (tenantError) setTenantError(null);
+                      }}
+                      className={cn(
+                        "w-full h-11 ps-10 pe-10 rounded-md border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red transition-all shadow-xs",
+                        tenantError ? "border-red ring-1 ring-red" : "border-border"
+                      )}
+                    />
+                    {tenantSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setTenantSearchQuery('')}
+                        aria-label="Bersihkan pencarian"
+                        className="absolute inset-y-0 end-0 flex items-center pe-3 text-text-3 hover:text-text cursor-pointer"
+                      >
+                        <Icon icon="heroicons:x-mark-20-solid" className="size-4.5" />
+                      </button>
+                    )}
+
+                    {/* Dropdown Floating Results - Placed directly below the search input */}
+                    {isDropdownOpen && (
+                      <div className="absolute top-full mt-1.5 inset-x-0 z-50 bg-white border border-border rounded-xl shadow-2xl max-h-64 overflow-y-auto page-fade-in divide-y divide-border/60">
+                        {filteredTenants.length === 0 ? (
+                          <div className="p-4 text-center text-xs font-semibold text-text-3">
+                            <Icon icon="heroicons:user-minus-20-solid" className="size-6 mx-auto mb-1 text-text-3/60" />
+                            Tidak ada tenant atau nomor kios yang cocok.
+                          </div>
+                        ) : (
+                          filteredTenants.map((tenant) => {
+                            const isOccupied = tenant.status === 'Terisi' && tenant.nama !== 'Kios Kosong';
+                            return (
+                              <button
+                                key={tenant.id}
+                                type="button"
+                                onClick={() => handleSelectTenant(tenant)}
+                                className="w-full p-3 text-start flex items-center justify-between gap-3 hover:bg-warm-gray/40 active:bg-warm-gray transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className={cn(
+                                    "px-2.5 py-1 text-xs font-extrabold rounded-md font-tabular-nums shrink-0",
+                                    isOccupied ? "bg-red-50 text-red border border-red/20" : "bg-warm-gray text-text-3"
+                                  )}>
+                                    {tenant.kios}
+                                  </span>
+                                  <div className="truncate">
+                                    <div className="text-sm font-bold text-text truncate">
+                                      {tenant.nama}
+                                    </div>
+                                    <div className="text-xs text-text-3 font-medium truncate">
+                                      Lantai {tenant.lantai} • {tenant.usaha}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <span className={cn(
+                                  "text-[11px] font-extrabold px-2 py-0.5 rounded-full shrink-0",
+                                  isOccupied ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-mono-100 text-mono-600"
+                                )}>
+                                  {isOccupied ? 'Terisi' : 'Kosong'}
+                                </span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {tenantError && (
+                <p className="text-xs font-bold text-red mt-1 animate-fade-in">
+                  {tenantError}
+                </p>
+              )}
+            </div>
 
             {/* STATUS TAGIHAN AKTIF CARD */}
             {selectedTenantId && (

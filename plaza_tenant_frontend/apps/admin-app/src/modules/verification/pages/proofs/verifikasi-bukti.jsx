@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Modal, Sheet, EmptyState, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Modal, Sheet, EmptyState, SkeletonTable, Pagination, useToast, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const location = useLocation();
   const { httpClient } = useAdminAuth();
+  const { addToast } = useToast();
   const [previewItem, setPreviewItem] = useState(null);
   const [antrean, setAntrean] = useState([]);
   const [riwayatProses, setRiwayatProses] = useState([]);
@@ -163,7 +164,6 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     { label: 'Waktu/Tanggal', sortKey: 'waktu' },
     { label: 'Jenis Tagihan', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
-    { label: 'Status Sanggahan', sortKey: 'teksSanggahan' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
 
@@ -202,12 +202,12 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       setPreviewItem(null);
       await fetchVerifikasiQueue();
 
-      setToastMessage(
-        `Bukti pembayaran ${item.trxCode} berhasil di-${type === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak dengan alasan'}.`
+      addToast(
+        `Bukti pembayaran ${item.trxCode} berhasil di-${type === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak dengan alasan'}.`,
+        type === 'konfirmasi' ? 'success' : 'info'
       );
-      setTimeout(() => setToastMessage(null), 4000);
     } catch (err) {
-      alert('Gagal memproses verifikasi. Coba lagi.');
+      addToast(err?.response?.data?.message || 'Gagal memproses verifikasi. Coba lagi.', 'error');
     }
   };
 
@@ -273,7 +273,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       <Card variant="elevated" className="w-full p-4 sm:p-6 flex flex-col gap-5">
         {activeTab === 'antrean' ? (
           isLoading ? (
-            <SkeletonTable rows={5} cols={6} />
+            <SkeletonTable rows={5} cols={5} />
           ) : sortedAntrean.length === 0 ? (
             <EmptyState
               icon="heroicons:document-check-20-solid"
@@ -285,7 +285,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               caption="Antrean Verifikasi Bukti Transfer Tenant"
               ariaLabel="Tabel Antrean Verifikasi Pembayaran Transfer Manual"
               headers={antreanHeaders}
-              colSpan={6}
+              colSpan={5}
               sortConfig={sortConfigAntrean}
               onSort={handleSortAntrean}
               footer={
@@ -302,7 +302,15 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               {paginatedAntrean.map((item, index) => (
                 <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
                   <th scope="row" data-label="Tenant & Kios" className="p-3 text-start">
-                    <div className="font-bold text-text text-sm">{item.nama}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-text text-sm">{item.nama}</span>
+                      {item.teksSanggahan && (
+                        <span className="inline-flex items-center gap-1 text-2xs font-extrabold text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded shadow-2xs">
+                          <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3 text-amber-700" />
+                          <span>Sanggahan</span>
+                        </span>
+                      )}
+                    </div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </th>
                   <td data-label="Waktu/Tanggal" className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
@@ -313,16 +321,6 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   </td>
                   <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
                     {item.nominal}
-                  </td>
-                  <td data-label="Status Sanggahan" className="p-3">
-                    {item.teksSanggahan ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
-                        <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5" />
-                        Ada Sanggahan
-                      </span>
-                    ) : (
-                      <span className="text-xs text-text-3 font-medium">Verifikasi Baru</span>
-                    )}
                   </td>
                   <td data-label="Aksi" className="p-3 text-center">
                     <Button

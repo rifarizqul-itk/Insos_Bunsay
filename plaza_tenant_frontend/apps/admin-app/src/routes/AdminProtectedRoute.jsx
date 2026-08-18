@@ -2,10 +2,10 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAdminAuth } from '../modules/auth/useAdminAuth';
 
-const ALLOWED_ADMIN_ROLES = ['admin', 'superadmin', 'staff_loket'];
+const ALLOWED_ADMIN_ROLES = ['admin', 'superadmin', 'staff_loket', 'auditor'];
 
-export default function AdminProtectedRoute() {
-  const { isLoggedIn, role, isHydrated } = useAdminAuth();
+export default function AdminProtectedRoute({ requiredPermission }) {
+  const { isLoggedIn, role, user, isHydrated } = useAdminAuth();
 
   if (!isHydrated) {
     return (
@@ -21,9 +21,20 @@ export default function AdminProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  // Route-Level RBAC Permission Enforcement
+  if (requiredPermission) {
+    const isSuperadmin = user?.sub_role === 'superadmin' || user?.Username === 'superadmin' || user?.Username === 'admin';
+    const userPerms = Array.isArray(user?.permissions) ? user.permissions : [];
+
+    if (!isSuperadmin && !userPerms.includes(requiredPermission)) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+  }
+
   return (
     <div data-slot="admin-protected-route" className="contents">
       <Outlet />
     </div>
   );
 }
+

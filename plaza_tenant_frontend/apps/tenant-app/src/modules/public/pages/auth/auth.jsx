@@ -64,7 +64,7 @@ function AuthPage() {
       } else if (err?.response?.status === 401 || err?.response?.status === 422) {
         setUsernameError('Username atau kata sandi yang Anda masukkan salah.');
       } else {
-        setUsernameError('Tidak dapat terhubung ke server auth. Pastikan backend Laravel berjalan.');
+        setUsernameError('Tidak dapat terhubung ke server. Silakan periksa koneksi internet Anda atau coba lagi nanti.');
       }
     } finally {
       setIsLoginLoading(false);
@@ -143,12 +143,12 @@ function AuthPage() {
                   value={formData.kataSandi}
                   onChange={handleInputChange}
                   autoComplete="current-password"
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-11 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1 focus:outline-none cursor-pointer"
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
                   aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                 >
                   <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
@@ -157,18 +157,18 @@ function AuthPage() {
             </FormField>
 
             <div className="flex items-center justify-between mt-1 text-sm">
-              <label className="flex items-center gap-2 font-semibold text-text-2 cursor-pointer select-none">
+              <label className="flex items-center gap-2 font-semibold text-text-2 cursor-pointer select-none min-h-[44px] py-1">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="size-4 accent-red cursor-pointer rounded"
+                  className="size-4.5 accent-red cursor-pointer rounded"
                 />
                 <span>Ingat Saya</span>
               </label>
               <Link
                 to="/auth/lupa-sandi"
-                className="text-red hover:underline font-semibold text-sm transition-colors py-1"
+                className="text-red hover:underline font-semibold text-sm transition-colors min-h-[44px] inline-flex items-center px-1"
               >
                 Lupa Kata Sandi?
               </Link>

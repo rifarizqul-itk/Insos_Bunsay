@@ -77,7 +77,7 @@ function TunggakanAR() {
   }, []);
 
   const handleBayar = () => {
-    navigate('/bayar', {
+    navigate('/tenant/pembayaran', {
       state: {
         totalTunggakan: totalTunggakanVal,
         listTagihan: listTagihan
