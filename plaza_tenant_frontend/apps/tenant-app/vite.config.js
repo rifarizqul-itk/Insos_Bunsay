@@ -55,6 +55,9 @@ export default defineConfig(({ mode }) => {
               if (id.includes('exceljs')) {
                 return 'vendor-excel';
               }
+              if (id.includes('pusher-js') || id.includes('laravel-echo')) {
+                return 'vendor-echo';
+              }
             }
           }
         }
