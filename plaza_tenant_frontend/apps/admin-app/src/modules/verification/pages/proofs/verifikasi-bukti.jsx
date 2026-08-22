@@ -6,6 +6,7 @@ import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { httpClient } = useAdminAuth();
   const { addToast } = useToast();
   const [previewItem, setPreviewItem] = useState(null);
@@ -90,19 +91,36 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     fetchVerifikasiQueue();
   }, [httpClient]);
 
-  // Auto-open modal pop-up when navigated from cashier setoran tunai
+  // Auto-open modal pop-up when navigated from notifications (?trx=...) or cashier setoran tunai
   useEffect(() => {
-    if (location.state?.autoOpen && antrean.length > 0) {
-      const match = antrean.find(item => 
-        (location.state.tenantNama && item.nama.toLowerCase().includes(location.state.tenantNama.toLowerCase())) ||
-        (location.state.idTagihan && item.id === location.state.idTagihan)
-      ) || antrean[0];
+    const targetTrx = searchParams.get('trx') || searchParams.get('id');
+    const targetTenant = searchParams.get('tenant') || location.state?.tenantNama;
+    const cleanTargetId = targetTrx ? String(targetTrx).replace(/[^0-9]/g, '') : null;
 
-      if (match) {
-        setPreviewItem(match);
+    if (cleanTargetId || targetTenant || location.state?.autoOpen) {
+      if (antrean.length > 0) {
+        const match = antrean.find(item => 
+          (cleanTargetId && String(item.id) === String(cleanTargetId)) ||
+          (targetTenant && item.nama.toLowerCase().includes(targetTenant.toLowerCase())) ||
+          (location.state?.idTagihan && String(item.id) === String(location.state.idTagihan))
+        ) || (location.state?.autoOpen ? antrean[0] : null);
+
+        if (match) {
+          setActiveTab('antrean');
+          setPreviewItem(match);
+          return;
+        }
+      }
+
+      if (riwayatProses.length > 0 && cleanTargetId) {
+        const matchRiwayat = riwayatProses.find(item => String(item.id) === String(cleanTargetId));
+        if (matchRiwayat) {
+          setActiveTab('riwayat');
+          setPreviewItem(matchRiwayat);
+        }
       }
     }
-  }, [antrean, location.state]);
+  }, [antrean, riwayatProses, location.state, searchParams]);
 
   const handleSortAntrean = (key) => {
     setSortConfigAntrean(prev => ({

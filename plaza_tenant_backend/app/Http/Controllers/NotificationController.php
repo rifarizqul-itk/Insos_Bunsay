@@ -24,13 +24,17 @@ class NotificationController extends Controller
         }
 
         $notifications = Notification::where('target_type', 'tenant')
-            ->where('id_user', $user->Id_user)
+            ->where(function ($q) use ($user) {
+                $q->where('id_user', $user->Id_user)->orWhereNull('id_user');
+            })
             ->orderBy('id', 'desc')
             ->limit(50)
             ->get();
 
         $unreadCount = Notification::where('target_type', 'tenant')
-            ->where('id_user', $user->Id_user)
+            ->where(function ($q) use ($user) {
+                $q->where('id_user', $user->Id_user)->orWhereNull('id_user');
+            })
             ->where('is_read', false)
             ->count();
 

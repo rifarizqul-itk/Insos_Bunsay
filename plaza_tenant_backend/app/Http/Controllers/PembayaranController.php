@@ -241,21 +241,22 @@ class PembayaranController extends Controller
 
         // 6. Kirim dynamic event notification ke panel Admin
         $nomFormatted = number_format((float)($request->Total_Bayar ?? 0), 0, ',', '.');
+        $namaTenant = $tagihanTarget?->sewa?->pemilik?->Nama ?? 'Tenant';
         if ($request->Metode_Bayar === 'Transfer') {
             \App\Models\Notification::send(
                 'admin',
                 null,
                 'Pembayaran Transfer Masuk',
-                "Tenant mengunggah bukti pembayaran transfer sebesar Rp {$nomFormatted}. Menunggu verifikasi admin.",
+                "Tenant {$namaTenant} mengunggah bukti transfer sebesar Rp {$nomFormatted} (TRX-{$pembayaran->Id_Pembayaran}). Menunggu verifikasi admin.",
                 'info',
-                '/admin/verifikasi-bukti'
+                '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
             );
         } else if ($request->Metode_Bayar === 'Midtrans') {
             \App\Models\Notification::send(
                 'admin',
                 null,
                 'Pembayaran Midtrans Berhasil',
-                "Pembayaran otomatis via Midtrans sebesar Rp {$nomFormatted} berhasil diterima.",
+                "Pembayaran otomatis via Midtrans dari {$namaTenant} sebesar Rp {$nomFormatted} berhasil diterima.",
                 'success',
                 '/admin/riwayat'
             );
@@ -396,19 +397,25 @@ class PembayaranController extends Controller
         );
 
         // Send Dynamic Event Notification to Tenant
+        $tenantUserId = $pembayaran->tagihan?->sewa?->pemilik?->Id_User;
+        if (!$tenantUserId && $pembayaran->Id_Tagihan) {
+            $tagihanObj = Tagihan::with('sewa.pemilik')->find($pembayaran->Id_Tagihan);
+            $tenantUserId = $tagihanObj?->sewa?->pemilik?->Id_User;
+        }
+
         if ($request->status === 'Diterima') {
             \App\Models\Notification::send(
                 'tenant',
-                null,
+                $tenantUserId,
                 'Pembayaran Sewa Diterima',
-                "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} sebesar Rp " . number_format((float)($pembayaran->Total_Bayar || 0), 0, ',', '.') . " telah diverifikasi dan DITERIMA oleh pengelola.",
+                "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} sebesar Rp " . number_format((float)($pembayaran->Total_Bayar ?? 0), 0, ',', '.') . " telah diverifikasi dan DITERIMA oleh pengelola.",
                 'success',
                 '/tenant/histori'
             );
         } else if ($request->status === 'Ditolak') {
             \App\Models\Notification::send(
                 'tenant',
-                null,
+                $tenantUserId,
                 'Pembayaran Sewa Ditolak',
                 "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} DITOLAK oleh pengelola. Alasan: " . ($request->catatan_admin ?: 'Bukti pembayaran tidak terbaca') . ". Silakan kirimkan sanggahan.",
                 'danger',
@@ -507,7 +514,7 @@ class PembayaranController extends Controller
             'Sanggahan Pembayaran Tenant Baru',
             "Tenant mengirimkan sanggahan untuk transaksi TRX-{$pembayaran->Id_Pembayaran}. Catatan sanggahan: {$request->teks_sanggahan}",
             'warning',
-            '/admin/verifikasi-bukti'
+            '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
         );
 
         return response()->json([

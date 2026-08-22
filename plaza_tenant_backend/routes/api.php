@@ -87,6 +87,7 @@ Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
     Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
     Route::post('/midtrans/token', [\App\Http\Controllers\MidtransController::class, 'createSnapToken']);
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
+    Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 });
 

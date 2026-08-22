@@ -43,8 +43,18 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
     }
   };
 
-  const handleNotifClick = (notif) => {
+  const handleNotifClick = async (notif) => {
     setIsOpen(false);
+    if (!notif.is_read) {
+      try {
+        await httpClient.put(`/api/v1/tenant/notifications/${notif.id}/read`);
+        setNotifikasiList(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (err) {
+        setNotifikasiList(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    }
     if (notif.link) {
       navigate(notif.link);
     }
