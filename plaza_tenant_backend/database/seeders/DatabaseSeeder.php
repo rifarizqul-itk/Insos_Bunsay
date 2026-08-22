@@ -15,9 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
-            KiosSeeder::class,
-            ScenarioSeeder::class,
-            BulkStressSeeder::class,  // 20k stress-test data
+            // KiosSeeder::class,     // [NONAKTIF] kios dummy — kios real dibuat di RealTenantSeeder
+            RealTenantSeeder::class,   // 886 tenant real dari Data Kios BY LEGAL April 2025
+            // ScenarioSeeder::class,  // [NONAKTIF] dummy scenario tenants
+            // BulkStressSeeder::class,// [NONAKTIF] 20k stress-test data
         ]);
     }
 }
