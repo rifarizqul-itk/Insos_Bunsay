@@ -18,4 +18,5 @@ export { BuktiPembayaranModal } from './components/BuktiPembayaranModal';
 export { BunsayQRCode } from './components/BunsayQRCode';
 export { Pagination } from './components/Pagination';
 export { ImageGallerySlider, parseImageGallery } from './components/ImageGallerySlider';
+export { NotificationPopover } from './components/NotificationPopover';
 export { cn } from './utils/cn';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, cn } from '@bunsay/shared-ui';
+import { Icon, NotificationPopover, cn } from '@bunsay/shared-ui';
 import { getEcho } from '@bunsay/shared-core';
 import { useTenantAuth } from '../useTenantAuth';
 
@@ -142,60 +142,13 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
         </button>
 
         {isOpen && (
-          <div 
-            role="region"
-            aria-label="Panel Notifikasi"
-            className="topbar-dropdown"
-          >
-            <div className="flex items-center justify-between border-b-2 border-mono-100 pb-2.5">
-              <span className="text-sm font-extrabold text-text">Notifikasi Anda</span>
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllRead}
-                  className="text-xs text-red hover:underline font-bold bg-transparent border-none cursor-pointer"
-                >
-                  Tandai Semua Dibaca
-                </button>
-              )}
-            </div>
-
-            <div role="list" className="flex flex-col gap-2 max-h-80 overflow-y-auto">
-              {notifikasiList.length === 0 ? (
-                <div className="text-xs text-text-3 font-semibold text-center py-4">Belum ada notifikasi.</div>
-              ) : (
-                notifikasiList.map((notif) => (
-                  <div
-                    key={notif.id}
-                    onClick={() => handleNotifClick(notif)}
-                    role="button"
-                    tabIndex={0}
-                    className={`
-                      p-3 rounded-lg flex flex-col gap-1 text-start border cursor-pointer transition-colors
-                      ${!notif.is_read ? 'bg-amber-50 border-amber-300 hover:bg-amber-100' : 'bg-white border-border hover:bg-mono-100'}
-                    `}
-                  >
-                    <div className="text-xs font-extrabold text-text leading-snug flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-1.5 font-bold">
-                        {notif.type === 'danger' || notif.type === 'warning' ? (
-                          <Icon icon="heroicons:exclamation-circle-20-solid" className="text-amber-600 shrink-0 size-4" />
-                        ) : (
-                          <Icon icon="heroicons:check-circle-20-solid" className="text-emerald-600 shrink-0 size-4" />
-                        )}
-                        <span>{notif.title || 'Informasi Notifikasi'}</span>
-                      </span>
-                      {!notif.is_read && <span className="size-2 rounded-full bg-red shrink-0" />}
-                    </div>
-                    <p className="text-xs text-text-2 font-medium leading-relaxed m-0">
-                      {notif.message || notif.teks}
-                    </p>
-                    <span className="text-2.5 text-text-3 font-semibold pt-1">
-                      {notif.created_at || 'Baru Saja'}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <NotificationPopover
+            notifications={notifikasiList}
+            unreadCount={unreadCount}
+            onMarkAllRead={handleMarkAllRead}
+            onNotificationClick={handleNotifClick}
+            variant="tenant"
+          />
         )}
       </div>
     </header>
