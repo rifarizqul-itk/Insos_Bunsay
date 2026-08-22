@@ -14,6 +14,20 @@ const formatRibuanDot = (val) => {
   return Number(cleanDigits).toLocaleString('id-ID');
 };
 
+const formatPeriodeIndo = (periodeStr) => {
+  if (!periodeStr) return 'Periode Berjalan';
+  if (/^\d{4}-\d{2}$/.test(periodeStr)) {
+    const [year, monthNum] = periodeStr.split('-');
+    const monthIdx = parseInt(monthNum, 10) - 1;
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return `${months[monthIdx] || monthNum} ${year}`;
+  }
+  return periodeStr;
+};
+
 const loadSnapScript = () => {
   return new Promise((resolve) => {
     if (typeof window !== 'undefined' && window.snap) {
@@ -531,46 +545,54 @@ function BayarSekarang() {
                   </div>
                 )}
 
-                {/* Rincian Tagihan yang Perlu Dibayar */}
+                {/* Rincian Periode Tagihan yang Perlu Dibayar (Opsi A: Clean Compact List) */}
                 {displayedUnpaidBills.length > 0 && (
-                  <div className="flex flex-col gap-2.5 bg-mono-50/70 border border-border/80 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
-                        <Icon icon="heroicons:list-bullet-20-solid" className="size-4 text-red" />
-                        <span>
+                  <div className="bg-mono-50/80 border border-border/80 rounded-xl p-4 sm:p-5 flex flex-col gap-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red" />
+                        <span className="text-xs sm:text-sm font-extrabold text-text">
                           {selectedKiosFilter === 'semua' 
-                            ? `Kewajiban Tagihan Aktif (${displayedUnpaidBills.length} Tagihan)`
-                            : `Tagihan Kios ${selectedKiosFilter} (${displayedUnpaidBills.length} Tagihan)`}
+                            ? `Rincian Periode Tagihan (${displayedUnpaidBills.length} Periode)`
+                            : `Tagihan Kios ${selectedKiosFilter} (${displayedUnpaidBills.length} Periode)`}
                         </span>
-                      </span>
-                      <span className="text-2xs font-bold text-text-3">
+                      </div>
+                      <span className="text-xs sm:text-sm font-extrabold font-tabular-nums text-red">
                         Total: Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2 pt-1">
-                      {displayedUnpaidBills.map((bill, bIdx) => (
-                        <div 
-                          key={bill.idTagihan || bIdx}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white border border-border/70 rounded-lg text-xs"
-                        >
-                          <div className="flex items-center gap-2">
-                            {availableKiosks.length > 1 && (
-                              <strong className="text-red font-extrabold font-tabular-nums text-xs">
-                                [{bill.noKios !== '—' ? `Kios ${bill.noKios}` : `Unit #${bIdx + 1}`}]
-                              </strong>
-                            )}
-                            <span className="text-text font-bold">{bill.jenisUsaha}</span>
-                            <span className="text-text-3">• Periode {bill.periode}</span>
+                    <div className="divide-y divide-border/50 text-xs sm:text-sm">
+                      {displayedUnpaidBills.map((bill, bIdx) => {
+                        const isLatest = bIdx === displayedUnpaidBills.length - 1;
+                        const nominalBill = Number(bill.sisaTagihan ?? bill.totalTagihan);
+                        return (
+                          <div 
+                            key={bill.idTagihan || bIdx}
+                            className="py-2.5 flex items-center justify-between gap-3 text-text"
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="size-1.5 rounded-full bg-red/80 shrink-0" />
+                              {availableKiosks.length > 1 && (
+                                <span className="font-extrabold text-red text-2xs px-1.5 py-0.5 rounded bg-red-50 border border-red/20 font-tabular-nums">
+                                  Kios {bill.noKios}
+                                </span>
+                              )}
+                              <span className="font-semibold text-text">
+                                Sewa Periode <strong className="font-bold text-text">{formatPeriodeIndo(bill.periode)}</strong>
+                              </span>
+                              {isLatest && displayedUnpaidBills.length > 1 && (
+                                <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                  Bulan Berjalan
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-tabular-nums font-bold text-text shrink-0 text-right">
+                              Rp {nominalBill.toLocaleString('id-ID')}
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between sm:justify-end gap-3">
-                            <span className="font-tabular-nums font-extrabold text-text">
-                              Rp {Number(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
-                            </span>
-                            <Badge status={bill.statusTagihan} />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

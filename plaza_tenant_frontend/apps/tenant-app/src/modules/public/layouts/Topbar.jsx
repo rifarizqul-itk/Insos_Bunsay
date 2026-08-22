@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, cn } from '@bunsay/shared-ui';
+import { getEcho } from '@bunsay/shared-core';
 import { useTenantAuth } from '../useTenantAuth';
 
 function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   const navigate = useNavigate();
-  const { httpClient } = useTenantAuth();
+  const { httpClient, user } = useTenantAuth();
   const [isOpen, setIsOpen] = useState(false);
   const notifikasiRef = useRef(null);
 
@@ -30,7 +31,33 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
 
   useEffect(() => {
     fetchNotifikasi();
-  }, [fetchNotifikasi]);
+
+    const echo = getEcho();
+    if (echo) {
+      const genChannel = echo.channel('tenant-notifications');
+      genChannel.listen('.notification.created', (e) => {
+        setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
+        setUnreadCount(prev => prev + 1);
+      });
+
+      const userId = user?.id || user?.Id_user || user?.sub;
+      let userChannel = null;
+      if (userId) {
+        userChannel = echo.channel(`tenant-notifications.${userId}`);
+        userChannel.listen('.notification.created', (e) => {
+          setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
+          setUnreadCount(prev => prev + 1);
+        });
+      }
+
+      return () => {
+        echo.leaveChannel('tenant-notifications');
+        if (userId) {
+          echo.leaveChannel(`tenant-notifications.${userId}`);
+        }
+      };
+    }
+  }, [fetchNotifikasi, user]);
 
   const handleMarkAllRead = async () => {
     try {

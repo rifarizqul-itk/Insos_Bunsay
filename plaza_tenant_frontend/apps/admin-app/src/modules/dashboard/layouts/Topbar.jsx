@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, cn } from '@bunsay/shared-ui';
+import { getEcho } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
@@ -30,6 +31,19 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
 
   useEffect(() => {
     fetchNotifikasi();
+
+    const echo = getEcho();
+    if (echo) {
+      const channel = echo.channel('admin-notifications');
+      channel.listen('.notification.created', (e) => {
+        setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
+        setUnreadCount(prev => prev + 1);
+      });
+
+      return () => {
+        echo.leaveChannel('admin-notifications');
+      };
+    }
   }, [fetchNotifikasi]);
 
   const handleMarkAllRead = async () => {

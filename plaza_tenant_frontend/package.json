@@ -18,6 +18,8 @@
   "dependencies": {
     "@iconify/react": "^6.0.2",
     "axios": "^1.7.9",
+    "laravel-echo": "^2.4.0",
+    "pusher-js": "^8.6.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

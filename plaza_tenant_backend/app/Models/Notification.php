@@ -39,7 +39,7 @@ class Notification extends Model
                 });
             }
 
-            return self::create([
+            $notification = self::create([
                 'target_type' => $targetType,
                 'id_user'     => $idUser,
                 'title'       => $title,
@@ -49,6 +49,14 @@ class Notification extends Model
                 'link'        => $link,
                 'created_at'  => now(),
             ]);
+
+            try {
+                \App\Events\NotificationSent::dispatch($notification);
+            } catch (\Throwable $broadCastErr) {
+                \Illuminate\Support\Facades\Log::warning('Pusher broadcast failed: ' . $broadCastErr->getMessage());
+            }
+
+            return $notification;
         } catch (\Throwable $e) {
             return null; // Fail-safe
         }

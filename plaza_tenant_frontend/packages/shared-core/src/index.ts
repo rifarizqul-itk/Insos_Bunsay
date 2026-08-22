@@ -22,3 +22,6 @@ export { MockTransactionAdapter, transactionPort } from './api/transactions';
 // Export Excel Rekap Utility
 export { downloadExcelRekap } from './utils/exportExcel';
 
+// Export Echo WebSocket instance
+export { getEcho } from './utils/echo';
+
