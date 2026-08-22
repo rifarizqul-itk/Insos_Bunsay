@@ -47,8 +47,12 @@ function AkunTenant() {
   });
 
   const [fieldError, setFieldError] = useState(null);
+  const [oldPasswordError, setOldPasswordError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState(null);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...adminDetail });
@@ -108,17 +112,22 @@ function AkunTenant() {
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (name === 'kataSandiLama' && oldPasswordError) setOldPasswordError(null);
     if (name === 'kataSandiBaru' && passwordError) setPasswordError(null);
     if (name === 'konfirmasiKataSandi' && confirmPasswordError) setConfirmPasswordError(null);
   };
 
   const handleSavePassword = async (e) => {
     e.preventDefault();
+    setOldPasswordError(null);
+    setPasswordError(null);
+    setConfirmPasswordError(null);
+
     let hasError = false;
     if (!passwordData.kataSandiLama) {
-      setPasswordError('Kata sandi saat ini wajib diisi.');
+      setOldPasswordError('Kata sandi saat ini wajib diisi.');
       addToast('Kata sandi saat ini wajib diisi.', 'error');
-      return;
+      hasError = true;
     }
     if (!passwordData.kataSandiBaru || passwordData.kataSandiBaru.length < 6) {
       setPasswordError('Kata sandi baru minimal 6 karakter.');
@@ -146,7 +155,14 @@ function AkunTenant() {
       addToast('Kata sandi akun tenant berhasil diperbarui!', 'success');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Gagal mengubah kata sandi.';
-      setPasswordError(msg);
+      const lowerMsg = msg.toLowerCase();
+      if (lowerMsg.includes('saat ini') || lowerMsg.includes('lama') || lowerMsg.includes('tidak sesuai') || lowerMsg.includes('salah')) {
+        setOldPasswordError(msg);
+      } else if (lowerMsg.includes('cocok') || lowerMsg.includes('konfirmasi')) {
+        setConfirmPasswordError(msg);
+      } else {
+        setPasswordError(msg);
+      }
       addToast(msg, 'error');
     } finally {
       setIsChangingPassword(false);
@@ -418,43 +434,76 @@ function AkunTenant() {
                 Ubah Kata Sandi
               </h3>
               
-              <FormField label="Kata Sandi Saat Ini" id="tenant-pwd-old">
-                <input
-                  type="password"
-                  name="kataSandiLama"
-                  placeholder="Masukkan kata sandi lama"
-                  value={passwordData.kataSandiLama}
-                  onChange={handlePasswordChange}
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
-                />
+              <FormField label="Kata Sandi Saat Ini" id="tenant-pwd-old" required error={oldPasswordError}>
+                <div className="relative w-full">
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    name="kataSandiLama"
+                    placeholder="Masukkan kata sandi lama"
+                    value={passwordData.kataSandiLama}
+                    onChange={handlePasswordChange}
+                    className={cn(
+                      'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                      oldPasswordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(prev => !prev)}
+                    className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                    aria-label={showOldPassword ? 'Sembunyikan kata sandi saat ini' : 'Tampilkan kata sandi saat ini'}
+                  >
+                    <Icon icon={showOldPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  </button>
+                </div>
               </FormField>
 
               <FormField label="Kata Sandi Baru" id="tenant-pwd-new" required error={passwordError}>
-                <input
-                  type="password"
-                  name="kataSandiBaru"
-                  placeholder="Minimal 6 karakter"
-                  value={passwordData.kataSandiBaru}
-                  onChange={handlePasswordChange}
-                  className={cn(
-                    'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors',
-                    passwordError ? 'border-red' : 'border-border'
-                  )}
-                />
+                <div className="relative w-full">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    name="kataSandiBaru"
+                    placeholder="Minimal 6 karakter"
+                    value={passwordData.kataSandiBaru}
+                    onChange={handlePasswordChange}
+                    className={cn(
+                      'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                      passwordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(prev => !prev)}
+                    className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                    aria-label={showNewPassword ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'}
+                  >
+                    <Icon icon={showNewPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  </button>
+                </div>
               </FormField>
 
               <FormField label="Konfirmasi Kata Sandi Baru" id="tenant-pwd-confirm" required error={confirmPasswordError}>
-                <input
-                  type="password"
-                  name="konfirmasiKataSandi"
-                  placeholder="Ulangi kata sandi baru"
-                  value={passwordData.konfirmasiKataSandi}
-                  onChange={handlePasswordChange}
-                  className={cn(
-                    'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors',
-                    confirmPasswordError ? 'border-red' : 'border-border'
-                  )}
-                />
+                <div className="relative w-full">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="konfirmasiKataSandi"
+                    placeholder="Ulangi kata sandi baru"
+                    value={passwordData.konfirmasiKataSandi}
+                    onChange={handlePasswordChange}
+                    className={cn(
+                      'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                      confirmPasswordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(prev => !prev)}
+                    className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                    aria-label={showConfirmPassword ? 'Sembunyikan konfirmasi kata sandi' : 'Tampilkan konfirmasi kata sandi'}
+                  >
+                    <Icon icon={showConfirmPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  </button>
+                </div>
               </FormField>
 
               <Button
