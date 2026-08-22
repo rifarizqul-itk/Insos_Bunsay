@@ -237,6 +237,8 @@ class PembayaranController extends Controller
                     'Status_Tagihan' => 'Lunas',
                     'Sisa_Tagihan'   => 0,
                 ]);
+        }
+
         // 6. Kirim dynamic event notification ke panel Admin
         $nomFormatted = number_format((float)($request->Total_Bayar ?? 0), 0, ',', '.');
         if ($request->Metode_Bayar === 'Transfer') {
