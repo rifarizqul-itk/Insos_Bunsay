@@ -393,12 +393,25 @@ function AuthPage() {
               )}
             </Button>
 
-            <div className="bg-cream/60 border border-border rounded-xl p-3.5 flex gap-2.5 items-start">
-              <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-red shrink-0 mt-0.5" />
-              <div className="text-xs text-text-2 leading-relaxed">
-                <strong className="text-text font-bold block mb-0.5">Butuh Bantuan Pengelola?</strong>
-                Hubungi <strong>WhatsApp (0811-5901-119)</strong> atau datang ke <strong>Kantor Pengelola Lt. 3</strong>.
+            <div className="bg-cream/70 border border-border/80 rounded-xl p-3.5 flex flex-col gap-2.5">
+              <div className="flex gap-2.5 items-start">
+                <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-red shrink-0 mt-0.5" />
+                <div className="text-xs text-text-2 leading-relaxed">
+                  <strong className="text-text font-bold block mb-0.5">Butuh Bantuan Pengelola?</strong>
+                  Jika nomor WhatsApp atau email Anda belum terdaftar, silakan chat langsung atau datang ke <strong>Kantor Pengelola Lt. 3</strong>.
+                </div>
               </div>
+              <a
+                href="https://wa.me/628115901119?text=Halo%20Pengelola%20Plaza%20Kebun%20Sayur,%20saya%20tenant%20membutuhkan%20bantuan%20terkait%20pemulihan%20kata%20sandi%20akun%20saya."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#128C7E] hover:text-[#075E54] text-xs font-bold rounded-lg transition-all active:scale-95"
+                aria-label="Chat WhatsApp Pengelola Plaza Kebun Sayur"
+              >
+                <Icon icon="ic:baseline-whatsapp" className="size-4.5 text-[#25D366]" />
+                <span>Chat WhatsApp Pengelola (0811-5901-119)</span>
+                <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3.5 opacity-70" />
+              </a>
             </div>
 
             <Link
@@ -477,13 +490,24 @@ function AuthPage() {
               )}
             </Button>
 
-            <button
-              type="button"
-              onClick={() => setForgotStep('request')}
-              className="text-text-2 hover:text-red text-xs font-semibold text-center transition-colors py-1 cursor-pointer"
-            >
-              Kirim ulang kode verifikasi ke akun lain
-            </button>
+            <div className="flex flex-col items-center gap-2 pt-1 border-t border-border/60">
+              <button
+                type="button"
+                onClick={() => setForgotStep('request')}
+                className="text-text-2 hover:text-red text-xs font-semibold text-center transition-colors py-1 cursor-pointer"
+              >
+                Kirim ulang kode verifikasi ke akun lain
+              </button>
+              <a
+                href="https://wa.me/628115901119?text=Halo%20Pengelola%20Plaza%20Kebun%20Sayur,%20saya%20tenant%20belum%20menerima%20kode%20OTP%20pemulihan%20kata%20sandi."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#128C7E] hover:text-[#075E54] hover:underline"
+              >
+                <Icon icon="ic:baseline-whatsapp" className="size-3.5 text-[#25D366]" />
+                <span>Tidak menerima kode? Bantuan WhatsApp Pengelola</span>
+              </a>
+            </div>
           </form>
         ) : (
           <div key="form-forgot-success" className="flex flex-col gap-4 text-center page-fade-in" role="status">
