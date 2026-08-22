@@ -51,6 +51,8 @@ function BayarSekarang() {
   const { httpClient } = useTenantAuth();
   
   const [metode, setMetode] = useState('transfer_manual');
+  const initialKiosFilter = location.state?.selectedKios || 'semua';
+  const [selectedKiosFilter, setSelectedKiosFilter] = useState(initialKiosFilter);
   const [nominal, setNominal] = useState(() => String(location.state?.nominal ?? location.state?.totalTunggakan ?? ''));
   const [nominalError, setNominalError] = useState(null);
   const [buktiTransfer, setBuktiTransfer] = useState(null);
@@ -94,10 +96,18 @@ function BayarSekarang() {
             });
           setUnpaidBills(activeUnpaid);
 
-          if (!isAllowedCicil && activeUnpaid.length > 0) {
-            const sumUnpaid = activeUnpaid.reduce((sum, b) => sum + Math.max(0, b.totalTagihan - b.totalTerbayar), 0);
-            if (sumUnpaid > 0) {
-              setNominal(String(sumUnpaid));
+          if (activeUnpaid.length > 0) {
+            const targetBills = initialKiosFilter === 'semua'
+              ? activeUnpaid
+              : activeUnpaid.filter(b => b.noKios === initialKiosFilter);
+
+            const sumTarget = (targetBills.length > 0 ? targetBills : activeUnpaid)
+              .reduce((sum, b) => sum + (b.sisaTagihan ?? b.totalTagihan), 0);
+
+            if (location.state?.nominal) {
+              setNominal(String(location.state.nominal));
+            } else if (sumTarget > 0) {
+              setNominal(String(sumTarget));
             }
           }
         }
@@ -109,16 +119,44 @@ function BayarSekarang() {
     };
 
     fetchUnpaidBills();
-  }, [httpClient]);
+  }, [httpClient, initialKiosFilter]);
+
+  const availableKiosks = useMemo(() => {
+    const map = new Map();
+    unpaidBills.forEach(b => {
+      if (b.noKios && b.noKios !== '—') {
+        const existing = map.get(b.noKios) || { noKios: b.noKios, jenisUsaha: b.jenisUsaha, totalUnpaid: 0, count: 0 };
+        existing.totalUnpaid += (b.sisaTagihan ?? b.totalTagihan);
+        existing.count += 1;
+        map.set(b.noKios, existing);
+      }
+    });
+    return Array.from(map.values());
+  }, [unpaidBills]);
+
+  const displayedUnpaidBills = useMemo(() => {
+    if (selectedKiosFilter === 'semua') return unpaidBills;
+    const filtered = unpaidBills.filter(b => b.noKios === selectedKiosFilter);
+    return filtered.length > 0 ? filtered : unpaidBills;
+  }, [unpaidBills, selectedKiosFilter]);
+
+  const handleSelectKiosFilter = (kiosKey) => {
+    setSelectedKiosFilter(kiosKey);
+    const targetBills = kiosKey === 'semua' ? unpaidBills : unpaidBills.filter(b => b.noKios === kiosKey);
+    const total = (targetBills.length > 0 ? targetBills : unpaidBills)
+      .reduce((sum, b) => sum + (b.sisaTagihan ?? b.totalTagihan), 0);
+    setNominal(String(total));
+    setNominalError(null);
+  };
 
   const fifoAllocations = useMemo(() => {
     const nominalNum = Number(nominal) || 0;
-    if (nominalNum > 0 && unpaidBills.length > 0) {
-      const activeUnpaid = unpaidBills.filter(b => b.statusTagihan !== 'Lunas');
+    if (nominalNum > 0 && displayedUnpaidBills.length > 0) {
+      const activeUnpaid = displayedUnpaidBills.filter(b => b.statusTagihan !== 'Lunas');
       return allocatePaymentFIFO(activeUnpaid, nominalNum).allocations;
     }
     return [];
-  }, [nominal, unpaidBills]);
+  }, [nominal, displayedUnpaidBills]);
 
   useEffect(() => {
     return () => {
@@ -190,7 +228,7 @@ function BayarSekarang() {
     setIsLoading(true);
     setProcessError(null);
     try {
-      const targetTagihanId = unpaidBills[0]?.idTagihan || 1;
+      const targetTagihanId = displayedUnpaidBills[0]?.idTagihan || unpaidBills[0]?.idTagihan || 1;
       const todayStr = new Date().toISOString().split('T')[0];
 
       if (metode === 'transfer_manual') {
@@ -433,21 +471,85 @@ function BayarSekarang() {
                   </a>
                 </div>
 
+                {/* Pemilihan Kios (Untuk Tenant Multi-Kios) */}
+                {availableKiosks.length > 1 && (
+                  <div className="flex flex-col gap-2.5 bg-mono-100/90 border border-border/80 rounded-xl p-3.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                        <Icon icon="heroicons:funnel-20-solid" className="size-3.5 text-red" />
+                        <span>Pilih Unit Kios yang Ingin Dibayar:</span>
+                      </span>
+                      <span className="text-2xs font-bold text-text-3">
+                        {selectedKiosFilter === 'semua' ? 'Semua Unit Kios' : `Fokus Kios ${selectedKiosFilter}`}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectKiosFilter('semua')}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
+                          selectedKiosFilter === 'semua'
+                            ? "bg-red text-white shadow-xs border border-red"
+                            : "bg-white text-text hover:bg-mono-50 border border-border"
+                        )}
+                      >
+                        <Icon icon="heroicons:building-storefront-20-solid" className="size-4 shrink-0" />
+                        <span>Semua Unit ({availableKiosks.length})</span>
+                        <span className={cn(
+                          "px-1.5 py-0.5 rounded text-2xs font-tabular-nums",
+                          selectedKiosFilter === 'semua' ? "bg-red-900/60 text-white" : "bg-mono-100 text-text-2 font-bold"
+                        )}>
+                          Rp {unpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
+                        </span>
+                      </button>
+
+                      {availableKiosks.map((k) => (
+                        <button
+                          key={k.noKios}
+                          type="button"
+                          onClick={() => handleSelectKiosFilter(k.noKios)}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
+                            selectedKiosFilter === k.noKios
+                              ? "bg-red text-white shadow-xs border border-red"
+                              : "bg-white text-text hover:bg-mono-50 border border-border"
+                          )}
+                        >
+                          <span className="font-tabular-nums font-bold">Kios {k.noKios}</span>
+                          <span className="text-2xs opacity-80 font-medium truncate max-w-24">({k.jenisUsaha})</span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-2xs font-tabular-nums font-extrabold",
+                            selectedKiosFilter === k.noKios ? "bg-red-900/60 text-white" : "bg-mono-100 text-red"
+                          )}>
+                            Rp {k.totalUnpaid.toLocaleString('id-ID')}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Rincian Tagihan yang Perlu Dibayar */}
-                {unpaidBills.length > 0 && (
+                {displayedUnpaidBills.length > 0 && (
                   <div className="flex flex-col gap-2.5 bg-mono-50/70 border border-border/80 rounded-xl p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
                         <Icon icon="heroicons:list-bullet-20-solid" className="size-4 text-red" />
-                        <span>Kewajiban Tagihan Aktif ({unpaidBills.length} Tagihan)</span>
+                        <span>
+                          {selectedKiosFilter === 'semua' 
+                            ? `Kewajiban Tagihan Aktif (${displayedUnpaidBills.length} Tagihan)`
+                            : `Tagihan Kios ${selectedKiosFilter} (${displayedUnpaidBills.length} Tagihan)`}
+                        </span>
                       </span>
                       <span className="text-2xs font-bold text-text-3">
-                        Total: Rp {unpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
+                        Total: Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
                       </span>
                     </div>
 
                     <div className="flex flex-col gap-2 pt-1">
-                      {unpaidBills.map((bill, bIdx) => (
+                      {displayedUnpaidBills.map((bill, bIdx) => (
                         <div 
                           key={bill.idTagihan || bIdx}
                           className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white border border-border/70 rounded-lg text-xs"

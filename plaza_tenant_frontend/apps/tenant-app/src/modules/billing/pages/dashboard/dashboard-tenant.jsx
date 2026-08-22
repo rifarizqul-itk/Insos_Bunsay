@@ -122,8 +122,8 @@ function DashboardTenant() {
     fetchDashboardData();
   }, []);
 
-  const handleBayar = (nominal) => {
-    navigate('/tenant/pembayaran', { state: { nominal } });
+  const handleBayar = (nominal, noKios = 'semua') => {
+    navigate('/tenant/pembayaran', { state: { nominal, selectedKios: noKios } });
   };
 
   if (loading) {
@@ -439,7 +439,7 @@ function DashboardTenant() {
                       <Button
                         variant="primary"
                         size="xs"
-                        onClick={() => handleBayar(tagihanNominal)}
+                        onClick={() => handleBayar(tagihanNominal, item.noKios)}
                         className="h-8 px-3 text-2xs font-extrabold gap-1 shadow-xs"
                       >
                         <span>Bayar Kios Ini</span>
