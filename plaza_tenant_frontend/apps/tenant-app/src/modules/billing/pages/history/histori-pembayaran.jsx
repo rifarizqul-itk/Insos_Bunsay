@@ -43,6 +43,7 @@ function HistoriPembayaran() {
           kios: item.tagihan?.sewa?.kios?.No_Kios || '',
           catatanAdmin: item.catatan_admin || '',
           teksSanggahan: item.teks_sanggahan || '',
+          buktiSanggahan: item.bukti_sanggahan || '',
           alokasi: []
         }));
         setHistory(mapped);
@@ -282,9 +283,17 @@ function HistoriPembayaran() {
                         </div>
                       )}
                       {row.teksSanggahan && (
-                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 font-semibold flex items-start gap-1.5 w-full">
-                          <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4 text-amber-700 shrink-0 mt-0.5" />
-                          <span>Sanggahan Anda: "{row.teksSanggahan}"</span>
+                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 font-semibold flex flex-col gap-1 w-full">
+                          <div className="flex items-start gap-1.5">
+                            <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4 text-amber-700 shrink-0 mt-0.5" />
+                            <span>Sanggahan Anda: "{row.teksSanggahan}"</span>
+                          </div>
+                          {row.buktiSanggahan && (
+                            <span className="ps-5.5 text-[11px] font-bold text-amber-800 flex items-center gap-1">
+                              <Icon icon="heroicons:paper-clip-20-solid" className="size-3.5" />
+                              <span>Lampiran foto sanggahan disertakan (terlampir di berkas resi)</span>
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
