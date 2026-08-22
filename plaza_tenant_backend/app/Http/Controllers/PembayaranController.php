@@ -237,6 +237,26 @@ class PembayaranController extends Controller
                     'Status_Tagihan' => 'Lunas',
                     'Sisa_Tagihan'   => 0,
                 ]);
+        // 6. Kirim dynamic event notification ke panel Admin
+        $nomFormatted = number_format((float)($request->Total_Bayar ?? 0), 0, ',', '.');
+        if ($request->Metode_Bayar === 'Transfer') {
+            \App\Models\Notification::send(
+                'admin',
+                null,
+                'Pembayaran Transfer Masuk',
+                "Tenant mengunggah bukti pembayaran transfer sebesar Rp {$nomFormatted}. Menunggu verifikasi admin.",
+                'info',
+                '/admin/verifikasi-bukti'
+            );
+        } else if ($request->Metode_Bayar === 'Midtrans') {
+            \App\Models\Notification::send(
+                'admin',
+                null,
+                'Pembayaran Midtrans Berhasil',
+                "Pembayaran otomatis via Midtrans sebesar Rp {$nomFormatted} berhasil diterima.",
+                'success',
+                '/admin/riwayat'
+            );
         }
 
         return response()->json($pembayaran, 201);

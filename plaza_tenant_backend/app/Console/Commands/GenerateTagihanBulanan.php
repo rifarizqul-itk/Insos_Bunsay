@@ -82,6 +82,17 @@ class GenerateTagihanBulanan extends Command
                     'Status_Tagihan'   => 'Belum Bayar',
                 ]);
 
+                if ($sewa->pemilik && $sewa->pemilik->Id_User) {
+                    \App\Models\Notification::send(
+                        'tenant',
+                        $sewa->pemilik->Id_User,
+                        'Tagihan Sewa Bulan Baru',
+                        "Tagihan sewa periode {$periodeStr} sebesar Rp " . number_format($tarif, 0, ',', '.') . " telah diterbitkan. Batas jatuh tempo: {$jatuhTempo}.",
+                        'info',
+                        '/tenant/pembayaran'
+                    );
+                }
+
                 $this->line("  [OK]   Sewa #{$sewa->Id_Sewa} ({$namaPemilik}) — Tagihan Rp " . number_format($tarif, 0, ',', '.') . " dibuat.");
             }
 
