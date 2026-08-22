@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useTenantAuth } from '../../useTenantAuth';
+import { useTenantAuth } from '../../TenantAuthProvider';
 import { FormField, Button, Card, Icon } from '@bunsay/shared-ui';
 
 function AuthPage() {
@@ -96,16 +96,19 @@ function AuthPage() {
 
   return (
     <div data-slot="auth-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80">
+      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80 rounded-2xl shadow-xl bg-white">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
-            <img 
-              src="/assets/main_logo_transparent_for_light_bg.png" 
-              alt="Logo Resmi Plaza Kebun Sayur Balikpapan" 
-              loading="lazy"
-              decoding="async"
-              className="h-12 object-contain" 
-            />
+            <picture>
+              <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+              <img 
+                src="/assets/main_logo_transparent_for_light_bg.png" 
+                alt="Logo Resmi Plaza Kebun Sayur Balikpapan" 
+                loading="lazy"
+                decoding="async"
+                className="h-12 object-contain" 
+              />
+            </picture>
           </div>
 
           <div key={isForgotMode ? 'title-forgot' : 'title-login'} className="page-fade-in">
@@ -130,7 +133,7 @@ function AuthPage() {
                 value={formData.username}
                 onChange={handleInputChange}
                 autoComplete="username"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
             </FormField>
 
@@ -143,7 +146,7 @@ function AuthPage() {
                   value={formData.kataSandi}
                   onChange={handleInputChange}
                   autoComplete="current-password"
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:ring-2 focus:ring-red/30 transition-colors"
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none focus:border-red transition-colors"
                 />
                 <button
                   type="button"

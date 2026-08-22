@@ -2,6 +2,7 @@ import React, { createContext, useState, useCallback, useMemo, useRef } from 're
 import { createAuthHttpClient, safeDecodeJwt, useAuthHydration } from '@bunsay/shared-core';
 
 export const AdminAuthContext = createContext(null);
+export { useAdminAuth } from './useAdminAuth';
 
 export function AdminAuthProvider({ children, apiBaseUrl }) {
   // Access Token stored strictly 100% in React memory state

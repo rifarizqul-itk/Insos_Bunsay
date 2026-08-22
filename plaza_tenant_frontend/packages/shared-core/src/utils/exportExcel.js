@@ -29,7 +29,7 @@ export const downloadExcelRekap = async (dataTransaksi, bulan, tahun) => {
 
   // 2. Style Header Row
   const headerRow = worksheet.getRow(1);
-  headerRow.font = { name: 'Arial', size: 11, bold: true, color: {argb: 'FFFFFFFF' } };
+  headerRow.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
   headerRow.fill = {
     type: 'pattern',
     pattern: 'solid',
@@ -43,7 +43,7 @@ export const downloadExcelRekap = async (dataTransaksi, bulan, tahun) => {
     const row = worksheet.addRow({
       no: index + 1,
       id: item.id || item.Id_Pembayaran || '-',
-      nama: item.nama || item.tagihan?.sewa?.pemilik ?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || '-',
+      nama: item.nama || item.tagihan?.sewa?.pemilik?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || '-',
       kios: item.kios || item.tagihan?.sewa?.kios?.No_Kios || item.tagihan?.sewa?.kios?.Kode_Kios || '-',
       tanggal: item.waktu || item.Tanggal_Bayar || '-',
       metode: item.metode || item.Metode_Bayar || '-',
@@ -74,3 +74,4 @@ export const downloadExcelRekap = async (dataTransaksi, bulan, tahun) => {
   document.body.removeChild(anchor);
   window.URL.revokeObjectURL(url);
 };
+

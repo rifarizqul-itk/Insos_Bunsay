@@ -2,9 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  envDir: path.resolve(import.meta.dirname, '../../'),
   publicDir: path.resolve(import.meta.dirname, '../../public'),
   resolve: {
     alias: {
@@ -17,12 +17,12 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'https://bunsay-backend.ddev.site',
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
       '/storage': {
-        target: 'https://bunsay-backend.ddev.site',
+        target: process.env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       }

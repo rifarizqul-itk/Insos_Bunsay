@@ -60,8 +60,8 @@ function Modal({
   const modalContent = (
     <div
       data-slot="modal"
-      style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10000 }}
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-6 bg-mono-900/50 backdrop-blur-xs page-fade-in overflow-y-auto"
+      style={{ position: 'fixed', inset: 0, zIndex: 10050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      className="fixed inset-0 z-[10050] flex items-center justify-center p-3 sm:p-6 bg-mono-900/50 backdrop-blur-xs page-fade-in overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

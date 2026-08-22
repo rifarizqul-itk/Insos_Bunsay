@@ -507,12 +507,26 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         </Sheet>
       )}
 
-      {/* Confirmation & Rejection Modal */}
+      {/* Confirmation & Rejection Modal - Layered Above Sheet Portal (z-10050) */}
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
         size="md"
-        className="font-sans"
+        title={
+          <div className="flex items-center gap-3">
+            <div className={cn('size-10 rounded-full flex items-center justify-center shrink-0', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
+              <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base sm:text-lg text-text">
+                Konfirmasi {confirmModal.type === 'konfirmasi' ? 'Penerimaan' : 'Penolakan'}
+              </h3>
+              <p className="text-xs text-text-3 font-medium">
+                {confirmModal.item?.nama} ({confirmModal.item?.kios})
+              </p>
+            </div>
+          </div>
+        }
         footer={
           <div className="flex justify-end gap-3 w-full">
             <Button
@@ -533,30 +547,17 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           </div>
         }
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className={cn('size-10 rounded-full flex items-center justify-center shrink-0', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
-              <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-lg text-text">
-                Konfirmasi {confirmModal.type === 'konfirmasi' ? 'Penerimaan' : 'Penolakan'}
-              </h3>
-              <p className="text-xs text-text-3 font-medium">
-                {confirmModal.item?.nama} ({confirmModal.item?.kios})
+        <div className="flex flex-col gap-3 font-sans text-sm">
+          {confirmModal.type === 'konfirmasi' ? (
+            <p className="text-text-2 leading-relaxed">
+              Apakah Anda yakin ingin memverifikasi dan menandai bukti transfer senilai <strong className="text-text font-bold">{confirmModal.item?.nominal}</strong> untuk kios <strong className="text-text font-bold">{confirmModal.item?.kios}</strong> sebagai <strong className="text-emerald-700 font-bold">LUNAS (Diterima)</strong>?
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-text-2 text-xs leading-relaxed">
+                Pembayaran akan ditolak dan tenant akan menerima notifikasi beserta alasan penolakan.
               </p>
-            </div>
-          </div>
-
-          <p className="text-sm text-text-2">
-            {confirmModal.type === 'konfirmasi'
-              ? `Apakah Anda yakin ingin menyetujui bukti transfer ini? Status tagihan ${confirmModal.item?.tagihan || ''} akan otomatis diubah menjadi LUNAS.`
-              : 'Harap berikan catatan alasan penolakan agar tenant dapat memperbaiki bukti atau metode pembayarannya.'}
-          </p>
-
-          {confirmModal.type === 'tolak' && (
-            <div className="flex flex-col gap-2 pt-1">
-              <label className="text-xs font-bold text-text flex items-center justify-between">
+              <label className="text-xs font-bold text-text flex items-center justify-between mt-1">
                 <span>Catatan Alasan Penolakan <span className="text-red">*</span></span>
                 <span className="text-text-3 font-normal">Wajib diisi</span>
               </label>

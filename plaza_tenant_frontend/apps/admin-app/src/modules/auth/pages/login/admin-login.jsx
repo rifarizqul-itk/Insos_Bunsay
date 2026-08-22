@@ -5,7 +5,7 @@ import { useAdminAuth } from '../../useAdminAuth';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const { login } = useAdminAuth();
+  const { loginAdmin } = useAdminAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -13,17 +13,22 @@ function AdminLoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
     setError('');
+
+    if (!formData.username.trim() || !formData.password) {
+      setError('Username dan kata sandi wajib diisi.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const res = await login(formData);
+      const res = await loginAdmin(formData.username.trim(), formData.password);
       if (res?.accessToken) {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       }
     } catch (err) {
-      const errMsg = err?.response?.data?.message || err?.message;
-      setError(errMsg || 'Login Gagal. Periksa username & kata sandi.');
+      const errMsg = err?.response?.data?.message || err?.message || 'Login Gagal. Periksa username & kata sandi.';
+      setError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -31,7 +36,7 @@ function AdminLoginPage() {
 
   return (
     <div data-slot="admin-login-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80">
+      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80 rounded-2xl shadow-xl bg-white">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <picture>
@@ -57,30 +62,24 @@ function AdminLoginPage() {
         </div>
 
         {error && (
-          <div className="p-3.5 mb-4 rounded-xl bg-red-50 border border-red-100 text-red text-sm font-semibold text-center">
+          <div className="p-3.5 mb-4 rounded-xl bg-red-50 border border-red-100 text-red text-sm font-semibold text-center" role="alert">
             {error}
           </div>
         )}
 
-        <form 
-          onSubmit={handleSubmit} 
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
-          className="flex flex-col gap-4 page-fade-in"
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 page-fade-in">
           <FormField label="Username Admin" id="admin-login-username" required>
             <input
               type="text"
               name="username"
               placeholder="Masukkan username admin"
               value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, username: e.target.value }));
+                if (error) setError('');
+              }}
               autoComplete="username"
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors"
+              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
             />
           </FormField>
 
@@ -91,9 +90,12 @@ function AdminLoginPage() {
                 name="password"
                 placeholder="Masukkan kata sandi"
                 value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, password: e.target.value }));
+                  if (error) setError('');
+                }}
                 autoComplete="current-password"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white transition-colors"
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
               <button
                 type="button"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAdminAuth } from '../modules/auth/useAdminAuth';
+import { useAdminAuth } from '../modules/auth/AdminAuthProvider';
 
 const ALLOWED_ADMIN_ROLES = ['admin', 'superadmin', 'staff_loket', 'auditor'];
 
@@ -9,19 +9,17 @@ export default function AdminProtectedRoute({ requiredPermission }) {
 
   if (!isHydrated) {
     return (
-      <div data-slot="admin-protected-route" className="flex min-h-screen items-center justify-center bg-cream text-text">
-        <p className="text-sm text-text-2 font-bold animate-pulse">Verifikasi kredensial pengelola...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
+        <p className="text-sm text-slate-400 font-medium animate-pulse">Verifikasi kredensial pengelola...</p>
       </div>
     );
   }
 
-  // BUG-NEW-05: explicitly check role !== null before ALLOWED_ADMIN_ROLES.includes()
-  // role is ?? null in AdminAuthProvider — null must never pass this guard.
-  if (!isLoggedIn || !role || !ALLOWED_ADMIN_ROLES.includes(role)) {
+  if (!isLoggedIn || !ALLOWED_ADMIN_ROLES.includes(role)) {
     return <Navigate to="/login" replace />;
   }
 
-  // Route-Level RBAC Permission Enforcement
+  // Route-Level RBAC Permission Enforcement (if specified)
   if (requiredPermission) {
     const isSuperadmin = user?.sub_role === 'superadmin' || user?.Username === 'superadmin' || user?.Username === 'admin';
     const userPerms = Array.isArray(user?.permissions) ? user.permissions : [];
@@ -31,10 +29,6 @@ export default function AdminProtectedRoute({ requiredPermission }) {
     }
   }
 
-  return (
-    <div data-slot="admin-protected-route" className="contents">
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 }
 
