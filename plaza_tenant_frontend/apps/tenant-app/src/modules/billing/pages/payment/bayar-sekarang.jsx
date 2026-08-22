@@ -555,9 +555,11 @@ function BayarSekarang() {
                           className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white border border-border/70 rounded-lg text-xs"
                         >
                           <div className="flex items-center gap-2">
-                            <strong className="text-red font-extrabold font-tabular-nums text-xs">
-                              [{bill.noKios !== '—' ? `Kios ${bill.noKios}` : `Unit #${bIdx + 1}`}]
-                            </strong>
+                            {availableKiosks.length > 1 && (
+                              <strong className="text-red font-extrabold font-tabular-nums text-xs">
+                                [{bill.noKios !== '—' ? `Kios ${bill.noKios}` : `Unit #${bIdx + 1}`}]
+                              </strong>
+                            )}
                             <span className="text-text font-bold">{bill.jenisUsaha}</span>
                             <span className="text-text-3">• Periode {bill.periode}</span>
                           </div>

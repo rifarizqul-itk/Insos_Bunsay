@@ -338,8 +338,8 @@ function DashboardTenant() {
         </Card>
       </div>
 
-      {/* SEKSI BARU: RINCIAN TAGIHAN & STATUS PER UNIT KIOS */}
-      {kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0 && (
+      {/* SEKSI: RINCIAN TAGIHAN & STATUS PER UNIT KIOS (HANYA MUNCUL JIKA MEMILIKI MULTI-KIOS) */}
+      {kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 1 && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
