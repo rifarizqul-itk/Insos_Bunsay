@@ -5,6 +5,7 @@ import { Badge } from './Badge';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { BunsayQRCode } from './BunsayQRCode';
+import { ImageGallerySlider } from './ImageGallerySlider';
 
 function angkaKeTerbilang(nilai) {
   const n = Math.floor(Math.abs(Number(nilai) || 0));
@@ -590,25 +591,21 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         )}
 
         {item.teksSanggahan && (
-          <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg text-xs flex flex-col gap-2">
+          <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg text-xs flex flex-col gap-2.5">
             <span className="font-bold text-amber-800 flex items-center gap-1.5">
               <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4" />
               <span>Sanggahan dari Tenant:</span>
             </span>
             <p className="text-amber-950 font-medium italic ps-5.5">"{item.teksSanggahan}"</p>
             {(item.buktiSanggahan || item.bukti_sanggahan) && (
-              <div className="mt-1 ps-5.5 flex flex-col gap-1">
-                <span className="text-[11px] font-bold text-amber-900 block">Foto Lampiran Sanggahan Baru:</span>
-                <div className="w-full max-h-52 bg-white/80 rounded-lg border border-amber-200 overflow-hidden flex items-center justify-center p-2">
-                  <img
-                    src={getResolvedImageUrl(item.buktiSanggahan || item.bukti_sanggahan)}
-                    alt="Lampiran Bukti Sanggahan"
-                    loading="lazy"
-                    className="max-h-48 max-w-full object-contain rounded cursor-pointer shadow-2xs"
-                    onClick={() => window.open(getResolvedImageUrl(item.buktiSanggahan || item.bukti_sanggahan), '_blank')}
-                    title="Klik untuk melihat foto ukuran penuh di tab baru"
-                  />
-                </div>
+              <div className="mt-1 ps-5.5">
+                <ImageGallerySlider
+                  images={item.buktiSanggahan || item.bukti_sanggahan}
+                  resolveUrl={getResolvedImageUrl}
+                  title="Lampiran Foto Sanggahan"
+                  maxHeightClass="max-h-56"
+                  badgePrefix="Lampiran #"
+                />
               </div>
             )}
           </div>

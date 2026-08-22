@@ -17,4 +17,5 @@ export { ErrorBoundary } from './components/ErrorBoundary';
 export { BuktiPembayaranModal } from './components/BuktiPembayaranModal';
 export { BunsayQRCode } from './components/BunsayQRCode';
 export { Pagination } from './components/Pagination';
+export { ImageGallerySlider, parseImageGallery } from './components/ImageGallerySlider';
 export { cn } from './utils/cn';

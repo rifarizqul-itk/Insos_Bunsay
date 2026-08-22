@@ -444,10 +444,32 @@ class PembayaranController extends Controller
             } catch (\Throwable $e) {}
         }
 
+        $existingBukti = $pembayaran->bukti_sanggahan;
+        $buktiArray = [];
+        if ($existingBukti) {
+            $decoded = json_decode($existingBukti, true);
+            if (is_array($decoded)) {
+                $buktiArray = $decoded;
+            } else if (is_string($existingBukti)) {
+                $buktiArray = array_values(array_filter(explode(',', $existingBukti)));
+                if (empty($buktiArray) && trim($existingBukti) !== '') {
+                    $buktiArray = [$existingBukti];
+                }
+            }
+        }
+
+        if ($buktiPath && !in_array($buktiPath, $buktiArray)) {
+            $buktiArray[] = $buktiPath;
+        }
+
+        $finalBuktiSanggahan = !empty($buktiArray)
+            ? (count($buktiArray) === 1 ? $buktiArray[0] : json_encode(array_values(array_unique($buktiArray))))
+            : $buktiPath;
+
         try {
             $pembayaran->update([
                 'teks_sanggahan'        => $request->teks_sanggahan,
-                'bukti_sanggahan'       => $buktiPath,
+                'bukti_sanggahan'       => $finalBuktiSanggahan,
                 'Verifikasi_Pembayaran' => 'Menunggu',
             ]);
         } catch (\Throwable $th) {
