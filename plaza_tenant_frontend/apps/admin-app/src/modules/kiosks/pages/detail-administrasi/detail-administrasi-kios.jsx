@@ -62,6 +62,12 @@ function DetailAdministrasiKios() {
         setPemilikId(targetPemilikId);
         setIzinkanCicilanAdmin(Boolean(pemilik?.izinkan_cicilan));
 
+        // Ambil daftar kios lain milik penyewa ini jika punya lebih dari 1 kios
+        const allTenantSewa = pemilik?.sewa || [];
+        const otherKiosks = allTenantSewa
+          .map(s => s.kios?.No_Kios)
+          .filter(kNo => kNo && kNo !== (item.No_Kios || id));
+
         const isKosong = item.Status === 'Kosong' || !pemilik;
         const hasUser = Boolean(userObj?.Username || userObj?.username);
 
@@ -96,7 +102,8 @@ function DetailAdministrasiKios() {
           keterangan: item.Catatan || (isKosong ? 'Unit kios kosong dan tersedia untuk disewa.' : 'Izin usaha aktif.'),
           statusKios: isKosong ? 'Kosong' : (item.Status || 'Terisi'),
           statusPemilik: isKosong ? 'Nonaktif' : 'Aktif',
-          statusAkun: statusAkunVal
+          statusAkun: statusAkunVal,
+          otherKiosks
         });
       }
     } catch (err) {
@@ -258,6 +265,34 @@ function DetailAdministrasiKios() {
                   <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Kontak Telepon</span>
                   <strong className="text-text font-bold font-tabular-nums">{editData.telepon}</strong>
                 </div>
+
+                {/* UNIT KIOS LAIN MILIK TENANT (JIKA MULTI-KIOS) */}
+                {editData.otherKiosks && editData.otherKiosks.length > 0 && (
+                  <div className="sm:col-span-2 pt-3 border-t border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-mono-50/70 p-3 rounded-xl">
+                    <div>
+                      <span className="text-2xs text-text-3 font-extrabold uppercase tracking-wider block mb-1">
+                        Unit Kios Lain Milik Penyewa Ini ({editData.otherKiosks.length} Kios):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {editData.otherKiosks.map((kNo) => (
+                          <button
+                            key={kNo}
+                            type="button"
+                            onClick={() => navigate(`/admin/kios/${kNo}`)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red border border-red/30 rounded-lg text-xs font-extrabold font-tabular-nums transition-colors cursor-pointer"
+                          >
+                            <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5" />
+                            <span>Kios {kNo}</span>
+                            <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3 text-red/70" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-2xs text-text-3 font-semibold sm:text-right">
+                      *Klik nomor kios untuk berpindah administrasi
+                    </span>
+                  </div>
+                )}
               </div>
             </Card>
 

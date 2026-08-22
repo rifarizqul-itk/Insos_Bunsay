@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Badge, Icon, SkeletonCard, SkeletonText } from '@bunsay/shared-ui';
+import { Card, Button, Badge, Icon, SkeletonCard, SkeletonText, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 const formatDateIndo = (dateStr) => {
@@ -160,19 +160,43 @@ function DashboardTenant() {
     );
   }
 
-  const { nama, kios, siklusSewa, tagihanBerjalan } = dashboardData || {};
+  const { nama, kios, siklusSewa, tagihanBerjalan, kiosBreakdown, totalTagihanSemuaKios } = dashboardData || {};
   
   const periodeText = (siklusSewa?.tanggalMulai && siklusSewa?.tanggalSelesai) 
     ? `${formatDateIndo(siklusSewa.tanggalMulai)} s/d ${formatDateIndo(siklusSewa.tanggalSelesai)}` 
     : '—';
   const jatuhTempo = siklusSewa?.jatuhTempo ? formatDateIndo(siklusSewa.jatuhTempo) : '—';
+  
+  // Hitung total tagihan dari semua kios jika tersedia
+  const calculatedTotal = (kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0)
+    ? kiosBreakdown.reduce((sum, k) => {
+        if (k.tagihan && in_array_status(k.tagihan.statusTagihan)) {
+          return sum + (k.tagihan.sisaTagihan ?? k.tagihan.totalTagihan ?? 0);
+        }
+        return sum;
+      }, 0)
+    : (tagihanBerjalan ? ((tagihanBerjalan.tarifSewa ?? 0) + (tagihanBerjalan.hutangTunggakan ?? 0)) : 0);
+
+  function in_array_status(status) {
+    return status === 'Belum Bayar' || status === 'Dicicil';
+  }
+
   const tarifSewaVal = tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0;
   const hutangTunggakanVal = tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0;
-  const totalTagihanVal = tarifSewaVal + hutangTunggakanVal;
-  const statusTagihan = tagihanBerjalan?.statusTagihan || 'Lunas';
+  const totalTagihanVal = calculatedTotal > 0 ? calculatedTotal : (tarifSewaVal + hutangTunggakanVal);
 
-  const perluBayar = (statusTagihan === 'Belum Bayar' || statusTagihan === 'Dicicil') && totalTagihanVal > 0;
-  const sedangVerifikasi = statusTagihan === 'Menunggu Verifikasi';
+  const hasUnpaidKiosk = kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0
+    ? kiosBreakdown.some(k => k.tagihan && (k.tagihan.statusTagihan === 'Belum Bayar' || k.tagihan.statusTagihan === 'Dicicil'))
+    : (tagihanBerjalan?.statusTagihan === 'Belum Bayar' || tagihanBerjalan?.statusTagihan === 'Dicicil');
+
+  const hasVerifikasiKiosk = kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0
+    ? kiosBreakdown.some(k => k.tagihan && k.tagihan.statusTagihan === 'Menunggu Verifikasi')
+    : (tagihanBerjalan?.statusTagihan === 'Menunggu Verifikasi');
+
+  const statusTagihan = hasUnpaidKiosk ? 'Belum Bayar' : (hasVerifikasiKiosk ? 'Menunggu Verifikasi' : (tagihanBerjalan?.statusTagihan || 'Lunas'));
+
+  const perluBayar = hasUnpaidKiosk && totalTagihanVal > 0;
+  const sedangVerifikasi = hasVerifikasiKiosk && !hasUnpaidKiosk;
 
   return (
     <div data-slot="dashboard-tenant" className="page-fade-in flex flex-col gap-8 font-sans">
@@ -207,7 +231,12 @@ function DashboardTenant() {
               Tagihan Sewa & Tunggakan Bulan Ini
             </span>
             <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
-              Total tagihan yang perlu dibayar bulan ini adalah <span className="font-tabular-nums text-red font-extrabold text-xl">Rp {totalTagihanVal.toLocaleString('id-ID')}</span>.
+              Total kewajiban sewa yang perlu dibayar bulan ini adalah <span className="font-tabular-nums text-red font-extrabold text-xl">Rp {totalTagihanVal.toLocaleString('id-ID')}</span>
+              {kiosBreakdown && kiosBreakdown.length > 1 && (
+                <span className="text-sm font-semibold text-text-2 block mt-1">
+                  (Mengakumulasikan seluruh tagihan aktif untuk {kiosBreakdown.length} unit kios Anda)
+                </span>
+              )}.
             </p>
           </div>
           <div className="w-full md:w-auto">
@@ -262,12 +291,13 @@ function DashboardTenant() {
               Status Tagihan Sewa
             </span>
             <p className="text-base sm:text-lg text-text font-bold mt-2 leading-relaxed text-pretty">
-              Tidak ada tagihan aktif yang perlu dibayar saat ini. Semua tagihan sewa dan tunggakan Anda dalam kondisi lunas / bersih.
+              Tidak ada tagihan aktif yang perlu dibayar saat ini. Semua tagihan sewa dan tunggakan dari seluruh kios Anda dalam kondisi lunas / bersih.
             </p>
           </div>
         </div>
       )}
 
+      {/* CARD STATISTIK UTAMA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card variant="elevated" className="flex flex-col justify-between">
           <div>
@@ -294,7 +324,7 @@ function DashboardTenant() {
         <Card variant="elevated" className="flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h2 className="label-micro text-balance">Total Tagihan Sewa</h2>
+              <h2 className="label-micro text-balance">Total Kewajiban Sewa</h2>
               <Badge status={statusTagihan} />
             </div>
             <div className="font-tabular-nums text-2xl sm:text-3xl font-extrabold text-text tracking-tight my-2">
@@ -321,6 +351,108 @@ function DashboardTenant() {
           </div>
         </Card>
       </div>
+
+      {/* SEKSI BARU: RINCIAN TAGIHAN & STATUS PER UNIT KIOS */}
+      {kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-red-50 text-red flex items-center justify-center font-bold">
+                <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight">
+                  Rincian Tagihan per Unit Kios
+                </h2>
+                <p className="text-xs text-text-3 font-medium">
+                  Informasi tarif, jenis usaha, dan status pembayaran aktif masing-masing unit kios Anda.
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-text-2 bg-mono-100 px-3 py-1 rounded-full border border-border">
+              {kiosBreakdown.length} Unit Kios
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {kiosBreakdown.map((item, idx) => {
+              const tagihan = item.tagihan;
+              const isLunas = tagihan?.statusTagihan === 'Lunas' || !tagihan;
+              const tagihanNominal = tagihan ? (tagihan.sisaTagihan ?? tagihan.totalTagihan ?? item.tarifBulanan) : 0;
+              const statusBadge = tagihan?.statusTagihan || (isLunas ? 'Lunas' : 'Belum Bayar');
+
+              return (
+                <Card 
+                  key={item.idSewa || idx} 
+                  variant="elevated" 
+                  className={cn(
+                    "p-5 sm:p-6 flex flex-col justify-between gap-4 border transition-all duration-200",
+                    !isLunas ? "border-red/30 hover:border-red/60 shadow-xs" : "border-border hover:border-border/90"
+                  )}
+                >
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2 border-b border-border/70 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-base font-extrabold text-red font-tabular-nums tracking-tight">
+                            Kios {item.noKios}
+                          </strong>
+                          <span className="text-2xs font-bold text-text-3 bg-mono-100 border border-border px-2 py-0.5 rounded">
+                            {item.lantai}
+                          </span>
+                        </div>
+                        <span className="text-xs text-text-2 font-semibold block mt-0.5">
+                          {item.jenisUsaha}
+                        </span>
+                      </div>
+                      <Badge status={statusBadge} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-text-3 font-semibold block">Ukuran Kios:</span>
+                        <strong className="text-text font-bold">{item.ukuran}</strong>
+                      </div>
+                      <div>
+                        <span className="text-text-3 font-semibold block">Tarif Sewa:</span>
+                        <strong className="text-text font-bold font-tabular-nums">
+                          Rp {Number(item.tarifBulanan || 750000).toLocaleString('id-ID')}/bln
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border/70 pt-3 flex items-center justify-between mt-1">
+                    <div>
+                      <span className="text-2xs text-text-3 font-semibold uppercase tracking-wider block">
+                        Tagihan Periode Ini:
+                      </span>
+                      <strong className={cn(
+                        "text-sm sm:text-base font-extrabold font-tabular-nums",
+                        isLunas ? "text-emerald-700" : "text-red"
+                      )}>
+                        {isLunas ? "Lunas (Rp 0)" : `Rp ${Number(tagihanNominal).toLocaleString('id-ID')}`}
+                      </strong>
+                    </div>
+
+                    {!isLunas && (
+                      <Button
+                        variant="primary"
+                        size="xs"
+                        onClick={() => handleBayar(tagihanNominal)}
+                        className="h-8 px-3 text-2xs font-extrabold gap-1 shadow-xs"
+                      >
+                        <span>Bayar Kios Ini</span>
+                        <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

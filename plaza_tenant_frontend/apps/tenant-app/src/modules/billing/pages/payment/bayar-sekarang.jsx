@@ -82,8 +82,12 @@ function BayarSekarang() {
               return {
                 idTagihan: t.Id_Tagihan,
                 periode: t.Periode,
+                noKios: t.sewa?.kios?.No_Kios || t.sewa?.No_Kios || '—',
+                jenisUsaha: t.sewa?.Jenis_Usaha || '—',
+                lantai: t.sewa?.kios?.Lantai ? `Lantai ${t.sewa.kios.Lantai}` : 'Lantai 1',
                 tarifSewa: parseFloat(t.Tarif_Sewa || 0),
                 totalTagihan,
+                sisaTagihan,
                 totalTerbayar: Math.max(0, totalTagihan - sisaTagihan),
                 statusTagihan: t.Status_Tagihan
               };
@@ -428,6 +432,44 @@ function BayarSekarang() {
                     <span>Hubungi Pengelola (WA)</span>
                   </a>
                 </div>
+
+                {/* Rincian Tagihan yang Perlu Dibayar */}
+                {unpaidBills.length > 0 && (
+                  <div className="flex flex-col gap-2.5 bg-mono-50/70 border border-border/80 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                        <Icon icon="heroicons:list-bullet-20-solid" className="size-4 text-red" />
+                        <span>Kewajiban Tagihan Aktif ({unpaidBills.length} Tagihan)</span>
+                      </span>
+                      <span className="text-2xs font-bold text-text-3">
+                        Total: Rp {unpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-1">
+                      {unpaidBills.map((bill, bIdx) => (
+                        <div 
+                          key={bill.idTagihan || bIdx}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white border border-border/70 rounded-lg text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <strong className="text-red font-extrabold font-tabular-nums text-xs">
+                              [{bill.noKios !== '—' ? `Kios ${bill.noKios}` : `Unit #${bIdx + 1}`}]
+                            </strong>
+                            <span className="text-text font-bold">{bill.jenisUsaha}</span>
+                            <span className="text-text-3">• Periode {bill.periode}</span>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3">
+                            <span className="font-tabular-nums font-extrabold text-text">
+                              Rp {Number(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
+                            </span>
+                            <Badge status={bill.statusTagihan} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <FormField 
                   label={

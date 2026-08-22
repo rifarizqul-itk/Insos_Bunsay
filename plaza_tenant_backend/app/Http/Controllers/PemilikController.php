@@ -90,9 +90,16 @@ class PemilikController extends Controller
             $pemilik = Pemilik::create($validatedData);
             $pemilik->load('user');
 
-            // 3. Link ke Kios jika No_Kios disertakan
-            if ($request->filled('No_Kios')) {
-                $kiosTarget = \App\Models\Kios::where('No_Kios', $request->No_Kios)->first();
+            // 3. Link ke Kios jika No_Kios atau kios_list disertakan
+            $kiosListRaw = $request->kios_list ?? $request->No_Kios ?? [];
+            $kiosList = is_array($kiosListRaw)
+                ? $kiosListRaw
+                : (is_string($kiosListRaw) ? array_filter(array_map('trim', explode(',', $kiosListRaw))) : []);
+
+            $assignedKiosNames = [];
+            foreach ($kiosList as $noKiosItem) {
+                if (empty($noKiosItem)) continue;
+                $kiosTarget = \App\Models\Kios::where('No_Kios', $noKiosItem)->first();
                 if ($kiosTarget) {
                     $tarifCustom = (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 750000);
                     $newSewa = \App\Models\Sewa::create([
@@ -105,30 +112,32 @@ class PemilikController extends Controller
                         'Status'         => 'Aktif',
                     ]);
                     $kiosTarget->update(['Status' => 'Terisi']);
+                    $assignedKiosNames[] = $kiosTarget->No_Kios;
 
-                    // Automatically generate first month's invoice (due on the 12th)
+                    // Automatically generate first month's invoice (due on the 25th)
                     \App\Models\Tagihan::create([
                         'Id_Sewa'          => $newSewa->Id_Sewa,
                         'Periode'          => date('Y-m'),
-                        'Jatuh_Tempo'      => date('Y-m-12'),
+                        'Jatuh_Tempo'      => date('Y-m-25'),
                         'Tarif_Sewa'       => $tarifCustom,
                         'Hutang_Tunggakan' => 0,
                         'Total_Tagihan'    => $tarifCustom,
                         'Sisa_Tagihan'     => $tarifCustom,
                         'Status_Tagihan'   => 'Belum Bayar',
                     ]);
-                    // Generate personalized welcome notification for the newly registered tenant
-                    if (!empty($pemilik->Id_User)) {
-                        \App\Models\Notification::send(
-                            'tenant',
-                            $pemilik->Id_User,
-                            'Selamat Datang di Portal Tenant Bunsay',
-                            "Halo Bpk/Ibu {$pemilik->Nama}, akun tenant Anda untuk Kios {$request->No_Kios} telah aktif.",
-                            'success',
-                            '/tenant/dashboard'
-                        );
-                    }
                 }
+            }
+
+            if (!empty($assignedKiosNames) && !empty($pemilik->Id_User)) {
+                $kiosStr = implode(', ', $assignedKiosNames);
+                \App\Models\Notification::send(
+                    'tenant',
+                    $pemilik->Id_User,
+                    'Selamat Datang di Portal Tenant Bunsay',
+                    "Halo Bpk/Ibu {$pemilik->Nama}, akun tenant Anda untuk Kios {$kiosStr} telah aktif.",
+                    'success',
+                    '/tenant/dashboard'
+                );
             }
 
             $responseData = $pemilik->toArray();

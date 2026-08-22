@@ -84,9 +84,15 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
               >
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text)' }}>
+                    {item.noKios && (
+                      <span style={{ color: 'var(--red)', fontWeight: '800', marginRight: '6px' }}>
+                        [{item.noKios}]
+                      </span>
+                    )}
                     Periode: <span className="font-tabular-nums">{item.periode}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '2px' }}>
+                    {item.jenisUsaha && <span style={{ marginRight: '6px' }}>{item.jenisUsaha} •</span>}
                     Teralokasi: <strong className="font-tabular-nums" style={{ color: 'var(--green)' }}>{formatRupiah(item.nominalTeralokasi)}</strong>
                   </div>
                 </div>

@@ -53,18 +53,14 @@ class SewaController extends Controller
             'Id_Pemilik'     => 'required|exists:pemilik,Id_Pemilik',
             'Id_Kios'        => 'required|exists:kios,Id_Kios',
             'Jenis_Usaha'    => 'required|string|max:255',
-            'Tanggal_Mulai'  => 'required|date',
-            'Tanggal_Selesai'=> 'required|date|after_or_equal:Tanggal_Mulai',
+            'Tanggal_Mulai'  => 'nullable|date',
+            'Tanggal_Selesai'=> 'nullable|date',
             'Tarif_Bulanan'  => 'nullable|numeric|min:0',
             'Keterangan'     => 'nullable|string',
         ]);
 
         try {
             // 2. Guard: Cek apakah kios ini sudah punya sewa Aktif
-            // Isu I3 dari schema audit (2026-08-12):
-            // MySQL tidak support partial unique index, sehingga constraint ini
-            // ditegakkan di application layer. Satu kios hanya boleh memiliki
-            // SATU sewa berstatus 'Aktif' pada satu waktu.
             $sewaAktifExist = Sewa::where('Id_Kios', $request->Id_Kios)
                 ->where('Status', 'Aktif')
                 ->exists();
@@ -78,6 +74,10 @@ class SewaController extends Controller
 
             // 3. Simpan Transaksi Sewa dengan Status default 'Aktif'
             $validatedData['Status'] = 'Aktif';
+            $validatedData['Tanggal_Mulai'] = $validatedData['Tanggal_Mulai'] ?? date('Y-m-d');
+            $validatedData['Tanggal_Selesai'] = $validatedData['Tanggal_Selesai'] ?? date('Y-m-d', strtotime('+1 year'));
+            $validatedData['Tarif_Bulanan'] = (float) ($validatedData['Tarif_Bulanan'] ?? 750000);
+            
             $sewa = Sewa::create($validatedData);
 
             // 4. Otomatis Update Status Kios menjadi 'Terisi'
@@ -85,6 +85,19 @@ class SewaController extends Controller
             if ($kios) {
                 $kios->update(['Status' => 'Terisi']);
             }
+
+            // 5. Otomatis buat Tagihan awal bulan ini
+            $tarif = (float) $validatedData['Tarif_Bulanan'];
+            \App\Models\Tagihan::create([
+                'Id_Sewa'          => $sewa->Id_Sewa,
+                'Periode'          => date('Y-m'),
+                'Jatuh_Tempo'      => date('Y-m-25'),
+                'Tarif_Sewa'       => $tarif,
+                'Hutang_Tunggakan' => 0.00,
+                'Total_Tagihan'    => $tarif,
+                'Sisa_Tagihan'     => $tarif,
+                'Status_Tagihan'   => 'Belum Bayar',
+            ]);
 
             return response()->json([
                 'success' => true,

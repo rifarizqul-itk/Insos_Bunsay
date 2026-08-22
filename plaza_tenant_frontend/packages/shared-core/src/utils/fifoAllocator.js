@@ -90,6 +90,8 @@ export function allocatePaymentFIFO(unpaidBills = [], paymentAmount = 0) {
     allocations.push({
       idTagihan: bill.idTagihan || bill.id,
       periode: bill.periode,
+      noKios: bill.noKios || bill.kios || null,
+      jenisUsaha: bill.jenisUsaha || null,
       tarifSewa: bill.tarifSewa || totalTagihan,
       totalTagihan: totalTagihan,
       terbayarSebelumnya: totalTerbayarSebelumnya,

@@ -74,8 +74,8 @@ class KiosController extends Controller
      */
     public function show($id)
     {
-        $kios = Kios::with(['sewa.pemilik.dokumen', 'sewa.pemilik.user'])->find($id)
-            ?? Kios::with(['sewa.pemilik.dokumen', 'sewa.pemilik.user'])->where('No_Kios', $id)->first();
+        $kios = Kios::with(['sewa.pemilik.dokumen', 'sewa.pemilik.user', 'sewa.pemilik.sewa.kios'])->find($id)
+            ?? Kios::with(['sewa.pemilik.dokumen', 'sewa.pemilik.user', 'sewa.pemilik.sewa.kios'])->where('No_Kios', $id)->first();
 
         if (!$kios) {
             return response()->json([

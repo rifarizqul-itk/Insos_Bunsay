@@ -21,6 +21,14 @@ function KetersediaanKios() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [createdCredential, setCreatedCredential] = useState(null);
+  
+  // Mode Pendaftaran: 'baru' (Penyewa Baru) vs 'terdaftar' (Tambah Kios untuk Tenant Terdaftar)
+  const [modePendaftaran, setModePendaftaran] = useState('baru');
+  const [existingTenants, setExistingTenants] = useState([]);
+  const [tenantSearchQuery, setTenantSearchQuery] = useState('');
+  const [selectedPemilikId, setSelectedPemilikId] = useState('');
+  const [selectedKiosList, setSelectedKiosList] = useState([]);
+
   const initialFormState = {
     nama: '',
     nik: '',
@@ -34,6 +42,13 @@ function KetersediaanKios() {
     username: ''
   };
   const [formTenant, setFormTenant] = useState(initialFormState);
+  
+  const [formKiosTambahan, setFormKiosTambahan] = useState({
+    kios: '',
+    usaha: '',
+    tarifBulanan: '750000'
+  });
+
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,6 +61,29 @@ function KetersediaanKios() {
     { id: 6, noKios: 'B-2001', lantai: 'Lantai 2', penyewa: 'Bpk. Ahmad Subagyo', usaha: 'Elektronik & Servis', status: 'Terisi', masaSewa: 'Agustus 2026' },
     { id: 7, noKios: 'B-2002', lantai: 'Lantai 2', penyewa: '-', usaha: '-', status: 'Tersedia', masaSewa: '-' }
   ];
+
+  const fetchExistingTenants = useCallback(async () => {
+    try {
+      const res = await httpClient.get('/api/v1/admin/pemilik');
+      const raw = res?.data?.data || (Array.isArray(res?.data) ? res.data : []);
+      setExistingTenants(Array.isArray(raw) ? raw : []);
+    } catch (err) {
+      console.warn('Failed to fetch existing tenants:', err);
+    }
+  }, [httpClient]);
+
+  const filteredExistingTenants = useMemo(() => {
+    if (!tenantSearchQuery.trim()) return existingTenants.slice(0, 20);
+    const q = tenantSearchQuery.toLowerCase();
+    return existingTenants.filter(t => {
+      const nama = String(t.Nama || '').toLowerCase();
+      const nik = String(t.No_KTP || '').toLowerCase();
+      const telp = String(t.No_Telepon || '').toLowerCase();
+      const username = String(t.user?.Username || '').toLowerCase();
+      const kios = (t.sewa || []).map(s => String(s.kios?.No_Kios || '')).join(' ').toLowerCase();
+      return nama.includes(q) || nik.includes(q) || telp.includes(q) || username.includes(q) || kios.includes(q);
+    });
+  }, [existingTenants, tenantSearchQuery]);
 
   const fetchKiosData = useCallback(async () => {
     setIsLoading(true);
@@ -85,7 +123,8 @@ function KetersediaanKios() {
 
   useEffect(() => {
     fetchKiosData();
-  }, [fetchKiosData]);
+    fetchExistingTenants();
+  }, [fetchKiosData, fetchExistingTenants]);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'noKios', direction: 'asc' });
@@ -149,7 +188,6 @@ function KetersediaanKios() {
       addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri. Status kios kembali Kosong/Tersedia.`, 'success');
       fetchKiosData();
     } catch (err) {
-      // Local fallback update state
       setDataKios(prev => prev.map(k => k.id === kios.id ? { ...k, status: 'Tersedia', penyewa: '-', usaha: '-', masaSewa: '-' } : k));
       addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri. Status kios kembali Kosong.`, 'success');
     }
@@ -164,8 +202,8 @@ function KetersediaanKios() {
     { label: 'Aksi', align: 'center', sortable: false }
   ];
 
-  const handleCreateTenant = async (e) => {
-    e.preventDefault();
+  // Submit Handler: Mode 1 (Penyewa Baru)
+  const handleCreateTenantBaru = async () => {
     setFieldError(null);
 
     if (!formTenant.nama.trim()) {
@@ -180,8 +218,10 @@ function KetersediaanKios() {
       setFieldError({ field: 'alamat', message: 'Alamat tempat tinggal tenant wajib diisi.' });
       return;
     }
-    if (!formTenant.kios.trim()) {
-      setFieldError({ field: 'kios', message: 'Nomor kios wajib diisi.' });
+
+    const finalKiosList = selectedKiosList.length > 0 ? selectedKiosList : (formTenant.kios ? [formTenant.kios] : []);
+    if (finalKiosList.length === 0) {
+      setFieldError({ field: 'kios', message: 'Pilih minimal 1 unit kios kosong yang akan disewa.' });
       return;
     }
     if (!formTenant.telepon.trim()) {
@@ -202,8 +242,9 @@ function KetersediaanKios() {
         Telepon: formTenant.telepon.trim(),
         Alamat: formTenant.alamat.trim(),
         Email: formTenant.email,
-        Jenis_Usaha: formTenant.usaha,
-        No_Kios: formTenant.kios,
+        Jenis_Usaha: formTenant.usaha || 'Perdagangan Umum',
+        No_Kios: finalKiosList.join(', '),
+        kios_list: finalKiosList,
         Tarif_Bulanan: Number(formTenant.tarifBulanan) || 750000,
         Username: formTenant.usernameMode === 'custom' ? formTenant.username.trim() : ''
       };
@@ -213,7 +254,7 @@ function KetersediaanKios() {
 
       const tempCred = {
         nama: formTenant.nama,
-        kios: formTenant.kios,
+        kios: finalKiosList.join(', '),
         username: createdData.Username || (formTenant.usernameMode === 'custom' ? formTenant.username.trim() : 'tenant'),
         tempPassword: createdData.tempPassword || 'bunsay1234',
         email: formTenant.email || '-',
@@ -223,14 +264,67 @@ function KetersediaanKios() {
       setCreatedCredential(tempCred);
       setIsDrawerOpen(false);
       setFormTenant(initialFormState);
-      addToast(`Pendaftaran tenant ${tempCred.nama} berhasil disimpan ke database!`, 'success');
+      setSelectedKiosList([]);
+      addToast(`Pendaftaran tenant ${tempCred.nama} untuk kios ${tempCred.kios} berhasil!`, 'success');
       fetchKiosData();
+      fetchExistingTenants();
     } catch (err) {
       console.error('Error creating tenant:', err);
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal mendaftarkan tenant baru.';
       addToast(errMsg, 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Submit Handler: Mode 2 (Tambah Kios untuk Penyewa Terdaftar)
+  const handleTambahKiosTerdaftar = async () => {
+    setFieldError(null);
+
+    if (!selectedPemilikId) {
+      setFieldError({ field: 'pemilikId', message: 'Silakan pilih tenant terdaftar terlebih dahulu.' });
+      return;
+    }
+    if (!formKiosTambahan.kios) {
+      setFieldError({ field: 'kiosTambahan', message: 'Silakan pilih unit kios kosong yang ingin ditambahkan.' });
+      return;
+    }
+
+    const selectedKiosObj = dataKios.find(k => k.noKios === formKiosTambahan.kios);
+    const selectedOwner = existingTenants.find(t => String(t.Id_Pemilik) === String(selectedPemilikId));
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        Id_Pemilik: Number(selectedPemilikId),
+        Id_Kios: selectedKiosObj?.id,
+        Jenis_Usaha: formKiosTambahan.usaha || 'Perdagangan Umum',
+        Tarif_Bulanan: Number(formKiosTambahan.tarifBulanan) || 750000,
+        Tanggal_Mulai: new Date().toISOString().split('T')[0]
+      };
+
+      await httpClient.post('/api/v1/admin/sewa', payload);
+      addToast(`Kios ${formKiosTambahan.kios} berhasil ditambahkan ke kepemilikan ${selectedOwner?.Nama || 'tenant'}!`, 'success');
+      setIsDrawerOpen(false);
+      setFormKiosTambahan({ kios: '', usaha: '', tarifBulanan: '750000' });
+      setSelectedPemilikId('');
+      fetchKiosData();
+      fetchExistingTenants();
+    } catch (err) {
+      console.error('Error assigning extra kiosk:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal menambahkan unit kios.';
+      addToast(errMsg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateTenant = (e) => {
+    e.preventDefault();
+    if (modePendaftaran === 'baru') {
+      handleCreateTenantBaru();
+    } else {
+      handleTambahKiosTerdaftar();
     }
   };
 
@@ -411,7 +505,7 @@ function KetersediaanKios() {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        title="Form Pendaftaran Tenant Baru"
+        title={modePendaftaran === 'baru' ? "Form Pendaftaran Tenant Baru" : "Tambah Unit Kios ke Tenant Terdaftar"}
         footer={
           <div className="flex gap-3 w-full">
             <Button
@@ -429,151 +523,470 @@ function KetersediaanKios() {
               disabled={isSubmitting}
               onClick={handleCreateTenant}
             >
-              {isSubmitting ? 'Mendaftarkan...' : 'Daftarkan Tenant'}
+              {isSubmitting 
+                ? (modePendaftaran === 'baru' ? 'Mendaftarkan...' : 'Menambahkan...') 
+                : (modePendaftaran === 'baru' ? 'Daftarkan Tenant Baru' : 'Tambahkan Kios ke Tenant')}
             </Button>
           </div>
         }
       >
-        <form onSubmit={handleCreateTenant} className="flex flex-col gap-4">
-          <FormField label="Nama Lengkap Tenant" id="tambah-tenant-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
-            <input 
-              type="text" 
-              placeholder="Contoh: Hj. Maryam" 
-              value={formTenant.nama} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, nama: e.target.value }))} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-            />
-          </FormField>
+        {/* TAB SELECTOR: MODE PENDAFTARAN */}
+        <div className="flex bg-mono-100 p-1 rounded-xl border border-border mb-5">
+          <button
+            type="button"
+            onClick={() => {
+              setModePendaftaran('baru');
+              setFieldError(null);
+            }}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-lg transition-all",
+              modePendaftaran === 'baru'
+                ? "bg-white text-text shadow-sm border border-border/80"
+                : "text-text-3 hover:text-text"
+            )}
+          >
+            <Icon icon="heroicons:user-plus-20-solid" className="size-4 text-red" />
+            <span>Penyewa Baru</span>
+          </button>
 
-          <FormField label="NIK (KTP Tenant)" id="tambah-tenant-nik" required error={fieldError?.field === 'nik' ? fieldError.message : undefined}>
-            <input 
-              type="text" 
-              placeholder="Contoh: 6471012345670001 (16 digit)" 
-              value={formTenant.nik} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, nik: e.target.value }))} 
-              className={cn(
-                'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base font-tabular-nums focus:bg-white transition-colors',
-                fieldError?.field === 'nik' ? 'border-red' : 'border-border'
-              )} 
-            />
-          </FormField>
+          <button
+            type="button"
+            onClick={() => {
+              setModePendaftaran('terdaftar');
+              setFieldError(null);
+              fetchExistingTenants();
+            }}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-lg transition-all",
+              modePendaftaran === 'terdaftar'
+                ? "bg-white text-text shadow-sm border border-border/80"
+                : "text-text-3 hover:text-text"
+            )}
+          >
+            <Icon icon="heroicons:building-storefront-20-solid" className="size-4 text-blue-600" />
+            <span>Penyewa Terdaftar</span>
+          </button>
+        </div>
 
-          <FormField label="Alamat Tempat Tinggal Tenant" id="tambah-tenant-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
-            <textarea
-              placeholder="Contoh: Jl. Letjen Suprapto No. 45, Balikpapan Barat" 
-              value={formTenant.alamat} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, alamat: e.target.value }))} 
-              rows={2}
-              className={cn(
-                'w-full rounded-md border bg-warm-gray/50 p-3 text-base focus:bg-white transition-colors resize-none',
-                fieldError?.field === 'alamat' ? 'border-red' : 'border-border'
-              )} 
-            />
-          </FormField>
+        {/* MODE 1: PENYEWA BARU */}
+        {modePendaftaran === 'baru' ? (
+          <form onSubmit={handleCreateTenant} className="flex flex-col gap-4">
+            <FormField label="Nama Lengkap Tenant" id="tambah-tenant-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
+              <input 
+                type="text" 
+                placeholder="Contoh: Hj. Maryam" 
+                value={formTenant.nama} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, nama: e.target.value }))} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+              />
+            </FormField>
 
-          <FormField label="Nomor Kios (Tersedia)" id="tambah-tenant-kios" required error={fieldError?.field === 'kios' ? fieldError.message : undefined}>
-            <select
-              value={formTenant.kios}
-              onChange={(e) => setFormTenant(prev => ({ ...prev, kios: e.target.value }))}
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums focus:bg-white transition-colors cursor-pointer"
-            >
-              <option value="">-- Pilih Kios Kosong --</option>
-              {dataKios
-                .filter(k => k.status === 'Tersedia' || k.status === 'Kosong')
-                .map((k) => (
-                  <option key={k.id} value={k.noKios}>
-                    {k.noKios} - ({k.lantai})
-                  </option>
-                ))}
-            </select>
-          </FormField>
+            <FormField label="NIK (KTP Tenant)" id="tambah-tenant-nik" required error={fieldError?.field === 'nik' ? fieldError.message : undefined}>
+              <input 
+                type="text" 
+                placeholder="Contoh: 6471012345670001 (16 digit)" 
+                value={formTenant.nik} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, nik: e.target.value }))} 
+                className={cn(
+                  'w-full h-11 rounded-md border bg-warm-gray/50 px-3.5 text-base font-tabular-nums focus:bg-white transition-colors',
+                  fieldError?.field === 'nik' ? 'border-red' : 'border-border'
+                )} 
+              />
+            </FormField>
 
-          <FormField label="Nomor Telepon (WA)" id="tambah-tenant-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
-            <input 
-              type="tel" 
-              placeholder="Contoh: 081234567890" 
-              value={formTenant.telepon} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, telepon: e.target.value }))} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-            />
-          </FormField>
+            <FormField label="Alamat Tempat Tinggal Tenant" id="tambah-tenant-alamat" required error={fieldError?.field === 'alamat' ? fieldError.message : undefined}>
+              <textarea
+                placeholder="Contoh: Jl. Letjen Suprapto No. 45, Balikpapan Barat" 
+                value={formTenant.alamat} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, alamat: e.target.value }))} 
+                rows={2}
+                className={cn(
+                  'w-full rounded-md border bg-warm-gray/50 p-3 text-base focus:bg-white transition-colors resize-none',
+                  fieldError?.field === 'alamat' ? 'border-red' : 'border-border'
+                )} 
+              />
+            </FormField>
 
-          <FormField label="Email Tenant (Opsional)" id="tambah-tenant-email" error={fieldError?.field === 'email' ? fieldError.message : undefined}>
-            <input 
-              type="email" 
-              placeholder="email@tenant.com (Opsional)" 
-              value={formTenant.email} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, email: e.target.value }))} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-            />
-          </FormField>
+            {/* PILIHAN KIOS DENGAN DUKUNGAN MULTI-KIOS */}
+            <div className="flex flex-col gap-2 p-3.5 bg-mono-50/70 rounded-xl border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                  <Icon icon="heroicons:building-storefront-20-solid" className="size-4 text-red" />
+                  <span>Pilih Unit Kios Kosong ({selectedKiosList.length > 0 ? selectedKiosList.length : (formTenant.kios ? 1 : 0)} Unit Terpilih)</span>
+                </label>
+              </div>
 
-          <div className="flex flex-col gap-2.5 p-3.5 bg-warm-gray/40 rounded-xl border border-border">
-            <label className="text-xs font-bold text-text-2">Pilihan Username Login Tenant:</label>
-            <div className="flex gap-4 text-xs font-bold">
-              <label className="flex items-center gap-1.5 cursor-pointer text-text">
-                <input 
-                  type="radio" 
-                  name="usernameMode" 
-                  value="auto" 
-                  checked={formTenant.usernameMode === 'auto'} 
-                  onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'auto', username: '' }))} 
-                />
-                <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600 inline" />
-                <span>Otomatis Sistem</span>
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer text-text">
-                <input 
-                  type="radio" 
-                  name="usernameMode" 
-                  value="custom" 
-                  checked={formTenant.usernameMode === 'custom'} 
-                  onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'custom' }))} 
-                />
-                <Icon icon="heroicons:pencil-20-solid" className="size-3.5 text-text-2 inline" />
-                <span>Input Custom Username</span>
-              </label>
+              <select
+                value={formTenant.kios}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormTenant(prev => ({ ...prev, kios: val }));
+                  if (val && !selectedKiosList.includes(val)) {
+                    setSelectedKiosList(prev => [...prev, val]);
+                  }
+                }}
+                className="w-full h-11 rounded-md border border-border bg-white pl-3.5 pr-9 text-sm font-bold font-tabular-nums focus:border-red cursor-pointer"
+              >
+                <option value="">-- Tambah / Pilih Kios Kosong --</option>
+                {dataKios
+                  .filter(k => k.status === 'Tersedia' || k.status === 'Kosong')
+                  .map((k) => (
+                    <option key={k.id} value={k.noKios}>
+                      {k.noKios} ({k.lantai})
+                    </option>
+                  ))}
+              </select>
+
+              {/* CHIP UNIT KIOS TERPILIH (MULTI-KIOS) */}
+              {selectedKiosList.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {selectedKiosList.map((kNo) => (
+                    <span 
+                      key={kNo} 
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red text-white text-xs font-extrabold rounded-lg shadow-xs font-tabular-nums"
+                    >
+                      <span>Kios {kNo}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = selectedKiosList.filter(item => item !== kNo);
+                          setSelectedKiosList(updated);
+                          if (formTenant.kios === kNo) {
+                            setFormTenant(prev => ({ ...prev, kios: updated[0] || '' }));
+                          }
+                        }}
+                        className="hover:bg-red-700 rounded-full p-0.5"
+                      >
+                        <Icon icon="heroicons:x-mark-20-solid" className="size-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {fieldError?.field === 'kios' && (
+                <span className="text-2xs font-bold text-red mt-1">{fieldError.message}</span>
+              )}
             </div>
 
-            {formTenant.usernameMode === 'custom' && (
-              <div className="mt-1">
-                <FormField label="Username Custom" id="tambah-tenant-username" required error={fieldError?.field === 'username' ? fieldError.message : undefined}>
+            <FormField label="Nomor Telepon (WA)" id="tambah-tenant-telepon" required error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
+              <input 
+                type="tel" 
+                placeholder="Contoh: 081234567890" 
+                value={formTenant.telepon} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, telepon: e.target.value }))} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+              />
+            </FormField>
+
+            <FormField label="Email Tenant (Opsional)" id="tambah-tenant-email" error={fieldError?.field === 'email' ? fieldError.message : undefined}>
+              <input 
+                type="email" 
+                placeholder="email@tenant.com (Opsional)" 
+                value={formTenant.email} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, email: e.target.value }))} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+              />
+            </FormField>
+
+            <div className="flex flex-col gap-2.5 p-3.5 bg-warm-gray/40 rounded-xl border border-border">
+              <label className="text-xs font-bold text-text-2">Pilihan Username Login Tenant:</label>
+              <div className="flex gap-4 text-xs font-bold">
+                <label className="flex items-center gap-1.5 cursor-pointer text-text">
                   <input 
-                    type="text" 
-                    placeholder="Contoh: maryam_kios102" 
-                    value={formTenant.username} 
-                    onChange={(e) => setFormTenant(prev => ({ ...prev, username: e.target.value }))} 
-                    className="w-full h-10 rounded-md border border-border bg-white px-3.5 text-sm font-bold font-tabular-nums focus:border-red" 
+                    type="radio" 
+                    name="usernameMode" 
+                    value="auto" 
+                    checked={formTenant.usernameMode === 'auto'} 
+                    onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'auto', username: '' }))} 
                   />
-                </FormField>
+                  <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600 inline" />
+                  <span>Otomatis Sistem</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer text-text">
+                  <input 
+                    type="radio" 
+                    name="usernameMode" 
+                    value="custom" 
+                    checked={formTenant.usernameMode === 'custom'} 
+                    onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'custom' }))} 
+                  />
+                  <Icon icon="heroicons:pencil-20-solid" className="size-3.5 text-text-2 inline" />
+                  <span>Input Custom Username</span>
+                </label>
               </div>
-            )}
-          </div>
 
-          <FormField label="Jenis Usaha" id="tambah-tenant-usaha">
-            <input 
-              type="text" 
-              placeholder="Contoh: Kerajinan, Fashion" 
-              value={formTenant.usaha} 
-              onChange={(e) => setFormTenant(prev => ({ ...prev, usaha: e.target.value }))} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-            />
-          </FormField>
+              {formTenant.usernameMode === 'custom' && (
+                <div className="mt-1">
+                  <FormField label="Username Custom" id="tambah-tenant-username" required error={fieldError?.field === 'username' ? fieldError.message : undefined}>
+                    <input 
+                      type="text" 
+                      placeholder="Contoh: maryam_kios102" 
+                      value={formTenant.username} 
+                      onChange={(e) => setFormTenant(prev => ({ ...prev, username: e.target.value }))} 
+                      className="w-full h-10 rounded-md border border-border bg-white px-3.5 text-sm font-bold font-tabular-nums focus:border-red" 
+                    />
+                  </FormField>
+                </div>
+              )}
+            </div>
 
-          <FormField label="Nominal Tagihan per Bulan (Rp)" id="tambah-tenant-tarif" required hint="Nominal sewa rutin bulanan yang akan ditagihkan ke tenant ini">
-            <input 
-              type="text" 
-              inputMode="numeric"
-              placeholder="Contoh: 750.000" 
-              value={formTenant.tarifBulanan ? Number(formTenant.tarifBulanan).toLocaleString('id-ID') : ''} 
-              onChange={(e) => {
-                const cleanDigits = e.target.value.replace(/\D/g, '');
-                setFormTenant(prev => ({ ...prev, tarifBulanan: cleanDigits }));
-              }} 
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
-            />
-          </FormField>
-        </form>
+            <FormField label="Jenis Usaha" id="tambah-tenant-usaha">
+              <input 
+                type="text" 
+                placeholder="Contoh: Kerajinan, Fashion, Sembako" 
+                value={formTenant.usaha} 
+                onChange={(e) => setFormTenant(prev => ({ ...prev, usaha: e.target.value }))} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+              />
+            </FormField>
+
+            <FormField label="Nominal Tagihan per Bulan per Kios (Rp)" id="tambah-tenant-tarif" required hint="Nominal sewa rutin bulanan yang akan ditagihkan untuk tiap kios">
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="Contoh: 750.000" 
+                value={formTenant.tarifBulanan ? Number(formTenant.tarifBulanan).toLocaleString('id-ID') : ''} 
+                onChange={(e) => {
+                  const cleanDigits = e.target.value.replace(/\D/g, '');
+                  setFormTenant(prev => ({ ...prev, tarifBulanan: cleanDigits }));
+                }} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
+              />
+            </FormField>
+          </form>
+        ) : (
+          /* MODE 2: TAMBAH KIOS UNTUK PENYEWA TERDAFTAR */
+          <form onSubmit={handleCreateTenant} className="flex flex-col gap-4">
+            <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3.5 text-xs text-blue-900 leading-relaxed flex gap-2.5 items-start">
+              <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-bold">Menambah Kios ke Akun yang Sudah Ada</strong>
+                Pilih tenant yang sudah terdaftar di database. Sistem akan menautkan kios baru ini ke akun portal yang sama tanpa membuat username baru.
+              </div>
+            </div>
+
+            {/* SEARCHABLE TENANT PICKER & SELECTED CARD */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                <Icon icon="heroicons:user-group-20-solid" className="size-4 text-blue-600" />
+                <span>Pilih Tenant / Pemilik Terdaftar <span className="text-red">*</span></span>
+              </label>
+
+              {selectedPemilikId ? (
+                /* STATE 1: KARTU TENANT TERPILIH */
+                (() => {
+                  const selectedTenant = existingTenants.find(t => String(t.Id_Pemilik) === String(selectedPemilikId));
+                  if (!selectedTenant) return null;
+                  const currentKiosks = selectedTenant.sewa?.map(s => s.kios?.No_Kios).filter(Boolean) || [];
+                  const initials = (selectedTenant.Nama || 'T')
+                    .split(' ')
+                    .map(n => n[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+
+                  return (
+                    <div className="flex flex-col gap-3 p-4 bg-white border-2 border-blue-500/80 rounded-xl shadow-xs">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="size-11 rounded-full bg-blue-600 text-white font-extrabold text-sm flex items-center justify-center shadow-xs shrink-0">
+                            {initials}
+                          </div>
+                          <div>
+                            <strong className="block text-base font-extrabold text-text leading-tight">
+                              {selectedTenant.Nama}
+                            </strong>
+                            <span className="text-xs text-text-3 font-semibold font-tabular-nums">
+                              NIK: {selectedTenant.No_KTP || '—'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedPemilikId('');
+                            setTenantSearchQuery('');
+                          }}
+                          className="h-8 px-2.5 text-xs font-bold gap-1 border-border hover:bg-mono-100"
+                        >
+                          <Icon icon="heroicons:arrow-path-20-solid" className="size-3.5" />
+                          <span>Ganti Tenant</span>
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs text-text-2">
+                        <div>
+                          <span className="text-2xs text-text-3 font-semibold block">Kontak / WA:</span>
+                          <strong className="text-text font-bold font-tabular-nums">{selectedTenant.No_Telepon || '—'}</strong>
+                        </div>
+                        <div>
+                          <span className="text-2xs text-text-3 font-semibold block">Username Portal:</span>
+                          <strong className="text-red font-bold font-tabular-nums">@{selectedTenant.user?.Username || 'tenant_...'}</strong>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-border/60">
+                        <span className="text-2xs text-text-3 font-semibold block mb-1">Unit Kios yang Saat Ini Disewa:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {currentKiosks.length > 0 ? (
+                            currentKiosks.map(kNo => (
+                              <span key={kNo} className="px-2.5 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 font-extrabold text-2xs rounded-md font-tabular-nums">
+                                Kios {kNo}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-text-3 italic text-2xs">Belum memiliki unit aktif</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                /* STATE 2: SEARCHABLE INPUT & LIVE FILTER LIST */
+                <div className="flex flex-col gap-2">
+                  <div className="relative">
+                    <Icon icon="heroicons:magnifying-glass-20-solid" className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-text-3" />
+                    <input
+                      type="text"
+                      placeholder="Cari nama tenant, NIK, username, no. HP..."
+                      value={tenantSearchQuery}
+                      onChange={(e) => setTenantSearchQuery(e.target.value)}
+                      className={cn(
+                        "w-full h-11 pl-10 pr-9 rounded-xl border bg-white text-sm font-semibold focus:bg-white transition-all",
+                        fieldError?.field === 'pemilikId' ? "border-red ring-1 ring-red" : "border-border focus:border-red"
+                      )}
+                      autoFocus
+                    />
+                    {tenantSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setTenantSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-3 hover:text-text p-1"
+                      >
+                        <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {fieldError?.field === 'pemilikId' && (
+                    <span className="text-2xs font-bold text-red">{fieldError.message}</span>
+                  )}
+
+                  {/* HASIL FILTER TENANT */}
+                  <div className="max-h-56 overflow-y-auto border border-border rounded-xl bg-white divide-y divide-border/60 shadow-sm">
+                    {filteredExistingTenants.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-text-3 font-semibold">
+                        Tidak ada tenant yang cocok dengan "{tenantSearchQuery}".
+                      </div>
+                    ) : (
+                      filteredExistingTenants.map((t) => {
+                        const initials = (t.Nama || 'T')
+                          .split(' ')
+                          .map(n => n[0])
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .join('')
+                          .toUpperCase();
+                        const currentKiosks = t.sewa?.map(s => s.kios?.No_Kios).filter(Boolean) || [];
+
+                        return (
+                          <button
+                            key={t.Id_Pemilik}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPemilikId(t.Id_Pemilik);
+                              setTenantSearchQuery('');
+                              setFieldError(null);
+                            }}
+                            className="w-full p-2.5 sm:p-3 text-left hover:bg-blue-50/50 flex items-center justify-between gap-3 transition-colors group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="size-8 rounded-full bg-mono-100 text-text font-extrabold text-xs flex items-center justify-center border border-border shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
+                                {initials}
+                              </div>
+                              <div className="min-w-0">
+                                <strong className="block text-xs sm:text-sm font-extrabold text-text truncate group-hover:text-blue-700 transition-colors">
+                                  {t.Nama}
+                                </strong>
+                                <div className="flex items-center gap-1.5 text-2xs text-text-3 font-medium truncate mt-0.5">
+                                  <span>NIK: {t.No_KTP || '—'}</span>
+                                  <span>•</span>
+                                  <span>WA: {t.No_Telepon || '—'}</span>
+                                  {t.user?.Username && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="font-mono text-red">@{t.user.Username}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="shrink-0 text-right">
+                              {currentKiosks.length > 0 ? (
+                                <span className="px-2 py-0.5 bg-mono-100 text-text font-extrabold text-2xs rounded font-tabular-nums border border-border/80">
+                                  {currentKiosks.length} Unit
+                                </span>
+                              ) : (
+                                <span className="text-2xs text-text-3 italic">0 Kios</span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <FormField label="Pilih Unit Kios Kosong Tambahan" id="pilih-kios-tambahan" required error={fieldError?.field === 'kiosTambahan' ? fieldError.message : undefined}>
+              <select
+                value={formKiosTambahan.kios}
+                onChange={(e) => setFormKiosTambahan(prev => ({ ...prev, kios: e.target.value }))}
+                className="w-full h-11 rounded-md border border-border bg-white pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:border-red cursor-pointer"
+              >
+                <option value="">-- Pilih Unit Kios Kosong --</option>
+                {dataKios
+                  .filter(k => k.status === 'Tersedia' || k.status === 'Kosong')
+                  .map((k) => (
+                    <option key={k.id} value={k.noKios}>
+                      {k.noKios} ({k.lantai})
+                    </option>
+                  ))}
+              </select>
+            </FormField>
+
+            <FormField label="Jenis Usaha untuk Kios Baru Ini" id="tambah-usaha-tambahan">
+              <input 
+                type="text" 
+                placeholder="Contoh: Cabang Pakaian, Gudang Stok, Aksesoris" 
+                value={formKiosTambahan.usaha} 
+                onChange={(e) => setFormKiosTambahan(prev => ({ ...prev, usaha: e.target.value }))} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+              />
+            </FormField>
+
+            <FormField label="Nominal Tagihan per Bulan (Rp)" id="tambah-tarif-tambahan" required hint="Tarif sewa bulanan untuk unit kios tambahan ini">
+              <input 
+                type="text" 
+                inputMode="numeric"
+                placeholder="Contoh: 750.000" 
+                value={formKiosTambahan.tarifBulanan ? Number(formKiosTambahan.tarifBulanan).toLocaleString('id-ID') : ''} 
+                onChange={(e) => {
+                  const cleanDigits = e.target.value.replace(/\D/g, '');
+                  setFormKiosTambahan(prev => ({ ...prev, tarifBulanan: cleanDigits }));
+                }} 
+                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
+              />
+            </FormField>
+          </form>
+        )}
       </Drawer>
 
       <Modal

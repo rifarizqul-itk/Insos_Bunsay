@@ -52,21 +52,58 @@ class DashboardController extends Controller
         $tagihanBerjalan = $allTagihan->where('Status_Tagihan', '!=', 'Lunas')->sortByDesc('Id_Tagihan')->first()
             ?? $allTagihan->sortByDesc('Id_Tagihan')->first();
 
+        // Kumpulkan breakdown tagihan per masing-masing unit kios
+        $kiosBreakdown = $pemilik->sewa->map(function ($sewaItem) {
+            $latestTagihan = $sewaItem->tagihan->where('Status_Tagihan', '!=', 'Lunas')->sortByDesc('Id_Tagihan')->first()
+                ?? $sewaItem->tagihan->sortByDesc('Id_Tagihan')->first();
+
+            return [
+                'idSewa'         => $sewaItem->Id_Sewa,
+                'noKios'         => optional($sewaItem->kios)->No_Kios ?? '—',
+                'lantai'         => optional($sewaItem->kios)->Lantai ? 'Lantai ' . $sewaItem->kios->Lantai : 'Lantai 1',
+                'ukuran'         => optional($sewaItem->kios)->Ukuran ?? '4x4 m²',
+                'jenisUsaha'     => $sewaItem->Jenis_Usaha ?? '—',
+                'tarifBulanan'   => (float) ($sewaItem->Tarif_Bulanan ?? 750000),
+                'tanggalMulai'   => $sewaItem->Tanggal_Mulai,
+                'tanggalSelesai' => $sewaItem->Tanggal_Selesai,
+                'tagihan'        => $latestTagihan ? [
+                    'idTagihan'       => $latestTagihan->Id_Tagihan,
+                    'periode'         => $latestTagihan->Periode,
+                    'tarifSewa'       => (float) $latestTagihan->Tarif_Sewa,
+                    'hutangTunggakan' => (float) ($latestTagihan->Hutang_Tunggakan ?? 0),
+                    'totalTagihan'    => (float) $latestTagihan->Total_Tagihan,
+                    'sisaTagihan'     => (float) ($latestTagihan->Sisa_Tagihan ?? $latestTagihan->Total_Tagihan),
+                    'statusTagihan'   => $latestTagihan->Status_Tagihan,
+                    'jatuhTempo'      => $latestTagihan->Jatuh_Tempo,
+                ] : null,
+            ];
+        })->values();
+
         // Kumpulkan semua nomor kios yang dimiliki pemilik ini
         $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
 
+        // Hitung total kewajiban berjalan dari seluruh kios
+        $totalTagihanSemuaKios = $kiosBreakdown->reduce(function ($carry, $item) {
+            if ($item['tagihan'] && in_array($item['tagihan']['statusTagihan'], ['Belum Bayar', 'Dicicil'])) {
+                return $carry + $item['tagihan']['sisaTagihan'];
+            }
+            return $carry;
+        }, 0.0);
+
         return response()->json([
-            'idPemilik'      => $pemilik->Id_Pemilik,
-            'nama'           => $pemilik->Nama,
-            'nik'            => $pemilik->No_KTP ?: '—',
-            'telepon'        => $pemilik->No_Telepon ?: '—',
-            'email'          => $user->email ?? $user->Username,
-            'alamat'         => $pemilik->Alamat ?: '—',
-            'kios'           => $kiosList->implode(', '),
-            'kiosList'       => $kiosList,
-            'statusPemilik'  => $pemilik->Status_Pemilik,
-            'izinkanCicilan' => (bool) ($pemilik->izinkan_cicilan ?? false),
-            'detailAdministrasi' => [
+            'idPemilik'              => $pemilik->Id_Pemilik,
+            'nama'                   => $pemilik->Nama,
+            'nik'                    => $pemilik->No_KTP ?: '—',
+            'telepon'                => $pemilik->No_Telepon ?: '—',
+            'email'                  => $user->email ?? $user->Username,
+            'alamat'                 => $pemilik->Alamat ?: '—',
+            'kios'                   => $kiosList->implode(', '),
+            'kiosList'               => $kiosList,
+            'kiosBreakdown'          => $kiosBreakdown,
+            'totalTagihanSemuaKios'  => (float) $totalTagihanSemuaKios,
+            'statusPemilik'          => $pemilik->Status_Pemilik,
+            'izinkanCicilan'         => (bool) ($pemilik->izinkan_cicilan ?? false),
+            'detailAdministrasi'     => [
                 'lantai'     => is_numeric($sewaTerbaru?->kios?->Lantai) ? "Lantai " . $sewaTerbaru->kios->Lantai : ($sewaTerbaru?->kios?->Lantai ?? 'Lantai 1'),
                 'ukuran'     => $sewaTerbaru?->kios?->Ukuran ?? '4x4 m²',
                 'sertifikat' => $sewaTerbaru?->kios?->Sertifikat ?? '—',
