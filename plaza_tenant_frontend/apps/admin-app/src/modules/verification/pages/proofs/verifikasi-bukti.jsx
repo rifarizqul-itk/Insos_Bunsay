@@ -243,30 +243,44 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex bg-warm-gray/60 p-1 rounded-xl border border-border self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab('antrean')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'antrean'
-                ? 'bg-red text-white shadow-sm'
-                : 'text-text-2 hover:text-text hover:bg-white/50'
-            }`}
+        {/* Tab Switcher & Refresh Button */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchVerifikasiQueue}
+            disabled={isLoading}
+            className="text-xs font-bold gap-1.5 h-9 px-3"
+            title="Muat ulang antrean data terbaru"
           >
-            Antrean Menunggu ({antrean.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('riwayat')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === 'riwayat'
-                ? 'bg-red text-white shadow-sm'
-                : 'text-text-2 hover:text-text hover:bg-white/50'
-            }`}
-          >
-            Riwayat Terproses ({riwayatProses.length})
-          </button>
+            <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-4", isLoading && "animate-spin text-red")} />
+            <span className="hidden sm:inline">Segarkan</span>
+          </Button>
+
+          <div className="flex bg-warm-gray/60 p-1 rounded-xl border border-border">
+            <button
+              type="button"
+              onClick={() => setActiveTab('antrean')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'antrean'
+                  ? 'bg-red text-white shadow-sm'
+                  : 'text-text-2 hover:text-text hover:bg-white/50'
+              }`}
+            >
+              Antrean Menunggu ({antrean.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('riwayat')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'riwayat'
+                  ? 'bg-red text-white shadow-sm'
+                  : 'text-text-2 hover:text-text hover:bg-white/50'
+              }`}
+            >
+              Riwayat Terproses ({riwayatProses.length})
+            </button>
+          </div>
         </div>
       </div>
 
