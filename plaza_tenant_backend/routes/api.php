@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function
     Route::post('/sewa/{id}/akhiri', [SewaController::class, 'akhiriSewa']);
     Route::apiResource('pemilik', PemilikController::class);
     Route::put('/pemilik/{id}/toggle-cicilan', [PemilikController::class, 'toggleCicilan']);
+    Route::post('/pemilik/{id}/reset-password', [PemilikController::class, 'resetPassword']);
     Route::apiResource('kios', KiosController::class);
     Route::apiResource('sewa', SewaController::class);
     Route::apiResource('dokumen', DokumenController::class);

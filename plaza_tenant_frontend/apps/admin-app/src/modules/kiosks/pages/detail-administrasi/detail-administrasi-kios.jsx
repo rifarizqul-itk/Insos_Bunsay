@@ -12,6 +12,7 @@ function DetailAdministrasiKios() {
   const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [resetResult, setResetResult] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const displayKiosNo = id || 'B-1001';
 
@@ -164,22 +165,44 @@ function DetailAdministrasiKios() {
     }
   };
 
-  const handleTriggerResetPassword = () => {
-    const tempPassword = 'bunsay' + Math.floor(1000 + Math.random() * 9000);
-    const targetUsername = editData.username !== '—' && editData.username !== 'Belum Dibuat' 
-      ? editData.username 
-      : ('tenant_' + (editData.tenant.toLowerCase().replace(/[^a-z0-9]/g, '') || displayKiosNo.toLowerCase().replace(/[^a-z0-9]/g, '')));
-    
-    const waMessage = `Halo Bpk/Ibu ${editData.tenant},\n\nBerikut informasi akun resmi Portal Tenant Plaza Kebun Sayur untuk kios ${displayKiosNo}:\n\n👤 Username: ${targetUsername}\n🔑 Kata Sandi Sementara: ${tempPassword}\n\nSilakan login ke portal tenant: ${window.location.origin}/auth\n\nDemi keamanan akun Anda, mohon segera perbarui kata sandi setelah berhasil masuk. Terima kasih.`;
-    
-    setResetResult({
-      tempPassword,
-      tenantName: editData.tenant,
-      kiosNo: displayKiosNo,
-      username: targetUsername,
-      telepon: editData.telepon,
-      waMessage
-    });
+  const handleTriggerResetPassword = async () => {
+    if (!pemilikId) {
+      addToast('Kios ini belum memiliki data penyewa terdaftar.', 'error');
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      const res = await httpClient.post(`/api/v1/admin/pemilik/${pemilikId}/reset-password`);
+      const payload = res?.data?.data || {};
+      const targetUsername = payload.username || editData.username || 'tenant';
+      const tempPassword = payload.tempPassword || 'bunsay1234';
+
+      const waMessage = `Halo Bpk/Ibu ${editData.tenant},\n\nBerikut informasi akun resmi Portal Tenant Plaza Kebun Sayur untuk kios ${displayKiosNo}:\n\n👤 Username: ${targetUsername}\n🔑 Kata Sandi Sementara: ${tempPassword}\n\nSilakan login ke portal tenant: ${window.location.origin}/auth\n\nDemi keamanan akun Anda, mohon segera perbarui kata sandi setelah berhasil masuk. Terima kasih.`;
+
+      setResetResult({
+        tempPassword,
+        tenantName: editData.tenant,
+        kiosNo: displayKiosNo,
+        username: targetUsername,
+        telepon: editData.telepon,
+        waMessage
+      });
+
+      setEditData(prev => ({
+        ...prev,
+        username: targetUsername,
+        statusAkun: 'Aktif'
+      }));
+
+      addToast('Kata sandi tenant berhasil direset dan disimpan ke database!', 'success');
+    } catch (err) {
+      console.error('Failed to reset password in DB:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal mereset kata sandi tenant.';
+      addToast(errMsg, 'error');
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   return (
@@ -486,11 +509,12 @@ function DetailAdministrasiKios() {
               <Button
                 variant="secondary"
                 fullWidth
+                disabled={isResettingPassword || editData.statusKios === 'Kosong'}
                 onClick={handleTriggerResetPassword}
-                className="h-11 text-xs font-bold gap-2 text-red hover:bg-red-50"
+                className="h-11 text-xs font-bold gap-2 text-red hover:bg-red-50 disabled:opacity-50"
               >
                 <Icon icon="heroicons:key-20-solid" className="size-4.5" />
-                <span>Reset Password Tenant</span>
+                <span>{isResettingPassword ? 'Mereset Kata Sandi...' : 'Reset Password Tenant'}</span>
               </Button>
             </Card>
           </div>

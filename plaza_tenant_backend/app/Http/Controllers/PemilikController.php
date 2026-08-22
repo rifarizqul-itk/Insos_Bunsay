@@ -281,11 +281,83 @@ class PemilikController extends Controller
                 'success'         => true,
                 'message'         => 'Akses cicilan berhasil ' . ($newValue ? 'diberikan' : 'dicabut'),
                 'izinkan_cicilan' => (bool) $newValue
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui status izin cicilan: ' . $e->getMessage()
+                'message' => 'Gagal mengubah status cicilan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset password akun tenant dari panel admin dan simpan langsung ke database.
+     * POST /api/v1/admin/pemilik/{id}/reset-password
+     */
+    public function resetPassword(Request $request, $id)
+    {
+        try {
+            $pemilik = Pemilik::with('user')->find($id);
+            if (!$pemilik) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pemilik tidak ditemukan.'
+                ], 404);
+            }
+
+            // Generate password baru atau gunakan password custom
+            $tempPassword = $request->password ?: ('bunsay' . rand(1000, 9999));
+            $passwordHash = \Illuminate\Support\Facades\Hash::make($tempPassword);
+
+            // Cek apakah pemilik sudah terhubung dengan akun User
+            if ($pemilik->user) {
+                $pemilik->user->update([
+                    'Password'     => $passwordHash,
+                    'status_aktif' => 1,
+                ]);
+                $username = $pemilik->user->Username;
+            } else {
+                // Buat akun User baru jika belum ada
+                $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($pemilik->Nama));
+                $prefix = (strlen($cleanName) > 0 ? substr($cleanName, 0, 10) : 'user');
+                $finalUsername = 'tenant_' . $prefix . '_' . rand(100, 999);
+                while (\App\Models\User::where('Username', $finalUsername)->exists()) {
+                    $finalUsername = 'tenant_' . $prefix . '_' . rand(100, 999);
+                }
+
+                $newUser = \App\Models\User::create([
+                    'Id_roles'    => 2,
+                    'sub_role'    => 'tenant',
+                    'status_aktif'=> 1,
+                    'Username'    => $finalUsername,
+                    'Password'    => $passwordHash,
+                    'nama_lengkap'=> $pemilik->Nama,
+                    'email'       => $pemilik->Email ?? null,
+                ]);
+                $pemilik->update(['Id_User' => $newUser->Id_user]);
+                $username = $finalUsername;
+            }
+
+            \App\Models\ActivityLog::record(
+                $request,
+                'Pemilik',
+                'Reset Password Tenant',
+                "Admin mereset kata sandi tenant {$pemilik->Nama} (Username: {$username})."
+            );
+
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Kata sandi tenant berhasil diperbarui di database.',
+                'data'         => [
+                    'username'     => $username,
+                    'tempPassword' => $tempPassword,
+                    'nama'         => $pemilik->Nama,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mereset kata sandi: ' . $e->getMessage()
             ], 500);
         }
     }
