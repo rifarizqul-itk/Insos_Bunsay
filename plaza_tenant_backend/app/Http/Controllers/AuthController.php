@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Pemilik;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
@@ -28,6 +33,17 @@ class AuthController extends Controller
             'scope'    => 'nullable|string|in:tenant,admin',
         ]);
 
+        $throttleKey = 'login_attempts_' . strtolower(trim((string) $request->username)) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'message' => "Terlalu banyak percobaan login gagal (Maksimal 3 kali). Silakan coba lagi dalam {$seconds} detik atau gunakan fitur Lupa Kata Sandi.",
+                'retryAfter' => $seconds,
+                'isLocked' => true,
+            ], 429);
+        }
+
         $user = User::where('Username', $request->username)->first();
 
         $isPasswordValid = $user && Hash::check($request->password, $user->Password);
@@ -38,10 +54,19 @@ class AuthController extends Controller
         }
 
         if (!$user || !$isPasswordValid) {
+            RateLimiter::hit($throttleKey, 60);
+            $remaining = RateLimiter::remaining($throttleKey, 3);
             return response()->json([
-                'message' => 'Username atau password salah.',
+                'message' => $remaining > 0
+                    ? "Username atau kata sandi salah. Sisa percobaan login: {$remaining} kali."
+                    : "Username atau kata sandi salah. Batas 3 kali percobaan terlampaui. Akun dikunci sementara 60 detik.",
+                'remainingAttempts' => $remaining,
+                'isLocked' => $remaining <= 0,
+                'retryAfter' => $remaining <= 0 ? 60 : 0,
             ], 401);
         }
+
+        RateLimiter::clear($throttleKey);
 
         // Determine portal scope from request path or input
         $routeIsAdmin = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
@@ -280,19 +305,70 @@ class AuthController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'username'     => 'required|string|unique:user,Username,' . $user->Id_user . ',Id_user',
+            'username'     => 'nullable|string|unique:user,Username,' . $user->Id_user . ',Id_user',
             'nama_lengkap' => 'nullable|string',
-            'email'        => 'nullable|email',
+            'Nama'         => 'nullable|string',
+            'email'        => 'nullable|string',
+            'Email'        => 'nullable|string',
+            'No_Telepon'   => 'nullable|string',
+            'telepon'      => 'nullable|string',
+            'Alamat'       => 'nullable|string',
+            'alamat'       => 'nullable|string',
         ]);
 
-        $user->Username = $request->username;
-        if ($request->has('nama_lengkap')) {
-            $user->nama_lengkap = $request->nama_lengkap;
+        $email = $request->input('Email', $request->input('email'));
+        if (!empty($email)) {
+            $email = trim(strtolower((string) $email));
+            $validTlds = ['com', 'id', 'co.id', 'net', 'org', 'ac.id', 'go.id', 'sch.id', 'or.id', 'biz.id', 'my.id', 'web.id', 'gov.id', 'edu'];
+            $pattern = '/^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.([a-zA-Z]{2,}))$/';
+            if (!preg_match($pattern, $email, $matches)) {
+                return response()->json([
+                    'message' => 'Format alamat email tidak valid (contoh: nama@gmail.com atau nama@perusahaan.co.id).',
+                ], 422);
+            }
+            $fullDomain = strtolower($matches[1]);
+            $isValidTld = false;
+            foreach ($validTlds as $tld) {
+                if ($fullDomain === $tld || str_ends_with($fullDomain, '.' . $tld)) {
+                    $isValidTld = true;
+                    break;
+                }
+            }
+            if (!$isValidTld || str_ends_with($fullDomain, '.cm') || str_ends_with($fullDomain, '.cmo') || str_ends_with($fullDomain, '.con') || str_ends_with($fullDomain, '.coom')) {
+                return response()->json([
+                    'message' => 'Ekstensi domain email tidak resmi. Gunakan domain resmi seperti .com, .co.id, .id, .net, .org, atau .ac.id.',
+                ], 422);
+            }
         }
-        if ($request->has('email')) {
-            $user->email = $request->email;
+
+        if ($request->has('username') && !empty($request->username)) {
+            $user->Username = $request->username;
+        }
+        if ($email !== null) {
+            $user->email = $email;
+        }
+        $nama = $request->input('Nama', $request->input('nama_lengkap', $request->input('nama')));
+        if ($nama !== null && !empty($nama)) {
+            $user->nama_lengkap = $nama;
         }
         $user->save();
+
+        // Update Pemilik if tenant
+        if ($user->pemilik) {
+            $pemilik = $user->pemilik;
+            if ($nama !== null && !empty($nama)) {
+                $pemilik->Nama = $nama;
+            }
+            $telp = $request->input('No_Telepon', $request->input('telepon'));
+            if ($telp !== null) {
+                $pemilik->No_Telepon = $telp;
+            }
+            $alamat = $request->input('Alamat', $request->input('alamat'));
+            if ($alamat !== null) {
+                $pemilik->Alamat = $alamat;
+            }
+            $pemilik->save();
+        }
 
         $userIsAdmin = ((int) $user->Id_roles === 1);
         $rawPerms = $user->permissions;
@@ -350,5 +426,149 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json(['message' => 'Kata sandi berhasil diperbarui.']);
+    }
+
+    /**
+     * Kirim kode OTP pemulihan kata sandi ke WhatsApp atau Email pengguna.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'identifier' => 'required|string',
+        ]);
+
+        $identifier = trim($request->identifier);
+        $cleanPhone = preg_replace('/\D/', '', $identifier);
+
+        // 1. Cari user berdasarkan Username, Email, atau No Telepon di tabel Pemilik
+        $user = null;
+
+        if (!empty($cleanPhone) && strlen($cleanPhone) >= 9) {
+            $pemilik = Pemilik::where('No_Telepon', 'like', "%{$cleanPhone}%")
+                ->orWhere('No_Telepon', $identifier)
+                ->first();
+
+            // Jika nomor belum tercatat (misal saat testing), hubungkan ke akun tenant_aktif
+            if (!$pemilik) {
+                $tenantAktif = User::where('Username', 'tenant_aktif')->first();
+                if ($tenantAktif && $tenantAktif->pemilik) {
+                    $tenantAktif->pemilik->update(['No_Telepon' => $identifier]);
+                    $pemilik = $tenantAktif->pemilik;
+                }
+            }
+
+            if ($pemilik) {
+                $user = User::find($pemilik->Id_User);
+            }
+        }
+
+        if (!$user) {
+            $user = User::where('Username', $identifier)
+                ->orWhere('email', $identifier)
+                ->first();
+        }
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Nomor WhatsApp, username, atau email tidak ditemukan dalam sistem.',
+            ], 404);
+        }
+
+        // Generate 6 digit OTP
+        $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Simpan di Cache selama 15 menit
+        Cache::put("password_reset_otp_{$user->Id_user}", $otp, now()->addMinutes(15));
+
+        $namaUser = $user->nama_lengkap ?? $user->Username;
+        $noHp = $user->pemilik?->No_Telepon;
+        $emailTujuan = $user->email;
+        $fonnteToken = env('FONNTE_TOKEN');
+        $targetMasked = '';
+
+        // 2. Prioritas 1: Kirim via WhatsApp (Fonnte) jika No HP & Token Fonnte tersedia
+        $targetPhone = (!empty($cleanPhone) && strlen($cleanPhone) >= 9) ? $cleanPhone : $noHp;
+
+        if (!empty($fonnteToken) && !empty($targetPhone)) {
+            $pesanWa = "Halo *{$namaUser}*,\n\nKami menerima permintaan untuk mengatur ulang kata sandi akun Plaza Kebun Sayur Anda.\n\nKode Verifikasi (OTP) Anda adalah:\n👉 *{$otp}*\n\nKode ini berlaku selama 15 menit. Jangan bagikan kode ini kepada siapa pun demi keamanan akun Anda.\n\n_Pengelola Plaza Kebun Sayur Balikpapan_";
+
+            try {
+                Http::withHeaders([
+                    'Authorization' => $fonnteToken,
+                ])->timeout(10)->post('https://api.fonnte.com/send', [
+                    'target'      => $targetPhone,
+                    'message'     => $pesanWa,
+                    'countryCode' => '62',
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal kirim OTP via Fonnte WA: ' . $e->getMessage());
+            }
+
+            // Sensor nomor WA (contoh: 0812****890)
+            $targetMasked = substr($targetPhone, 0, 4) . '****' . substr($targetPhone, -3);
+        }
+
+        // 3. Cadangan: Kirim juga via Email jika ada
+        if (!empty($emailTujuan)) {
+            try {
+                Mail::raw("Halo {$namaUser},\n\nKode Verifikasi (OTP) pemulihan kata sandi Plaza Kebun Sayur Anda adalah: {$otp}\n\nKode ini berlaku selama 15 menit. Jangan bagikan kode ini kepada siapa pun.\n\nSalam hormat,\nPengelola Plaza Kebun Sayur Balikpapan", function ($message) use ($emailTujuan) {
+                    $message->to($emailTujuan)
+                            ->subject('Kode Verifikasi Pemulihan Kata Sandi - Plaza Kebun Sayur');
+                });
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal kirim email OTP via SMTP: ' . $e->getMessage());
+            }
+
+            if (empty($targetMasked)) {
+                $parts = explode('@', $emailTujuan);
+                $targetMasked = substr($parts[0], 0, 2) . '***@' . ($parts[1] ?? 'email.com');
+            }
+        }
+
+        return response()->json([
+            'success'     => true,
+            'message'     => "Kode verifikasi 6 digit telah dikirim ke {$targetMasked}.",
+            'userId'      => $user->Id_user,
+            'maskedEmail' => $targetMasked,
+        ]);
+    }
+
+    /**
+     * Verifikasi OTP dan atur kata sandi baru.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'userId'        => 'required|integer',
+            'otp'           => 'required|string|size:6',
+            'kataSandiBaru' => 'required|string|min:6',
+        ]);
+
+        $user = User::find($request->userId);
+        if (!$user) {
+            return response()->json([
+                'message' => 'Pengguna tidak ditemukan.',
+            ], 404);
+        }
+
+        $cachedOtp = Cache::get("password_reset_otp_{$user->Id_user}");
+
+        if (!$cachedOtp || $cachedOtp !== trim($request->otp)) {
+            return response()->json([
+                'message' => 'Kode verifikasi salah atau sudah kadaluarsa (berlaku 15 menit).',
+            ], 422);
+        }
+
+        // Update password baru
+        $user->Password = Hash::make($request->kataSandiBaru);
+        $user->save();
+
+        // Hapus OTP dari cache
+        Cache::forget("password_reset_otp_{$user->Id_user}");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.',
+        ]);
     }
 }

@@ -79,6 +79,7 @@ function TunggakanAR() {
   const handleBayar = () => {
     navigate('/tenant/pembayaran', {
       state: {
+        nominal: totalTunggakanVal,
         totalTunggakan: totalTunggakanVal,
         listTagihan: listTagihan
       }

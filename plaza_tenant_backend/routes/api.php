@@ -29,6 +29,8 @@ Route::prefix('v1/tenant/auth')->group(function () {
     // Public Tenant Auth
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     
     // Silent Refresh Endpoint (HttpOnly Cookie based - No Bearer token required)
     Route::post('/refresh', [AuthController::class, 'refresh']);
@@ -47,6 +49,8 @@ Route::prefix('v1/tenant/auth')->group(function () {
 Route::prefix('v1/admin/auth')->group(function () {
     // Public Admin Auth
     Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     
     // Silent Refresh Endpoint (HttpOnly Cookie based - No Bearer token required)
     Route::post('/refresh', [AuthController::class, 'refresh']);

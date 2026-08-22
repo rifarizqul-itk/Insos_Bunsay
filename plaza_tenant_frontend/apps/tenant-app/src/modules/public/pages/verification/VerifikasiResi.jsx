@@ -98,7 +98,7 @@ export function VerifikasiResi() {
 
           {/* Action */}
           <div className="flex justify-center">
-            <Link to="/auth">
+            <Link to="/tenant/dashboard">
               <Button type="button" variant="primary" size="sm" className="px-6 font-bold">
                 Masuk ke Portal Tenant
               </Button>
