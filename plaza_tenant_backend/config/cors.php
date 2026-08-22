@@ -31,7 +31,9 @@ return [
         'http://127.0.0.1:3002',
     ]))),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://.*\.netlify\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
