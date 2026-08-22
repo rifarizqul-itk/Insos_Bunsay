@@ -1,5 +1,5 @@
-const BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api';
-const DEFAULT_TIMEOUT = 10000;
+const BASE_URL = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/api\/?$/, '');
+const DEFAULT_TIMEOUT = 25000;
 
 const normalizeError = (error, status) => {
   if (typeof error === 'object' && error !== null && error.message) {

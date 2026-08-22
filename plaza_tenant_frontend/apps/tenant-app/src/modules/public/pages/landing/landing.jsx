@@ -1,9 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Button, Card } from '@bunsay/shared-ui';
+import { useTenantAuth } from '../../TenantAuthProvider';
 
 function LandingPage() {
   const navigate = useNavigate();
+  const { isLoggedIn } = useTenantAuth();
+
+  const handleAuthRedirect = () => {
+    if (isLoggedIn) {
+      navigate('/tenant/dashboard');
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <div data-slot="landing-page" className="page-fade-in bg-mono-50 min-h-dvh font-sans">
@@ -26,11 +36,11 @@ function LandingPage() {
         <Button
           variant="primary"
           size="sm"
-          onClick={() => navigate('/auth')}
+          onClick={handleAuthRedirect}
           className="h-10 px-5 text-sm font-bold gap-1.5 shadow-sm"
         >
-          <Icon icon="material-symbols:login" className="size-4.5" />
-          <span>Login Portal</span>
+          <Icon icon={isLoggedIn ? "material-symbols:dashboard" : "material-symbols:login"} className="size-4.5" />
+          <span>{isLoggedIn ? 'Dashboard Tenant' : 'Login Portal'}</span>
         </Button>
       </nav>
 
@@ -59,10 +69,10 @@ function LandingPage() {
                   size="lg"
                   fullWidth
                   className="sm:w-auto h-13 px-8 text-base font-extrabold gap-2.5 shadow-md"
-                  onClick={() => navigate('/auth')}
+                  onClick={handleAuthRedirect}
                 >
-                  Login Portal
-                  <Icon icon="material-symbols:login" className="size-5.5" />
+                  <span>{isLoggedIn ? 'Buka Dashboard Tenant' : 'Login Portal'}</span>
+                  <Icon icon={isLoggedIn ? "material-symbols:dashboard" : "material-symbols:login"} className="size-5.5" />
                 </Button>
               </div>
             </div>

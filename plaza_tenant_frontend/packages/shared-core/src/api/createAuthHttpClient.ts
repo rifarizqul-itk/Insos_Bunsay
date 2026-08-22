@@ -15,9 +15,10 @@ interface IQueueItem {
 
 export function createAuthHttpClient(options: IAuthHttpClientOptions): AxiosInstance {
   const { baseURL, refreshEndpoint, getToken, setToken, onUnauthenticated } = options;
+  const sanitizedBaseURL = (baseURL || '').replace(/\/api\/?$/, '');
 
   const client = axios.create({
-    baseURL,
+    baseURL: sanitizedBaseURL,
     withCredentials: true,
     headers: {
       'Content-Type': 'application/json',

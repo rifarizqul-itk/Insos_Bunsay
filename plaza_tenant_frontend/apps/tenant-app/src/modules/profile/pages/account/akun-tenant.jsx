@@ -2,6 +2,24 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FormField, Button, Card, Icon, Badge, useToast, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
+const VALID_TLDS = ['com', 'id', 'co.id', 'net', 'org', 'ac.id', 'go.id', 'sch.id', 'or.id', 'biz.id', 'my.id', 'web.id', 'gov.id', 'edu'];
+
+function validateOfficialEmail(email) {
+  if (!email || !email.trim()) return null;
+  const trimmed = email.trim().toLowerCase();
+  const baseRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.([a-zA-Z]{2,}))$/;
+  const match = trimmed.match(baseRegex);
+  if (!match) {
+    return 'Format alamat email tidak valid (contoh: nama@gmail.com).';
+  }
+  const fullDomain = match[1];
+  const isValid = VALID_TLDS.some(tld => fullDomain === tld || fullDomain.endsWith('.' + tld));
+  if (!isValid || fullDomain.endsWith('.cm') || fullDomain.endsWith('.cmo') || fullDomain.endsWith('.con') || fullDomain.endsWith('.coom')) {
+    return 'Ekstensi domain email tidak resmi. Gunakan domain resmi (.com, .co.id, .id, .net, .org, .ac.id, dll).';
+  }
+  return null;
+}
+
 function AkunTenant() {
   const { user, httpClient, logout } = useTenantAuth();
   const { addToast } = useToast();
@@ -36,6 +54,14 @@ function AkunTenant() {
   const [formData, setFormData] = useState({ ...adminDetail });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [passwordData, setPasswordData] = useState({
+    kataSandiLama: '',
+    kataSandiBaru: '',
+    konfirmasiKataSandi: ''
+  });
+
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const fetchTenantProfileData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -44,7 +70,7 @@ function AkunTenant() {
         const d = res.data;
         const cleanEmail = (d.email && d.email !== d.Username && !d.email.startsWith('tenant_')) 
           ? d.email 
-          : (user?.email && !user?.email.startsWith('tenant_') ? user.email : 'Belum Diatur (Opsional)');
+          : (user?.email && !user?.email.startsWith('tenant_') ? user.email : '');
 
         const mapped = {
           nama: d.nama || user?.name || user?.Username || 'Tenant Aktif',
@@ -79,13 +105,6 @@ function AkunTenant() {
     fetchTenantProfileData();
   }, [fetchTenantProfileData]);
 
-  const [passwordData, setPasswordData] = useState({
-    kataSandiLama: '',
-    kataSandiBaru: '',
-    konfirmasiKataSandi: ''
-  });
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
@@ -93,9 +112,14 @@ function AkunTenant() {
     if (name === 'konfirmasiKataSandi' && confirmPasswordError) setConfirmPasswordError(null);
   };
 
-  const handleSavePassword = (e) => {
+  const handleSavePassword = async (e) => {
     e.preventDefault();
     let hasError = false;
+    if (!passwordData.kataSandiLama) {
+      setPasswordError('Kata sandi saat ini wajib diisi.');
+      addToast('Kata sandi saat ini wajib diisi.', 'error');
+      return;
+    }
     if (!passwordData.kataSandiBaru || passwordData.kataSandiBaru.length < 6) {
       setPasswordError('Kata sandi baru minimal 6 karakter.');
       addToast('Kata sandi baru minimal 6 karakter.', 'error');
@@ -109,15 +133,24 @@ function AkunTenant() {
     if (hasError) return;
 
     setIsChangingPassword(true);
-    setTimeout(() => {
-      setIsChangingPassword(false);
+    try {
+      await httpClient.put('/api/v1/tenant/auth/change-password', {
+        kataSandiLama: passwordData.kataSandiLama,
+        kataSandiBaru: passwordData.kataSandiBaru,
+      });
       setPasswordData({
         kataSandiLama: '',
         kataSandiBaru: '',
         konfirmasiKataSandi: ''
       });
       addToast('Kata sandi akun tenant berhasil diperbarui!', 'success');
-    }, 400);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Gagal mengubah kata sandi.';
+      setPasswordError(msg);
+      addToast(msg, 'error');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleStartEdit = () => {
@@ -137,31 +170,45 @@ function AkunTenant() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formData.nama) {
+    if (!formData.nama || !formData.nama.trim()) {
       setFieldError({ field: 'nama', message: 'Nama lengkap wajib diisi.' });
       addToast('Nama lengkap wajib diisi.', 'error');
       return;
     }
 
+    if (formData.email && formData.email.trim().length > 0) {
+      const emailErrorMsg = validateOfficialEmail(formData.email);
+      if (emailErrorMsg) {
+        setFieldError({ field: 'email', message: emailErrorMsg });
+        addToast(emailErrorMsg, 'error');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await httpClient.put('/api/v1/tenant/auth/profile', {
-        Nama: formData.nama,
-        No_Telepon: formData.telepon,
-        Email: formData.email,
-        Alamat: formData.alamat
+        Nama: formData.nama.trim(),
+        No_Telepon: formData.telepon?.trim(),
+        Email: formData.email?.trim(),
+        Alamat: formData.alamat?.trim()
       });
       setAdminDetail(prev => ({ ...prev, ...formData }));
       setIsEditing(false);
+      setFieldError(null);
       addToast('Data profil berhasil diperbarui!', 'success');
     } catch (err) {
-      setAdminDetail(prev => ({ ...prev, ...formData }));
-      setIsEditing(false);
-      addToast('Data profil berhasil diperbarui!', 'success');
+      const msg = err.response?.data?.message || err.message || 'Gagal memperbarui data profil.';
+      addToast(msg, 'error');
+      if (msg.toLowerCase().includes('email')) {
+        setFieldError({ field: 'email', message: msg });
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!adminDetail) return null;
 
   return (
     <div data-slot="akun-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
@@ -195,7 +242,7 @@ function AkunTenant() {
                     className={cn(
                       'w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors',
                       isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
-                      fieldError?.field === 'nama' && 'border-red'
+                      fieldError?.field === 'nama' && 'border-red ring-1 ring-red'
                     )}
                   />
                 </FormField>
@@ -213,7 +260,7 @@ function AkunTenant() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <FormField label="Email" id="profile-email">
+                <FormField label="Email" id="profile-email" error={fieldError?.field === 'email' ? fieldError.message : undefined}>
                   <input
                     type="email"
                     name="email"
@@ -221,13 +268,16 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
-                    className={`w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors ${
-                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                    }`}
+                    placeholder="contoh: nama@domain.com"
+                    className={cn(
+                      'w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors',
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
+                      fieldError?.field === 'email' && 'border-red ring-1 ring-red'
+                    )}
                   />
                 </FormField>
 
-                <FormField label="Telepon (WA)" id="profile-telepon">
+                <FormField label="Telepon (WA)" id="profile-telepon" error={fieldError?.field === 'telepon' ? fieldError.message : undefined}>
                   <input
                     type="tel"
                     name="telepon"
@@ -235,9 +285,11 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
-                    className={`w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors ${
-                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
-                    }`}
+                    className={cn(
+                      'w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors',
+                      isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
+                      fieldError?.field === 'telepon' && 'border-red ring-1 ring-red'
+                    )}
                   />
                 </FormField>
               </div>

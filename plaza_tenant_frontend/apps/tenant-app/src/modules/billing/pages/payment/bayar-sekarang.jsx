@@ -21,7 +21,7 @@ function BayarSekarang() {
   const { httpClient } = useTenantAuth();
   
   const [metode, setMetode] = useState('transfer_manual');
-  const [nominal, setNominal] = useState(() => String(location.state?.nominal ?? '7500000'));
+  const [nominal, setNominal] = useState(() => String(location.state?.nominal ?? location.state?.totalTunggakan ?? ''));
   const [nominalError, setNominalError] = useState(null);
   const [buktiTransfer, setBuktiTransfer] = useState(null);
   const [previewBukti, setPreviewBukti] = useState(null);

@@ -410,7 +410,7 @@ class ScenarioSeeder extends Seeder
                 'sub_role'    => 'tenant',
                 'status_aktif'=> 1,
                 'nama_lengkap'=> $name,
-                'email'       => "{$username}@bunsay.id",
+                'email'       => $username === 'tenant_aktif' ? 'patran05534@gmail.com' : "{$username}@bunsay.id",
             ]
         );
 
@@ -418,7 +418,7 @@ class ScenarioSeeder extends Seeder
             ['Id_User' => $user->Id_user],
             [
                 'Nama'       => $name,
-                'No_Telepon' => '08' . fake()->numerify('##########'),
+                'No_Telepon' => $username === 'tenant_aktif' ? '082253009569' : ('08' . fake()->numerify('##########')),
                 'No_KTP'     => fake()->numerify('6471############'),
                 'Alamat'     => 'Plaza Kebun Sayur, Balikpapan',
             ]

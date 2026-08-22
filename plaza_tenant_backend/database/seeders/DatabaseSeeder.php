@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             KiosSeeder::class,
             ScenarioSeeder::class,
+            BulkStressSeeder::class,  // 20k stress-test data
         ]);
     }
 }
