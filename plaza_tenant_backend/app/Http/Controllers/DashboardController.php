@@ -49,12 +49,28 @@ class DashboardController extends Controller
         // Ambil sewa aktif paling baru
         $sewaTerbaru = $pemilik->sewa->sortByDesc('Tanggal_Mulai')->first();
         $allTagihan = $pemilik->sewa->flatMap->tagihan;
-        $tagihanBerjalan = $allTagihan->where('Status_Tagihan', '!=', 'Lunas')->sortByDesc('Id_Tagihan')->first()
+        
+        // Tagihan belum lunas dari seluruh kios
+        $unpaidTagihanAll = $allTagihan->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']);
+        $totalKewajibanSemua = (float) $unpaidTagihanAll->sum(fn($t) => (float)($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0));
+
+        // Tagihan periode berjalan (paling baru)
+        $tagihanBerjalan = $allTagihan->sortByDesc('Periode')->first()
             ?? $allTagihan->sortByDesc('Id_Tagihan')->first();
+
+        // Hitung tarif sewa bulan ini (paling baru) vs total tunggakan bulan-bulan sebelumnya
+        $tarifBulanIni = ($tagihanBerjalan && in_array($tagihanBerjalan->Status_Tagihan, ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']))
+            ? (float) ($tagihanBerjalan->Sisa_Tagihan ?? $tagihanBerjalan->Total_Tagihan ?? $tagihanBerjalan->Tarif_Sewa ?? 0)
+            : 0.0;
+        
+        $totalTunggakanLalu = max(0.0, $totalKewajibanSemua - $tarifBulanIni);
 
         // Kumpulkan breakdown tagihan per masing-masing unit kios
         $kiosBreakdown = $pemilik->sewa->map(function ($sewaItem) {
-            $latestTagihan = $sewaItem->tagihan->where('Status_Tagihan', '!=', 'Lunas')->sortByDesc('Id_Tagihan')->first()
+            $unpaidKiosBills = $sewaItem->tagihan->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']);
+            $totalUnpaidKios = (float) $unpaidKiosBills->sum(fn($t) => (float)($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0));
+
+            $latestTagihan = $sewaItem->tagihan->sortByDesc('Periode')->first()
                 ?? $sewaItem->tagihan->sortByDesc('Id_Tagihan')->first();
 
             return [
@@ -64,6 +80,8 @@ class DashboardController extends Controller
                 'ukuran'         => optional($sewaItem->kios)->Ukuran ?? '4x4 m²',
                 'jenisUsaha'     => $sewaItem->Jenis_Usaha ?? '—',
                 'tarifBulanan'   => (float) ($sewaItem->Tarif_Bulanan ?? 750000),
+                'totalKewajiban' => $totalUnpaidKios,
+                'unpaidCount'    => $unpaidKiosBills->count(),
                 'tanggalMulai'   => $sewaItem->Tanggal_Mulai,
                 'tanggalSelesai' => $sewaItem->Tanggal_Selesai,
                 'tagihan'        => $latestTagihan ? [
@@ -73,7 +91,7 @@ class DashboardController extends Controller
                     'hutangTunggakan' => (float) ($latestTagihan->Hutang_Tunggakan ?? 0),
                     'totalTagihan'    => (float) $latestTagihan->Total_Tagihan,
                     'sisaTagihan'     => (float) ($latestTagihan->Sisa_Tagihan ?? $latestTagihan->Total_Tagihan),
-                    'statusTagihan'   => $latestTagihan->Status_Tagihan,
+                    'statusTagihan'   => $unpaidKiosBills->count() > 0 ? ($latestTagihan->Status_Tagihan === 'Lunas' ? 'Menunggak' : $latestTagihan->Status_Tagihan) : 'Lunas',
                     'jatuhTempo'      => $latestTagihan->Jatuh_Tempo,
                 ] : null,
             ];
@@ -81,14 +99,6 @@ class DashboardController extends Controller
 
         // Kumpulkan semua nomor kios yang dimiliki pemilik ini
         $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
-
-        // Hitung total kewajiban berjalan dari seluruh kios
-        $totalTagihanSemuaKios = $kiosBreakdown->reduce(function ($carry, $item) {
-            if ($item['tagihan'] && in_array($item['tagihan']['statusTagihan'], ['Belum Bayar', 'Dicicil'])) {
-                return $carry + $item['tagihan']['sisaTagihan'];
-            }
-            return $carry;
-        }, 0.0);
 
         return response()->json([
             'idPemilik'              => $pemilik->Id_Pemilik,
@@ -100,7 +110,9 @@ class DashboardController extends Controller
             'kios'                   => $kiosList->implode(', '),
             'kiosList'               => $kiosList,
             'kiosBreakdown'          => $kiosBreakdown,
-            'totalTagihanSemuaKios'  => (float) $totalTagihanSemuaKios,
+            'totalTagihanSemuaKios'  => (float) $totalKewajibanSemua,
+            'totalTunggakanLalu'     => (float) $totalTunggakanLalu,
+            'tarifBulanIni'          => (float) $tarifBulanIni,
             'statusPemilik'          => $pemilik->Status_Pemilik,
             'izinkanCicilan'         => (bool) ($pemilik->izinkan_cicilan ?? false),
             'detailAdministrasi'     => [
@@ -123,9 +135,9 @@ class DashboardController extends Controller
                 'idTagihan'       => $tagihanBerjalan->Id_Tagihan,
                 'periode'         => $tagihanBerjalan->Periode,
                 'tarifSewa'       => (float) ($tagihanBerjalan->Tarif_Sewa ?? $sewaTerbaru->Tarif_Bulanan ?? 750000),
-                'hutangTunggakan' => (float) ($tagihanBerjalan->Hutang_Tunggakan ?? 0),
+                'hutangTunggakan' => (float) ($totalTunggakanLalu),
                 'totalTagihan'    => (float) $tagihanBerjalan->Total_Tagihan,
-                'statusTagihan'   => $tagihanBerjalan->Status_Tagihan,
+                'statusTagihan'   => $unpaidTagihanAll->count() > 0 ? ($tagihanBerjalan->Status_Tagihan === 'Lunas' ? 'Menunggak' : $tagihanBerjalan->Status_Tagihan) : 'Lunas',
             ] : null,
         ]);
     }

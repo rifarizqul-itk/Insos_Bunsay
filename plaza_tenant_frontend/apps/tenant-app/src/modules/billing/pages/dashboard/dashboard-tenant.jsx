@@ -160,34 +160,20 @@ function DashboardTenant() {
     );
   }
 
-  const { nama, kios, siklusSewa, tagihanBerjalan, kiosBreakdown, totalTagihanSemuaKios } = dashboardData || {};
+  const { nama, kios, siklusSewa, tagihanBerjalan, kiosBreakdown, totalTagihanSemuaKios, totalTunggakanLalu, tarifBulanIni } = dashboardData || {};
   
   const periodeText = (siklusSewa?.tanggalMulai && siklusSewa?.tanggalSelesai) 
     ? `${formatDateIndo(siklusSewa.tanggalMulai)} s/d ${formatDateIndo(siklusSewa.tanggalSelesai)}` 
     : '—';
   const jatuhTempo = siklusSewa?.jatuhTempo ? formatDateIndo(siklusSewa.jatuhTempo) : '—';
   
-  // Hitung total tagihan dari semua kios jika tersedia
-  const calculatedTotal = (kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0)
-    ? kiosBreakdown.reduce((sum, k) => {
-        if (k.tagihan && in_array_status(k.tagihan.statusTagihan)) {
-          return sum + (k.tagihan.sisaTagihan ?? k.tagihan.totalTagihan ?? 0);
-        }
-        return sum;
-      }, 0)
-    : (tagihanBerjalan ? ((tagihanBerjalan.tarifSewa ?? 0) + (tagihanBerjalan.hutangTunggakan ?? 0)) : 0);
-
-  function in_array_status(status) {
-    return status === 'Belum Bayar' || status === 'Dicicil';
-  }
-
-  const tarifSewaVal = tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0;
-  const hutangTunggakanVal = tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0;
-  const totalTagihanVal = calculatedTotal > 0 ? calculatedTotal : (tarifSewaVal + hutangTunggakanVal);
+  const tarifSewaVal = Number(tarifBulanIni ?? (tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0));
+  const hutangTunggakanVal = Number(totalTunggakanLalu ?? (tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0));
+  const totalTagihanVal = Number(totalTagihanSemuaKios ?? (tarifSewaVal + hutangTunggakanVal));
 
   const hasUnpaidKiosk = kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0
-    ? kiosBreakdown.some(k => k.tagihan && (k.tagihan.statusTagihan === 'Belum Bayar' || k.tagihan.statusTagihan === 'Dicicil'))
-    : (tagihanBerjalan?.statusTagihan === 'Belum Bayar' || tagihanBerjalan?.statusTagihan === 'Dicicil');
+    ? kiosBreakdown.some(k => (k.totalKewajiban ?? 0) > 0 || (k.tagihan && (k.tagihan.statusTagihan === 'Belum Bayar' || k.tagihan.statusTagihan === 'Dicicil' || k.tagihan.statusTagihan === 'Menunggak')))
+    : (tagihanBerjalan?.statusTagihan === 'Belum Bayar' || tagihanBerjalan?.statusTagihan === 'Dicicil' || totalTagihanVal > 0);
 
   const hasVerifikasiKiosk = kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0
     ? kiosBreakdown.some(k => k.tagihan && k.tagihan.statusTagihan === 'Menunggu Verifikasi')
@@ -377,9 +363,9 @@ function DashboardTenant() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {kiosBreakdown.map((item, idx) => {
               const tagihan = item.tagihan;
-              const isLunas = tagihan?.statusTagihan === 'Lunas' || !tagihan;
-              const tagihanNominal = tagihan ? (tagihan.sisaTagihan ?? tagihan.totalTagihan ?? item.tarifBulanan) : 0;
-              const statusBadge = tagihan?.statusTagihan || (isLunas ? 'Lunas' : 'Belum Bayar');
+              const totalKiosOwed = Number(item.totalKewajiban ?? (tagihan ? (tagihan.sisaTagihan ?? tagihan.totalTagihan) : 0));
+              const isLunas = totalKiosOwed === 0;
+              const statusBadge = isLunas ? 'Lunas' : (tagihan?.statusTagihan || 'Belum Bayar');
 
               return (
                 <Card 
@@ -425,13 +411,13 @@ function DashboardTenant() {
                   <div className="border-t border-border/70 pt-3 flex items-center justify-between mt-1">
                     <div>
                       <span className="text-2xs text-text-3 font-semibold uppercase tracking-wider block">
-                        Tagihan Periode Ini:
+                        {item.unpaidCount && item.unpaidCount > 1 ? `Kewajiban (${item.unpaidCount} Periode):` : 'Tagihan Kewajiban:'}
                       </span>
                       <strong className={cn(
                         "text-sm sm:text-base font-extrabold font-tabular-nums",
                         isLunas ? "text-emerald-700" : "text-red"
                       )}>
-                        {isLunas ? "Lunas (Rp 0)" : `Rp ${Number(tagihanNominal).toLocaleString('id-ID')}`}
+                        {isLunas ? "Lunas (Rp 0)" : `Rp ${Number(totalKiosOwed).toLocaleString('id-ID')}`}
                       </strong>
                     </div>
 
@@ -439,7 +425,7 @@ function DashboardTenant() {
                       <Button
                         variant="primary"
                         size="xs"
-                        onClick={() => handleBayar(tagihanNominal, item.noKios)}
+                        onClick={() => handleBayar(totalKiosOwed, item.noKios)}
                         className="h-8 px-3 text-2xs font-extrabold gap-1 shadow-xs"
                       >
                         <span>Bayar Kios Ini</span>

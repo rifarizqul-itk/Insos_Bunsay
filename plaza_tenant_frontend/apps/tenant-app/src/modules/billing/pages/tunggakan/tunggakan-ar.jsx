@@ -130,7 +130,8 @@ function TunggakanAR() {
           
           {/* Rincian Nominal Sebelum & Sesudah Ditambahkan Tarif Bulan Ini */}
           {totalTunggakanVal > 0 && listTagihan.length > 0 && (() => {
-            const latestBill = listTagihan[0]; // Tagihan berjalan / bulan ini
+            const sorted = [...listTagihan].sort((a, b) => (a.periode || '').localeCompare(b.periode || ''));
+            const latestBill = sorted[sorted.length - 1]; // Tagihan berjalan / bulan ini (paling baru)
             const tarifBulanIni = latestBill ? Math.max(0, latestBill.totalTagihan - latestBill.totalTerbayar) : 0;
             const tunggakanLalu = Math.max(0, totalTunggakanVal - tarifBulanIni);
 
