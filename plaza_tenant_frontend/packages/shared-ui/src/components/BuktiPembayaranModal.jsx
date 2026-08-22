@@ -152,10 +152,28 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   const getResolvedImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+      if (url.includes('ngrok-free.app') && !url.includes('ngrok-skip-browser-warning')) {
+        const sep = url.includes('?') ? '&' : '?';
+        return `${url}${sep}ngrok-skip-browser-warning=true`;
+      }
       return url;
     }
-    const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-    return `/${cleanPath}`;
+    const apiBase = (
+      import.meta.env?.VITE_API_BASE_URL ||
+      import.meta.env?.VITE_API_URL ||
+      ''
+    ).replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    if (apiBase) {
+      const fullUrl = `${apiBase}${cleanPath}`;
+      if (fullUrl.includes('ngrok-free.app') && !fullUrl.includes('ngrok-skip-browser-warning')) {
+        const sep = fullUrl.includes('?') ? '&' : '?';
+        return `${fullUrl}${sep}ngrok-skip-browser-warning=true`;
+      }
+      return fullUrl;
+    }
+    return cleanPath;
   };
 
   const baseImageSrc = isFilePath ? getResolvedImageUrl(buktiUrl) : (buktiUrl.startsWith('data:') ? buktiUrl : null);

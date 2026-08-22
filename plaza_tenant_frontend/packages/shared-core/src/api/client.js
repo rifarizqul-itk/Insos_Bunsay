@@ -85,3 +85,38 @@ export const httpClient = {
 
 export const apiClient = httpClient;
 export const mockDelay = (data, ms = 300) => new Promise(resolve => setTimeout(() => resolve(data), ms));
+
+export function resolveStorageUrl(path) {
+  if (!path || typeof path !== 'string') return null;
+
+  if (path.startsWith('data:')) {
+    return path;
+  }
+
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    if (path.includes('ngrok-free.app') && !path.includes('ngrok-skip-browser-warning')) {
+      const sep = path.includes('?') ? '&' : '?';
+      return `${path}${sep}ngrok-skip-browser-warning=true`;
+    }
+    return path;
+  }
+
+  const apiBase = (
+    import.meta.env?.VITE_API_BASE_URL ||
+    import.meta.env?.VITE_API_URL ||
+    ''
+  ).replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (apiBase) {
+    const fullUrl = `${apiBase}${cleanPath}`;
+    if (fullUrl.includes('ngrok-free.app') && !fullUrl.includes('ngrok-skip-browser-warning')) {
+      const sep = fullUrl.includes('?') ? '&' : '?';
+      return `${fullUrl}${sep}ngrok-skip-browser-warning=true`;
+    }
+    return fullUrl;
+  }
+
+  return cleanPath;
+}

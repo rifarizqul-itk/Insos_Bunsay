@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Icon, Table, Card, Button, Badge, Modal, Sheet, EmptyState, SkeletonTable, Pagination, useToast, cn } from '@bunsay/shared-ui';
+import { resolveStorageUrl } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function VerifikasiBuktiTransfer({ selectedTenant = null }) {
@@ -470,12 +471,26 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             </div>
 
             {previewItem.teksSanggahan && (
-              <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg flex flex-col gap-1 text-xs">
+              <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg flex flex-col gap-2 text-xs">
                 <div className="font-bold text-amber-800 flex items-center gap-1.5">
                   <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4" />
                   <span>Catatan Sanggahan dari Tenant:</span>
                 </div>
                 <p className="text-amber-950 italic font-semibold ps-5">"{previewItem.teksSanggahan}"</p>
+                {previewItem.buktiSanggahan && (
+                  <div className="mt-1 ps-5">
+                    <span className="text-[11px] font-bold text-amber-900 block mb-1">Foto Lampiran Sanggahan:</span>
+                    <div className="w-full max-h-48 bg-white/70 rounded-lg border border-amber-200 overflow-hidden flex items-center justify-center p-1.5">
+                      <img
+                        src={resolveStorageUrl(previewItem.buktiSanggahan)}
+                        alt="Bukti Lampiran Sanggahan"
+                        loading="lazy"
+                        className="max-h-44 max-w-full object-contain rounded cursor-pointer"
+                        onClick={() => window.open(resolveStorageUrl(previewItem.buktiSanggahan), '_blank')}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -485,10 +500,12 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               {previewItem.buktiUrl ? (
                 <div className="w-full max-h-64 bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2">
                   <img
-                    src={(previewItem.buktiUrl.startsWith('http') || previewItem.buktiUrl.startsWith('data:')) ? previewItem.buktiUrl : (previewItem.buktiUrl.startsWith('/') ? previewItem.buktiUrl : `/${previewItem.buktiUrl}`)}
+                    src={resolveStorageUrl(previewItem.buktiUrl)}
                     alt={`Bukti Transfer ${previewItem.trxCode}`}
                     loading="lazy"
-                    className="max-h-60 max-w-full object-contain rounded-md shadow-xs"
+                    className="max-h-60 max-w-full object-contain rounded-md shadow-xs cursor-pointer"
+                    onClick={() => window.open(resolveStorageUrl(previewItem.buktiUrl), '_blank')}
+                    title="Klik untuk membuka ukuran penuh di tab baru"
                   />
                 </div>
               ) : (
