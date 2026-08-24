@@ -19,4 +19,5 @@ export { BunsayQRCode } from './components/BunsayQRCode';
 export { Pagination } from './components/Pagination';
 export { ImageGallerySlider, parseImageGallery } from './components/ImageGallerySlider';
 export { NotificationPopover } from './components/NotificationPopover';
+export { VerifikasiResi } from './components/VerifikasiResi';
 export { cn } from './utils/cn';

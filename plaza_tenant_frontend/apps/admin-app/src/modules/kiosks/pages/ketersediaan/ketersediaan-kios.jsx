@@ -387,6 +387,7 @@ function KetersediaanKios() {
           <div className="w-full sm:w-72">
             <input
               type="text"
+              aria-label="Cari nomor kios, nama penyewa, atau jenis usaha"
               placeholder="Cari kios, penyewa, jenis usaha..."
               value={searchQuery}
               onChange={(e) => {
@@ -399,6 +400,7 @@ function KetersediaanKios() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <select
+              aria-label="Filter berdasarkan lantai kios"
               value={filterLantai}
               onChange={(e) => {
                 setFilterLantai(e.target.value);
@@ -412,6 +414,7 @@ function KetersediaanKios() {
             </select>
 
             <select
+              aria-label="Filter berdasarkan status ketersediaan kios"
               value={filterStatus}
               onChange={(e) => {
                 setFilterStatus(e.target.value);
@@ -436,6 +439,8 @@ function KetersediaanKios() {
           />
         ) : (
           <Table 
+            caption="Tabel Ketersediaan dan Administrasi Kios Plaza Kebun Sayur"
+            ariaLabel="Daftar Ketersediaan dan Status Kios"
             headers={tableHeaders} 
             colSpan={6} 
             sortConfig={sortConfig} 
@@ -467,6 +472,7 @@ function KetersediaanKios() {
                           variant="secondary"
                           size="sm"
                           onClick={() => navigate(`/admin/kios/${kios.noKios}`)}
+                          aria-label={`Detail administrasi kios ${kios.noKios} (${kios.penyewa})`}
                           className="h-8 text-xs font-bold gap-1"
                         >
                           <span>Detail</span>
@@ -475,6 +481,7 @@ function KetersediaanKios() {
                           variant="danger"
                           size="sm"
                           onClick={() => handleAkhiriSewa(kios)}
+                          aria-label={`Akhiri masa sewa kios ${kios.noKios} (${kios.penyewa})`}
                           className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20"
                         >
                           <Icon icon="heroicons:stop-circle-20-solid" width="14" height="14" />

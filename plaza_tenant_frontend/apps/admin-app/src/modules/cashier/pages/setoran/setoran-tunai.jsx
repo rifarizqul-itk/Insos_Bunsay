@@ -401,6 +401,11 @@ function SetoranTunai() {
                     </div>
                     <input
                       type="text"
+                      role="combobox"
+                      aria-expanded={isDropdownOpen}
+                      aria-haspopup="listbox"
+                      aria-controls="tenant-combobox-list"
+                      aria-label="Cari nomor kios atau nama tenant untuk setoran tunai"
                       placeholder="Cari no. kios (misal: A1-05) atau nama tenant (misal: Ahmad)..."
                       value={tenantSearchQuery}
                       onFocus={() => setIsDropdownOpen(true)}
@@ -427,7 +432,12 @@ function SetoranTunai() {
 
                     {/* Dropdown Floating Results - Placed directly below the search input */}
                     {isDropdownOpen && (
-                      <div className="absolute top-full mt-1.5 inset-x-0 z-50 bg-white border border-border rounded-xl shadow-2xl max-h-64 overflow-y-auto page-fade-in divide-y divide-border/60">
+                      <div
+                        id="tenant-combobox-list"
+                        role="listbox"
+                        aria-label="Daftar Tenant Terdaftar"
+                        className="absolute top-full mt-1.5 inset-x-0 z-50 bg-white border border-border rounded-xl shadow-2xl max-h-64 overflow-y-auto page-fade-in divide-y divide-border/60"
+                      >
                         {filteredTenants.length === 0 ? (
                           <div className="p-4 text-center text-xs font-semibold text-text-3">
                             <Icon icon="heroicons:user-minus-20-solid" className="size-6 mx-auto mb-1 text-text-3/60" />
@@ -440,6 +450,8 @@ function SetoranTunai() {
                               <button
                                 key={tenant.id}
                                 type="button"
+                                role="option"
+                                aria-selected={false}
                                 onClick={() => handleSelectTenant(tenant)}
                                 className="w-full p-3 text-start flex items-center justify-between gap-3 hover:bg-warm-gray/40 active:bg-warm-gray transition-colors cursor-pointer"
                               >

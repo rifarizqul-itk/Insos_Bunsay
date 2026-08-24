@@ -111,7 +111,7 @@ function RiwayatTransaksiAdmin() {
   const tableHeaders = [
     { label: 'ID TRX', sortKey: 'idRaw' },
     { label: 'Tenant & Kios', sortKey: 'nama' },
-    { label: 'Jenis Tagihan', sortKey: 'tagihan' },
+    { label: 'Periode', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Metode & Waktu', sortKey: 'metode' },
     { label: 'Status', align: 'center', sortKey: 'status' },
@@ -187,7 +187,7 @@ function RiwayatTransaksiAdmin() {
                     <div className="font-bold text-text text-sm">{item.nama}</div>
                     <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
                   </td>
-                  <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
+                  <td data-label="Periode" className="p-3 text-text-2 font-medium">
                     <div>{item.tagihan}</div>
                     {item.alokasi && item.alokasi.length > 1 && (
                       <span className="inline-flex items-center gap-1 text-2xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded mt-1 shadow-2xs">

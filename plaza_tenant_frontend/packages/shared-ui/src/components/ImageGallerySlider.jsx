@@ -52,16 +52,18 @@ export function ImageGallerySlider({
     setCurrentIndex(prev => (prev < parsedList.length - 1 ? prev + 1 : 0));
   }, [parsedList.length]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (parsedList.length <= 1) return;
-      if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'ArrowRight') handleNext();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePrev, handleNext, parsedList.length]);
+  // Scoped Container Keyboard navigation (WCAG 2.1.1 / 2.1.4 compliant)
+  const handleContainerKeyDown = (e) => {
+    if (parsedList.length <= 1) return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handlePrev();
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNext();
+    }
+  };
 
   if (parsedList.length === 0) return null;
 
@@ -69,7 +71,13 @@ export function ImageGallerySlider({
   const isMultiple = parsedList.length > 1;
 
   return (
-    <div className={cn('flex flex-col gap-2 w-full', className)}>
+    <div
+      tabIndex={0}
+      onKeyDown={handleContainerKeyDown}
+      role="region"
+      aria-label={`Galeri ${title}`}
+      className={cn('flex flex-col gap-2 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-xl p-1', className)}
+    >
       {/* Header Bar with Count & Navigation */}
       <div className="flex items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-1.5 font-bold text-text">
@@ -87,6 +95,7 @@ export function ImageGallerySlider({
             onClick={() => setIsZoomed(!isZoomed)}
             className="text-[11px] font-bold text-red hover:underline flex items-center gap-1 cursor-pointer me-1"
             title={isZoomed ? 'Kecilkan' : 'Perbesar'}
+            aria-label={isZoomed ? 'Kecilkan tampilan gambar' : 'Perbesar tampilan gambar'}
           >
             <Icon icon={isZoomed ? 'heroicons:magnifying-glass-minus-20-solid' : 'heroicons:magnifying-glass-plus-20-solid'} className="size-3.5" />
             <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
@@ -127,15 +136,21 @@ export function ImageGallerySlider({
           isZoomed ? 'max-h-[32rem]' : maxHeightClass
         )}
       >
-        <img
-          key={currentUrl}
-          src={currentUrl}
-          alt={`${title} #${currentIndex + 1}`}
-          loading="lazy"
-          className="max-h-full max-w-full object-contain rounded-lg cursor-pointer shadow-2xs transition-transform duration-200"
+        <button
+          type="button"
           onClick={() => window.open(currentUrl, '_blank')}
+          aria-label={`Buka ${title} #${currentIndex + 1} dalam ukuran penuh di tab baru`}
+          className="flex items-center justify-center max-h-full max-w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-lg"
           title="Klik untuk membuka ukuran penuh di tab baru"
-        />
+        >
+          <img
+            key={currentUrl}
+            src={currentUrl}
+            alt={`${title} #${currentIndex + 1}`}
+            loading="lazy"
+            className="max-h-full max-w-full object-contain rounded-lg shadow-2xs transition-transform duration-200"
+          />
+        </button>
 
         {/* Floating Side Chevron Buttons for Large Multiple Galleries */}
         {isMultiple && (
@@ -174,13 +189,14 @@ export function ImageGallerySlider({
               key={`thumb-${idx}-${thumbUrl}`}
               type="button"
               onClick={() => setCurrentIndex(idx)}
+              aria-label={`Buka Foto Sanggahan #${idx + 1}`}
+              aria-pressed={currentIndex === idx}
               className={cn(
-                'relative shrink-0 size-11 rounded-lg border-2 overflow-hidden bg-white cursor-pointer transition-all',
+                'relative shrink-0 size-11 rounded-lg border-2 overflow-hidden bg-white cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red',
                 currentIndex === idx
                   ? 'border-red ring-2 ring-red/20 shadow-xs scale-105'
                   : 'border-border/70 opacity-60 hover:opacity-100'
               )}
-              title={`Buka Foto Sanggahan #${idx + 1}`}
             >
               <img
                 src={thumbUrl}
@@ -197,3 +213,5 @@ export function ImageGallerySlider({
     </div>
   );
 }
+
+export default ImageGallerySlider;

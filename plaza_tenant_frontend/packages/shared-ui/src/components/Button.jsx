@@ -3,16 +3,17 @@ import { cn } from '../utils/cn';
 
 const variantClasses = {
   primary: 'bg-red text-white hover:bg-red-rich hover:-translate-y-0.5 focus:ring-2 focus:ring-red focus:ring-offset-2 shadow-sm hover:shadow-md active:translate-y-0 active:scale-[0.98]',
-  secondary: 'bg-mono-100 text-text border border-border hover:bg-mono-200 hover:-translate-y-0.5 focus:ring-2 focus:ring-border focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]',
+  secondary: 'bg-mono-100 text-text border border-border hover:bg-mono-200 hover:-translate-y-0.5 focus:ring-2 focus:ring-red focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]',
   outline: 'bg-transparent text-red border-2 border-red hover:bg-mono-100 hover:-translate-y-0.5 focus:ring-2 focus:ring-red focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]',
   danger: 'bg-red-50 text-red border border-red/30 hover:bg-red-100 hover:-translate-y-0.5 focus:ring-2 focus:ring-red focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]',
-  warning: 'bg-amber text-white hover:bg-orange hover:-translate-y-0.5 focus:ring-2 focus:ring-amber focus:ring-offset-2 shadow-md hover:shadow-lg active:translate-y-0 active:scale-[0.98]',
+  warning: 'bg-amber text-amber-950 font-extrabold hover:bg-amber-600 hover:text-white hover:-translate-y-0.5 focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 shadow-sm hover:shadow-md active:translate-y-0 active:scale-[0.98]',
 };
 
 const sizeClasses = {
-  sm: 'px-4 py-2 text-sm min-h-11 rounded-sm',
-  md: 'px-6 py-2.5 text-base min-h-11 rounded-md',
-  lg: 'px-8 py-3 text-base min-h-12 rounded-md',
+  xs: 'px-3 py-1 text-xs sm:text-sm min-h-8 rounded-lg font-bold',
+  sm: 'px-4 py-2 text-sm min-h-10 rounded-lg font-bold',
+  md: 'px-6 py-2.5 text-sm sm:text-base min-h-11 rounded-xl font-bold',
+  lg: 'px-8 py-3.5 text-base sm:text-lg min-h-13 rounded-xl font-extrabold',
 };
 
 const triggerHaptic = (duration = 15) => {

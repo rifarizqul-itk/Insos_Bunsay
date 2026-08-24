@@ -97,53 +97,66 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
     <header
       data-slot="topbar-admin"
       aria-label="Topbar Navigasi Admin"
-      className="topbar-container h-16 px-4 md:px-8 flex items-center justify-between font-sans"
+      className="topbar-container h-17 md:h-18 px-4 md:px-8 flex items-center justify-between font-sans border-b border-border/80 bg-white/85 backdrop-blur-xl shrink-0"
     >
-      <div className="flex items-center gap-3">
+      {/* Left: Mobile Toggle & Breadcrumb / Context */}
+      <div className="flex items-center gap-3.5 min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
           aria-label="Buka Menu Navigasi Admin"
-          className="md:hidden size-11 flex items-center justify-center -ms-2 rounded-md text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors"
+          className="md:hidden size-11 flex items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors cursor-pointer active:scale-95"
         >
           <Icon icon="heroicons:bars-3-20-solid" className="size-6" />
         </button>
 
-        <div className="text-sm font-bold text-text-2 leading-tight min-w-0 break-words">
-          <span className="hidden sm:inline">Konsol Admin: </span>
-          <span className="text-red font-extrabold">{userTitle}</span>
+        <div className="flex items-center gap-2 text-sm font-bold text-text-3 min-w-0">
+          <span className="hidden sm:inline">Plaza Kebun Sayur</span>
+          <span className="hidden sm:inline text-border">/</span>
+          <span className="text-text font-extrabold text-sm sm:text-[15px] truncate">
+            {userTitle}
+          </span>
         </div>
       </div>
 
-      <div ref={notifikasiRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Notifikasi Admin"
-          aria-expanded={isOpen}
-          className={cn(
-            'h-11 px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-md border border-border transition-colors',
-            isOpen ? 'bg-mono-100 text-text' : 'bg-transparent text-text hover:bg-mono-100/60'
-          )}
-        >
-          <span>Notifikasi</span>
-          <span className={cn('text-white text-xs font-extrabold px-2 py-0.5 rounded-full inline-block font-tabular-nums', unreadCount > 0 ? 'bg-red' : 'bg-slate-400')}>
-            {unreadCount}
-          </span>
-        </button>
+      {/* Right: Actions & Notification Trigger */}
+      <div className="flex items-center gap-3">
+        <div ref={notifikasiRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Notifikasi Admin"
+            aria-expanded={isOpen}
+            className={cn(
+              'h-11 px-3.5 sm:px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-xl border transition-all active:scale-95 shrink-0 shadow-2xs',
+              isOpen
+                ? 'bg-mono-100 text-text border-border shadow-xs'
+                : 'bg-white text-text-2 border-border/80 hover:text-text hover:bg-mono-50 hover:border-border'
+            )}
+          >
+            <Icon icon="heroicons:bell-20-solid" className="size-5 text-text-2 shrink-0" />
+            <span className="font-extrabold text-sm">Notifikasi</span>
+            {unreadCount > 0 && (
+              <span className="text-white text-xs font-extrabold px-2 py-0.5 rounded-full bg-red font-tabular-nums animate-pulse shadow-2xs">
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-        {isOpen && (
-          <NotificationPopover
-            notifications={notifikasiList}
-            unreadCount={unreadCount}
-            onMarkAllRead={handleMarkAllRead}
-            onNotificationClick={handleNotifClick}
-            variant="admin"
-          />
-        )}
+          {isOpen && (
+            <NotificationPopover
+              notifications={notifikasiList}
+              unreadCount={unreadCount}
+              onMarkAllRead={handleMarkAllRead}
+              onNotificationClick={handleNotifClick}
+              variant="admin"
+            />
+          )}
+        </div>
       </div>
     </header>
   );
 }
 
 export default Topbar;
+

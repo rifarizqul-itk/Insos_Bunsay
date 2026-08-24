@@ -691,7 +691,7 @@ function BayarSekarang() {
                 </div>
 
                 {metode === 'transfer_manual' && (
-                  <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-field" required={!previewBukti}>
+                  <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-input" required={!previewBukti}>
                     <input
                       id="upload-bukti-transfer-input"
                       type="file"

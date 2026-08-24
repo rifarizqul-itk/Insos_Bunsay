@@ -1,6 +1,9 @@
 import React from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Icon, Badge, Button, BunsayQRCode } from '@bunsay/shared-ui';
+import { Icon } from './Icon';
+import { Badge } from './Badge';
+import { Button } from './Button';
+import { BunsayQRCode } from './BunsayQRCode';
 
 export function VerifikasiResi() {
   const navigate = useNavigate();
@@ -14,11 +17,14 @@ export function VerifikasiResi() {
       {/* Header */}
       <header className="max-w-xl mx-auto w-full flex items-center justify-between pb-6 border-b border-border/60">
         <div className="flex items-center gap-3">
-          <img
-            src="/assets/main_logo_transparent_for_light_bg.png"
-            alt="Logo Plaza Kebun Sayur"
-            className="h-10 w-auto object-contain"
-          />
+          <picture>
+            <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+            <img
+              src="/assets/main_logo_transparent_for_light_bg.png"
+              alt="Logo Plaza Kebun Sayur"
+              className="h-10 w-auto object-contain"
+            />
+          </picture>
           <div>
             <h1 className="text-sm sm:text-base font-extrabold text-text leading-tight">
               UPTD Pasar Plaza Kebun Sayur
@@ -103,10 +109,10 @@ export function VerifikasiResi() {
               type="button"
               variant="primary"
               size="sm"
-              onClick={() => navigate('/tenant/dashboard')}
+              onClick={() => navigate('/')}
               className="px-6 font-bold"
             >
-              Masuk ke Portal Tenant
+              Masuk ke Beranda
             </Button>
           </div>
 

@@ -18,59 +18,49 @@ function BottomNav() {
     return location.pathname.startsWith(path) && path !== '/admin/dashboard';
   };
 
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && 'navigator' in window && typeof window.navigator.vibrate === 'function') {
+      try { window.navigator.vibrate(10); } catch {}
+    }
+  };
+
   return (
     <nav 
       data-slot="bottom-nav-admin"
-      className="md:hidden fixed bottom-2 left-2 right-2 z-30 bg-white/90 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
+      aria-label="Navigasi Bawah Seluler Admin"
+      className="md:hidden fixed bottom-2 inset-x-2.5 z-30 bg-white/95 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
       style={{
         marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
         fontFamily: "'Plus Jakarta Sans', sans-serif"
       }}
     >
-      <div 
-        style={{
-          display: 'flex',
-          width: '100%',
-          height: '64px',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxSizing: 'border-box',
-          padding: '0 6px',
-          margin: 0
-        }}
-      >
+      <div className="flex w-full h-16 items-center justify-between px-1.5 py-1">
         {adminItems.map((item) => {
           const active = isActive(item.path);
           return (
             <Link
               key={item.path}
               to={item.path}
+              onClick={triggerHaptic}
               aria-label={item.label}
               aria-current={active ? 'page' : undefined}
-              className="active:scale-95 transition-transform duration-100 ease-out cursor-pointer"
-              style={{
-                flex: '1 1 0%',
-                width: '0',
-                minWidth: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                color: active ? 'var(--red)' : 'var(--text-2)',
-                fontWeight: active ? '700' : '600',
-                textDecoration: 'none',
-                boxSizing: 'border-box',
-                padding: '4px 0'
-              }}
+              className="flex-1 flex flex-col items-center justify-center h-full px-0.5 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer select-none text-decoration-none min-w-0"
             >
-              <Icon 
-                icon={item.icon} 
-                className="size-6 mb-0.5 shrink-0"
-              />
-              <span className="text-2.5 xs:text-xs leading-none font-semibold tracking-tight truncate max-w-full text-center px-0.5">
-                {item.label}
-              </span>
+              <div className={`flex flex-col items-center justify-center w-full py-1 px-1 rounded-xl transition-all ${
+                active 
+                  ? 'bg-red/10 border border-red/20 shadow-2xs text-red' 
+                  : 'text-text-2 hover:text-text'
+              }`}>
+                <Icon 
+                  icon={item.icon} 
+                  className={`size-5 mb-0.5 shrink-0 transition-transform ${active ? 'scale-105 text-red font-bold' : 'text-text-2'}`}
+                />
+                <span className={`text-[11px] leading-tight tracking-tight truncate max-w-full text-center px-0.5 ${
+                  active ? 'font-extrabold text-red' : 'font-bold text-text-2'
+                }`}>
+                  {item.label}
+                </span>
+              </div>
             </Link>
           );
         })}
@@ -80,3 +70,4 @@ function BottomNav() {
 }
 
 export default BottomNav;
+export { BottomNav };

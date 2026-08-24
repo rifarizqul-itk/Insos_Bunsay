@@ -11,21 +11,31 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
   const userPerms = user?.permissions || ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
   const isSuperadmin = user?.sub_role === 'superadmin' || user?.username === 'admin' || user?.username === 'superadmin';
 
-  const rawMenuItems = [
-    { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard' },
-    { id: 'verifikasi-bukti', label: 'Verifikasi Bukti Transfer', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran' },
-    { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai', perm: 'input_setoran' },
-    { id: 'riwayat', label: 'Riwayat Transaksi Admin', path: '/admin/riwayat' },
-    { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios', perm: 'kelola_kios' },
-    { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor', perm: 'ekspor_laporan' },
-    { id: 'audit-log', label: 'Audit Trail Log', path: '/admin/audit-log', perm: 'lihat_audit_log' },
-    { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun' }
+  const menuSections = [
+    {
+      title: 'MENU UTAMA',
+      items: [
+        { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid' },
+        { id: 'verifikasi-bukti', label: 'Verifikasi Transfer', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran', icon: 'heroicons:clipboard-document-check-20-solid' },
+        { id: 'setoran-tunai', label: 'Setoran Tunai Kasir', path: '/admin/setoran-tunai', perm: 'input_setoran', icon: 'heroicons:banknotes-20-solid' },
+      ]
+    },
+    {
+      title: 'DATA & AUDIT',
+      items: [
+        { id: 'riwayat', label: 'Riwayat Transaksi', path: '/admin/riwayat', icon: 'heroicons:clock-20-solid' },
+        { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios', perm: 'kelola_kios', icon: 'heroicons:building-storefront-20-solid' },
+        { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor', perm: 'ekspor_laporan', icon: 'heroicons:arrow-down-tray-20-solid' },
+        { id: 'audit-log', label: 'Audit Trail Log', path: '/admin/audit-log', perm: 'lihat_audit_log', icon: 'heroicons:shield-check-20-solid' },
+      ]
+    },
+    {
+      title: 'PENGATURAN',
+      items: [
+        { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun', icon: 'heroicons:user-group-20-solid' }
+      ]
+    }
   ];
-
-  const menuItems = rawMenuItems.filter(item => {
-    if (!item.perm || isSuperadmin) return true;
-    return userPerms.includes(item.perm);
-  });
 
   const handleNavigate = (path) => {
     startTransition(() => {
@@ -36,28 +46,19 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
 
   const isActive = (path) => location.pathname === path;
 
+  const displayName = user?.nama_lengkap || user?.Username || 'Admin Pengelola';
+  const displayRole = user?.sub_role ? user.sub_role.toUpperCase() : (isSuperadmin ? 'SUPERADMIN' : 'STAF ADMIN');
+  const userInitials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'AD';
+
   return (
     <aside 
       data-slot="sidebar-admin"
       aria-label="Navigasi Utama Admin"
-      className={cn('sidebar-admin-container flex flex-col justify-between h-dvh max-h-screen overflow-hidden', isOpen && 'mobile-open')}
-      style={{
-        display: 'flex',
-        flexDirection: 'column'
-      }}
+      className={cn('sidebar-admin-container flex flex-col justify-between h-dvh max-h-screen overflow-hidden font-sans', isOpen && 'mobile-open')}
     >
-      <div style={{ 
-        height: '64px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        paddingLeft: '24px', 
-        paddingRight: '16px',
-        borderBottom: '1px solid var(--border)',
-        gap: '12px',
-        flexShrink: 0
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Header / Logo */}
+      <div className="h-16 px-5 border-b border-border/80 flex items-center justify-between shrink-0 bg-white">
+        <div className="flex items-center gap-2.5">
           <picture>
             <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
             <img
@@ -65,74 +66,96 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
               alt="Logo Plaza Kebun Sayur"
               loading="lazy"
               decoding="async"
-              width={144}
-              height={36}
-              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+              width={130}
+              height={32}
+              className="h-8 w-auto object-contain"
             />
           </picture>
-          <span style={{ fontSize: '24px', fontWeight: '800', color: 'var(--red)', letterSpacing: '-0.5px' }}>
-            Admin
+          <span className="text-xs font-extrabold text-red bg-red-50 border border-red/20 px-2 py-0.5 rounded-md tracking-wider">
+            ADMIN
           </span>
         </div>
         <button
           onClick={onClose}
           aria-label="Tutup menu navigasi"
-          className="sidebar-close-btn block md:hidden p-2 text-2xl text-text-2 bg-transparent cursor-pointer active:scale-95 transition-transform size-11 flex items-center justify-center"
+          className="sidebar-close-btn md:hidden p-1.5 text-text-2 hover:text-text hover:bg-mono-100 rounded-lg cursor-pointer active:scale-95 transition-all flex items-center justify-center"
         >
-          <Icon icon="ph:x-bold" className="size-5.5" />
+          <Icon icon="heroicons:x-mark-20-solid" className="size-5" />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {menuItems.map((item) => {
-          const active = isActive(item.path);
+      {/* Navigation Groups */}
+      <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 flex flex-col gap-6">
+        {menuSections.map((section) => {
+          const visibleItems = section.items.filter(item => {
+            if (!item.perm || isSuperadmin) return true;
+            return userPerms.includes(item.perm);
+          });
+
+          if (visibleItems.length === 0) return null;
+
           return (
-            <button
-              key={item.id}
-              onClick={() => handleNavigate(item.path)}
-              aria-current={active ? 'page' : undefined}
-              style={{
-                width: '100%',
-                backgroundColor: active ? 'var(--red-50)' : 'transparent',
-                color: active ? 'var(--red)' : 'var(--text-2)',
-                textAlign: 'start',
-                padding: '12px 24px',
-                borderRadius: '0',
-                fontWeight: active ? '700' : '500',
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                border: 'none',
-                borderInlineStart: active ? '4px solid var(--red)' : '4px solid transparent',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                if(!active) e.target.style.backgroundColor = 'var(--warm-gray)';
-              }}
-              onMouseLeave={(e) => {
-                if(!active) e.target.style.backgroundColor = 'transparent';
-              }}
-            >
-              {item.label}
-            </button>
+            <div key={section.title} className="flex flex-col gap-1.5">
+              <span className="px-3.5 text-xs font-extrabold text-text-3 tracking-wider uppercase mb-1">
+                {section.title}
+              </span>
+
+              {visibleItems.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigate(item.path)}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[14.5px] font-extrabold transition-all duration-150 cursor-pointer text-start relative group',
+                      active
+                        ? 'bg-red text-white shadow-xs'
+                        : 'text-text-2 hover:text-text hover:bg-mono-100/80 active:scale-[0.99]'
+                    )}
+                  >
+                    <Icon
+                      icon={item.icon}
+                      className={cn(
+                        'size-5 shrink-0 transition-colors',
+                        active ? 'text-white' : 'text-text-3 group-hover:text-red'
+                      )}
+                    />
+                    <span className="flex-1 truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
 
-      <div 
-        className="p-5 sm:p-6 border-t border-border bg-white shrink-0"
-        style={{ 
-          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' 
-        }}
-      >
-        <button
-          onClick={onLogout}
-          className="w-full min-h-[44px] bg-warm-gray text-red hover:bg-red-100 active:scale-[0.98] transition-all p-2.5 text-sm font-bold text-center rounded-lg flex items-center justify-center gap-2 cursor-pointer border-none"
-        >
-          <Icon icon="material-symbols:logout" className="size-5" />
-          <span>Keluar Admin</span>
-        </button>
+      {/* Bottom User Card */}
+      <div className="p-3 border-t border-border/80 bg-mono-50/70 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+        <div className="p-3 rounded-xl bg-white border border-border/80 shadow-2xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="size-10 rounded-full bg-red text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-2xs">
+              {userInitials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[13.5px] font-extrabold text-text block truncate leading-tight">
+                {displayName}
+              </span>
+              <span className="text-[11px] font-bold text-text-3 block uppercase tracking-wide mt-0.5">
+                {displayRole}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={onLogout}
+            title="Keluar dari Akun Admin"
+            aria-label="Keluar dari Akun Admin"
+            className="size-9 rounded-xl text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-all active:scale-95 shrink-0"
+          >
+            <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-5" />
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -140,3 +163,4 @@ function SidebarAdmin({ isOpen, onClose, onLogout }) {
 
 export default SidebarAdmin;
 export { SidebarAdmin };
+

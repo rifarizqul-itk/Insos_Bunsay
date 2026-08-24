@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @source "../src";
-@source "../../../apps/tenant-app/src";
-@source "../../../apps/admin-app/src";
-@source "../../../packages/shared-ui/src";
+@source "../../apps/tenant-app/src";
+@source "../../apps/admin-app/src";
+@source "../../packages/shared-ui/src";
 
 html {
   scrollbar-gutter: stable;
@@ -11,40 +11,40 @@ html {
 
 @theme {
   /* Monochromatic Maroon Scale (Hue 0°) */
-  --color-mono-50: #FAF6F6;
-  --color-mono-100: #F6EBEB;
-  --color-mono-200: #E4D8D8;
-  --color-mono-300: #D2BEBE;
-  --color-mono-400: #997A7A;
+  --color-mono-50: #FAF8F8;
+  --color-mono-100: #F5EEEE;
+  --color-mono-200: #E8DFDF;
+  --color-mono-300: #D8CACA;
+  --color-mono-400: #A89090;
   --color-mono-500: #7C4646;
   --color-mono-600: #8B1A1A;
   --color-mono-700: #6E1313;
   --color-mono-800: #4E0E0E;
-  --color-mono-900: #1F1010;
+  --color-mono-900: #1A0D0D;
 
   /* Semantic / Brand Aliases */
   --color-red: #8B1A1A;
   --color-red-rich: #6E1313;
   --color-red-dark: #4E0E0E;
-  --color-red-50: #FAF6F6;
-  --color-red-100: #F6EBEB;
+  --color-red-50: #FDF5F5;
+  --color-red-100: #F9EBEB;
 
-  --color-cream: #FAF6F6;
-  --color-warm-gray: #F6EBEB;
+  --color-cream: #FAF8F8;
+  --color-warm-gray: #F5EEEE;
   --color-gold-accent: #C59B27;
-  --color-border: #E4D8D8;
+  --color-border: #E8DFDF;
 
-  --color-text: #1F1010;
-  --color-text-2: #7C4646;
-  --color-text-3: #997A7A;
+  --color-text: #1A0D0D;
+  --color-text-2: #6A4B4B;
+  --color-text-3: #735656;
 
-  /* Functional Status Colors (Preserved) */
+  /* Functional Status Colors */
   --color-green: #14592F;
-  --color-green-bg: #E7F4ED;
+  --color-green-bg: #EAF5EF;
   --color-orange: #9E4A00;
-  --color-orange-bg: #FDF0E3;
-  --color-amber: #d97706;
-  --color-amber-bg: #FEF3C7;
+  --color-orange-bg: #FDF2E7;
+  --color-amber: #D97706;
+  --color-amber-bg: #FEF8E7;
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 
@@ -58,65 +58,67 @@ html {
 
   --text-4\.5xl: 42px;
   --text-4\.5xl--line-height: 1.1;
-  --text-4\.5xl--font-weight: 725;
+  --text-4\.5xl--font-weight: 800;
 
-  --text-sm: 15px;
-  --text-sm--line-height: 1.6;
+  --text-sm: 14px;
+  --text-sm--line-height: 1.55;
 
   --text-base: 15px;
   --text-base--line-height: 1.6;
 
-  --text-xs: 13px;
-  --text-xs--line-height: 1.5;
+  --text-xs: 12.5px;
+  --text-xs--line-height: 1.45;
 
   --spacing-4\.5: 1.125rem;
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 
-  /* Apple-style Tinted Layered Shadows */
-  --shadow-card: 0 4px 20px -2px hsla(0, 68%, 15%, 0.05), 0 2px 6px -1px hsla(0, 68%, 15%, 0.03);
-  --shadow-card-elevated: 0 10px 30px -4px hsla(0, 68%, 15%, 0.08), 0 4px 12px -2px hsla(0, 68%, 15%, 0.04);
-  --shadow-glow-maroon: 0 0 25px 2px hsla(0, 68%, 32%, 0.16);
-  --shadow-modal: 0 20px 45px -10px hsla(0, 68%, 15%, 0.22);
+  /* Refined Apple & Dashboard Layered Soft Shadows */
+  --shadow-card: 0 1px 3px 0 rgba(26, 13, 13, 0.03), 0 4px 14px -2px rgba(26, 13, 13, 0.04);
+  --shadow-card-elevated: 0 4px 8px -1px rgba(26, 13, 13, 0.03), 0 14px 28px -4px rgba(26, 13, 13, 0.06);
+  --shadow-glow-maroon: 0 0 24px 2px rgba(139, 26, 26, 0.12);
+  --shadow-modal: 0 20px 40px -8px rgba(26, 13, 13, 0.16);
 }
 
 @layer base {
   :root {
-    --mono-50: #FAF6F6;
-    --mono-100: #F6EBEB;
-    --mono-200: #E4D8D8;
-    --mono-300: #D2BEBE;
-    --mono-400: #997A7A;
+    --mono-50: #FAF8F8;
+    --mono-100: #F5EEEE;
+    --mono-200: #E8DFDF;
+    --mono-300: #D8CACA;
+    --mono-400: #A89090;
     --mono-500: #7C4646;
     --mono-600: #8B1A1A;
     --mono-700: #6E1313;
     --mono-800: #4E0E0E;
-    --mono-900: #1F1010;
+    --mono-900: #1A0D0D;
 
     --red: #8B1A1A;
     --red-rich: #6E1313;
     --red-dark: #4E0E0E;
-    --red-50: #FAF6F6;
-    --red-100: #F6EBEB;
-    --cream: #FAF6F6;
-    --warm-gray: #F6EBEB;
+    --red-50: #FDF5F5;
+    --red-100: #F9EBEB;
+    --cream: #FAF8F8;
+    --warm-gray: #F5EEEE;
     --gold: #C59B27;
-    --border: #E4D8D8;
+    --border: #E8DFDF;
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
-    --text: #1F1010;
-    --text-2: #7C4646;
-    --text-3: #997A7A;
-    --disabled-bg: #D2BEBE;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --text: #1A0D0D;
+    --text-2: #6A4B4B;
+    --text-3: #997E7E;
+    --disabled-bg: #D8CACA;
     --green: #14592F;
-    --green-bg: #E7F4ED;
+    --green-bg: #EAF5EF;
     --orange: #9E4A00;
-    --orange-bg: #FDF0E3;
+    --orange-bg: #FDF2E7;
 
     --z-sticky: 40;
     --z-header: 90;
@@ -124,6 +126,9 @@ html {
     --z-drawer: 400;
     --z-modal: 500;
     --z-toast: 1000;
+
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   * {
@@ -139,11 +144,16 @@ html {
 
   body {
     background-color: var(--mono-50);
+    background-image: 
+      radial-gradient(ellipse at 20% 0%, rgba(249, 235, 235, 0.5) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(245, 238, 238, 0.4) 0%, transparent 50%);
+    background-attachment: fixed;
     color: var(--text);
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    font-size: 15px;
+    font-size: 15.5px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3 {
@@ -180,7 +190,7 @@ html {
     font-weight: 600;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     min-height: 44px;
   }
 
@@ -198,7 +208,7 @@ html {
     background-color: #FFFFFF;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 12px 16px;
+    padding: 11px 15px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
@@ -208,10 +218,10 @@ html {
     -webkit-appearance: none;
     -moz-appearance: none;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--text);
     background-color: #FFFFFF;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236A4B4B' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.75rem center;
     background-repeat: no-repeat;
     background-size: 1rem 1rem;
@@ -229,7 +239,7 @@ html {
 
   input:focus, select:focus, textarea:focus {
     border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.12);
+    box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.08);
   }
 
   table {
@@ -244,10 +254,10 @@ html {
     font-variant-numeric: tabular-nums;
   }
   .label-micro {
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 12px;
+    letter-spacing: 0.07em;
+    font-size: 12.5px;
     color: var(--text-2);
   }
   .text-balance {
@@ -266,25 +276,25 @@ html {
 
 @layer components {
   .page-fade-in {
-    animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .topbar-hamburger-tenant,
   .topbar-hamburger-admin {
-    @apply flex md:hidden items-center justify-center border border-border rounded-md px-3 h-[44px] text-2xl text-text bg-transparent transition-colors hover:bg-mono-100;
+    @apply flex md:hidden items-center justify-center border border-border rounded-lg px-3 h-[42px] text-xl text-text bg-white/80 transition-colors hover:bg-mono-100;
   }
 
   .topbar-container {
-    @apply h-16 bg-white/80 backdrop-blur-xl border-b border-border sticky top-0 z-20 flex items-center justify-between px-4 md:px-8 transition-colors;
+    @apply h-16 bg-white/85 backdrop-blur-xl border-b border-border/80 sticky top-0 z-20 flex items-center justify-between px-4 md:px-8 transition-colors;
   }
 
   .topbar-dropdown {
-    @apply absolute top-[60px] right-0 w-[min(90vw,360px)] bg-white border border-border/90 rounded-2xl shadow-modal p-4 flex flex-col gap-3 z-30 animate-[fadeIn_0.15s_ease-out];
+    @apply absolute top-[60px] right-0 w-[min(90vw,380px)] bg-white border border-border/90 rounded-2xl shadow-modal p-0 flex flex-col z-30 animate-[fadeIn_0.18s_cubic-bezier(0.16,1,0.3,1)];
   }
 
   .sidebar-tenant-container,
   .sidebar-admin-container {
-    @apply fixed top-0 left-0 z-50 w-[260px] h-screen h-dvh bg-white border-r border-border transition-transform duration-300 ease-out -translate-x-full md:translate-x-0;
+    @apply fixed top-0 left-0 z-50 w-[280px] h-screen h-dvh bg-white border-r border-border/90 transition-transform duration-300 ease-out -translate-x-full md:translate-x-0;
   }
 
   .sidebar-tenant-container.mobile-open,
@@ -293,15 +303,15 @@ html {
   }
 
   .sidebar-mobile-overlay {
-    @apply fixed inset-0 bg-mono-900/40 backdrop-blur-xs z-40 md:hidden;
+    @apply fixed inset-0 bg-mono-900/35 backdrop-blur-xs z-40 md:hidden;
   }
 
   .main-layout {
-    @apply md:ml-[260px] min-h-dvh flex flex-col;
+    @apply md:ml-[280px] min-h-dvh flex flex-col;
   }
 
   .main-content-inner {
-    @apply flex-1 p-4 md:p-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-8;
+    @apply flex-1 p-4 md:p-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-8 max-w-7xl w-full mx-auto;
   }
 }
 

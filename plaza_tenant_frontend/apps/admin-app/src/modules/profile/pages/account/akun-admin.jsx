@@ -334,6 +334,7 @@ function AkunAdmin() {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
+                autoComplete="username"
                 className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
               />
             </FormField>
@@ -344,6 +345,7 @@ function AkunAdmin() {
                 name="nama"
                 value={formData.nama}
                 onChange={handleInputChange}
+                autoComplete="name"
                 className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
               />
             </FormField>
@@ -354,6 +356,7 @@ function AkunAdmin() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
+                autoComplete="email"
                 className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
               />
             </FormField>
@@ -364,6 +367,7 @@ function AkunAdmin() {
                 name="telepon"
                 value={formData.telepon}
                 onChange={handleInputChange}
+                autoComplete="tel"
                 className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
               />
             </FormField>
@@ -396,6 +400,7 @@ function AkunAdmin() {
                   placeholder="Masukkan kata sandi saat ini"
                   value={formData.kataSandiLama}
                   onChange={handleInputChange}
+                  autoComplete="current-password"
                   className={cn(
                     'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                     oldPasswordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
@@ -420,6 +425,7 @@ function AkunAdmin() {
                   placeholder="Minimal 6 karakter"
                   value={formData.kataSandiBaru}
                   onChange={handleInputChange}
+                  autoComplete="new-password"
                   className={cn(
                     'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                     passwordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
@@ -444,6 +450,7 @@ function AkunAdmin() {
                   placeholder="Ulangi kata sandi baru"
                   value={formData.konfirmasiKataSandi}
                   onChange={handleInputChange}
+                  autoComplete="new-password"
                   className={cn(
                     'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                     confirmPasswordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
@@ -482,11 +489,11 @@ function AkunAdmin() {
               <div className="flex items-center gap-2">
                 <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
                 <h3 className="text-xl font-extrabold text-text tracking-tight">
-                  Manajemen Staf & Otorisasi RBAC (Superadmin Panel)
+                  Kontrol Akses Admin Berbasis Peran
                 </h3>
               </div>
               <p className="text-text-2 text-sm font-medium mt-1">
-                Kelola akun staf pengelola, atur preset peran (*Role Presets*), dan centang izin fitur (*Permission Matrix*).
+                Kelola akun staf pengelola, atur preset peran, dan centang izin fitur.
               </p>
             </div>
 

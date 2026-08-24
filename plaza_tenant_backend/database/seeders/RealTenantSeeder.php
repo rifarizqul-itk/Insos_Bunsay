@@ -919,7 +919,7 @@ class RealTenantSeeder extends Seeder
         ];
 
         $tarif   = 750000.00;
-        $mulai   = Carbon::now()->subMonths(6)->startOfMonth();
+        $mulai   = Carbon::now()->subMonths(5)->startOfMonth();
         $created = 0;
         $skipped = 0;
 

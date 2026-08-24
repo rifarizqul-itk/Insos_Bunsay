@@ -132,7 +132,8 @@ export function NotificationPopover({
             <button
               type="button"
               onClick={onMarkAllRead}
-              className="text-xs font-bold text-red hover:text-red-800 flex items-center gap-1 hover:underline cursor-pointer transition-colors"
+              aria-label="Tandai semua notifikasi sudah dibaca"
+              className="text-xs font-bold text-red hover:text-red-800 flex items-center gap-1 hover:underline cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
             >
               <Icon icon="heroicons:check-badge-20-solid" className="size-4" />
               <span>Tandai Dibaca</span>
@@ -141,12 +142,13 @@ export function NotificationPopover({
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 bg-mono-100 rounded-lg border border-border/60 text-xs font-bold">
+        <div className="flex items-center gap-1.5 p-1 bg-mono-100 rounded-lg border border-border/60 text-xs font-bold" role="group" aria-label="Filter notifikasi">
           <button
             type="button"
             onClick={() => setActiveFilter('all')}
+            aria-pressed={activeFilter === 'all'}
             className={cn(
-              "flex-1 py-1.5 px-3 rounded-md text-center transition-all cursor-pointer",
+              "flex-1 py-1.5 px-3 rounded-md text-center transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red",
               activeFilter === 'all'
                 ? "bg-white text-text font-extrabold shadow-xs"
                 : "text-text-2 hover:text-text"
@@ -157,8 +159,9 @@ export function NotificationPopover({
           <button
             type="button"
             onClick={() => setActiveFilter('unread')}
+            aria-pressed={activeFilter === 'unread'}
             className={cn(
-              "flex-1 py-1.5 px-3 rounded-md text-center transition-all cursor-pointer flex items-center justify-center gap-1.5",
+              "flex-1 py-1.5 px-3 rounded-md text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red",
               activeFilter === 'unread'
                 ? "bg-white text-text font-extrabold shadow-xs"
                 : "text-text-2 hover:text-text"
@@ -166,14 +169,14 @@ export function NotificationPopover({
           >
             <span>Belum Dibaca</span>
             {unreadCount > 0 && (
-              <span className="size-2 rounded-full bg-red shrink-0" />
+              <span className="size-2 rounded-full bg-red shrink-0" aria-hidden="true" />
             )}
           </button>
         </div>
       </div>
 
       {/* Scrollable Notification List */}
-      <div className="max-h-[22rem] overflow-y-auto divide-y divide-border/40 p-2">
+      <div className="max-h-[22rem] overflow-y-auto divide-y divide-border/40 p-2" role="region" aria-live="polite">
         {groupedNotifications.length === 0 ? (
           <div className="py-10 px-4 flex flex-col items-center justify-center text-center gap-2 text-text-3">
             <div className="size-12 rounded-full bg-mono-100 flex items-center justify-center text-mono-400">
@@ -196,71 +199,68 @@ export function NotificationPopover({
               </div>
 
               {/* Group Items */}
-              <div className="flex flex-col gap-1 mt-1">
+              <ul className="flex flex-col gap-1 mt-1 list-none p-0 m-0">
                 {group.items.map((notif) => {
                   const iconCfg = getNotifIconConfig(notif.type, notif.title);
                   const isUnread = !notif.is_read;
 
                   return (
-                    <div
-                      key={notif.id}
-                      onClick={() => onNotificationClick && onNotificationClick(notif)}
-                      role="button"
-                      tabIndex={0}
-                      className={cn(
-                        "p-3 rounded-xl flex items-start gap-3 text-left cursor-pointer transition-all duration-150 relative group",
-                        isUnread
-                          ? "bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80"
-                          : "hover:bg-mono-50 border border-transparent"
-                      )}
-                    >
-                      {/* Unread Indicator Dot */}
-                      {isUnread && (
-                        <span className="absolute left-1.5 top-4 size-1.5 rounded-full bg-red shadow-xs animate-pulse" />
-                      )}
+                    <li key={notif.id}>
+                      <button
+                        type="button"
+                        onClick={() => onNotificationClick && onNotificationClick(notif)}
+                        aria-label={`${notif.title || 'Pemberitahuan'}: ${notif.message || notif.teks || ''}${isUnread ? ' (Belum dibaca)' : ''}`}
+                        className={cn(
+                          "w-full p-3 rounded-xl flex items-start gap-3 text-left cursor-pointer transition-all duration-150 relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red focus-visible:ring-inset",
+                          isUnread
+                            ? "bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80"
+                            : "hover:bg-mono-50 border border-transparent"
+                        )}
+                      >
+                        {/* Unread Indicator Dot */}
+                        {isUnread && (
+                          <span className="absolute left-1.5 top-4 size-1.5 rounded-full bg-red shadow-xs animate-pulse" aria-hidden="true" />
+                        )}
 
-                      {/* Category Icon */}
-                      <div className={cn(
-                        "size-8 rounded-lg flex items-center justify-center shrink-0 border mt-0.5",
-                        iconCfg.colorClass
-                      )}>
-                        <Icon icon={iconCfg.icon} className="size-4" />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-1.5">
-                          <h4 className={cn(
-                            "text-xs leading-snug truncate",
-                            isUnread ? "font-extrabold text-text" : "font-bold text-text-2"
-                          )}>
-                            {notif.title || 'Pemberitahuan'}
-                          </h4>
-                          <span className="text-2xs font-semibold text-text-3 shrink-0 font-tabular-nums">
-                            {formatRelativeTime(notif.created_at)}
-                          </span>
+                        {/* Category Icon */}
+                        <div className={cn(
+                          "size-8 rounded-lg flex items-center justify-center shrink-0 border mt-0.5",
+                          iconCfg.colorClass
+                        )} aria-hidden="true">
+                          <Icon icon={iconCfg.icon} className="size-4" />
                         </div>
 
-                        <p className="text-xs text-text-2 font-medium line-clamp-2 mt-0.5 leading-relaxed">
-                          {notif.message || notif.teks || ''}
-                        </p>
-                      </div>
-                    </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between gap-1.5">
+                            <span className={cn(
+                              "text-xs leading-snug truncate",
+                              isUnread ? "font-extrabold text-text" : "font-bold text-text-2"
+                            )}>
+                              {notif.title || 'Pemberitahuan'}
+                            </span>
+                            <span className="text-2xs font-semibold text-text-3 shrink-0 font-tabular-nums">
+                              {formatRelativeTime(notif.created_at)}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-text-2 font-medium line-clamp-2 mt-0.5 leading-relaxed">
+                            {notif.message || notif.teks || ''}
+                          </p>
+                        </div>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           ))
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="p-2.5 bg-mono-50/80 border-t border-border/70 text-center flex items-center justify-center gap-1.5 text-2xs text-text-3 font-semibold">
-        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span>Sinkronisasi Real-Time WebSocket Aktif</span>
-      </div>
     </div>
   );
 }
 
 export default NotificationPopover;
+

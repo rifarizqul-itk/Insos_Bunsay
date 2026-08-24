@@ -14,7 +14,7 @@ class KiosController extends Controller
      */
     public function index()
     {
-        $kios = Kios::with(['sewa.pemilik'])->get();
+        $kios = Kios::with(['sewa.pemilik', 'sewa.tagihan'])->get();
 
         return response()->json([
             'success' => true,

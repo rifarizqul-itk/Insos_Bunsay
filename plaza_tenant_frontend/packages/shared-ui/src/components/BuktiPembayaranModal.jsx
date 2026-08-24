@@ -98,13 +98,11 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [isUsingMockFallback, setIsUsingMockFallback] = useState(false);
 
   const isModalOpen = isOpen !== undefined ? isOpen : Boolean(item);
 
   useEffect(() => {
     setImageError(false);
-    setIsUsingMockFallback(false);
     setIsZoomed(false);
   }, [item, isModalOpen]);
 
@@ -178,7 +176,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   };
 
   const baseImageSrc = isFilePath ? getResolvedImageUrl(buktiUrl) : (buktiUrl.startsWith('data:') ? buktiUrl : null);
-  const activeImageSrc = isUsingMockFallback ? '/assets/MOCKUP_BUKTI_TF.jpg' : baseImageSrc;
+  const activeImageSrc = baseImageSrc;
 
   const handleCopyCode = (text) => {
     if (!text) return;
@@ -717,7 +715,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-text-3">
-                    {isUsingMockFallback ? 'Ilustrasi Bukti Slip (Data Dummy Arsip):' : 'Pratinjau Foto Slip:'}
+                    Pratinjau Foto Slip:
                   </span>
                   <button
                     type="button"
@@ -738,11 +736,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                     alt={`Bukti Transfer ${trxLabel}`}
                     loading="lazy"
                     onError={() => {
-                      if (!isUsingMockFallback) {
-                        setIsUsingMockFallback(true);
-                      } else {
-                        setImageError(true);
-                      }
+                      setImageError(true);
                     }}
                     className="max-h-full max-w-full object-contain rounded-md cursor-pointer"
                     onClick={() => setIsZoomed(!isZoomed)}
@@ -760,7 +754,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                       {isFilePath ? buktiUrl.split('/').pop() : `Bukti_Transfer_${trxLabel}.jpg`}
                     </span>
                     <span className="text-xs text-text-3 font-medium">
-                      Lampiran Berkas Slip Transfer (Teks Arsip)
+                      Gambar tidak ditemukan di storage server
                     </span>
                   </div>
                 </div>
@@ -784,7 +778,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                 <span>Dokumen Sah e-Retribusi</span>
               </div>
               <p className="text-[11px] text-text-3 leading-snug">
-                Pindai QR Code dengan kamera ponsel untuk memvalidasi keaslian resi ini langsung pada server UPTD.
+                Pindai QR Code untuk memvalidasi keaslian resi.
               </p>
               <a
                 href={verificationUrl}

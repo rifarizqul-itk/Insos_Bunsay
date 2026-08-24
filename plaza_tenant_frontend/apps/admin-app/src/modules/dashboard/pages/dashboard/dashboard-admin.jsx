@@ -51,17 +51,62 @@ function DashboardAdmin() {
           const resKios = kiosResult.value;
           const rawKios = resKios?.data?.data || resKios?.data;
           if (Array.isArray(rawKios)) {
-            const fetchedTenants = rawKios.map((item, idx) => {
-              const namaTenant = item.sewa?.pemilik?.Nama || item.sewa?.[0]?.pemilik?.Nama || item.tenant || item.Nama || 'Kios Tanpa Nama';
-              const jenisUsaha = item.sewa?.Jenis_Usaha || item.sewa?.[0]?.Jenis_Usaha || item.usaha || 'Perdagangan Umum';
-              return {
-                id: item.Id_Kios || idx + 1,
-                nama: namaTenant,
-                kios: item.No_Kios || `Kios-${idx + 1}`,
-                usaha: jenisUsaha,
-                tunggakan: 0,
-                statusPembayaran: item.Status === 'Terisi' ? 'Lunas' : 'Belum Bayar'
-              };
+            const fetchedTenants = [];
+            rawKios.forEach((item, idx) => {
+              const sewaList = Array.isArray(item.sewa) ? item.sewa : (item.sewa ? [item.sewa] : []);
+              if (sewaList.length === 0) {
+                fetchedTenants.push({
+                  id: item.Id_Kios || idx + 1,
+                  idKios: item.Id_Kios,
+                  idPemilik: null,
+                  nama: item.Nama || 'Kios Belum Tersewa',
+                  kios: item.No_Kios || `Kios-${idx + 1}`,
+                  usaha: 'Belum Ada Usaha',
+                  tunggakan: 0,
+                  statusPembayaran: 'Kosong'
+                });
+              } else {
+                sewaList.forEach((sewaObj, sIdx) => {
+                  const namaTenant = sewaObj?.pemilik?.Nama || item.tenant || item.Nama || 'Kios Tanpa Nama';
+                  const jenisUsaha = sewaObj?.Jenis_Usaha || item.usaha || 'Perdagangan Umum';
+                  const idPemilik = sewaObj?.pemilik?.Id_Pemilik || sewaObj?.Id_Pemilik;
+                  
+                  const tagihanList = Array.isArray(sewaObj?.tagihan) ? sewaObj.tagihan : [];
+                  const latestBill = tagihanList.length > 0 
+                    ? [...tagihanList].sort((a, b) => String(b.Periode || b.Id_Tagihan || '').localeCompare(String(a.Periode || a.Id_Tagihan || '')))[0] 
+                    : null;
+                  
+                  const unpaidBills = tagihanList.filter(t => ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi'].includes(t.Status_Tagihan));
+                  const totalTunggakan = unpaidBills.reduce((acc, t) => acc + Number(t.Sisa_Tagihan ?? t.Total_Tagihan ?? 0), 0);
+
+                  let statusPembayaran = 'Belum Bayar';
+                  if (latestBill) {
+                    if (latestBill.Status_Tagihan === 'Lunas') {
+                      statusPembayaran = 'Lunas';
+                    } else if (latestBill.Status_Tagihan === 'Menunggu Verifikasi') {
+                      statusPembayaran = 'Menunggu Verifikasi';
+                    } else if (latestBill.Status_Tagihan === 'Dicicil') {
+                      statusPembayaran = 'Dicicil';
+                    } else {
+                      statusPembayaran = 'Belum Bayar';
+                    }
+                  } else if (item.Status === 'Kosong') {
+                    statusPembayaran = 'Kosong';
+                  }
+
+                  fetchedTenants.push({
+                    id: sewaObj.Id_Sewa ? `sewa-${sewaObj.Id_Sewa}` : (item.Id_Kios || idx + 1),
+                    idSewa: sewaObj.Id_Sewa,
+                    idKios: item.Id_Kios,
+                    idPemilik: idPemilik,
+                    nama: namaTenant,
+                    kios: item.No_Kios || `Kios-${idx + 1}`,
+                    usaha: jenisUsaha,
+                    tunggakan: totalTunggakan,
+                    statusPembayaran: statusPembayaran
+                  });
+                });
+              }
             });
             setTenants(fetchedTenants);
           }
@@ -118,12 +163,15 @@ function DashboardAdmin() {
     });
 
     const { key, direction } = sortConfig;
-    return list.sort((a, b) => {
+    return [...list].sort((a, b) => {
       let valA = a[key] ?? '';
       let valB = b[key] ?? '';
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return direction === 'asc' ? valA - valB : valB - valA;
+      }
+      return direction === 'asc'
+        ? String(valA).localeCompare(String(valB), undefined, { numeric: true })
+        : String(valB).localeCompare(String(valA), undefined, { numeric: true });
     });
   }, [tenants, searchQuery, statusFilter, sortConfig]);
 
@@ -140,11 +188,11 @@ function DashboardAdmin() {
   const belumBayarCount = metrics?.tagihan_pending ?? tenants.filter(t => t.statusPembayaran === 'Belum Bayar').length;
 
   return (
-    <div data-slot="dashboard-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="dashboard-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans max-w-7xl mx-auto w-full">
       {errorMsg && (
-        <div className="bg-red text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-2">
-            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />
+        <div className="bg-red text-white font-bold text-sm px-4 py-3.5 rounded-xl shadow-card flex items-center justify-between animate-fade-in border border-red-rich">
+          <div className="flex items-center gap-2.5">
+            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
           <button
@@ -158,76 +206,108 @@ function DashboardAdmin() {
         </div>
       )}
 
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Dashboard Pengelola Plaza
-        </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Ringkasan data pembayaran, antrean verifikasi, dan administrasi kios.
-        </p>
+      {/* Header & Page Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+            Dashboard Pengelola Plaza
+          </h1>
+          <p className="text-text-2 text-xs sm:text-sm font-medium mt-1 text-pretty">
+            Ringkasan data pembayaran sewa, antrean verifikasi bukti transfer, dan administrasi kios.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-mono-100 border border-border text-xs sm:text-sm font-bold text-text-2 shadow-2xs">
+            <Icon icon="heroicons:calendar-days-20-solid" className="size-4.5 text-red" />
+            <span>Periode: {new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date())}</span>
+          </span>
+        </div>
       </div>
 
+      {/* 3 Summary StatCards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard
           label="Total Kios Terisi"
           value={metrics?.kios_terisi ?? totalTenant}
-          color="red"
-          icon={<Icon icon="heroicons:home-20-solid" className="size-6" />}
+          color="text"
+          subtext="Unit aktif terdaftar"
+          icon={<Icon icon="heroicons:building-storefront-20-solid" className="size-5.5" />}
         />
         <StatCard
-          label="Menunggu Verifikasi Transfer"
+          label="Menunggu Verifikasi"
           value={verifikasiCount}
-          color="orange"
-          icon={<Icon icon="heroicons:clock-20-solid" className="size-6" />}
+          color={verifikasiCount > 0 ? "amber" : "text"}
+          subtext="Perlu konfirmasi loket admin"
+          trend={verifikasiCount > 0 ? "action" : "optimal"}
+          trendLabel={verifikasiCount > 0 ? `${verifikasiCount} Antrean` : "Semua Beres"}
+          icon={<Icon icon="heroicons:clock-20-solid" className="size-5.5" />}
         />
         <StatCard
           label="Belum Bayar Bulan Ini"
           value={belumBayarCount}
-          color="red"
-          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-6" />}
+          color={belumBayarCount > 0 ? "red" : "green"}
+          subtext="Siklus sewa bulan berjalan"
+          trend={belumBayarCount > 0 ? "warning" : "positive"}
+          trendLabel={belumBayarCount > 0 ? "Perlu Follow-up" : "100% Lunas"}
+          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5.5" />}
         />
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+      {/* Main Kiosk Administration Data Table */}
+      <Card variant="default" className="p-4 sm:p-6 flex flex-col gap-5 rounded-2xl border border-border/80 shadow-card">
+        {/* Table Toolbar Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">
-            Daftar Administrasi Kios
-          </h3>
+          <div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
+              Daftar Administrasi Kios
+            </h2>
+            <p className="text-xs sm:text-sm text-text-3 font-medium">
+              Data status pembayaran sewa unit kios pada siklus bulan berjalan.
+            </p>
+          </div>
 
-          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Cari nama atau no kios..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label="Cari nama tenant atau nomor kios"
-              className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-red"
-            />
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64">
+              <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3" />
+              <input
+                type="text"
+                placeholder="Cari tenant / kios..."
+                aria-label="Cari nama tenant atau nomor kios"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full h-10 pl-9.5 pr-4 text-sm font-medium rounded-xl border border-border bg-mono-100/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red transition-all"
+              />
+            </div>
+
+            {/* Filter Status */}
             <select
+              aria-label="Filter status pembayaran kios"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              aria-label="Filter status pembayaran bulan ini"
-              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
+              className="h-10 text-xs sm:text-sm font-bold rounded-xl border border-border bg-white text-text px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
             >
               <option value="Semua">Semua Status</option>
-              <option value="Lunas">Lunas</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
               <option value="Belum Bayar">Belum Bayar</option>
+              <option value="Lunas">Lunas</option>
             </select>
           </div>
         </div>
 
+        {/* Table Content */}
         {isLoading ? (
-          <SkeletonTable rows={5} cols={6} />
+          <SkeletonTable rows={6} cols={6} />
         ) : filteredTenants.length === 0 ? (
           <EmptyState
-            icon="heroicons:user-minus-20-solid"
+            icon="heroicons:user-group-20-solid"
             title="Tenant Tidak Ditemukan"
             description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
           />
@@ -253,32 +333,35 @@ function DashboardAdmin() {
             {filteredTenants.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((tenant, idx) => {
               const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
               return (
-                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Nama Tenant" className="p-3 font-semibold text-start text-text">
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-mono-50/70 transition-colors">
+                  <th scope="row" data-label="Nama Tenant" className="py-2.5 px-3 sm:px-3.5 font-bold text-start text-text text-sm sm:text-base">
                     {tenant.nama}
                   </th>
-                  <td data-label="No. Kios" className="font-tabular-nums font-extrabold p-3 text-text">
-                    {tenant.kios}
+                  <td data-label="No. Kios" className="font-tabular-nums font-extrabold py-2.5 px-3 sm:px-3.5 text-text text-xs sm:text-sm">
+                    <span className="bg-mono-100/80 px-2.5 py-0.5 rounded-md border border-border/60">
+                      {tenant.kios}
+                    </span>
                   </td>
-                  <td data-label="Jenis Usaha" className="p-3 text-text-2 font-medium">
+                  <td data-label="Jenis Usaha" className="py-2.5 px-3 sm:px-3.5 text-text-2 font-medium text-xs sm:text-sm">
                     {tenant.usaha}
                   </td>
-                  <td data-label="Tunggakan" className={cn("font-tabular-nums p-3 font-extrabold", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
+                  <td data-label="Tunggakan" className={cn("font-tabular-nums py-2.5 px-3 sm:px-3.5 font-extrabold text-xs sm:text-sm", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
                     Rp {tenant.tunggakan.toLocaleString('id-ID')}
                   </td>
-                  <td data-label="Status Bulan Ini" className="p-3">
+                  <td data-label="Status Bulan Ini" className="py-2.5 px-3 sm:px-3.5">
                     <Badge
                       status={tenant.statusPembayaran}
                       clickable={isVerifikasiPending}
                       onClick={isVerifikasiPending ? () => handleOpenVerifikasi(tenant) : undefined}
                     />
                   </td>
-                  <td data-label="Aksi" className="p-3 text-center">
+                  <td data-label="Aksi" className="py-2.5 px-3 sm:px-3.5 text-center">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
-                      className="min-h-11 sm:min-h-9 sm:h-9 px-4 text-xs font-bold"
+                      aria-label={`Detail administrasi keuangan kios ${tenant.kios} (${tenant.nama})`}
+                      className="min-h-8 h-8 px-3 text-xs sm:text-sm font-bold shadow-2xs"
                     >
                       Detail
                     </Button>
@@ -318,12 +401,12 @@ function DashboardAdmin() {
         }
       >
         {verifikasiTarget && (
-          <div className="flex flex-col gap-5 text-sm">
+          <div className="flex flex-col gap-5 text-sm font-sans">
             <Card variant="inset" className="p-4 flex flex-col gap-2.5">
-              <div><span className="text-text-3 font-semibold">Jenis Tagihan:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.tagihan}</strong></div>
-              <div><span className="text-text-3 font-semibold">Nominal Pembayaran:</span> <strong className="text-text font-bold font-tabular-nums">{verifikasiTarget.antrean.nominal}</strong></div>
-              <div><span className="text-text-3 font-semibold">Metode:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.labelMetode}</strong></div>
-              <div><span className="text-text-3 font-semibold">Waktu Pengiriman:</span> <strong className="text-text font-bold">{verifikasiTarget.antrean.waktu}</strong></div>
+              <div><span className="text-text-3 font-semibold text-xs">Periode:</span> <strong className="text-text font-bold block">{verifikasiTarget.antrean.tagihan}</strong></div>
+              <div><span className="text-text-3 font-semibold text-xs">Nominal Pembayaran:</span> <strong className="text-text font-bold font-tabular-nums block">{verifikasiTarget.antrean.nominal}</strong></div>
+              <div><span className="text-text-3 font-semibold text-xs">Metode:</span> <strong className="text-text font-bold block">{verifikasiTarget.antrean.labelMetode}</strong></div>
+              <div><span className="text-text-3 font-semibold text-xs">Waktu Pengiriman:</span> <strong className="text-text font-bold block">{verifikasiTarget.antrean.waktu}</strong></div>
             </Card>
 
             <AlokasiBreakdown alokasiList={verifikasiTarget.antrean.alokasi} />
@@ -335,3 +418,4 @@ function DashboardAdmin() {
 }
 
 export default DashboardAdmin;
+

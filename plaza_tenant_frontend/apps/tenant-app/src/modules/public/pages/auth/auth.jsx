@@ -406,7 +406,7 @@ function AuthPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#128C7E] hover:text-[#075E54] text-xs font-bold rounded-lg transition-all active:scale-95"
-                aria-label="Chat WhatsApp Pengelola Plaza Kebun Sayur"
+                aria-label="Chat WhatsApp Pengelola Plaza Kebun Sayur (buka di tab baru)"
               >
                 <Icon icon="ic:baseline-whatsapp" className="size-4.5 text-[#25D366]" />
                 <span>Chat WhatsApp Pengelola (0811-5901-119)</span>
@@ -438,6 +438,8 @@ function AuthPage() {
                 placeholder="123456"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                autoComplete="one-time-code"
+                inputMode="numeric"
                 className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-center font-mono text-lg tracking-widest focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
             </FormField>
@@ -449,6 +451,7 @@ function AuthPage() {
                   placeholder="Minimal 6 karakter"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
                   className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none focus:border-red transition-colors"
                 />
                 <button
@@ -468,6 +471,7 @@ function AuthPage() {
                 placeholder="Ulangi kata sandi baru"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
                 className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
             </FormField>

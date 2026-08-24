@@ -109,50 +109,66 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   }, [isOpen]);
 
   return (
-    <header data-slot="topbar" className="topbar-container min-h-16 py-2 flex justify-between items-center font-sans">
-      <div className="flex items-center gap-2.5 min-w-0 flex-1 me-3">
+    <header
+      data-slot="topbar"
+      className="topbar-container h-17 md:h-18 px-4 md:px-8 flex justify-between items-center font-sans border-b border-border/80 bg-white/85 backdrop-blur-xl shrink-0"
+    >
+      {/* Left: Mobile Toggle & Session Context */}
+      <div className="flex items-center gap-3.5 min-w-0">
         <button
           onClick={onToggleSidebar}
           aria-label="Buka menu navigasi"
-          className="topbar-hamburger-tenant bg-transparent border border-border rounded-md px-3 cursor-pointer items-center justify-center h-11 text-text shrink-0"
+          className="topbar-hamburger-tenant md:hidden size-11 flex items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors cursor-pointer active:scale-95"
         >
-          <Icon icon="ph:list-bold" className="size-5.5" />
+          <Icon icon="heroicons:bars-3-20-solid" className="size-6" />
         </button>
         
-        <div className="text-sm font-bold text-text-2 leading-tight min-w-0 break-words">
-          <span className="hidden sm:inline">Sesi Aktif: </span>
-          <span className="text-red font-extrabold">{userTitle}</span>
+        <div className="flex items-center gap-2 text-sm font-bold text-text-3 min-w-0">
+          <span className="hidden sm:inline">Portal Tenant</span>
+          <span className="hidden sm:inline text-border">/</span>
+          <span className="text-text font-extrabold text-sm sm:text-[15px] truncate">
+            {userTitle}
+          </span>
         </div>
       </div>
 
-      <div ref={notifikasiRef} className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Notifikasi"
-          aria-expanded={isOpen}
-          className={cn(
-            'h-11 px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-md border border-border transition-colors',
-            isOpen ? 'bg-mono-100 text-text' : 'bg-transparent text-text hover:bg-mono-100/60'
-          )}
-        >
-          <span>Notifikasi</span>
-          <span className={cn('text-white text-xs font-extrabold px-2 py-0.5 rounded-full inline-block font-tabular-nums', unreadCount > 0 ? 'bg-red' : 'bg-slate-400')}>
-            {unreadCount}
-          </span>
-        </button>
+      {/* Right: Quick Action & Notification Trigger */}
+      <div className="flex items-center gap-3">
+        <div ref={notifikasiRef} className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Notifikasi"
+            aria-expanded={isOpen}
+            className={cn(
+              'h-11 px-3.5 sm:px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-xl border transition-all active:scale-95 shrink-0 shadow-2xs',
+              isOpen
+                ? 'bg-mono-100 text-text border-border shadow-xs'
+                : 'bg-white text-text-2 border-border/80 hover:text-text hover:bg-mono-50 hover:border-border'
+            )}
+          >
+            <Icon icon="heroicons:bell-20-solid" className="size-5 text-text-2 shrink-0" />
+            <span className="font-extrabold text-sm">Notifikasi</span>
+            {unreadCount > 0 && (
+              <span className="text-white text-xs font-extrabold px-2 py-0.5 rounded-full bg-red font-tabular-nums animate-pulse shadow-2xs">
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-        {isOpen && (
-          <NotificationPopover
-            notifications={notifikasiList}
-            unreadCount={unreadCount}
-            onMarkAllRead={handleMarkAllRead}
-            onNotificationClick={handleNotifClick}
-            variant="tenant"
-          />
-        )}
+          {isOpen && (
+            <NotificationPopover
+              notifications={notifikasiList}
+              unreadCount={unreadCount}
+              onMarkAllRead={handleMarkAllRead}
+              onNotificationClick={handleNotifClick}
+              variant="tenant"
+            />
+          )}
+        </div>
       </div>
     </header>
   );
 }
 
 export default Topbar;
+

@@ -255,6 +255,7 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
+                    autoComplete="name"
                     className={cn(
                       'w-full h-11 rounded-md border px-3.5 text-base font-semibold transition-colors',
                       isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
@@ -284,6 +285,7 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
+                    autoComplete="email"
                     placeholder="contoh: nama@domain.com"
                     className={cn(
                       'w-full h-11 rounded-md border px-3.5 text-base font-medium transition-colors',
@@ -301,6 +303,7 @@ function AkunTenant() {
                     onChange={handleInputChange}
                     readOnly={!isEditing}
                     aria-readonly={!isEditing}
+                    autoComplete="tel"
                     className={cn(
                       'w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors',
                       isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
@@ -317,6 +320,7 @@ function AkunTenant() {
                   onChange={handleInputChange}
                   readOnly={!isEditing}
                   aria-readonly={!isEditing}
+                  autoComplete="street-address"
                   rows={2}
                   className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
@@ -324,13 +328,14 @@ function AkunTenant() {
                 />
               </FormField>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                 {isEditing ? (
                   <>
                     <Button 
                       type="button" 
                       variant="secondary" 
                       onClick={() => { setFormData({ ...adminDetail }); setFieldError(null); setIsEditing(false); }}
+                      className="w-full sm:w-auto min-h-11 sm:min-h-9"
                     >
                       Batal
                     </Button>
@@ -338,6 +343,7 @@ function AkunTenant() {
                       type="submit" 
                       variant="primary" 
                       disabled={isSubmitting}
+                      className="w-full sm:w-auto min-h-11 sm:min-h-9"
                     >
                       {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </Button>
@@ -347,7 +353,7 @@ function AkunTenant() {
                     type="button" 
                     variant="secondary" 
                     onClick={handleStartEdit}
-                    className="gap-2"
+                    className="gap-2 w-full sm:w-auto min-h-11 sm:min-h-9 shadow-2xs"
                   >
                     <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
                     <span>Ubah Data Kontak</span>
@@ -360,9 +366,9 @@ function AkunTenant() {
           {/* CARD DETAIL ADMINISTRASI & LEGALITAS KIOS UNTUK TENANT */}
           <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/80 pb-4 gap-2">
-              <h3 className="text-lg font-extrabold text-text tracking-tight">
+              <h2 className="text-lg font-extrabold text-text tracking-tight">
                 Detail Administrasi & Legalitas Kios Anda
-              </h3>
+              </h2>
               {adminDetail.izinkanCicilan && (
                 <Badge variant="warning">
                   Cicilan Diizinkan
@@ -430,9 +436,9 @@ function AkunTenant() {
         <div className="lg:col-span-4 flex flex-col gap-6">
           <form onSubmit={handleSavePassword}>
             <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
-              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border/80 pb-3 text-balance">
+              <h2 className="text-base font-extrabold text-text tracking-tight border-b border-border/80 pb-3 text-balance">
                 Ubah Kata Sandi
-              </h3>
+              </h2>
               
               <FormField label="Kata Sandi Saat Ini" id="tenant-pwd-old" required error={oldPasswordError}>
                 <div className="relative w-full">
@@ -442,6 +448,7 @@ function AkunTenant() {
                     placeholder="Masukkan kata sandi lama"
                     value={passwordData.kataSandiLama}
                     onChange={handlePasswordChange}
+                    autoComplete="current-password"
                     className={cn(
                       'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                       oldPasswordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
@@ -466,6 +473,7 @@ function AkunTenant() {
                     placeholder="Minimal 6 karakter"
                     value={passwordData.kataSandiBaru}
                     onChange={handlePasswordChange}
+                    autoComplete="new-password"
                     className={cn(
                       'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                       passwordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
@@ -490,6 +498,7 @@ function AkunTenant() {
                     placeholder="Ulangi kata sandi baru"
                     value={passwordData.konfirmasiKataSandi}
                     onChange={handlePasswordChange}
+                    autoComplete="new-password"
                     className={cn(
                       'w-full h-11 rounded-md border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
                       confirmPasswordError ? 'border-red focus:border-red' : 'border-border focus:border-red'
@@ -519,9 +528,9 @@ function AkunTenant() {
           </form>
 
           <Card variant="elevated" className="flex flex-col gap-4 p-6">
-            <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+            <h2 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
               Keluar Akun
-            </h3>
+            </h2>
             <p className="text-sm text-text-2 font-medium leading-relaxed text-pretty">
               Keluar dari akun tenant untuk mengakhiri sesi aktif Anda pada perangkat ini.
             </p>

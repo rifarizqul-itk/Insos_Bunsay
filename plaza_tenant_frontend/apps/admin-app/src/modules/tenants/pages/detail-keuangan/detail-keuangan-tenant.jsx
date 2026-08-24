@@ -62,15 +62,23 @@ function DetailKeuanganTenant() {
         allTagihan = resTagihan?.data || [];
       } catch (_) {}
 
-      const targetKios = currentTenant?.kios || id || '';
-      const targetNama = currentTenant?.nama || '';
+      const targetIdKios = currentTenant?.idKios || currentTenant?.id;
+      const targetIdPemilik = currentTenant?.idPemilik;
+      const targetKios = (currentTenant?.kios || id || '').toLowerCase().trim();
+      const targetNama = (currentTenant?.nama || '').toLowerCase().trim();
 
       // Filter payments matching this tenant / kiosk
       const matchedPayments = allPembayaran.filter(p => {
-        const pKios = p.tagihan?.sewa?.kios?.No_Kios || '';
-        const pNama = p.tagihan?.sewa?.pemilik?.Nama || '';
-        if (targetKios && pKios && pKios.toLowerCase() === targetKios.toLowerCase()) return true;
-        if (targetNama && pNama && pNama.toLowerCase() === targetNama.toLowerCase()) return true;
+        const pIdKios = p.tagihan?.sewa?.kios?.Id_Kios || p.tagihan?.sewa?.Id_Kios;
+        const pIdPemilik = p.tagihan?.sewa?.pemilik?.Id_Pemilik || p.tagihan?.sewa?.Id_Pemilik;
+        const pKios = (p.tagihan?.sewa?.kios?.No_Kios || '').toLowerCase().trim();
+        const pNama = (p.tagihan?.sewa?.pemilik?.Nama || '').toLowerCase().trim();
+
+        if (targetKios && pKios && pKios === targetKios) return true;
+        if (targetIdKios && pIdKios && String(targetIdKios) === String(pIdKios)) return true;
+        if (targetIdPemilik && pIdPemilik && String(targetIdPemilik) === String(pIdPemilik)) return true;
+        if (targetNama && pNama && (pNama === targetNama || pNama.includes(targetNama) || targetNama.includes(pNama))) return true;
+
         return false;
       }).map(p => ({
         id: `TRX-${p.Id_Pembayaran}`,
@@ -83,14 +91,20 @@ function DetailKeuanganTenant() {
 
       // Filter tagihan matching this tenant / kiosk
       const matchedBills = allTagihan.filter(t => {
-        const tKios = t.sewa?.kios?.No_Kios || '';
-        const tNama = t.sewa?.pemilik?.Nama || '';
-        if (targetKios && tKios && tKios.toLowerCase() === targetKios.toLowerCase()) return true;
-        if (targetNama && tNama && tNama.toLowerCase() === targetNama.toLowerCase()) return true;
+        const tIdKios = t.sewa?.kios?.Id_Kios || t.sewa?.Id_Kios;
+        const tIdPemilik = t.sewa?.pemilik?.Id_Pemilik || t.sewa?.Id_Pemilik;
+        const tKios = (t.sewa?.kios?.No_Kios || '').toLowerCase().trim();
+        const tNama = (t.sewa?.pemilik?.Nama || '').toLowerCase().trim();
+
+        if (targetKios && tKios && tKios === targetKios) return true;
+        if (targetIdKios && tIdKios && String(targetIdKios) === String(tIdKios)) return true;
+        if (targetIdPemilik && tIdPemilik && String(targetIdPemilik) === String(tIdPemilik)) return true;
+        if (targetNama && tNama && (tNama === targetNama || tNama.includes(targetNama) || targetNama.includes(tNama))) return true;
+
         return false;
       });
 
-      // Calculate total unpaid tunggakan
+      // Calculate total unpaid tunggakan exclusively for THIS tenant / kiosk
       const totalTunggakan = matchedBills.reduce((acc, curr) => {
         if (curr.Status_Tagihan !== 'Lunas') {
           return acc + Number(curr.Sisa_Tagihan || curr.Total_Tagihan || 0);
@@ -98,8 +112,9 @@ function DetailKeuanganTenant() {
         return acc;
       }, 0);
 
-      // Determine latest bill status
-      const latestBill = matchedBills[0];
+      // Determine latest bill status (sorted by Periode descending)
+      const sortedBills = [...matchedBills].sort((a, b) => (b.Periode || '').localeCompare(a.Periode || ''));
+      const latestBill = sortedBills[0];
       const realStatusPembayaran = latestBill ? latestBill.Status_Tagihan : (currentTenant?.statusPembayaran || 'Lunas');
 
       if (currentTenant) {

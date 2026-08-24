@@ -31,11 +31,34 @@ function Drawer({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+        return;
+      }
+      if (e.key === 'Tab' && isOpen && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable.length) return;
+        const firstEl = focusable[0];
+        const lastEl = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstEl || !drawerRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            lastEl.focus();
+          }
+        } else {
+          if (document.activeElement === lastEl || !drawerRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            firstEl.focus();
+          }
+        }
+      }
     };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -50,7 +73,7 @@ function Drawer({
   return (
     <div
       data-slot="drawer"
-      className="fixed inset-0 z-40 flex justify-end bg-text/45 backdrop-blur-sm transition-opacity page-fade-in"
+      className="fixed inset-0 z-[9000] flex justify-end bg-mono-900/50 backdrop-blur-xs transition-opacity page-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

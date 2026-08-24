@@ -33,16 +33,20 @@ class ScenarioSeeder extends Seeder
     {
         $this->command->info('Seeding Plaza Kebun Sayur Scenarios (250+ Tenants)...');
 
-        // Fetch available kiosks created by KiosSeeder
+        // Fetch available kiosks created by KiosSeeder / RealTenantSeeder
         $availableKiosks = Kios::where('Status', 'Kosong')->get();
         $kioskIndex = 0;
+        $extraCounter = 1001;
 
-        $getKiosk = function () use (&$availableKiosks, &$kioskIndex) {
+        $getKiosk = function () use (&$availableKiosks, &$kioskIndex, &$extraCounter) {
             if ($kioskIndex >= $availableKiosks->count()) {
                 // Create extra kiosk if run out
+                while (Kios::where('No_Kios', 'X-' . $extraCounter)->exists()) {
+                    $extraCounter++;
+                }
                 $kiosk = Kios::create([
-                    'No_Kios' => 'X' . rand(1,9) . '-' . sprintf('%03d', rand(100, 999)),
-                    'Lantai'  => rand(1, 2),
+                    'No_Kios' => 'X-' . ($extraCounter++),
+                    'Lantai'  => rand(1, 3),
                     'Ukuran'  => '4x4 m²',
                     'Status'  => 'Kosong',
                 ]);
@@ -256,7 +260,7 @@ class ScenarioSeeder extends Seeder
             if (!Sewa::where('Id_Pemilik', $pemilik->Id_Pemilik)->exists()) {
                 $kios = $getKiosk();
                 $kios->update(['Status' => 'Terisi']);
-                $startDate = Carbon::now()->subMonths(3)->startOfMonth();
+                $startDate = Carbon::now()->subMonths(2)->startOfMonth();
                 $sewa = Sewa::create([
                     'Id_Pemilik'     => $pemilik->Id_Pemilik,
                     'Id_Kios'        => $kios->Id_Kios,
@@ -431,7 +435,7 @@ class ScenarioSeeder extends Seeder
         $kios = $getKiosk();
         $kios->update(['Status' => 'Terisi']);
 
-        $startDate = Carbon::now()->subMonths($monthsCount)->startOfMonth();
+        $startDate = Carbon::now()->subMonths($monthsCount - 1)->startOfMonth();
         $sewa = Sewa::create([
             'Id_Pemilik'     => $pemilik->Id_Pemilik,
             'Id_Kios'        => $kios->Id_Kios,
@@ -528,7 +532,7 @@ class ScenarioSeeder extends Seeder
         $kios = $getKiosk();
         $kios->update(['Status' => 'Terisi']);
 
-        $startDate = Carbon::now()->subMonths($count)->startOfMonth();
+        $startDate = Carbon::now()->subMonths($count - 1)->startOfMonth();
         $sewa = Sewa::create([
             'Id_Pemilik'     => $pemilik->Id_Pemilik,
             'Id_Kios'        => $kios->Id_Kios,

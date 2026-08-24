@@ -9,10 +9,20 @@ class TagihanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Tagihan::with(['sewa.pemilik']);
+        $query = Tagihan::with(['sewa.pemilik', 'sewa.kios']);
         if ($request->has('Id_Pemilik')) {
             $query->whereHas('sewa', function($q) use ($request) {
                 $q->where('Id_Pemilik', $request->Id_Pemilik);
+            });
+        }
+        if ($request->has('Id_Kios')) {
+            $query->whereHas('sewa', function($q) use ($request) {
+                $q->where('Id_Kios', $request->Id_Kios);
+            });
+        }
+        if ($request->has('No_Kios')) {
+            $query->whereHas('sewa.kios', function($q) use ($request) {
+                $q->where('No_Kios', $request->No_Kios);
             });
         }
         return response()->json($query->get());

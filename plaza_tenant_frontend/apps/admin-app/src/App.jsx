@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from '@bunsay/shared-ui';
+import { ToastProvider, VerifikasiResi } from '@bunsay/shared-ui';
 import { AdminAuthProvider } from './modules/auth/AdminAuthProvider';
 import AdminProtectedRoute from './routes/AdminProtectedRoute';
 
@@ -38,8 +38,10 @@ function AdminAppRoutes() {
         <AdminAuthProvider apiBaseUrl={adminApiUrl}>
           <Suspense fallback={<AdminPageLoader />}>
             <Routes>
-              {/* Public Admin Login Route */}
+              {/* Public Admin Login & Verification Routes */}
               <Route path="/login" element={<AdminLoginPage />} />
+              <Route path="/verifikasi" element={<VerifikasiResi />} />
+              <Route path="/admin/verifikasi" element={<VerifikasiResi />} />
 
               {/* Protected Admin Console Routes */}
               <Route element={<AdminProtectedRoute />}>

@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from '@bunsay/shared-ui';
+import { ToastProvider, VerifikasiResi } from '@bunsay/shared-ui';
 import { TenantAuthProvider } from './modules/public/TenantAuthProvider';
 import TenantProtectedRoute from './routes/TenantProtectedRoute';
 
@@ -14,7 +14,6 @@ const BayarSekarang = lazy(() => import('./modules/billing/pages/payment'));
 const HistoriPembayaran = lazy(() => import('./modules/billing/pages/history'));
 const TunggakanAR = lazy(() => import('./modules/billing/pages/tunggakan'));
 const AkunTenant = lazy(() => import('./modules/profile/pages/account'));
-const VerifikasiResi = lazy(() => import('./modules/public/pages/verification/VerifikasiResi'));
 
 function PageLoader() {
   return (

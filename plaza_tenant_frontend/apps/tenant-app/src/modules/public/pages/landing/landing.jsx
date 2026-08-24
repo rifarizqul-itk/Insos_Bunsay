@@ -17,8 +17,8 @@ function LandingPage() {
 
   return (
     <div data-slot="landing-page" className="page-fade-in bg-mono-50 min-h-dvh font-sans">
-      <nav className="landing-navbar h-18 bg-white/80 backdrop-blur-xl border-b border-border/80 sticky top-0 flex items-center justify-between px-4 sm:px-6 md:px-10 z-40 shadow-xs transition-colors gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <nav aria-label="Navigasi Beranda" className="landing-navbar h-18 bg-white/80 backdrop-blur-xl border-b border-border/80 sticky top-0 flex items-center justify-center sm:justify-between px-4 sm:px-6 md:px-10 z-40 shadow-xs transition-colors gap-2">
+        <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0">
           <picture className="shrink-0">
             <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
             <img
@@ -29,19 +29,10 @@ function LandingPage() {
               height={44}
             />
           </picture>
-          <span className="font-extrabold text-base xs:text-lg sm:text-xl md:text-2xl text-red tracking-tight truncate">
+          <span className="font-extrabold text-base xs:text-lg sm:text-xl md:text-2xl text-red tracking-tight truncate text-center sm:text-left">
             Plaza Kebun Sayur
           </span>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleAuthRedirect}
-          className="h-10 px-3.5 sm:px-5 text-xs sm:text-sm font-bold gap-1.5 shadow-sm shrink-0"
-        >
-          <Icon icon={isLoggedIn ? "material-symbols:dashboard" : "material-symbols:login"} className="size-4.5" />
-          <span>{isLoggedIn ? 'Dashboard Tenant' : 'Login Portal'}</span>
-        </Button>
       </nav>
 
       <main id="main-app" className="landing-page-shell max-w-6xl mx-auto px-4 sm:px-6 py-8 md:py-10">
@@ -100,9 +91,9 @@ function LandingPage() {
                 <div className="size-12 rounded-xl bg-mono-100 text-red flex items-center justify-center mb-4 border border-mono-200/60 shadow-xs">
                   <Icon icon="heroicons:clock-20-solid" className="size-6.5" />
                 </div>
-                <h3 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
+                <h2 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
                   Jam Operasional Gedung
-                </h3>
+                </h2>
                 <p className="text-text-2 text-base font-medium leading-relaxed mb-4 text-pretty">
                   Gedung Plaza Kebun Sayur buka setiap hari melayani pedagang dan pengunjung pada jam:
                 </p>
@@ -121,9 +112,9 @@ function LandingPage() {
                 <div className="size-12 rounded-xl bg-green-bg text-green flex items-center justify-center mb-4 border border-green/20 shadow-xs">
                   <Icon icon="heroicons:building-office-20-solid" className="size-6.5" />
                 </div>
-                <h3 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
+                <h2 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
                   Informasi Kontak Kantor Pengelola
-                </h3>
+                </h2>
                 
                 <div className="space-y-2 text-sm sm:text-base text-text font-medium leading-relaxed mb-4">
                   <p className="text-pretty"><strong>Alamat:</strong> Jl. Letjen Suprapto, Baru Ilir, Balikpapan Barat, Kaltim 76123</p>

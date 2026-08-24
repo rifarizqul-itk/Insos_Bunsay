@@ -181,7 +181,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const antreanHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
     { label: 'Waktu/Tanggal', sortKey: 'waktu' },
-    { label: 'Jenis Tagihan', sortKey: 'tagihan' },
+    { label: 'Periode', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
@@ -275,35 +275,49 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             <span className="hidden sm:inline">Segarkan</span>
           </Button>
 
-          <div className="flex bg-warm-gray/60 p-1 rounded-xl border border-border">
+          <div role="tablist" aria-label="Status Antrean Verifikasi" className="flex flex-1 sm:flex-initial bg-warm-gray/60 p-1 rounded-xl border border-border">
             <button
+              id="tab-antrean"
+              role="tab"
+              aria-selected={activeTab === 'antrean'}
+              aria-controls="tabpanel-antrean"
               type="button"
               onClick={() => setActiveTab('antrean')}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 sm:px-4 py-2 min-h-10 sm:min-h-9 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
                 activeTab === 'antrean'
                   ? 'bg-red text-white shadow-sm'
                   : 'text-text-2 hover:text-text hover:bg-white/50'
               }`}
             >
-              Antrean Menunggu ({antrean.length})
+              <span>Antrean ({antrean.length})</span>
             </button>
             <button
+              id="tab-riwayat"
+              role="tab"
+              aria-selected={activeTab === 'riwayat'}
+              aria-controls="tabpanel-riwayat"
               type="button"
               onClick={() => setActiveTab('riwayat')}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 sm:px-4 py-2 min-h-10 sm:min-h-9 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
                 activeTab === 'riwayat'
                   ? 'bg-red text-white shadow-sm'
                   : 'text-text-2 hover:text-text hover:bg-white/50'
               }`}
             >
-              Riwayat Terproses ({riwayatProses.length})
+              <span>Terproses ({riwayatProses.length})</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Table Card */}
-      <Card variant="elevated" className="w-full p-4 sm:p-6 flex flex-col gap-5">
+      <Card
+        id={activeTab === 'antrean' ? 'tabpanel-antrean' : 'tabpanel-riwayat'}
+        role="tabpanel"
+        aria-labelledby={activeTab === 'antrean' ? 'tab-antrean' : 'tab-riwayat'}
+        variant="elevated"
+        className="w-full p-4 sm:p-6 flex flex-col gap-5"
+      >
         {activeTab === 'antrean' ? (
           isLoading ? (
             <SkeletonTable rows={5} cols={5} />
@@ -349,7 +363,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   <td data-label="Waktu/Tanggal" className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
                     {item.waktu}
                   </td>
-                  <td data-label="Jenis Tagihan" className="p-3 text-text-2 font-medium">
+                  <td data-label="Periode" className="p-3 text-text-2 font-medium">
                     {item.tagihan}
                   </td>
                   <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
@@ -488,7 +502,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   <strong className="text-text font-bold text-sm block">{previewItem.nama} (<span className="font-tabular-nums">{previewItem.kios}</span>)</strong>
                 </div>
                 <div>
-                  <span className="text-text-3 font-medium block mb-0.5">Jenis Tagihan</span>
+                  <span className="text-text-3 font-medium block mb-0.5">Periode</span>
                   <strong className="text-text font-bold text-sm block">{previewItem.tagihan}</strong>
                 </div>
                 <div>
@@ -528,14 +542,20 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               <label className="label-micro text-text-3">Lampiran Bukti Transfer</label>
               {previewItem.buktiUrl ? (
                 <div className="w-full max-h-64 bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2">
-                  <img
-                    src={resolveStorageUrl(previewItem.buktiUrl)}
-                    alt={`Bukti Transfer ${previewItem.trxCode}`}
-                    loading="lazy"
-                    className="max-h-60 max-w-full object-contain rounded-md shadow-xs cursor-pointer"
+                  <button
+                    type="button"
                     onClick={() => window.open(resolveStorageUrl(previewItem.buktiUrl), '_blank')}
+                    aria-label={`Buka lampiran bukti transfer ${previewItem.trxCode || ''} dalam ukuran penuh di tab baru`}
+                    className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
                     title="Klik untuk membuka ukuran penuh di tab baru"
-                  />
+                  >
+                    <img
+                      src={resolveStorageUrl(previewItem.buktiUrl)}
+                      alt={`Bukti Transfer ${previewItem.trxCode}`}
+                      loading="lazy"
+                      className="max-h-60 max-w-full object-contain rounded-md shadow-xs"
+                    />
+                  </button>
                 </div>
               ) : (
                 <div className="w-full bg-mono-100/50 border border-border/70 rounded-lg flex items-center gap-3 p-3.5">

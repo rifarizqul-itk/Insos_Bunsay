@@ -164,6 +164,7 @@ function AuditLogPage() {
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
             <input
               type="text"
+              aria-label="Cari admin, aksi, atau deskripsi aktivitas"
               placeholder="Cari admin / aksi / deskripsi..."
               value={searchQuery}
               onChange={(e) => {
@@ -173,6 +174,7 @@ function AuditLogPage() {
               className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red"
             />
             <select
+              aria-label="Filter berdasarkan modul sistem"
               value={filterModul}
               onChange={(e) => {
                 setFilterModul(e.target.value);
@@ -188,6 +190,7 @@ function AuditLogPage() {
               <option value="Auth">Login / Autentikasi</option>
             </select>
             <select
+              aria-label="Filter berdasarkan role staf admin"
               value={filterRole}
               onChange={(e) => {
                 setFilterRole(e.target.value);
