@@ -316,7 +316,7 @@ function AkunAdmin() {
           Pengaturan Akun Pengelola
         </h1>
         <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Kelola profil, kata sandi, serta hak akses otorisasi staf pengelola (Superadmin View).
+          Kelola profil dan kata sandi.
         </p>
       </div>
 
