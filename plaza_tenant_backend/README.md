@@ -39,14 +39,17 @@ DB_PASSWORD=
 
 ### Langkah 3 — Jalankan Migrasi & Seeder Komprehensif
 
-Sistem telah dilengkapi dengan 27 file migrasi dan orchestrator seeder yang otomatis menghasilkan **252+ Akun Tenant** beserta seluruh skenario data bisnis dan edge cases:
+Sistem telah dilengkapi dengan 29 file migrasi dan orchestrator seeder yang otomatis menghasilkan **886 Akun Tenant Riil** beserta seluruh akun pengelola admin dan skenario data bisnis:
 
 ```bash
-# Reset database total & isi data simulasi 252+ tenant
+# Reset database total & isi data seeder 886 tenant riil dan 5 role admin
 php artisan migrate:fresh --seed
+
+# ATAU jika menggunakan DDEV:
+ddev artisan migrate:fresh --seed
 ```
 
-> 📋 *Untuk rincian akun login pengujian (5 akun admin & skenario tenant unggulan), baca dokumen [README_SEEDER.md](README_SEEDER.md).*
+> 📋 *Untuk rincian akun login pengujian (Admin: `admin123`, Tenant: `password123`), baca dokumen [README_SEEDER.md](../README_SEEDER.md).*
 
 ---
 
