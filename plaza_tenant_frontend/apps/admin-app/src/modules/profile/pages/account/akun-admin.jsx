@@ -82,29 +82,6 @@ function AkunAdmin() {
     }
   ];
 
-  const fetchStafList = useCallback(async () => {
-    setIsLoadingStaf(true);
-    try {
-      const res = await httpClient.get('/api/v1/admin/staf');
-      if (res?.data?.data && Array.isArray(res.data.data)) {
-        setStafList(res.data.data);
-      } else {
-        setStafList(fallbackStaf);
-      }
-    } catch (err) {
-      console.warn('Fallback to local staff list:', err);
-      setStafList(fallbackStaf);
-    } finally {
-      setIsLoadingStaf(false);
-    }
-  }, [httpClient]);
-
-  useEffect(() => {
-    if (isSuperadmin) {
-      fetchStafList();
-    }
-  }, [isSuperadmin, fetchStafList]);
-
   const fallbackStaf = [
     {
       id: 1,
@@ -143,6 +120,29 @@ function AkunAdmin() {
       status_aktif: true
     }
   ];
+
+  const fetchStafList = useCallback(async () => {
+    setIsLoadingStaf(true);
+    try {
+      const res = await httpClient.get('/api/v1/admin/staf');
+      if (res?.data?.data && Array.isArray(res.data.data)) {
+        setStafList(res.data.data);
+      } else {
+        setStafList(fallbackStaf);
+      }
+    } catch (err) {
+      console.warn('Fallback to local staff list:', err);
+      setStafList(fallbackStaf);
+    } finally {
+      setIsLoadingStaf(false);
+    }
+  }, [httpClient]);
+
+  useEffect(() => {
+    if (isSuperadmin) {
+      fetchStafList();
+    }
+  }, [isSuperadmin, fetchStafList]);
 
   const handleApplyPreset = (preset) => {
     setStafForm(prev => ({

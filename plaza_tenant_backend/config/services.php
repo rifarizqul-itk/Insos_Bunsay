@@ -44,5 +44,9 @@ return [
             : 'https://app.sandbox.midtrans.com/snap/v1/transactions',
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
 
 ];

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('sewa', function (Blueprint $table) {
             $table->integer('Id_Sewa', true);
-            $table->integer('Id_Pemilik')->index('id_pemilik');
-            $table->integer('Id_Kios')->index('id_kios');
+            $table->integer('Id_Pemilik')->index('sewa_id_pemilik_idx');
+            $table->integer('Id_Kios')->index('sewa_id_kios_idx');
             $table->string('Jenis_Usaha', 100)->nullable();
             $table->date('Tanggal_Mulai')->nullable();
             $table->date('Tanggal_Selesai')->nullable();

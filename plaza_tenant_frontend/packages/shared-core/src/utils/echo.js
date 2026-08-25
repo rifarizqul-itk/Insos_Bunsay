@@ -10,7 +10,7 @@ let echoInstance = null;
 export const getEcho = () => {
   if (typeof window === 'undefined') return null;
 
-  const key = import.meta.env.VITE_PUSHER_APP_KEY || 'c7c2a8df51e9766c5a88';
+  const key = import.meta.env.VITE_PUSHER_APP_KEY || '';
   const cluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1';
 
   if (!key) return null;

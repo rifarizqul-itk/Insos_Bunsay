@@ -87,7 +87,7 @@ class StafManagementController extends Controller
         $staf = User::where('Id_roles', 1)->find($id);
 
         if (!$staf) {
-            return response()->json(['message' => 'Akun staf tidak ditemukan.'], 440);
+            return response()->json(['message' => 'Akun staf tidak ditemukan.'], 404);
         }
 
         $request->validate([

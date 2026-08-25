@@ -25,20 +25,6 @@ class Notification extends Model
     public static function send(string $targetType, ?int $idUser, string $title, string $message, string $type = 'info', ?string $link = null): ?self
     {
         try {
-            if (!Schema::hasTable('notifications')) {
-                Schema::create('notifications', function (Blueprint $table) {
-                    $table->id();
-                    $table->string('target_type', 20)->default('tenant');
-                    $table->unsignedBigInteger('id_user')->nullable();
-                    $table->string('title');
-                    $table->text('message');
-                    $table->string('type', 20)->default('info');
-                    $table->boolean('is_read')->default(false);
-                    $table->string('link')->nullable();
-                    $table->timestamp('created_at')->useCurrent();
-                });
-            }
-
             $notification = self::create([
                 'target_type' => $targetType,
                 'id_user'     => $idUser,

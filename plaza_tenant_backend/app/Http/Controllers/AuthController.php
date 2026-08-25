@@ -48,11 +48,6 @@ class AuthController extends Controller
 
         $isPasswordValid = $user && Hash::check($request->password, $user->Password);
 
-        // Fallback for admin credentials convenience (admin, admin123, password123)
-        if (!$isPasswordValid && $user && (int) $user->Id_roles === 1 && in_array($request->password, ['admin', 'admin123', 'password', 'password123'])) {
-            $isPasswordValid = true;
-        }
-
         if (!$user || !$isPasswordValid) {
             RateLimiter::hit($throttleKey, 60);
             $remaining = RateLimiter::remaining($throttleKey, 5);
@@ -448,15 +443,6 @@ class AuthController extends Controller
                 ->orWhere('No_Telepon', $identifier)
                 ->first();
 
-            // Jika nomor belum tercatat (misal saat testing), hubungkan ke akun tenant_aktif
-            if (!$pemilik) {
-                $tenantAktif = User::where('Username', 'tenant_aktif')->first();
-                if ($tenantAktif && $tenantAktif->pemilik) {
-                    $tenantAktif->pemilik->update(['No_Telepon' => $identifier]);
-                    $pemilik = $tenantAktif->pemilik;
-                }
-            }
-
             if ($pemilik) {
                 $user = User::find($pemilik->Id_User);
             }
@@ -483,7 +469,7 @@ class AuthController extends Controller
         $namaUser = $user->nama_lengkap ?? $user->Username;
         $noHp = $user->pemilik?->No_Telepon;
         $emailTujuan = $user->email;
-        $fonnteToken = env('FONNTE_TOKEN');
+        $fonnteToken = config('services.fonnte.token');
         $targetMasked = '';
 
         // 2. Prioritas 1: Kirim via WhatsApp (Fonnte) jika No HP & Token Fonnte tersedia

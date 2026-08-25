@@ -25,27 +25,6 @@ function AuditLogPage() {
     }));
   };
 
-  const fetchLogs = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await httpClient.get('/api/v1/admin/logs');
-      if (response?.data?.data && Array.isArray(response.data.data)) {
-        setLogs(response.data.data);
-      } else {
-        setLogs(fallbackLogs);
-      }
-    } catch (err) {
-      console.warn('Fallback to local audit logs dataset:', err);
-      setLogs(fallbackLogs);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [httpClient]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
-
   const fallbackLogs = [
     {
       id: 101,
@@ -98,6 +77,27 @@ function AuditLogPage() {
       created_at: '2026-08-07 20:15:00'
     }
   ];
+
+  const fetchLogs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await httpClient.get('/api/v1/admin/logs');
+      if (response?.data?.data && Array.isArray(response.data.data)) {
+        setLogs(response.data.data);
+      } else {
+        setLogs(fallbackLogs);
+      }
+    } catch (err) {
+      console.warn('Fallback to local audit logs dataset:', err);
+      setLogs(fallbackLogs);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [httpClient]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   const filteredLogs = useMemo(() => {
     let result = [...logs];

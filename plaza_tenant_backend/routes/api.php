@@ -23,6 +23,15 @@ use App\Http\Controllers\PembayaranController;
 */
 
 // ============================================================
+// 0. HEALTH CHECK ENDPOINT
+// ============================================================
+Route::get('/health', fn () => response()->json([
+    'status' => 'OK',
+    'service' => 'Insos Bunsay API Backend',
+    'timestamp' => now()->toIso8601String(),
+]));
+
+// ============================================================
 // 1. TENANT DOMAIN AUTH ROUTES (bunsayhub.id)
 // ============================================================
 Route::prefix('v1/tenant/auth')->group(function () {

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('dokumen', function (Blueprint $table) {
             $table->integer('Id_Dokumen', true);
-            $table->integer('Id_Pemilik')->index('id_pemilik');
-            $table->integer('Id_Kios')->index('id_kios');
+            $table->integer('Id_Pemilik')->index('dokumen_id_pemilik_idx');
+            $table->integer('Id_Kios')->index('dokumen_id_kios_idx');
             $table->enum('Jenis_Dokumen', ['Sertifikat', 'SP', 'PPJB', 'AJB']);
             $table->string('Nomor_Dokumen', 100)->nullable();
             $table->date('Tanggal')->nullable();

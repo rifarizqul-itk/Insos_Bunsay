@@ -203,7 +203,7 @@ class PemilikController extends Controller
 
         // Validasi input update (No_KTP diabaikan untuk ID pemilik ini sendiri)
         $validatedData = $request->validate([
-            'Id_User'    => 'nullable|exists:users,id',
+            'Id_User'    => 'nullable|exists:user,Id_user',
             'Nama'       => 'sometimes|required|string|max:255',
             'No_Telepon' => 'sometimes|required|string|max:20',
             'No_KTP'     => 'sometimes|required|string|max:20|unique:pemilik,No_KTP,' . $id . ',Id_Pemilik',

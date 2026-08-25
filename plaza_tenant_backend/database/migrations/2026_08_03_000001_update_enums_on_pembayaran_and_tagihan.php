@@ -17,15 +17,16 @@ return new class extends Migration
     {
         // ⚠️ URUTAN PENTING: UPDATE dulu sebelum ALTER.
         // MySQL akan error jika ENUM diubah saat masih ada data dengan nilai lama.
+        if (DB::getDriverName() === 'mysql') {
+            // 1. Ganti data 'Cash' → 'Tunai' SEBELUM alter ENUM
+            DB::statement("UPDATE pembayaran SET Metode_Bayar = 'Tunai' WHERE Metode_Bayar = 'Cash'");
 
-        // 1. Ganti data 'Cash' → 'Tunai' SEBELUM alter ENUM
-        DB::statement("UPDATE pembayaran SET Metode_Bayar = 'Tunai' WHERE Metode_Bayar = 'Cash'");
+            // 2. Baru alter ENUM Metode_Bayar — sekarang aman karena tidak ada 'Cash' lagi
+            DB::statement("ALTER TABLE pembayaran MODIFY COLUMN Metode_Bayar ENUM('Transfer','Tunai','Midtrans') NOT NULL");
 
-        // 2. Baru alter ENUM Metode_Bayar — sekarang aman karena tidak ada 'Cash' lagi
-        DB::statement("ALTER TABLE pembayaran MODIFY COLUMN Metode_Bayar ENUM('Transfer','Tunai','Midtrans') NOT NULL");
-
-        // 3. Tambah 'Dicicil' ke ENUM Status_Tagihan di tabel tagihan
-        DB::statement("ALTER TABLE tagihan MODIFY COLUMN Status_Tagihan ENUM('Lunas','Belum Bayar','Menunggu Verifikasi','Dicicil') NULL DEFAULT 'Belum Bayar'");
+            // 3. Tambah 'Dicicil' ke ENUM Status_Tagihan di tabel tagihan
+            DB::statement("ALTER TABLE tagihan MODIFY COLUMN Status_Tagihan ENUM('Lunas','Belum Bayar','Menunggu Verifikasi','Dicicil') NULL DEFAULT 'Belum Bayar'");
+        }
     }
 
     public function down(): void
