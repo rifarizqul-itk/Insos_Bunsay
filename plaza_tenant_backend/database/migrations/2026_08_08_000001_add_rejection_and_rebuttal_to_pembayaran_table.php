@@ -9,17 +9,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        try {
-            DB::statement("ALTER TABLE pembayaran ADD COLUMN catatan_admin TEXT NULL AFTER Verifikasi_Pembayaran");
-        } catch (\Throwable $e) {}
-
-        try {
-            DB::statement("ALTER TABLE pembayaran ADD COLUMN teks_sanggahan TEXT NULL AFTER catatan_admin");
-        } catch (\Throwable $e) {}
-
-        try {
-            DB::statement("ALTER TABLE pembayaran ADD COLUMN bukti_sanggahan LONGTEXT NULL AFTER teks_sanggahan");
-        } catch (\Throwable $e) {}
+        Schema::table('pembayaran', function (Blueprint $table) {
+            if (!Schema::hasColumn('pembayaran', 'catatan_admin')) {
+                $table->text('catatan_admin')->nullable();
+            }
+            if (!Schema::hasColumn('pembayaran', 'teks_sanggahan')) {
+                $table->text('teks_sanggahan')->nullable();
+            }
+            if (!Schema::hasColumn('pembayaran', 'bukti_sanggahan')) {
+                $table->longText('bukti_sanggahan')->nullable();
+            }
+        });
     }
 
     public function down(): void
