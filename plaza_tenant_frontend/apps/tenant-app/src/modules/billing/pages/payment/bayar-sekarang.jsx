@@ -333,15 +333,6 @@ function BayarSekarang() {
   return (
     <div data-slot="bayar-sekarang" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="mb-4 gap-2 font-bold"
-        >
-          <Icon icon="heroicons:arrow-left-20-solid" width="18" height="18" />
-          <span>Kembali</span>
-        </Button>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
           Formulir Pembayaran Tagihan
         </h1>
@@ -462,15 +453,15 @@ function BayarSekarang() {
             </Card>
           ) : (
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-6">
-              <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
-                {/* Banner Izin Cicil via WhatsApp */}
-                <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 text-sm">
-                  <div className="flex items-start gap-2.5">
-                    <Icon icon="heroicons:information-circle-20-solid" width="22" height="22" className="text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-extrabold text-amber-900">Ingin Mengajukan Pembayaran Cicilan?</div>
-                      <p className="text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
-                        Pembayaran standar disarankan <strong>Lunas</strong>. Jika Anda ingin mencicil, Anda <strong>wajib berdiskusi &amp; meminta izin Pengelola Bunsay</strong> via WhatsApp sebelum mentransfer.
+              <Card variant="elevated" className="flex flex-col gap-5 p-5 sm:p-7">
+                {/* Banner Izin Cicil via WhatsApp (Compact & Elegant) */}
+                <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-amber-900 text-xs sm:text-sm">Ingin Mengajukan Cicilan?</div>
+                      <p className="text-[11px] sm:text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
+                        Hubungi pengelola terlebih dahulu untuk persetujuan nominal pembayaran bertahap.
                       </p>
                     </div>
                   </div>
@@ -478,10 +469,10 @@ function BayarSekarang() {
                     href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi dan mengajukan izin pembayaran cicilan sewa kios.')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0 shadow-sm transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shrink-0 shadow-2xs transition-all cursor-pointer"
                   >
-                    <Icon icon="heroicons:chat-bubble-left-right-20-solid" width="16" height="16" />
-                    <span>Hubungi Pengelola (WA)</span>
+                    <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4" />
+                    <span>Chat Pengelola (WA)</span>
                   </a>
                 </div>
 
@@ -545,21 +536,24 @@ function BayarSekarang() {
                   </div>
                 )}
 
-                {/* Rincian Periode Tagihan yang Perlu Dibayar (Opsi A: Clean Compact List) */}
+                {/* Rincian Periode Tagihan yang Perlu Dibayar (Clean Responsive Card) */}
                 {displayedUnpaidBills.length > 0 && (
-                  <div className="bg-mono-50/80 border border-border/80 rounded-xl p-4 sm:p-5 flex flex-col gap-3">
-                    <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
-                      <div className="flex items-center gap-2">
-                        <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red" />
-                        <span className="text-xs sm:text-sm font-extrabold text-text">
+                  <div className="bg-mono-50/80 border border-border/80 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-border/60 pb-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red shrink-0" />
+                        <span className="text-xs sm:text-sm font-extrabold text-text truncate">
                           {selectedKiosFilter === 'semua' 
-                            ? `Rincian Periode Tagihan (${displayedUnpaidBills.length} Periode)`
+                            ? `Rincian Tagihan (${displayedUnpaidBills.length} Periode)`
                             : `Tagihan Kios ${selectedKiosFilter} (${displayedUnpaidBills.length} Periode)`}
                         </span>
                       </div>
-                      <span className="text-xs sm:text-sm font-extrabold font-tabular-nums text-red">
-                        Total: Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
-                      </span>
+                      <div className="flex items-center justify-between sm:justify-end gap-2 text-xs sm:text-sm font-extrabold font-tabular-nums text-red shrink-0">
+                        <span className="text-2xs sm:text-xs text-text-3 font-semibold sm:hidden">Total Tagihan:</span>
+                        <span className="bg-red-50 text-red px-2.5 py-1 rounded-lg border border-red/20 font-tabular-nums">
+                          Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="divide-y divide-border/50 text-xs sm:text-sm">
@@ -571,15 +565,15 @@ function BayarSekarang() {
                             key={bill.idTagihan || bIdx}
                             className="py-2.5 flex items-center justify-between gap-3 text-text"
                           >
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
                               <span className="size-1.5 rounded-full bg-red/80 shrink-0" />
                               {availableKiosks.length > 1 && (
                                 <span className="font-extrabold text-red text-2xs px-1.5 py-0.5 rounded bg-red-50 border border-red/20 font-tabular-nums">
                                   Kios {bill.noKios}
                                 </span>
                               )}
-                              <span className="font-semibold text-text">
-                                Sewa Periode <strong className="font-bold text-text">{formatPeriodeIndo(bill.periode)}</strong>
+                              <span className="font-semibold text-text text-xs sm:text-sm">
+                                Sewa <strong className="font-bold text-text">{formatPeriodeIndo(bill.periode)}</strong>
                               </span>
                               {isLatest && displayedUnpaidBills.length > 1 && (
                                 <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
@@ -587,7 +581,7 @@ function BayarSekarang() {
                                 </span>
                               )}
                             </div>
-                            <div className="font-tabular-nums font-bold text-text shrink-0 text-right">
+                            <div className="font-tabular-nums font-extrabold text-text shrink-0 text-right whitespace-nowrap">
                               Rp {nominalBill.toLocaleString('id-ID')}
                             </div>
                           </div>

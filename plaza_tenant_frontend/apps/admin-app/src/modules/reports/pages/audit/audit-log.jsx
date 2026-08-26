@@ -155,9 +155,10 @@ function AuditLogPage() {
         </p>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="text-lg font-extrabold text-text tracking-tight">
+      {/* Main Audit Log Table (Seamless Edge-to-Edge Surface) */}
+      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/80 bg-white">
+          <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
             Riwayat Aktivitas Staf ({filteredLogs.length} Entri)
           </h3>
 
@@ -171,7 +172,7 @@ function AuditLogPage() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 px-3.5 rounded-xl border border-border bg-mono-50/70 text-xs sm:text-sm font-semibold w-full sm:w-60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
             />
             <select
               aria-label="Filter berdasarkan modul sistem"
@@ -180,12 +181,12 @@ function AuditLogPage() {
                 setFilterModul(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
+              className="h-10 px-3.5 rounded-xl border border-border bg-white text-xs sm:text-sm font-extrabold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-2xs"
             >
               <option value="Semua">Semua Modul</option>
               <option value="Pembayaran">Pembayaran</option>
               <option value="Setoran">Setoran Tunai</option>
-              <option value="Kios">Kios & Sewa</option>
+              <option value="Kios">Kios &amp; Sewa</option>
               <option value="User">Staf Admin</option>
               <option value="Auth">Login / Autentikasi</option>
             </select>
@@ -196,7 +197,7 @@ function AuditLogPage() {
                 setFilterRole(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 pl-3.5 pr-9 rounded-md border border-border bg-white text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
+              className="h-10 px-3.5 rounded-xl border border-border bg-white text-xs sm:text-sm font-extrabold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-2xs"
             >
               <option value="Semua">Semua Role</option>
               <option value="superadmin">Superadmin</option>
@@ -208,15 +209,20 @@ function AuditLogPage() {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={5} cols={7} />
+          <div className="p-6">
+            <SkeletonTable rows={5} cols={7} />
+          </div>
         ) : filteredLogs.length === 0 ? (
-          <EmptyState
-            icon="heroicons:document-magnifying-glass-20-solid"
-            title="Log Aktivitas Kosong"
-            description="Tidak ada rekam aktivitas yang cocok dengan filter atau kata kunci pencarian."
-          />
+          <div className="p-8">
+            <EmptyState
+              icon="heroicons:document-magnifying-glass-20-solid"
+              title="Log Aktivitas Kosong"
+              description="Tidak ada rekam aktivitas yang cocok dengan filter atau kata kunci pencarian."
+            />
+          </div>
         ) : (
           <Table
+            className="border-0 rounded-none shadow-none"
             caption="Log Audit Trail Aktivitas Pengelola"
             headers={tableHeaders}
             colSpan={7}
@@ -234,7 +240,7 @@ function AuditLogPage() {
               }
             >
               {paginatedLogs.map((log) => (
-                <tr key={log.id} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                <tr key={log.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
                   <td className="p-3 font-extrabold text-text font-tabular-nums text-xs">
                     #{log.id}
                   </td>
@@ -259,12 +265,13 @@ function AuditLogPage() {
                   <td className="p-3 text-xs text-text font-medium max-w-xs truncate" title={log.deskripsi}>
                     {log.deskripsi}
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center whitespace-nowrap">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => setSelectedLog(log)}
-                      className="h-8 px-3 text-xs font-bold"
+                      aria-label={`Lihat detail log nomor ${log.id}`}
+                      className="h-8 px-3 text-xs font-bold shadow-2xs"
                     >
                       Detail
                     </Button>
@@ -273,7 +280,7 @@ function AuditLogPage() {
               ))}
             </Table>
         )}
-      </Card>
+      </div>
 
       {/* Modal Detail Audit Log */}
       <Modal

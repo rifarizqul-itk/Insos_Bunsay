@@ -40,7 +40,7 @@ class DokumenController extends Controller
         $validatedData = $request->validate([
             'Id_Pemilik'    => 'required|exists:pemilik,Id_Pemilik',
             'Jenis_Dokumen' => 'required|string|max:100', // Contoh: SP, PPJB, Sertifikat, KTP
-            'Nomor_Dokumen' => 'required|string|max:255',
+            'Nomor_Dokumen' => 'nullable|string|max:255',
             'Tanggal'       => 'nullable|date',
         ]);
 
@@ -108,7 +108,7 @@ class DokumenController extends Controller
         $validatedData = $request->validate([
             'Id_Pemilik'    => 'sometimes|required|exists:pemilik,Id_Pemilik',
             'Jenis_Dokumen' => 'sometimes|required|string|max:100',
-            'Nomor_Dokumen' => 'sometimes|required|string|max:255',
+            'Nomor_Dokumen' => 'nullable|string|max:255',
             'Tanggal'       => 'nullable|date',
         ]);
 

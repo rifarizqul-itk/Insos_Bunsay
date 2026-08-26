@@ -382,9 +382,11 @@ function KetersediaanKios() {
         </Card>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-          <div className="w-full sm:w-72">
+      {/* Main Kiosk Inventory Table (Seamless Edge-to-Edge Surface) */}
+      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-3 justify-between items-center border-b border-border/80 bg-white">
+          <div className="w-full sm:w-80 relative">
+            <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3" />
             <input
               type="text"
               aria-label="Cari nomor kios, nama penyewa, atau jenis usaha"
@@ -394,7 +396,7 @@ function KetersediaanKios() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3.5 text-sm rounded-lg border border-border bg-warm-gray/40 focus:bg-white transition-colors"
+              className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-2xs"
             />
           </div>
 
@@ -406,7 +408,7 @@ function KetersediaanKios() {
                 setFilterLantai(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 pl-3.5 pr-9 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 px-3.5 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
             >
               <option value="Semua">Semua Lantai</option>
               <option value="Lantai 1">Lantai 1</option>
@@ -420,7 +422,7 @@ function KetersediaanKios() {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 pl-3.5 pr-9 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 px-3.5 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
             >
               <option value="Semua">Semua Status</option>
               <option value="Terisi">Terisi</option>
@@ -430,15 +432,20 @@ function KetersediaanKios() {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={5} cols={6} />
+          <div className="p-6">
+            <SkeletonTable rows={5} cols={6} />
+          </div>
         ) : filteredKios.length === 0 ? (
-          <EmptyState
-            icon="heroicons:building-storefront-20-solid"
-            title="Kios Tidak Ditemukan"
-            description="Tidak ada kios yang cocok dengan filter atau kata kunci pencarian Anda."
-          />
+          <div className="p-8">
+            <EmptyState
+              icon="heroicons:building-storefront-20-solid"
+              title="Kios Tidak Ditemukan"
+              description="Tidak ada kios yang cocok dengan filter atau kata kunci pencarian Anda."
+            />
+          </div>
         ) : (
           <Table 
+            className="border-0 rounded-none shadow-none"
             caption="Tabel Ketersediaan dan Administrasi Kios Plaza Kebun Sayur"
             ariaLabel="Daftar Ketersediaan dan Status Kios"
             headers={tableHeaders} 
@@ -457,24 +464,28 @@ function KetersediaanKios() {
               }
             >
               {paginatedKios.map((kios) => (
-                <tr key={kios.id} className="border-b border-border/80 last:border-b-0 hover:bg-warm-gray/20 transition-colors">
+                <tr key={kios.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
                   <td className="p-3 font-extrabold text-text font-tabular-nums">{kios.noKios}</td>
                   <td className="p-3 text-text-2 font-medium">{kios.lantai}</td>
                   <td className="p-3 font-semibold text-text">{kios.penyewa}</td>
                   <td className="p-3 text-text-2 font-medium">{kios.usaha}</td>
                   <td className="p-3">
-                    <Badge status={kios.status === 'Terisi' ? 'Lunas' : 'Belum Bayar'} customText={kios.status} />
+                    <Badge status={kios.status === 'Terisi' ? 'Terisi' : 'Kosong'} customText={kios.status} />
                   </td>
-                  <td className="p-3 text-center flex items-center justify-center gap-1.5">
+                  <td className="p-3 text-center whitespace-nowrap">
                     {kios.status === 'Terisi' ? (
-                      <>
+                      <div className="flex items-center justify-center gap-2">
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => navigate(`/admin/kios/${kios.noKios}`)}
-                          aria-label={`Detail administrasi kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1"
+                          onClick={() => {
+                            setSelectedKios(kios);
+                            setIsDetailOpen(true);
+                          }}
+                          aria-label={`Lihat detail administrasi kios ${kios.noKios} (${kios.penyewa})`}
+                          className="h-8 text-xs font-bold gap-1 shadow-2xs"
                         >
+                          <Icon icon="heroicons:information-circle-20-solid" width="14" height="14" />
                           <span>Detail</span>
                         </Button>
                         <Button
@@ -482,32 +493,34 @@ function KetersediaanKios() {
                           size="sm"
                           onClick={() => handleAkhiriSewa(kios)}
                           aria-label={`Akhiri masa sewa kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20"
+                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20 shadow-2xs"
                         >
                           <Icon icon="heroicons:stop-circle-20-solid" width="14" height="14" />
                           <span>Akhiri Sewa</span>
                         </Button>
-                      </>
+                      </div>
                     ) : (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          setFormTenant(prev => ({ ...prev, kios: kios.noKios }));
-                          setIsDrawerOpen(true);
-                        }}
-                        className="h-8 text-xs font-bold gap-1"
-                      >
-                        <Icon icon="heroicons:plus-20-solid" width="14" height="14" />
-                        <span>Sewa Kios</span>
-                      </Button>
+                      <div className="flex items-center justify-center">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            setFormTenant(prev => ({ ...prev, kios: kios.noKios }));
+                            setIsDrawerOpen(true);
+                          }}
+                          className="h-8 text-xs font-bold gap-1 shadow-2xs"
+                        >
+                          <Icon icon="heroicons:plus-20-solid" width="14" height="14" />
+                          <span>Sewa Kios</span>
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
             </Table>
         )}
-      </Card>
+      </div>
 
       <Drawer
         isOpen={isDrawerOpen}

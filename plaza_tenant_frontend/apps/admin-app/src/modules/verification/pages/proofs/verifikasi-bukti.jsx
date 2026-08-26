@@ -310,25 +310,29 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         </div>
       </div>
 
-      {/* Main Table Card */}
-      <Card
+      {/* Main Table Container (Seamless Edge-to-Edge Surface) */}
+      <div
         id={activeTab === 'antrean' ? 'tabpanel-antrean' : 'tabpanel-riwayat'}
         role="tabpanel"
         aria-labelledby={activeTab === 'antrean' ? 'tab-antrean' : 'tab-riwayat'}
-        variant="elevated"
-        className="w-full p-4 sm:p-6 flex flex-col gap-5"
+        className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col"
       >
         {activeTab === 'antrean' ? (
           isLoading ? (
-            <SkeletonTable rows={5} cols={5} />
+            <div className="p-6">
+              <SkeletonTable rows={5} cols={5} />
+            </div>
           ) : sortedAntrean.length === 0 ? (
-            <EmptyState
-              icon="heroicons:document-check-20-solid"
-              title="Antrean Verifikasi Kosong"
-              description={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada antrean transfer manual yang menunggu verifikasi saat ini.'}
-            />
+            <div className="p-8">
+              <EmptyState
+                icon="heroicons:document-check-20-solid"
+                title="Antrean Verifikasi Kosong"
+                description={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada antrean transfer manual yang menunggu verifikasi saat ini.'}
+              />
+            </div>
           ) : (
             <Table
+              className="border-0 rounded-none shadow-none"
               caption="Antrean Verifikasi Bukti Transfer Tenant"
               ariaLabel="Tabel Antrean Verifikasi Pembayaran Transfer Manual"
               headers={antreanHeaders}
@@ -347,10 +351,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               }
             >
               {paginatedAntrean.map((item, index) => (
-                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-start">
+                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-red-50/20 transition-colors">
+                  <th scope="row" data-label="Tenant & Kios" className="py-3 px-4 text-start">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-text text-sm">{item.nama}</span>
+                      <span className="font-extrabold text-text text-sm sm:text-base">{item.nama}</span>
                       {item.teksSanggahan && (
                         <span className="inline-flex items-center gap-1 text-2xs font-extrabold text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded shadow-2xs">
                           <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3 text-amber-700" />
@@ -358,24 +362,24 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                         </span>
                       )}
                     </div>
-                    <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
+                    <div className="font-tabular-nums font-extrabold text-xs text-red mt-0.5">Kios {item.kios}</div>
                   </th>
-                  <td data-label="Waktu/Tanggal" className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
+                  <td data-label="Waktu/Tanggal" className="py-3 px-4 text-text-2 font-medium text-xs font-tabular-nums">
                     {item.waktu}
                   </td>
-                  <td data-label="Periode" className="p-3 text-text-2 font-medium">
+                  <td data-label="Periode" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {item.tagihan}
                   </td>
-                  <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                  <td data-label="Nominal Bayar" className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
                     {item.nominal}
                   </td>
-                  <td data-label="Aksi" className="p-3 text-center">
+                  <td data-label="Aksi" className="py-3 px-4 text-center">
                     <Button
                       variant="primary"
                       size="sm"
                       onClick={() => setPreviewItem(item)}
                       aria-label={`Periksa bukti transfer ${item.nama} (${item.kios})`}
-                      className="min-h-11 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
+                      className="min-h-11 sm:min-h-8 sm:h-8 px-3.5 text-xs font-extrabold shadow-2xs"
                     >
                       Periksa Bukti
                     </Button>
@@ -386,15 +390,20 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           )
         ) : (
           isLoading ? (
-            <SkeletonTable rows={5} cols={6} />
+            <div className="p-6">
+              <SkeletonTable rows={5} cols={6} />
+            </div>
           ) : sortedRiwayat.length === 0 ? (
-            <EmptyState
-              icon="heroicons:clock-20-solid"
-              title="Belum Ada Riwayat Terproses"
-              description="Belum ada verifikasi pembayaran yang disetujui atau ditolak."
-            />
+            <div className="p-8">
+              <EmptyState
+                icon="heroicons:clock-20-solid"
+                title="Belum Ada Riwayat Terproses"
+                description="Belum ada verifikasi pembayaran yang disetujui atau ditolak."
+              />
+            </div>
           ) : (
             <Table
+              className="border-0 rounded-none shadow-none"
               caption="Riwayat Bukti Transfer Terproses"
               ariaLabel="Tabel Riwayat Pembayaran Terproses"
               headers={riwayatHeaders}
@@ -413,34 +422,34 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               }
             >
               {paginatedRiwayat.map((item, index) => (
-                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="Tenant & Kios" className="p-3 text-start">
-                    <div className="font-bold text-text text-sm">{item.nama}</div>
-                    <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
+                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-red-50/20 transition-colors">
+                  <th scope="row" data-label="Tenant & Kios" className="py-3 px-4 text-start">
+                    <div className="font-extrabold text-text text-sm sm:text-base">{item.nama}</div>
+                    <div className="font-tabular-nums font-extrabold text-xs text-red mt-0.5">Kios {item.kios}</div>
                   </th>
-                  <td data-label="Tagihan" className="p-3 text-text-2 font-medium">
+                  <td data-label="Tagihan" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {item.tagihan}
                   </td>
-                  <td data-label="Nominal" className="font-tabular-nums font-extrabold p-3 text-text">
+                  <td data-label="Nominal" className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
                     {item.nominal}
                   </td>
-                  <td data-label="Keputusan Verifikasi" className="p-3">
+                  <td data-label="Keputusan Verifikasi" className="py-3 px-4">
                     <Badge status={item.status} />
                   </td>
-                  <td data-label="Catatan Admin" className="p-3 text-xs text-text-2">
+                  <td data-label="Catatan Admin" className="py-3 px-4 text-xs text-text-2">
                     {item.catatan ? (
                       <span className="italic text-red font-medium">"{item.catatan}"</span>
                     ) : (
                       <span className="text-text-3">-</span>
                     )}
                   </td>
-                  <td data-label="Aksi" className="p-3 text-center">
+                  <td data-label="Aksi" className="py-3 px-4 text-center">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => setPreviewItem(item)}
                       aria-label={`Lihat rincian riwayat ${item.nama} (${item.kios})`}
-                      className="min-h-11 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
+                      className="min-h-11 sm:min-h-8 sm:h-8 px-3.5 text-xs font-bold shadow-2xs"
                     >
                       Lihat
                     </Button>
@@ -450,7 +459,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             </Table>
           )
         )}
-      </Card>
+      </div>
 
       {/* SLIDE-OVER SHEET: Detail Verification Sheet */}
       {previewItem && (

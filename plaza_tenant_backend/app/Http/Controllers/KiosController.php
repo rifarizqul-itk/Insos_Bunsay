@@ -46,7 +46,7 @@ class KiosController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'No_Kios' => 'required|string|max:10|unique:kios,No_Kios',
-            'Lantai'  => 'nullable|integer',
+            'Lantai'  => 'required|integer|min:1',
             'Ukuran'  => 'nullable|string|max:20',
             'Status'  => 'nullable|in:Terisi,Kosong',
         ]);

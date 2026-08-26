@@ -75,7 +75,7 @@ class SewaController extends Controller
             // 3. Simpan Transaksi Sewa dengan Status default 'Aktif'
             $validatedData['Status'] = 'Aktif';
             $validatedData['Tanggal_Mulai'] = $validatedData['Tanggal_Mulai'] ?? date('Y-m-d');
-            $validatedData['Tanggal_Selesai'] = $validatedData['Tanggal_Selesai'] ?? date('Y-m-d', strtotime('+1 year'));
+            $validatedData['Tanggal_Selesai'] = $validatedData['Tanggal_Selesai'] ?? null;
             $validatedData['Tarif_Bulanan'] = (float) ($validatedData['Tarif_Bulanan'] ?? 750000);
             
             $sewa = Sewa::create($validatedData);

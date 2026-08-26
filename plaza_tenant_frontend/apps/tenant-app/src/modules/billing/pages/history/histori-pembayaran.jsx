@@ -195,15 +195,17 @@ function HistoriPembayaran() {
         </div>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+      <div className="flex flex-col gap-5 md:bg-white md:border md:border-border/80 md:rounded-2xl md:p-6 md:shadow-card">
         {loading ? (
           <SkeletonTable rows={5} />
         ) : filteredHistory.length === 0 ? (
-          <EmptyState
-            icon="heroicons:receipt-refund-20-solid"
-            title="Belum Ada Riwayat Transaksi"
-            description="Riwayat pembayaran sewa kios Anda akan otomatis tercatat di sini setelah melakukan pembayaran."
-          />
+          <div className="bg-white border border-border/80 rounded-2xl p-6 sm:p-8">
+            <EmptyState
+              icon="heroicons:receipt-refund-20-solid"
+              title="Belum Ada Riwayat Transaksi"
+              description="Riwayat pembayaran sewa kios Anda akan otomatis tercatat di sini setelah melakukan pembayaran."
+            />
+          </div>
         ) : (
           <>
             {/* Tampilan Desktop: Tabel Lengkap */}
@@ -234,7 +236,7 @@ function HistoriPembayaran() {
                     <td className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
                       {row.tanggal}
                     </td>
-                    <td className="font-tabular-nums font-extrabold p-3 text-text">
+                    <td className="font-tabular-nums font-extrabold p-3 text-text whitespace-nowrap">
                       Rp {row.nominalAngka.toLocaleString('id-ID')}
                     </td>
                     <td className="p-3 text-text font-bold">
@@ -309,15 +311,15 @@ function HistoriPembayaran() {
               </Table>
             </div>
 
-            {/* Tampilan Mobile: BRImo-Style Activity List Card */}
-            <div className="block md:hidden flex flex-col divide-y divide-border/70 border border-border/80 rounded-2xl overflow-hidden bg-white shadow-card">
+            {/* Tampilan Mobile: Modern Spacious Transaction Feed (Design 1 Reference) */}
+            <div className="block md:hidden flex flex-col gap-3">
               {paginatedHistory.map((row, idx) => {
                 const isMidtrans = row.metode === 'Midtrans';
                 const isTunai = row.metode === 'Tunai';
                 
-                const methodLabel = isMidtrans ? 'Pembayaran Otomatis' : isTunai ? 'Setoran Tunai (Loket)' : 'Transfer Bank (Manual)';
+                const methodLabel = isMidtrans ? 'Midtrans Gateway' : isTunai ? 'Setoran Tunai' : 'Transfer Bank';
                 const iconName = isMidtrans ? 'heroicons:qr-code-20-solid' : isTunai ? 'heroicons:banknotes-20-solid' : 'heroicons:building-library-20-solid';
-                const iconBg = isMidtrans ? 'bg-orange-50 text-orange border-orange-200' : isTunai ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-red-50 text-red border-red/20';
+                const iconBg = isMidtrans ? 'bg-orange-50 text-orange border-orange-200/80' : isTunai ? 'bg-amber-50 text-amber-800 border-amber-200/80' : 'bg-red-50 text-red border-red/20';
 
                 return (
                   <div
@@ -326,35 +328,48 @@ function HistoriPembayaran() {
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedReceipt(row); } }}
-                    className="p-4 flex flex-col gap-3 hover:bg-mono-50/60 active:bg-mono-100/80 transition-colors cursor-pointer select-none"
+                    className="p-4 bg-white border border-border/80 rounded-2xl shadow-2xs hover:border-red/40 hover:shadow-xs active:bg-mono-50/80 transition-all cursor-pointer select-none flex flex-col gap-3.5"
                     aria-label={`Transaksi ${row.id} sebesar Rp ${row.nominalAngka.toLocaleString('id-ID')}, status ${row.status}. Ketuk untuk melihat resi.`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      {/* Left: Icon Box & Transaction Details */}
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className={cn("size-10 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 shadow-2xs", iconBg)}>
+                    {/* Top Row: Icon + Method & ID + Status Badge */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={cn("size-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs", iconBg)}>
                           <Icon icon={iconName} className="size-5" />
                         </div>
                         <div className="min-w-0 flex flex-col">
                           <strong className="text-sm font-extrabold text-text tracking-tight truncate leading-tight">
                             {methodLabel}
                           </strong>
-                          <span className="text-xs text-text-3 font-semibold truncate mt-0.5">
-                            {row.id}{row.kios ? ` • Kios ${row.kios}` : ''}
-                          </span>
-                          <span className="text-sm font-extrabold font-tabular-nums text-text mt-1.5">
-                            Rp {row.nominalAngka.toLocaleString('id-ID')}
-                          </span>
-                          <span className="text-[11px] text-text-3 font-medium font-tabular-nums mt-0.5">
-                            {row.tanggal}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-text-3 font-semibold mt-0.5">
+                            <span className="font-tabular-nums">{row.id}</span>
+                            {row.kios && (
+                              <>
+                                <span className="text-mono-300">•</span>
+                                <span className="text-text-2 font-bold font-tabular-nums">Kios {row.kios}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Right: Status Badge & Chevron */}
-                      <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="shrink-0">
                         <Badge status={row.status} />
-                        <div className="flex items-center gap-1 text-xs font-bold text-red hover:underline pt-1">
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Date on Left + Amount & Resi Button on Right */}
+                    <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-text-3 font-tabular-nums">
+                        <Icon icon="heroicons:calendar-20-solid" className="size-3.5 text-mono-400 shrink-0" />
+                        <span>{row.tanggal}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm sm:text-base font-extrabold font-tabular-nums text-text whitespace-nowrap">
+                          Rp {row.nominalAngka.toLocaleString('id-ID')}
+                        </span>
+                        <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-mono-100 hover:bg-red-50 text-red text-xs font-extrabold transition-colors">
                           <span>Resi</span>
                           <Icon icon="heroicons:chevron-right-20-solid" className="size-3.5" />
                         </div>
@@ -363,7 +378,7 @@ function HistoriPembayaran() {
 
                     {/* Sanggahan & Rejection Info for Mobile */}
                     {row.status === 'Ditolak' && (
-                      <div className="mt-1 pt-2 border-t border-border/50 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="pt-2 border-t border-border/50 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
                         {row.catatanAdmin && (
                           <div className="p-2.5 bg-red-50 border border-red/20 rounded-lg text-xs text-red font-bold flex items-center gap-2">
                             <Icon icon="heroicons:exclamation-circle-20-solid" className="size-4 shrink-0 text-red" />
@@ -384,7 +399,7 @@ function HistoriPembayaran() {
                     )}
 
                     {row.teksSanggahan && (
-                      <div className="mt-1 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 font-semibold flex flex-col gap-1">
+                      <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 font-semibold flex flex-col gap-1">
                         <div className="flex items-start gap-1.5">
                           <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4 text-amber-700 shrink-0 mt-0.5" />
                           <span>Sanggahan Anda: "{row.teksSanggahan}"</span>
@@ -395,7 +410,7 @@ function HistoriPembayaran() {
                 );
               })}
 
-              <div className="p-3 bg-mono-50/50 border-t border-border/70">
+              <div className="p-4 bg-white border border-border/80 rounded-2xl shadow-2xs mt-1">
                 <Pagination
                   currentPage={currentPage}
                   totalItems={filteredHistory.length}
@@ -408,7 +423,7 @@ function HistoriPembayaran() {
             </div>
           </>
         )}
-      </Card>
+      </div>
 
       {/* Modal Resi & Bukti Pembayaran */}
       <BuktiPembayaranModal

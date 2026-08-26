@@ -150,17 +150,23 @@ function RiwayatTransaksiAdmin() {
         </div>
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+      {/* Main Global Transaction History Table (Seamless Edge-to-Edge Surface) */}
+      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
         {isLoading ? (
-          <SkeletonTable rows={5} cols={7} />
+          <div className="p-6">
+            <SkeletonTable rows={5} cols={7} />
+          </div>
         ) : filteredRiwayat.length === 0 ? (
-          <EmptyState
-            icon="heroicons:receipt-percent-20-solid"
-            title="Riwayat Transaksi Kosong"
-            description="Belum ada transaksi pembayaran yang tercatat untuk filter metode ini."
-          />
+          <div className="p-8">
+            <EmptyState
+              icon="heroicons:receipt-percent-20-solid"
+              title="Riwayat Transaksi Kosong"
+              description="Belum ada transaksi pembayaran yang tercatat untuk filter metode ini."
+            />
+          </div>
         ) : (
           <Table
+            className="border-0 rounded-none shadow-none"
             caption="Riwayat Transaksi Lintas Metode Pengelola Plaza"
             ariaLabel="Tabel Riwayat Seluruh Transaksi Admin"
             headers={tableHeaders}
@@ -178,16 +184,16 @@ function RiwayatTransaksiAdmin() {
                 />
               }
             >
-              {paginatedRiwayat.map((item, idx) => (
-                <tr key={item.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" data-label="ID TRX" className="font-tabular-nums font-bold p-3 text-text text-start">
+              {paginatedRiwayat.map((item, index) => (
+                <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
+                  <th scope="row" data-label="ID TRX" className="py-3 px-4 font-mono font-black text-text text-xs sm:text-sm">
                     {item.id}
                   </th>
-                  <td data-label="Tenant & Kios" className="p-3 text-start">
-                    <div className="font-bold text-text text-sm">{item.nama}</div>
-                    <div className="font-tabular-nums font-bold text-xs text-text-3">Kios {item.kios}</div>
+                  <td data-label="Tenant & Kios" className="py-3 px-4 text-start">
+                    <div className="font-extrabold text-text text-xs sm:text-sm">{item.nama}</div>
+                    <div className="font-tabular-nums font-extrabold text-xs text-red">Kios {item.kios}</div>
                   </td>
-                  <td data-label="Periode" className="p-3 text-text-2 font-medium">
+                  <td data-label="Periode" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     <div>{item.tagihan}</div>
                     {item.alokasi && item.alokasi.length > 1 && (
                       <span className="inline-flex items-center gap-1 text-2xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded mt-1 shadow-2xs">
@@ -196,16 +202,16 @@ function RiwayatTransaksiAdmin() {
                       </span>
                     )}
                   </td>
-                  <td data-label="Nominal Bayar" className="font-tabular-nums font-extrabold p-3 text-text">
+                  <td data-label="Nominal Bayar" className="py-3 px-4 font-tabular-nums font-black text-xs sm:text-sm text-text">
                     {item.nominal}
                   </td>
-                  <td data-label="Metode & Waktu" className="p-3 text-text-2 text-xs">
-                    <div className="font-bold text-text text-sm">
+                  <td data-label="Metode & Waktu" className="py-3 px-4 text-text-2 text-xs">
+                    <div className="font-bold text-text text-xs sm:text-sm">
                       {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
                     </div>
                     <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
                   </td>
-                  <td data-label="Status" className="p-3 text-center">
+                  <td data-label="Status" className="py-3 px-4 text-center">
                     <Badge status={item.status} />
                     {item.alasan && (
                       <div className="text-xs text-red mt-1 italic font-medium">
@@ -213,13 +219,13 @@ function RiwayatTransaksiAdmin() {
                       </div>
                     )}
                   </td>
-                  <td data-label="Aksi" className="p-3 text-center">
+                  <td data-label="Aksi" className="py-3 px-4 text-center whitespace-nowrap">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => setSelectedBukti(item)}
                       aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
-                      className="min-h-10 sm:min-h-8 sm:h-8 px-3 text-xs font-bold"
+                      className="h-8 px-3 text-xs font-bold shadow-2xs"
                     >
                       Detail
                     </Button>
@@ -228,7 +234,7 @@ function RiwayatTransaksiAdmin() {
               ))}
             </Table>
         )}
-      </Card>
+      </div>
 
       {/* Modal Detail & Kuitansi Transaksi */}
       <BuktiPembayaranModal

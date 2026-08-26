@@ -483,8 +483,8 @@ function AkunAdmin() {
 
       {/* SUPERADMIN SECTION: Manajemen Staf & Role Presets */}
       {isSuperadmin && (
-        <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-5 mt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+        <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col mt-2">
+          <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 bg-white">
             <div>
               <div className="flex items-center gap-2">
                 <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
@@ -501,7 +501,7 @@ function AkunAdmin() {
               variant="primary"
               size="sm"
               onClick={() => handleOpenStafModal()}
-              className="gap-2 font-bold self-start sm:self-auto h-10 px-4"
+              className="gap-2 font-bold self-start sm:self-auto h-10 px-4 shadow-2xs"
             >
               <Icon icon="heroicons:user-plus-20-solid" className="size-4.5" />
               <span>Tambah Staf Pengelola</span>
@@ -514,6 +514,7 @@ function AkunAdmin() {
 
             return (
               <Table
+                className="border-0 rounded-none shadow-none"
                 caption="Daftar Akun Staf Pengelola Plaza"
                 headers={[
                   { label: 'Identitas Staf' },
@@ -537,20 +538,20 @@ function AkunAdmin() {
                 }
               >
                 {paginatedStaf.map((staf) => (
-                  <tr key={staf.id} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                    <td className="p-3 font-extrabold text-text text-sm">
+                  <tr key={staf.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
+                    <td className="py-3 px-4 font-extrabold text-text text-sm">
                       <div>{staf.nama_lengkap}</div>
                       <div className="text-xs text-text-3 font-normal">{staf.email}</div>
                     </td>
-                    <td className="p-3 font-bold font-mono text-xs text-red">
+                    <td className="py-3 px-4 font-bold font-mono text-xs text-red">
                       @{staf.username}
                     </td>
-                    <td className="p-3">
+                    <td className="py-3 px-4">
                       <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded bg-slate-900 text-white">
                         {staf.sub_role || 'admin'}
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="py-3 px-4">
                       <div className="flex flex-wrap gap-1 max-w-xs">
                         {(staf.permissions || []).map((permKey) => {
                           const match = ALL_PERMISSIONS.find(p => p.key === permKey);
@@ -562,19 +563,19 @@ function AkunAdmin() {
                         })}
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="py-3 px-4">
                       <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md", staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
                         <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500')} />
                         {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
                       </span>
                     </td>
-                    <td className="p-3 text-center">
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleOpenStafModal(staf)}
-                          className="h-8 px-2.5 text-xs font-bold"
+                          className="h-8 px-2.5 text-xs font-bold shadow-2xs"
                         >
                           Edit Izin
                         </Button>
@@ -582,7 +583,7 @@ function AkunAdmin() {
                           variant={staf.status_aktif !== false ? 'danger' : 'secondary'}
                           size="sm"
                           onClick={() => handleToggleStafStatus(staf)}
-                          className="h-8 px-2 text-xs font-bold"
+                          className="h-8 px-2 text-xs font-bold shadow-2xs"
                         >
                           {staf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}
                         </Button>
@@ -593,7 +594,7 @@ function AkunAdmin() {
               </Table>
             );
           })()}
-        </Card>
+        </div>
       )}
 
       {/* Modal Tambah / Edit Staf Pengelola */}

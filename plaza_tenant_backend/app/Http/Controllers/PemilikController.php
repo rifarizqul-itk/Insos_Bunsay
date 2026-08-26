@@ -106,7 +106,7 @@ class PemilikController extends Controller
                         'Id_Kios'        => $kiosTarget->Id_Kios,
                         'Id_Pemilik'     => $pemilik->Id_Pemilik,
                         'Tanggal_Mulai'  => date('Y-m-d'),
-                        'Tanggal_Selesai'=> date('Y-m-d', strtotime('+1 year')),
+                        'Tanggal_Selesai'=> $request->Tanggal_Selesai ?? null,
                         'Jenis_Usaha'    => $jenisUsaha,
                         'Tarif_Bulanan'  => $tarifCustom,
                         'Status'         => 'Aktif',

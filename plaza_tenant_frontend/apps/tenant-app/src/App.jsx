@@ -45,6 +45,7 @@ function TenantAppRoutes() {
                   <Route path="/tenant/dashboard" element={<DashboardTenant />} />
                   <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
                   <Route path="/tenant/histori" element={<HistoriPembayaran />} />
+                  <Route path="/tenant/tagihan" element={<TunggakanAR />} />
                   <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
                   <Route path="/tenant/akun" element={<AkunTenant />} />
                 </Route>

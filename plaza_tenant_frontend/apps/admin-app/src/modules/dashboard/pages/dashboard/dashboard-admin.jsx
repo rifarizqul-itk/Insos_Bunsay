@@ -254,33 +254,38 @@ function DashboardAdmin() {
         />
       </div>
 
-      {/* Main Kiosk Administration Data Table */}
-      <Card variant="default" className="p-4 sm:p-6 flex flex-col gap-5 rounded-2xl border border-border/80 shadow-card">
+      {/* Main Kiosk Administration Data Table (Seamless Edge-to-Edge Surface) */}
+      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
         {/* Table Toolbar Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
-              Daftar Administrasi Kios
-            </h2>
-            <p className="text-xs sm:text-sm text-text-3 font-medium">
-              Data status pembayaran sewa unit kios pada siklus bulan berjalan.
-            </p>
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/80 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+              <Icon icon="heroicons:table-cells-20-solid" className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
+                Daftar Administrasi Kios
+              </h2>
+              <p className="text-xs sm:text-sm text-text-3 font-medium">
+                Status pembayaran dan kewajiban sewa seluruh unit kios pada siklus berjalan.
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Search Input */}
-            <div className="relative flex-1 sm:w-64">
+            <div className="relative flex-1 sm:w-72">
               <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3" />
               <input
                 type="text"
-                placeholder="Cari tenant / kios..."
+                placeholder="Cari nama tenant / nomor kios..."
                 aria-label="Cari nama tenant atau nomor kios"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-10 pl-9.5 pr-4 text-sm font-medium rounded-xl border border-border bg-mono-100/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red transition-all"
+                className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-2xs"
               />
             </div>
 
@@ -292,7 +297,7 @@ function DashboardAdmin() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 text-xs sm:text-sm font-bold rounded-xl border border-border bg-white text-text px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red"
+              className="h-10 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text px-3.5 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
             >
               <option value="Semua">Semua Status</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
@@ -304,15 +309,20 @@ function DashboardAdmin() {
 
         {/* Table Content */}
         {isLoading ? (
-          <SkeletonTable rows={6} cols={6} />
+          <div className="p-6">
+            <SkeletonTable rows={6} cols={6} />
+          </div>
         ) : filteredTenants.length === 0 ? (
-          <EmptyState
-            icon="heroicons:user-group-20-solid"
-            title="Tenant Tidak Ditemukan"
-            description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
-          />
+          <div className="p-8">
+            <EmptyState
+              icon="heroicons:user-group-20-solid"
+              title="Tenant Tidak Ditemukan"
+              description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
+            />
+          </div>
         ) : (
           <Table
+            className="border-0 rounded-none shadow-none"
             caption="Daftar Status Pembayaran Tenant Bulan Ini"
             ariaLabel="Tabel Status Pembayaran Kios Plaza Kebun Sayur"
             headers={tableHeaders}
@@ -333,45 +343,55 @@ function DashboardAdmin() {
             {filteredTenants.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((tenant, idx) => {
               const isVerifikasiPending = tenant.statusPembayaran === 'Menunggu Verifikasi';
               return (
-                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-mono-50/70 transition-colors">
-                  <th scope="row" data-label="Nama Tenant" className="py-2.5 px-3 sm:px-3.5 font-bold text-start text-text text-sm sm:text-base">
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-red-50/20 transition-colors">
+                  <th scope="row" data-label="Nama Tenant" className="py-3 px-3 sm:px-4 font-extrabold text-start text-text text-sm sm:text-base">
                     {tenant.nama}
                   </th>
-                  <td data-label="No. Kios" className="font-tabular-nums font-extrabold py-2.5 px-3 sm:px-3.5 text-text text-xs sm:text-sm">
-                    <span className="bg-mono-100/80 px-2.5 py-0.5 rounded-md border border-border/60">
+                  <td data-label="No. Kios" className="font-tabular-nums font-extrabold py-3 px-3 sm:px-4 text-text text-xs sm:text-sm">
+                    <span className="bg-mono-100/90 text-red px-2.5 py-0.5 rounded-lg border border-border/70 font-extrabold font-tabular-nums">
                       {tenant.kios}
                     </span>
                   </td>
-                  <td data-label="Jenis Usaha" className="py-2.5 px-3 sm:px-3.5 text-text-2 font-medium text-xs sm:text-sm">
+                  <td data-label="Jenis Usaha" className="py-3 px-3 sm:px-4 text-text-2 font-semibold text-xs sm:text-sm">
                     {tenant.usaha}
                   </td>
-                  <td data-label="Tunggakan" className={cn("font-tabular-nums py-2.5 px-3 sm:px-3.5 font-extrabold text-xs sm:text-sm", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
+                  <td data-label="Tunggakan" className={cn("font-tabular-nums py-3 px-3 sm:px-4 font-black text-xs sm:text-sm", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
                     Rp {tenant.tunggakan.toLocaleString('id-ID')}
                   </td>
-                  <td data-label="Status Bulan Ini" className="py-2.5 px-3 sm:px-3.5">
-                    <Badge
-                      status={tenant.statusPembayaran}
-                      clickable={isVerifikasiPending}
-                      onClick={isVerifikasiPending ? () => handleOpenVerifikasi(tenant) : undefined}
-                    />
+                  <td data-label="Status Tagihan" className="py-3 px-3 sm:px-4">
+                    <Badge status={tenant.statusPembayaran} />
                   </td>
-                  <td data-label="Aksi" className="py-2.5 px-3 sm:px-3.5 text-center">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
-                      aria-label={`Detail administrasi keuangan kios ${tenant.kios} (${tenant.nama})`}
-                      className="min-h-8 h-8 px-3 text-xs sm:text-sm font-bold shadow-2xs"
-                    >
-                      Detail
-                    </Button>
+                  <td data-label="Aksi" className="py-3 px-3 sm:px-4 text-center">
+                    {isVerifikasiPending ? (
+                      <Button
+                        variant="primary"
+                        size="xs"
+                        className="gap-1 bg-amber-500 hover:bg-amber-600 border-amber-600 text-white font-extrabold shadow-2xs"
+                        onClick={() => handleOpenVerifikasi(tenant)}
+                        aria-label={`Verifikasi bukti bayar ${tenant.nama} kios ${tenant.kios}`}
+                      >
+                        <Icon icon="heroicons:check-badge-20-solid" className="size-3.5" />
+                        <span>Verifikasi Bukti</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="xs"
+                        className="gap-1 text-text-2 font-bold hover:text-red hover:border-red shadow-2xs"
+                        onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
+                        aria-label={`Lihat detail informasi kios ${tenant.kios}`}
+                      >
+                        <Icon icon="heroicons:eye-20-solid" className="size-3.5" />
+                        <span>Detail Kios</span>
+                      </Button>
+                    )}
                   </td>
                 </tr>
               );
             })}
           </Table>
         )}
-      </Card>
+      </div>
 
       <Drawer
         isOpen={showVerifikasiDrawer}

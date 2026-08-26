@@ -89,15 +89,19 @@ function RiwayatPemilikKios() {
         />
       </div>
 
-      <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
+      {/* Main Riwayat Pemilik Table (Seamless Edge-to-Edge Surface) */}
+      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
         {filteredData.length === 0 ? (
-          <EmptyState
-            icon="heroicons:user-minus-20-solid"
-            title="Arsip Nonaktif Kosong"
-            description="Tidak ada catatan mantan pemilik kios nonaktif yang cocok dengan pencarian."
-          />
+          <div className="p-8">
+            <EmptyState
+              icon="heroicons:user-minus-20-solid"
+              title="Arsip Nonaktif Kosong"
+              description="Tidak ada catatan mantan pemilik kios nonaktif yang cocok dengan pencarian."
+            />
+          </div>
         ) : (
           <Table
+            className="border-0 rounded-none shadow-none"
             caption="Daftar Arsip Pemilik Kios Nonaktif"
             headers={tableHeaders}
             colSpan={6}
@@ -115,28 +119,28 @@ function RiwayatPemilikKios() {
               }
             >
               {paginatedData.map((tenant, idx) => (
-                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" className="p-3 font-bold text-start text-text">
+                <tr key={tenant.id || idx} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
+                  <th scope="row" className="py-3 px-4 font-extrabold text-start text-text text-sm sm:text-base">
                     {tenant.nama}
                   </th>
-                  <td className="font-tabular-nums font-extrabold p-3 text-red">
-                    {tenant.kios}
+                  <td className="font-tabular-nums font-extrabold py-3 px-4 text-red text-xs sm:text-sm">
+                    Kios {tenant.kios}
                   </td>
-                  <td className="p-3 text-text-2 font-medium">
+                  <td className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {tenant.usaha || '—'}
                   </td>
-                  <td className="p-3">
+                  <td className="py-3 px-4">
                     <Badge status="Belum Bayar" customText="Nonaktif" />
                   </td>
-                  <td className="p-3 text-xs text-text-2 font-medium">
+                  <td className="py-3 px-4 text-xs text-text-2 font-medium">
                     {tenant.rincianTunggakan}
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="py-3 px-4 text-center whitespace-nowrap">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
-                      className="h-8 px-3 text-xs font-bold"
+                      className="h-8 px-3 text-xs font-bold shadow-2xs"
                     >
                       Detail Legalitas
                     </Button>
@@ -145,7 +149,7 @@ function RiwayatPemilikKios() {
               ))}
             </Table>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

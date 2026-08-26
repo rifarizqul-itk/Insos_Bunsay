@@ -9,7 +9,8 @@ const tenantTitles = {
   '/tenant/dashboard': 'Dashboard Tenant | Plaza Kebun Sayur',
   '/tenant/pembayaran': 'Bayar Sewa Kios | Portal Tenant Plaza Kebun Sayur',
   '/tenant/histori': 'Histori Pembayaran | Portal Tenant Plaza Kebun Sayur',
-  '/tenant/tunggakan': 'Rincian Tunggakan Sewa | Portal Tenant Plaza Kebun Sayur',
+  '/tenant/tagihan': 'Daftar Tagihan Sewa | Portal Tenant Plaza Kebun Sayur',
+  '/tenant/tunggakan': 'Daftar Tagihan Sewa | Portal Tenant Plaza Kebun Sayur',
   '/tenant/akun': 'Akun & Legalitas Kios | Portal Tenant Plaza Kebun Sayur',
 };
 
@@ -26,7 +27,18 @@ function TenantLayout() {
   const userTitle = user?.nama ?? user?.name ?? user?.Username ?? 'Tenant Aktif';
 
   return (
-    <div data-slot="tenant-layout" className="min-h-dvh bg-cream relative overflow-x-hidden">
+    <div data-slot="tenant-layout" className="min-h-dvh bg-[#F3F4F7] relative overflow-x-hidden">
+      {/* Background Atmosphere Glow (Bankoli-Inspired Soft Ambient Aura) */}
+      <div 
+        className="absolute top-0 inset-x-0 h-96 pointer-events-none z-0" 
+        style={{
+          background: 'radial-gradient(ellipse 90% 70% at 50% -20%, rgba(139, 26, 26, 0.07) 0%, rgba(139, 26, 26, 0.02) 60%, transparent 100%)'
+        }}
+        aria-hidden="true" 
+      />
+      <div className="absolute -top-24 -right-24 size-96 rounded-full bg-red/4 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+      <div className="absolute -top-24 -left-24 size-96 rounded-full bg-amber-500/3 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+
       {/* Skip Link for Keyboard Accessibility (WCAG 2.4.1 Level A) */}
       <a
         href="#main-content"
@@ -49,14 +61,14 @@ function TenantLayout() {
         />
       )}
 
-      <div className="main-layout">
+      <div className="main-layout relative z-10">
         <Topbar
           userTitle={userTitle}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           variant="tenant"
         />
 
-        <main id="main-content" tabIndex={-1} className="main-content-inner focus:outline-none">
+        <main id="main-content" tabIndex={-1} className="main-content-inner focus:outline-none pb-24 md:pb-12">
           <Outlet />
         </main>
       </div>

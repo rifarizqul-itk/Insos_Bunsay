@@ -19,8 +19,8 @@ function Sidebar({ isOpen, onClose, onLogout }) {
     {
       title: 'TAGIHAN & HISTORI',
       items: [
+        { id: 'tagihan', label: 'Tagihan Sewa', path: '/tenant/tagihan', icon: 'heroicons:document-duplicate-20-solid' },
         { id: 'histori', label: 'Histori Pembayaran', path: '/tenant/histori', icon: 'heroicons:clock-20-solid' },
-        { id: 'tunggakan', label: 'Tunggakan Sewa', path: '/tenant/tunggakan', icon: 'heroicons:exclamation-circle-20-solid' },
       ]
     },
     {

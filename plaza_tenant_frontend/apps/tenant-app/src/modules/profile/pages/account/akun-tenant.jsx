@@ -227,25 +227,30 @@ function AkunTenant() {
   if (!adminDetail) return null;
 
   return (
-    <div data-slot="akun-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="akun-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-7 font-sans max-w-6xl mx-auto w-full">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Pengaturan Akun & Administrasi Kios Tenant
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-text tracking-tight text-balance">
+          Pengaturan Akun &amp; Administrasi Kios
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Lihat rincian administrasi kios, profil pemilik, dokumen legalitas, dan kelola kata sandi Anda.
+        <p className="text-text-2 text-xs sm:text-sm font-medium mt-1 text-pretty">
+          Rincian administrasi kios, profil pemilik, dokumen legalitas resmi, dan keamanan kata sandi.
         </p>
       </div>
 
       <div className="akun-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-8 flex flex-col gap-6">
-          <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
-            <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
-              Detail Profil Pemilik Kios
-            </h3>
+          <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-6 rounded-3xl bg-white border border-border/80 shadow-card">
+            <div className="flex items-center gap-2.5 border-b border-border/70 pb-3.5">
+              <div className="size-9 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+                <Icon icon="heroicons:user-circle-20-solid" className="size-5" />
+              </div>
+              <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
+                Detail Profil Pemilik Kios
+              </h3>
+            </div>
             
             <form onSubmit={handleSave} className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <FormField label="Nama Lengkap" id="profile-nama" required error={fieldError?.field === 'nama' ? fieldError.message : undefined}>
                   <input
                     ref={firstInputRef}
@@ -364,11 +369,16 @@ function AkunTenant() {
           </Card>
 
           {/* CARD DETAIL ADMINISTRASI & LEGALITAS KIOS UNTUK TENANT */}
-          <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/80 pb-4 gap-2">
-              <h2 className="text-lg font-extrabold text-text tracking-tight">
-                Detail Administrasi & Legalitas Kios Anda
-              </h2>
+          <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-6 rounded-3xl bg-white border border-border/80 shadow-card">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/70 pb-4 gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="size-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+                  <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
+                </div>
+                <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
+                  Administrasi &amp; Legalitas Kios
+                </h2>
+              </div>
               {adminDetail.izinkanCicilan && (
                 <Badge variant="warning">
                   Cicilan Diizinkan
@@ -376,20 +386,20 @@ function AkunTenant() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
               <div>
                 <span className="label-micro text-text-3 block mb-1">Nomor Kios</span>
                 <strong className="text-lg font-extrabold text-red font-tabular-nums tracking-tight">{adminDetail.kios}</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Lokasi & Ukuran Kios</span>
+                <span className="label-micro text-text-3 block mb-1">Lokasi &amp; Ukuran</span>
                 <strong className="text-sm font-bold text-text">{adminDetail.lantai} ({adminDetail.ukuran})</strong>
               </div>
 
               <div>
                 <span className="label-micro text-text-3 block mb-1">Tarif Retribusi Bulanan</span>
-                <strong className="text-base font-extrabold text-emerald-700 font-tabular-nums">
+                <strong className="text-base font-extrabold text-emerald-700 font-tabular-nums whitespace-nowrap">
                   Rp {Number(adminDetail.tarifBulanan || 750000).toLocaleString('id-ID')}
                 </strong>
               </div>
@@ -423,9 +433,9 @@ function AkunTenant() {
             </div>
 
             {adminDetail.catatan && (
-              <div className="border-t border-border/60 pt-5">
+              <div className="border-t border-border/60 pt-4">
                 <span className="label-micro text-text-3 block mb-1.5">Catatan Resmi Administrasi Pengelola</span>
-                <p className="text-sm text-text-2 font-medium leading-relaxed bg-mono-100/60 p-3.5 rounded-md border border-border/60">
+                <p className="text-xs sm:text-sm text-text-2 font-medium leading-relaxed bg-mono-100/60 p-3.5 rounded-xl border border-border/60">
                   {adminDetail.catatan}
                 </p>
               </div>
@@ -435,10 +445,15 @@ function AkunTenant() {
 
         <div className="lg:col-span-4 flex flex-col gap-6">
           <form onSubmit={handleSavePassword}>
-            <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7">
-              <h2 className="text-base font-extrabold text-text tracking-tight border-b border-border/80 pb-3 text-balance">
-                Ubah Kata Sandi
-              </h2>
+            <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7 rounded-3xl bg-white border border-border/80 shadow-card">
+              <div className="flex items-center gap-2.5 border-b border-border/70 pb-3.5">
+                <div className="size-9 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+                  <Icon icon="heroicons:key-20-solid" className="size-5" />
+                </div>
+                <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
+                  Keamanan &amp; Kata Sandi
+                </h2>
+              </div>
               
               <FormField label="Kata Sandi Saat Ini" id="tenant-pwd-old" required error={oldPasswordError}>
                 <div className="relative w-full">

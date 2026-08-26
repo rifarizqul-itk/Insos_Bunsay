@@ -201,21 +201,29 @@ function DetailKeuanganTenant() {
           </div>
         )}
 
-        <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-5">
-          <h3 className="text-lg font-extrabold text-text tracking-tight">
-            Riwayat Transaksi Pembayaran Tenant
-          </h3>
+        {/* Main Tenant Financial History Table (Seamless Edge-to-Edge Surface) */}
+        <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+          <div className="p-4 sm:p-6 border-b border-border/80 bg-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
+              Riwayat Transaksi Pembayaran Tenant
+            </h3>
+          </div>
 
           {isLoading ? (
-            <SkeletonTable rows={4} cols={6} />
+            <div className="p-6">
+              <SkeletonTable rows={4} cols={6} />
+            </div>
           ) : riwayat.length === 0 ? (
-            <EmptyState
-              icon="heroicons:receipt-refund-20-solid"
-              title="Belum Ada Transaksi"
-              description="Tenant ini belum memiliki riwayat transaksi pembayaran di database."
-            />
+            <div className="p-8">
+              <EmptyState
+                icon="heroicons:receipt-refund-20-solid"
+                title="Belum Ada Transaksi"
+                description="Tenant ini belum memiliki riwayat transaksi pembayaran di database."
+              />
+            </div>
           ) : (
             <Table
+              className="border-0 rounded-none shadow-none"
               caption={`Riwayat Transaksi Keuangan Kios ${tenantInfo.kios}`}
               headers={tableHeaders}
               colSpan={6}
@@ -231,30 +239,30 @@ function DetailKeuanganTenant() {
               }
             >
               {paginatedRiwayat.map((row, idx) => (
-                <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                  <th scope="row" className="font-tabular-nums font-bold p-3 text-text text-start">
+                <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
+                  <th scope="row" className="font-mono font-black py-3 px-4 text-text text-start text-xs sm:text-sm">
                     {row.id}
                   </th>
-                  <td className="p-3 text-text-2 font-medium font-tabular-nums">
+                  <td className="py-3 px-4 text-text-2 font-medium font-tabular-nums text-xs">
                     {row.tanggal}
                   </td>
-                  <td className="p-3 text-text font-semibold">
+                  <td className="py-3 px-4 text-text font-bold text-xs sm:text-sm">
                     {row.tipe}
                   </td>
-                  <td className="font-tabular-nums font-extrabold p-3 text-text">
+                  <td className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
                     Rp {row.nominal.toLocaleString('id-ID')}
                   </td>
-                  <td className="p-3 text-text-3 font-semibold text-xs">
+                  <td className="py-3 px-4 text-text-3 font-semibold text-xs">
                     {row.metode}
                   </td>
-                  <td className="p-3">
+                  <td className="py-3 px-4">
                     <Badge status={row.status} />
                   </td>
                 </tr>
               ))}
             </Table>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );
