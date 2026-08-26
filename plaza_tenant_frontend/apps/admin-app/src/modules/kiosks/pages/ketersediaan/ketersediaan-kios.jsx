@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Drawer, Modal, FormField, EmptyState, SkeletonTable, useToast, Pagination, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Modal, FormField, EmptyState, SkeletonTable, useToast, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function KetersediaanKios() {
@@ -522,10 +522,11 @@ function KetersediaanKios() {
         )}
       </div>
 
-      <Drawer
+      <Modal
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         title={modePendaftaran === 'baru' ? "Form Pendaftaran Tenant Baru" : "Tambah Unit Kios ke Tenant Terdaftar"}
+        size="xl"
         footer={
           <div className="flex gap-3 w-full">
             <Button
@@ -719,7 +720,6 @@ function KetersediaanKios() {
                     checked={formTenant.usernameMode === 'auto'} 
                     onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'auto', username: '' }))} 
                   />
-                  <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600 inline" />
                   <span>Otomatis Sistem</span>
                 </label>
                 <label className="flex items-center gap-1.5 cursor-pointer text-text">
@@ -730,7 +730,6 @@ function KetersediaanKios() {
                     checked={formTenant.usernameMode === 'custom'} 
                     onChange={() => setFormTenant(prev => ({ ...prev, usernameMode: 'custom' }))} 
                   />
-                  <Icon icon="heroicons:pencil-20-solid" className="size-3.5 text-text-2 inline" />
                   <span>Input Custom Username</span>
                 </label>
               </div>
@@ -1007,7 +1006,7 @@ function KetersediaanKios() {
             </FormField>
           </form>
         )}
-      </Drawer>
+      </Modal>
 
       <Modal
         isOpen={Boolean(createdCredential)}

@@ -1,24 +1,24 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Icon } from '@bunsay/shared-ui';
+import { Icon, cn } from '@bunsay/shared-ui';
 
-function BottomNav({ role }) {
+function BottomNav({ role = 'tenant' }) {
   const location = useLocation();
 
   const tenantItems = [
-    { label: 'Beranda', path: '/tenant/dashboard', icon: 'material-symbols:dashboard-outline' },
-    { label: 'Bayar', path: '/tenant/pembayaran', icon: 'material-symbols:payments-outline' },
-    { label: 'Tagihan', path: '/tenant/tagihan', icon: 'material-symbols:receipt-long-outline' },
-    { label: 'Riwayat', path: '/tenant/histori', icon: 'material-symbols:history' },
-    { label: 'Profil', path: '/tenant/akun', icon: 'material-symbols:person-outline' }
+    { label: 'Beranda', path: '/tenant/dashboard', icon: 'heroicons:squares-2x2-20-solid', iconOutline: 'heroicons:squares-2x2' },
+    { label: 'Bayar', path: '/tenant/pembayaran', icon: 'heroicons:credit-card-20-solid', iconOutline: 'heroicons:credit-card' },
+    { label: 'Tagihan', path: '/tenant/tagihan', icon: 'heroicons:document-text-20-solid', iconOutline: 'heroicons:document-text' },
+    { label: 'Histori', path: '/tenant/histori', icon: 'heroicons:clock-20-solid', iconOutline: 'heroicons:clock' },
+    { label: 'Akun', path: '/tenant/akun', icon: 'heroicons:user-circle-20-solid', iconOutline: 'heroicons:user-circle' }
   ];
 
   const adminItems = [
-    { label: 'Beranda', path: '/admin/dashboard', icon: 'material-symbols:dashboard-outline' },
-    { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'material-symbols:fact-check-outline' },
-    { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'material-symbols:payments-outline' },
-    { label: 'Riwayat', path: '/admin/riwayat', icon: 'material-symbols:history' },
-    { label: 'Profil', path: '/admin/akun', icon: 'material-symbols:person-outline' }
+    { label: 'Beranda', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid', iconOutline: 'heroicons:squares-2x2' },
+    { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'heroicons:shield-check-20-solid', iconOutline: 'heroicons:shield-check' },
+    { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'heroicons:banknotes-20-solid', iconOutline: 'heroicons:banknotes' },
+    { label: 'Riwayat', path: '/admin/riwayat', icon: 'heroicons:clock-20-solid', iconOutline: 'heroicons:clock' },
+    { label: 'Akun', path: '/admin/akun', icon: 'heroicons:user-circle-20-solid', iconOutline: 'heroicons:user-circle' }
   ];
 
   const menuItems = role === 'admin' ? adminItems : tenantItems;
@@ -39,13 +39,9 @@ function BottomNav({ role }) {
     <nav 
       data-slot="bottom-nav"
       aria-label="Navigasi Bawah Seluler"
-      className="md:hidden fixed bottom-3 inset-x-3 z-40 bg-white/95 backdrop-blur-2xl border border-border/90 shadow-2xl rounded-3xl p-1.5 max-w-lg mx-auto"
-      style={{
-        marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
-        fontFamily: "'Plus Jakarta Sans', sans-serif"
-      }}
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-border/80 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] pb-[env(safe-area-inset-bottom,0px)]"
     >
-      <div className="flex w-full h-14 items-center justify-between gap-1">
+      <div className="grid grid-cols-5 items-center h-15 max-w-lg mx-auto px-1">
         {menuItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -55,20 +51,28 @@ function BottomNav({ role }) {
               onClick={triggerHaptic}
               aria-label={item.label}
               aria-current={active ? 'page' : undefined}
-              className="flex-1 flex flex-col items-center justify-center h-full rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer select-none text-decoration-none min-w-0"
+              className={cn(
+                'flex flex-col items-center justify-center h-full py-1 transition-all active:scale-95 select-none relative group min-w-0',
+                active ? 'text-red' : 'text-text-3 hover:text-text-2'
+              )}
             >
-              <div className={`flex flex-col items-center justify-center w-full py-1 px-1 rounded-2xl transition-all duration-200 ${
-                active 
-                  ? 'bg-gradient-to-br from-[#6E1313] via-[#8B1A1A] to-[#4E0E0E] text-white shadow-md shadow-red/25' 
-                  : 'text-text-2 hover:text-text hover:bg-mono-100/60'
-              }`}>
+              {/* Active top accent indicator line */}
+              {active && (
+                <span className="absolute top-0 inset-x-3.5 h-[2.5px] bg-red rounded-full shadow-xs animate-[fadeIn_0.15s_ease-out]" aria-hidden="true" />
+              )}
+              
+              <div className="flex flex-col items-center justify-center gap-0.5">
                 <Icon 
-                  icon={item.icon} 
-                  className={`size-5 mb-0.5 shrink-0 transition-transform ${active ? 'scale-105 text-white font-bold' : 'text-text-2'}`}
+                  icon={active ? item.icon : (item.iconOutline || item.icon)} 
+                  className={cn(
+                    'size-5.5 transition-all duration-150',
+                    active ? 'scale-105 text-red font-bold' : 'text-text-3 group-hover:text-text-2'
+                  )}
                 />
-                <span className={`text-[10px] sm:text-[11px] leading-tight tracking-tight truncate max-w-full text-center px-0.5 ${
-                  active ? 'font-extrabold text-white' : 'font-bold text-text-2'
-                }`}>
+                <span className={cn(
+                  'text-[10px] tracking-tight leading-tight truncate max-w-full text-center',
+                  active ? 'font-extrabold text-red' : 'font-semibold text-text-3'
+                )}>
                   {item.label}
                 </span>
               </div>

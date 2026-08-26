@@ -17,14 +17,18 @@ export function VerifikasiResi() {
       {/* Header */}
       <header className="max-w-xl mx-auto w-full flex items-center justify-between pb-6 border-b border-border/60">
         <div className="flex items-center gap-3">
-          <picture>
-            <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
-            <img
-              src="/assets/main_logo_transparent_for_light_bg.png"
-              alt="Logo Plaza Kebun Sayur"
-              className="h-10 w-auto object-contain"
-            />
-          </picture>
+            <picture>
+              <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
+              <img
+                src="/assets/main_logo_transparent_for_light_bg.png"
+                alt="Logo Plaza Kebun Sayur"
+                loading="lazy"
+                decoding="async"
+                width={130}
+                height={32}
+                className="h-10 w-auto object-contain"
+              />
+            </picture>
           <div>
             <h1 className="text-sm sm:text-base font-extrabold text-text leading-tight">
               UPTD Pasar Plaza Kebun Sayur

@@ -4,7 +4,7 @@ import { Icon, NotificationPopover, cn } from '@bunsay/shared-ui';
 import { getEcho } from '@bunsay/shared-core';
 import { useTenantAuth } from '../useTenantAuth';
 
-function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
+function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, variant = 'tenant' }) {
   const navigate = useNavigate();
   const { httpClient, user } = useTenantAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -111,9 +111,9 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
   return (
     <header
       data-slot="topbar"
-      className="topbar-container h-16 md:h-18 px-4 md:px-8 flex justify-between items-center font-sans border-b border-border/70 bg-white/90 backdrop-blur-xl shrink-0 sticky top-0 z-20 shadow-2xs"
+      className="topbar-container h-16 px-4 md:px-5 flex justify-between items-center font-sans border-b border-border/80 bg-white/90 backdrop-blur-xl shrink-0 sticky top-0 z-20 shadow-2xs"
     >
-      {/* Left: Mobile Toggle & Tenant Persona Greeting */}
+      {/* Left: Mobile Toggle, Desktop Collapse Button & Tenant Persona Greeting */}
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onToggleSidebar}
@@ -121,6 +121,18 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
           className="topbar-hamburger-tenant md:hidden size-10 flex items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors cursor-pointer active:scale-95 shrink-0"
         >
           <Icon icon="heroicons:bars-3-20-solid" className="size-6" />
+        </button>
+
+        {/* Desktop Collapse Toggle Button */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? "Buka menu samping navigasi (Ctrl+B)" : "Lipat menu samping navigasi (Ctrl+B)"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Buka menu samping (Ctrl+B)" : "Lipat menu samping (Ctrl+B)"}
+          className="hidden md:flex size-10 items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-all cursor-pointer active:scale-95 border border-border/80 shadow-2xs shrink-0"
+        >
+          <Icon icon={isCollapsed ? "heroicons:bars-3-bottom-left-20-solid" : "heroicons:bars-3-20-solid"} className="size-5" />
         </button>
         
         <div className="flex items-center gap-2.5 min-w-0">
@@ -145,20 +157,21 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'tenant' }) {
       <div className="flex items-center gap-2.5">
         <div ref={notifikasiRef} className="relative">
           <button
+            type="button"
             onClick={() => setIsOpen(!isOpen)}
-            aria-label="Notifikasi"
+            aria-label="Notifikasi Tenant"
             aria-expanded={isOpen}
             className={cn(
-              'h-10 px-3 sm:px-3.5 text-xs sm:text-sm font-extrabold cursor-pointer flex items-center gap-1.5 sm:gap-2 rounded-xl border transition-all active:scale-95 shrink-0 shadow-2xs',
+              'h-11 px-3.5 sm:px-4 text-sm font-extrabold cursor-pointer flex items-center gap-2 rounded-xl border transition-all active:scale-95 shrink-0 shadow-2xs',
               isOpen
                 ? 'bg-mono-100 text-text border-border shadow-xs'
                 : 'bg-white text-text-2 border-border/80 hover:text-text hover:bg-mono-50 hover:border-border'
             )}
           >
-            <Icon icon="heroicons:bell-20-solid" className="size-4.5 text-text-2 shrink-0" />
-            <span className="font-extrabold text-xs sm:text-sm hidden xs:inline">Notifikasi</span>
+            <Icon icon="heroicons:bell-20-solid" className="size-5 text-text-2 shrink-0" />
+            <span className="font-extrabold text-sm">Notifikasi</span>
             {unreadCount > 0 && (
-              <span className="text-white text-2xs font-extrabold px-1.5 py-0.5 rounded-full bg-red font-tabular-nums animate-pulse shadow-2xs">
+              <span className="text-white text-xs font-extrabold px-2 py-0.5 rounded-full bg-red font-tabular-nums animate-pulse shadow-2xs">
                 {unreadCount}
               </span>
             )}

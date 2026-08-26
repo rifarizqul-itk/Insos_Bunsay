@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Drawer, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
+import { Modal, Table, StatCard, Badge, Button, Card, Icon, AlokasiBreakdown, EmptyState, SkeletonCard, SkeletonTable, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DashboardAdmin() {
@@ -393,12 +393,11 @@ function DashboardAdmin() {
         )}
       </div>
 
-      <Drawer
+      <Modal
         isOpen={showVerifikasiDrawer}
         onClose={() => { setShowVerifikasiDrawer(false); setVerifikasiTarget(null); }}
         title="Verifikasi Bukti Transfer Bank"
-        subtitle={verifikasiTarget ? `Tenant ${verifikasiTarget.tenant.nama} (${verifikasiTarget.tenant.kios})` : ''}
-        size="md"
+        size="lg"
         footer={
           verifikasiTarget && (
             <>
@@ -432,7 +431,7 @@ function DashboardAdmin() {
             <AlokasiBreakdown alokasiList={verifikasiTarget.antrean.alokasi} />
           </div>
         )}
-      </Drawer>
+      </Modal>
     </div>
   );
 }

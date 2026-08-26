@@ -144,16 +144,24 @@ html {
 
   body {
     background-color: var(--mono-50);
-    background-image: 
-      radial-gradient(ellipse at 20% 0%, rgba(249, 235, 235, 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 100%, rgba(245, 238, 238, 0.4) 0%, transparent 50%);
-    background-attachment: fixed;
     color: var(--text);
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
     font-size: 15.5px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: 
+      radial-gradient(ellipse at 20% 0%, rgba(249, 235, 235, 0.5) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(245, 238, 238, 0.4) 0%, transparent 50%);
+    transform: translateZ(0);
   }
 
   h1, h2, h3 {
@@ -285,7 +293,7 @@ html {
   }
 
   .topbar-container {
-    @apply h-16 bg-white/85 backdrop-blur-xl border-b border-border/80 sticky top-0 z-20 flex items-center justify-between px-4 md:px-8 transition-colors;
+    @apply h-16 bg-white/85 backdrop-blur-xl border-b border-border/80 sticky top-0 z-20 flex items-center justify-between px-4 md:px-5 transition-colors;
   }
 
   .topbar-dropdown {
@@ -294,7 +302,16 @@ html {
 
   .sidebar-tenant-container,
   .sidebar-admin-container {
-    @apply fixed top-0 left-0 z-50 w-[280px] h-screen h-dvh bg-white border-r border-border/90 transition-transform duration-300 ease-out -translate-x-full md:translate-x-0;
+    @apply fixed top-0 left-0 z-50 w-[280px] h-screen h-dvh bg-white border-r border-border/90 -translate-x-full md:translate-x-0;
+    transition: width 0.14s cubic-bezier(0.2, 0, 0, 1), transform 0.14s cubic-bezier(0.2, 0, 0, 1);
+    will-change: width, transform;
+    transform: translateZ(0);
+    contain: paint;
+  }
+
+  .sidebar-tenant-container.desktop-collapsed,
+  .sidebar-admin-container.desktop-collapsed {
+    @apply md:w-[72px];
   }
 
   .sidebar-tenant-container.mobile-open,
@@ -308,6 +325,33 @@ html {
 
   .main-layout {
     @apply md:ml-[280px] min-h-dvh flex flex-col;
+    transition: margin-left 0.14s cubic-bezier(0.2, 0, 0, 1);
+    will-change: margin-left;
+    transform: translateZ(0);
+  }
+
+  .main-layout.sidebar-collapsed {
+    @apply md:ml-[72px];
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .topbar-container,
+    [data-slot="bottom-nav-tenant"],
+    [data-slot="bottom-nav-admin"],
+    .modal-backdrop,
+    .sidebar-mobile-overlay {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
   }
 
   .main-content-inner {

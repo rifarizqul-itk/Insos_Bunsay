@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
-import { Sheet } from './Sheet';
+import { Modal } from './Modal';
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -470,13 +470,13 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   };
 
   return (
-    <Sheet
+    <Modal
       isOpen={isModalOpen}
       onClose={onClose}
       title="Rincian Transaksi"
       subtitle={`ID: ${trxLabel}`}
       badge={<Badge status={item.status || 'Diterima'} />}
-      width="md"
+      size="xl"
       footer={
         <div className="flex items-center justify-between w-full gap-3 print:hidden">
           <Button
@@ -794,7 +794,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         </div>
 
       </div>
-    </Sheet>
+    </Modal>
   );
 }
 

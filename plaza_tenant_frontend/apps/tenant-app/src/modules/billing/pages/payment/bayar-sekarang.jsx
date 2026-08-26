@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon, FormField, Button, Card, FIFOPreview, Badge, useToast, cn } from '@bunsay/shared-ui';
+import { Icon, FormField, Button, Card, useToast, cn } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
@@ -74,9 +74,9 @@ function BayarSekarang() {
   const [isLoading, setIsLoading] = useState(false);
   const [unpaidBills, setUnpaidBills] = useState([]);
   const [isUnpaidLoaded, setIsUnpaidLoaded] = useState(false);
-  const [showReview, setShowReview] = useState(false);
   const [izinkanCicilan, setIzinkanCicilan] = useState(false);
   const [processError, setProcessError] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     const fetchUnpaidBills = async () => {
@@ -154,6 +154,10 @@ function BayarSekarang() {
     return filtered.length > 0 ? filtered : unpaidBills;
   }, [unpaidBills, selectedKiosFilter]);
 
+  const totalKewajiban = useMemo(() => {
+    return displayedUnpaidBills.reduce((sum, b) => sum + (b.sisaTagihan ?? b.totalTagihan), 0);
+  }, [displayedUnpaidBills]);
+
   const handleSelectKiosFilter = (kiosKey) => {
     setSelectedKiosFilter(kiosKey);
     const targetBills = kiosKey === 'semua' ? unpaidBills : unpaidBills.filter(b => b.noKios === kiosKey);
@@ -180,19 +184,7 @@ function BayarSekarang() {
     };
   }, [previewBukti]);
 
-  const handleRadioKeyDown = (e, targetRole) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const nextMetode = metode === 'transfer_manual' ? 'midtrans_gateway' : 'transfer_manual';
-      setMetode(nextMetode);
-    } else if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      if (targetRole) setMetode(targetRole);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const processFile = (file) => {
     if (!file) return;
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -212,8 +204,37 @@ function BayarSekarang() {
     setPreviewBukti(URL.createObjectURL(file));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFileChange = (e) => {
+    processFile(e.target.files[0]);
+  };
+
+  const handleDrop = (e) => {
     e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    if (previewBukti && previewBukti.startsWith('blob:')) {
+      URL.revokeObjectURL(previewBukti);
+    }
+    setBuktiTransfer(null);
+    setPreviewBukti(null);
+  };
+
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+
+  const handleProsesPembayaran = async (e) => {
+    if (e) e.preventDefault();
+
     const nominalAngka = parseInt(nominal, 10);
     if (!nominalAngka || nominalAngka <= 0) {
       setNominalError('Masukkan nominal pembayaran yang valid.');
@@ -226,21 +247,9 @@ function BayarSekarang() {
       return;
     }
 
-    setNominalError(null);
-    setShowReview(true);
-  };
-
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    if (!file) return resolve(null);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-
-  const handleProsesPembayaran = async () => {
     setIsLoading(true);
     setProcessError(null);
+
     try {
       const targetTagihanId = displayedUnpaidBills[0]?.idTagihan || unpaidBills[0]?.idTagihan || 1;
       const todayStr = new Date().toISOString().split('T')[0];
@@ -258,7 +267,7 @@ function BayarSekarang() {
 
         await httpClient.post('/api/v1/tenant/pembayaran', payload);
         setIsLoading(false);
-        addToast('Bukti pembayaran terkirim! Menunggu verifikasi admin.', 'success');
+        addToast('Bukti transfer berhasil dikirim! Menunggu verifikasi admin.', 'success');
         navigate('/tenant/histori');
         return;
       }
@@ -274,7 +283,6 @@ function BayarSekarang() {
       }
 
       setIsLoading(false);
-      setShowReview(false);
 
       const snapInstance = window.snap || (await loadSnapScript());
 
@@ -296,19 +304,19 @@ function BayarSekarang() {
               };
 
               await httpClient.post('/api/v1/tenant/pembayaran', confirmPayload);
-              addToast('Pembayaran Midtrans Berhasil! Tagihan sewa kios telah diperbarui.', 'success');
+              addToast('Pembayaran Midtrans Berhasil! Status tagihan telah lunas.', 'success');
               navigate('/tenant/histori');
             } catch (postErr) {
               console.error('Error confirming midtrans payment:', postErr);
-              addToast('Pembayaran selesai. Mengalihkan ke halaman riwayat...', 'info');
+              addToast('Pembayaran selesai. Mengalihkan ke riwayat...', 'info');
               navigate('/tenant/histori');
             }
           },
           onPending: () => {
-            addToast('Transaksi dibuat. Silakan selesaikan pembayaran sesuai panduan Midtrans.', 'info');
+            addToast('Transaksi dibuat. Silakan selesaikan pembayaran sesuai instruksi Midtrans.', 'info');
           },
           onError: () => {
-            addToast('Pembayaran Midtrans gagal atau dibatalkan.', 'error');
+            addToast('Pembayaran Midtrans dibatalkan atau gagal.', 'error');
           },
           onClose: () => {
             addToast('Popup pembayaran Midtrans ditutup.', 'info');
@@ -331,575 +339,414 @@ function BayarSekarang() {
   };
 
   return (
-    <div data-slot="bayar-sekarang" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Formulir Pembayaran Tagihan
+    <div data-slot="bayar-sekarang" className="page-fade-in flex flex-col gap-6 font-sans max-w-6xl mx-auto w-full">
+      {/* Header Sederhana & Ramah */}
+      <div className="flex flex-col gap-1 border-b border-border/70 pb-4">
+        <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
+          Pembayaran Sewa Kios
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Masukkan nominal bebas dan pilih metode pembayaran sewa kios Anda.
+        <p className="text-text-2 text-xs sm:text-sm font-medium">
+          Pilih metode dan selesaikan pembayaran sewa kios Anda.
         </p>
       </div>
 
-      <div className="bayar-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          {!isUnpaidLoaded ? (
-            <Card variant="elevated" className="flex flex-col gap-4 p-6 sm:p-7 animate-pulse">
-              <div className="h-5 w-40 bg-mono-200/60 rounded-md" />
-              <div className="h-11 w-full bg-mono-200/40 rounded-md" />
-              <div className="h-20 w-full bg-mono-200/40 rounded-xl" />
-              <div className="h-12 w-full bg-mono-200/60 rounded-md mt-2" />
-            </Card>
-          ) : unpaidBills.length === 0 ? (
-            <Card variant="elevated" className="flex flex-col items-center justify-center text-center p-8 sm:p-10 page-fade-in border-emerald-200 bg-emerald-50/40">
-              <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
-                <Icon icon="heroicons:check-circle-20-solid" width="40" height="40" />
-              </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-text tracking-tight text-balance mb-2">
-                Semua Tagihan Sewa Anda Sudah Lunas!
-              </h2>
-              <p className="text-text-2 text-sm sm:text-base font-medium max-w-md mb-6 leading-relaxed">
-                Tidak ada tagihan atau tunggakan sewa kios yang perlu dibayar saat ini. Terima kasih telah melakukan pembayaran tepat waktu!
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
-                <Button
-                  variant="primary"
-                  size="md"
-                  fullWidth
-                  onClick={() => navigate('/tenant/dashboard')}
-                  className="font-extrabold shadow-sm bg-green hover:bg-green/90 h-11"
-                >
-                  Kembali ke Dashboard
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  onClick={() => navigate('/tenant/histori')}
-                  className="font-extrabold h-11"
-                >
-                  Lihat Histori Pembayaran
-                </Button>
-              </div>
-            </Card>
-          ) : showReview ? (
-            <Card variant="glow" className="flex flex-col gap-5 p-6 sm:p-7 page-fade-in" role="region" aria-label="Tinjauan Konfirmasi Pembayaran">
-              <div className="flex items-center gap-2 border-b border-border pb-3">
-                <Icon icon="heroicons:shield-check-20-solid" width="24" height="24" className="text-green" />
-                <h2 className="text-lg font-extrabold text-text tracking-tight text-balance">
-                  Konfirmasi Review Pembayaran
-                </h2>
-              </div>
-              <p className="text-sm text-text-2 text-pretty">
-                Mohon periksa kembali detail transaksi pembayaran Anda sebelum memproses secara permanen.
-              </p>
-
-              <div className="p-4 bg-mono-100/60 border border-border/80 rounded-lg flex flex-col gap-2.5 text-sm">
-                <div><span className="text-text-3 font-semibold">Nominal Pembayaran:</span> <strong className="text-text font-bold font-tabular-nums text-base text-red">Rp {parseInt(nominal, 10).toLocaleString('id-ID')}</strong></div>
-                <div><span className="text-text-3 font-semibold">Metode Pembayaran:</span> <strong className="text-text font-bold">{metode === 'transfer_manual' ? 'Transfer Bank (Manual)' : 'Pembayaran Otomatis Midtrans'}</strong></div>
-                {metode === 'transfer_manual' && buktiTransfer && (
-                  <div><span className="text-text-3 font-semibold">Lampiran Bukti:</span> <strong className="text-text font-bold">{buktiTransfer.name}</strong></div>
-                )}
-              </div>
-
-              <FIFOPreview allocations={fifoAllocations} nominal={Number(nominal) || 0} />
-
-              {processError && (
-                <div className="bg-red-50 border border-red/30 rounded-xl p-4 flex items-start gap-3 text-xs sm:text-sm text-red font-medium leading-relaxed">
-                  <Icon icon="heroicons:exclamation-triangle" width="22" height="22" className="shrink-0 mt-0.5 text-red" />
-                  <div className="flex flex-col gap-1.5">
-                    <strong className="font-extrabold text-sm text-red">Gagal Menghubungi Midtrans Gateway:</strong>
-                    <span className="text-text font-semibold">{processError}</span>
-                    {processError.includes('Access denied') && (
-                      <div className="mt-1 p-2.5 bg-white/80 border border-red/20 rounded-lg text-xs text-text-2 space-y-1">
-                        <p className="font-bold text-red">⚠️ Kunci API Midtrans Sandbox Anda belum sesuai:</p>
-                        <p>1. Buka <strong>dashboard.sandbox.midtrans.com</strong> &rarr; <em>Settings</em> &rarr; <em>Access Keys</em>.</p>
-                        <p>2. Salin <strong>Server Key</strong> ke <code>plaza_tenant_backend/.env</code> (<code>MIDTRANS_SERVER_KEY=SB-Mid-server-...</code>).</p>
-                        <p>3. Salin <strong>Client Key</strong> ke <code>plaza_tenant_frontend/.env</code> (<code>VITE_MIDTRANS_CLIENT_KEY=SB-Mid-client-...</code>).</p>
-                      </div>
-                    )}
+      {/* Main Content */}
+      {!isUnpaidLoaded ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-pulse">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-border/80 h-96" />
+          <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-border/80 h-80" />
+        </div>
+      ) : unpaidBills.length === 0 ? (
+        <Card variant="elevated" className="flex flex-col items-center justify-center text-center p-8 sm:p-12 border-emerald-200 bg-emerald-50/40 rounded-3xl max-w-xl mx-auto w-full my-6">
+          <div className="size-14 rounded-full bg-emerald-100 flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
+            <Icon icon="heroicons:check-circle-20-solid" className="size-9" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text tracking-tight mb-2">
+            Semua Tagihan Sewa Sudah Lunas!
+          </h2>
+          <p className="text-text-2 text-xs sm:text-sm font-medium max-w-sm mb-6 leading-relaxed">
+            Tidak ada tagihan sewa kios yang perlu dibayar saat ini. Terima kasih telah membayar tepat waktu.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-xs">
+            <Button
+              variant="primary"
+              size="md"
+              fullWidth
+              onClick={() => navigate('/tenant/dashboard')}
+              className="font-extrabold shadow-sm bg-emerald-600 hover:bg-emerald-700 h-10 text-xs"
+            >
+              Ke Dashboard
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={() => navigate('/tenant/histori')}
+              className="font-extrabold h-10 text-xs"
+            >
+              Lihat Riwayat
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <form onSubmit={handleProsesPembayaran} className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+          
+          {/* KOLOM KIRI: FORMULIR PEMBAYARAN */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-4">
+              
+              {/* Multi-Kiosk Filter (Jika punya > 1 kios) */}
+              {availableKiosks.length > 1 && (
+                <div className="flex flex-col gap-1.5 pb-3 border-b border-border/70">
+                  <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">
+                    Pilih Unit Kios:
+                  </span>
+                  
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectKiosFilter('semua')}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
+                        selectedKiosFilter === 'semua'
+                          ? "bg-red text-white shadow-xs"
+                          : "bg-mono-100 text-text-2 hover:bg-mono-200/80"
+                      )}
+                    >
+                      Semua Kios ({availableKiosks.length})
+                    </button>
+                    {availableKiosks.map((k) => (
+                      <button
+                        key={k.noKios}
+                        type="button"
+                        onClick={() => handleSelectKiosFilter(k.noKios)}
+                        className={cn(
+                          "px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1",
+                          selectedKiosFilter === k.noKios
+                            ? "bg-red text-white shadow-xs"
+                            : "bg-mono-100 text-text-2 hover:bg-mono-200/80"
+                        )}
+                      >
+                        <span>Kios {k.noKios}</span>
+                        <span className="text-2xs opacity-80">({k.jenisUsaha})</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => setShowReview(false)}
-                  className="flex-1 h-12 text-sm font-extrabold"
-                >
-                  Ubah Data
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="lg"
-                  disabled={isLoading}
-                  onClick={handleProsesPembayaran}
-                  className="flex-1 h-12 text-sm font-extrabold shadow-md bg-green hover:bg-green/90"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin" width="20" height="20" />
-                      <span>Memproses...</span>
-                    </span>
-                  ) : (
-                    'Konfirmasi & Bayar Sekarang'
-                  )}
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-6">
-              <Card variant="elevated" className="flex flex-col gap-5 p-5 sm:p-7">
-                {/* Banner Izin Cicil via WhatsApp (Compact & Responsive) */}
-                <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm shadow-2xs">
-                  <div className="flex items-start gap-2.5 min-w-0">
-                    <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <div className="font-extrabold text-amber-900 text-xs sm:text-sm">Ingin Mengajukan Cicilan?</div>
-                      <p className="text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
-                        Hubungi pengelola terlebih dahulu untuk persetujuan nominal pembayaran bertahap.
-                      </p>
-                    </div>
-                  </div>
-                  <a
-                    href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi dan mengajukan izin pembayaran cicilan sewa kios.')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shrink-0 shadow-2xs transition-all cursor-pointer w-full sm:w-auto min-h-[44px]"
+              {/* Pilihan Metode Bayar (Segmented Tabs) */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs sm:text-sm font-extrabold text-text">
+                  Metode Pembayaran
+                </span>
+
+                <div className="grid grid-cols-2 p-0.5 bg-mono-100 rounded-xl border border-border/60 gap-1" role="tablist">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={metode === 'transfer_manual'}
+                    onClick={() => setMetode('transfer_manual')}
+                    className={cn(
+                      "py-2 px-2.5 rounded-lg font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      metode === 'transfer_manual'
+                        ? "bg-white text-red shadow-2xs border border-border/40 font-black"
+                        : "text-text-2 hover:text-text"
+                    )}
                   >
-                    <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4" />
-                    <span>Chat Pengelola (WA)</span>
-                  </a>
+                    <Icon icon="heroicons:building-library-20-solid" className="size-4 shrink-0" />
+                    <span>Transfer Bank</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={metode === 'midtrans_gateway'}
+                    onClick={() => setMetode('midtrans_gateway')}
+                    className={cn(
+                      "py-2 px-2.5 rounded-lg font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      metode === 'midtrans_gateway'
+                        ? "bg-white text-red shadow-2xs border border-border/40 font-black"
+                        : "text-text-2 hover:text-text"
+                    )}
+                  >
+                    <Icon icon="heroicons:qr-code-20-solid" className="size-4 shrink-0" />
+                    <span>Pembayaran Otomatis</span>
+                  </button>
                 </div>
+              </div>
 
-                {/* Pemilihan Kios (Untuk Tenant Multi-Kios) */}
-                {availableKiosks.length > 1 && (
-                  <div className="flex flex-col gap-2.5 bg-mono-100/90 border border-border/80 rounded-xl p-3.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
-                        <Icon icon="heroicons:funnel-20-solid" className="size-3.5 text-red" />
-                        <span>Pilih Unit Kios yang Ingin Dibayar:</span>
-                      </span>
-                      <span className="text-2xs font-bold text-text-3">
-                        {selectedKiosFilter === 'semua' ? 'Semua Unit Kios' : `Fokus Kios ${selectedKiosFilter}`}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectKiosFilter('semua')}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
-                          selectedKiosFilter === 'semua'
-                            ? "bg-red text-white shadow-xs border border-red"
-                            : "bg-white text-text hover:bg-mono-50 border border-border"
-                        )}
-                      >
-                        <Icon icon="heroicons:building-storefront-20-solid" className="size-4 shrink-0" />
-                        <span>Semua Unit ({availableKiosks.length})</span>
-                        <span className={cn(
-                          "px-1.5 py-0.5 rounded text-2xs font-tabular-nums",
-                          selectedKiosFilter === 'semua' ? "bg-red-900/60 text-white" : "bg-mono-100 text-text-2 font-bold"
-                        )}>
-                          Rp {unpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
-                        </span>
-                      </button>
-
-                      {availableKiosks.map((k) => (
-                        <button
-                          key={k.noKios}
-                          type="button"
-                          onClick={() => handleSelectKiosFilter(k.noKios)}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
-                            selectedKiosFilter === k.noKios
-                              ? "bg-red text-white shadow-xs border border-red"
-                              : "bg-white text-text hover:bg-mono-50 border border-border"
-                          )}
-                        >
-                          <span className="font-tabular-nums font-bold">Kios {k.noKios}</span>
-                          <span className="text-2xs opacity-80 font-medium truncate max-w-24">({k.jenisUsaha})</span>
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded text-2xs font-tabular-nums font-extrabold",
-                            selectedKiosFilter === k.noKios ? "bg-red-900/60 text-white" : "bg-mono-100 text-red"
-                          )}>
-                            Rp {k.totalUnpaid.toLocaleString('id-ID')}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Rincian Periode Tagihan yang Perlu Dibayar (Clean Flat Summary Card) */}
-                {displayedUnpaidBills.length > 0 && (
-                  <div className="bg-mono-50/60 border border-border/80 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-2xs">
-                    <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-2.5">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red shrink-0" />
-                        <span className="text-xs sm:text-sm font-extrabold text-text tracking-tight">
-                          {displayedUnpaidBills.length > 1 
-                            ? `Rincian Tagihan (${displayedUnpaidBills.length} Periode)` 
-                            : 'Rincian Tagihan Sewa'}
-                        </span>
+              {/* Konten Sesuai Metode */}
+              {metode === 'transfer_manual' ? (
+                <div className="flex flex-col gap-3.5 page-fade-in">
+                  {/* Kartu Rekening Bersih (1x Saja) */}
+                  <div className="p-3.5 bg-mono-50/80 border border-border/80 rounded-xl flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-2xs text-text-3 font-semibold block">Transfer ke Bank BPD Kaltimtara:</span>
+                      <div className="text-lg sm:text-xl font-mono font-black text-red tracking-wider font-tabular-nums mt-0.5 select-all">
+                        08115901119
                       </div>
-
-                      {displayedUnpaidBills.length > 1 && (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-text-3 font-tabular-nums shrink-0">
-                          <span className="hidden sm:inline">Total Akumulasi:</span>
-                          <span className="bg-red-50 text-red px-2.5 py-0.5 rounded-lg border border-red/20 font-extrabold font-tabular-nums text-xs">
-                            Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
-                          </span>
-                        </div>
-                      )}
+                      <span className="text-2xs text-text-2 font-bold block mt-0.5">
+                        a.n. UPTD PASAR KEBUN SAYUR
+                      </span>
                     </div>
 
-                    <div className="divide-y divide-border/60">
-                      {displayedUnpaidBills.map((bill, bIdx) => {
-                        const isLatest = bIdx === displayedUnpaidBills.length - 1;
-                        const nominalBill = Number(bill.sisaTagihan ?? bill.totalTagihan);
-                        const isDicicil = bill.statusTagihan === 'Dicicil' || (bill.totalTerbayar > 0);
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="gap-1 px-3 py-1.5 text-xs font-bold shadow-2xs border-border hover:border-red hover:text-red shrink-0"
+                      onClick={() => {
+                        navigator.clipboard.writeText('08115901119');
+                        addToast('Nomor rekening berhasil disalin!', 'success');
+                      }}
+                    >
+                      <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
+                      <span>Salin</span>
+                    </Button>
+                  </div>
 
-                        return (
-                          <div 
-                            key={bill.idTagihan || bIdx}
-                            className="py-3 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
-                          >
-                            {/* Left: Info Details */}
-                            <div className="flex flex-col min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-extrabold text-text text-sm sm:text-base tracking-tight">
-                                  Sewa Periode {formatPeriodeIndo(bill.periode)}
-                                </span>
-                                {bill.noKios && bill.noKios !== '—' && (
-                                  <span className="font-bold text-red text-xs">
-                                    • Kios {bill.noKios}
-                                  </span>
-                                )}
-                                {isLatest && displayedUnpaidBills.length > 1 && (
-                                  <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                                    Bulan Berjalan
-                                  </span>
-                                )}
-                                {isDicicil && (
-                                  <span className="text-2xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                    Dicicil
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-xs text-text-3 font-medium mt-0.5">
-                                <span>{bill.lantai || 'Lantai 1'}</span>
-                                {bill.jenisUsaha && bill.jenisUsaha !== '—' && (
-                                  <span> — {bill.jenisUsaha}</span>
-                                )}
-                              </div>
-                            </div>
+                  {/* Dropzone Bukti Transfer */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs sm:text-sm font-extrabold text-text">
+                      Unggah Bukti Transfer <span className="text-red">*</span>
+                    </span>
 
-                            {/* Right: Nominal */}
-                            <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 pt-1 sm:pt-0">
-                              <div className="text-base sm:text-lg font-black font-tabular-nums text-text">
-                                Rp {nominalBill.toLocaleString('id-ID')}
-                              </div>
-                              {bill.totalTerbayar > 0 && (
-                                <span className="text-2xs text-emerald-700 font-bold font-tabular-nums">
-                                  Sudah terbayar Rp {bill.totalTerbayar.toLocaleString('id-ID')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                    {!previewBukti ? (
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={handleDrop}
+                        className={cn(
+                          "border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer group",
+                          isDragOver ? "border-red bg-red-50/50" : "border-border/80 hover:border-red/60 bg-mono-50/40"
+                        )}
+                        onClick={() => document.getElementById('file-upload-input')?.click()}
+                      >
+                        <input
+                          id="file-upload-input"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="sr-only"
+                        />
+                        <div className="size-9 rounded-lg bg-white border border-border/80 flex items-center justify-center text-text-3 group-hover:text-red shadow-2xs">
+                          <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-4" />
+                        </div>
+                        <p className="text-xs font-bold text-text">
+                          <span className="text-red hover:underline">Pilih foto bukti</span> atau seret file ke sini
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-mono-50 border border-border/80 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <img
+                          src={previewBukti}
+                          alt="Preview Bukti"
+                          className="size-12 rounded-lg object-cover border border-border/80 shrink-0 bg-white"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-text truncate">
+                            {buktiTransfer?.name || 'Bukti_Transfer.jpg'}
+                          </p>
+                          <p className="text-2xs text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                            <Icon icon="heroicons:check-circle-20-solid" className="size-3.5" />
+                            <span>Foto siap dikirim</span>
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveFile}
+                          className="text-text-3 hover:text-red p-1.5 shrink-0 rounded-lg"
+                          aria-label="Hapus file"
+                        >
+                          <Icon icon="heroicons:trash-20-solid" className="size-4.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex flex-col gap-2.5 page-fade-in">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <Icon icon="heroicons:bolt-20-solid" className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <strong className="text-emerald-950 font-bold text-xs sm:text-[13px] block">
+                        Pembayaran Instan
+                      </strong>
+                      <span className="text-[11.5px] text-emerald-800 font-medium block mt-0.5">
+                        Otomatis lunas 24 jam &bull; Tanpa perlu unggah struk
+                      </span>
                     </div>
                   </div>
-                )}
 
+                  <div className="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
+                      <Icon icon="heroicons:qr-code-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
+                      <span>QRIS (GoPay, OVO, ShopeePay, DANA)</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
+                      <Icon icon="heroicons:building-library-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
+                      <span>Virtual Account Bank</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
+                      <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
+                      <span>Alfamart / Indomaret</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Input Nominal */}
+              <div className="flex flex-col gap-1">
                 <FormField 
                   label={
-                    <span className="flex items-center justify-between w-full">
-                      <span className="inline-flex items-center gap-1 font-bold text-text-2">
-                        <span>Nominal Pembayaran (Rp)</span>
-                        <span className="text-red font-bold" aria-hidden="true">*</span>
-                      </span>
-                      {!izinkanCicilan ? (
-                        <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1">
-                          <Icon icon="heroicons:lock-closed-20-solid" className="size-3.5" />
-                          <span>Wajib Pelunasan Full</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 flex items-center gap-1">
-                          <Icon icon="heroicons:check-circle-20-solid" className="size-3.5" />
-                          <span>Cicilan Diizinkan</span>
-                        </span>
-                      )}
+                    <span className="font-extrabold text-xs sm:text-sm text-text">
+                      Nominal yang Dibayar (Rp)
                     </span>
                   } 
                   id="input-nominal-pembayaran" 
                   error={nominalError}
                 >
-                  <input 
-                    type="text" 
-                    inputMode="numeric"
-                    placeholder="Contoh: 750.000" 
-                    value={formatRibuanDot(nominal)} 
-                    readOnly={!izinkanCicilan}
-                    onChange={(e) => { 
-                      if (izinkanCicilan) {
-                        const cleanDigits = e.target.value.replace(/\D/g, '');
-                        setNominal(cleanDigits); 
-                        if (nominalError) setNominalError(null); 
-                      }
-                    }} 
-                    className={cn(
-                      'w-full h-11 rounded-md border border-border px-3.5 text-base font-bold font-tabular-nums transition-colors',
-                      !izinkanCicilan ? 'bg-amber-50/40 cursor-not-allowed text-text-2' : 'bg-mono-100/50 text-text focus:bg-white'
-                    )}
-                  />
-                  {!izinkanCicilan && (
-                    <p className="text-xs text-text-3 font-medium mt-1">
-                      Nominal otomatis dikunci pada tagihan lunas. Hubungi Pengelola via WA untuk membuka izin cicilan.
-                    </p>
-                  )}
-                </FormField>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <span id="label-metode-pembayaran" className="text-sm font-bold text-text-2">
-                    Pilih Metode Pembayaran
-                  </span>
-                  <div role="radiogroup" aria-labelledby="label-metode-pembayaran" className="flex flex-col gap-2.5">
-                    <button
-                      type="button"
-                      role="radio"
-                      tabIndex={metode === 'transfer_manual' ? 0 : -1}
-                      aria-checked={metode === 'transfer_manual'}
-                      onClick={() => setMetode('transfer_manual')}
-                      onKeyDown={(e) => handleRadioKeyDown(e, 'transfer_manual')}
-                      className={cn(
-                        'w-full min-h-12 px-4 py-3 rounded-xl font-bold text-sm text-start flex items-center justify-between border transition-all cursor-pointer',
-                        metode === 'transfer_manual' ? 'bg-red-50 text-red border-red shadow-sm' : 'bg-mono-100/60 text-text border-border hover:bg-mono-100'
-                      )}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <Icon icon="heroicons:building-library-20-solid" className="size-5" />
-                        <span>Transfer Bank (Manual)</span>
-                      </span>
-                      {metode === 'transfer_manual' && <Icon icon="heroicons:check-circle-20-solid" className="size-5 text-red" />}
-                    </button>
-
-                    <button
-                      type="button"
-                      role="radio"
-                      tabIndex={metode === 'midtrans_gateway' ? 0 : -1}
-                      aria-checked={metode === 'midtrans_gateway'}
-                      onClick={() => setMetode('midtrans_gateway')}
-                      onKeyDown={(e) => handleRadioKeyDown(e, 'midtrans_gateway')}
-                      className={cn(
-                        'w-full min-h-12 px-4 py-3 rounded-xl font-bold text-sm text-start flex items-center justify-between border transition-all cursor-pointer',
-                        metode === 'midtrans_gateway' ? 'bg-red-50 text-red border-red shadow-sm' : 'bg-mono-100/60 text-text border-border hover:bg-mono-100'
-                      )}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <Icon icon="heroicons:qr-code-20-solid" className="size-5" />
-                        <span>Pembayaran Otomatis</span>
-                      </span>
-                      {metode === 'midtrans_gateway' && <Icon icon="heroicons:check-circle-20-solid" className="size-5 text-red" />}
-                    </button>
-                  </div>
-                </div>
-
-                {metode === 'transfer_manual' && (
-                  <div className="flex flex-col gap-4">
-                    {/* Rekening Tujuan Box (Visible on mobile/tablet directly above upload input) */}
-                    <div className="lg:hidden p-4 bg-mono-50 border border-border/90 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">Rekening Tujuan Transfer</span>
-                        <Badge status="Terisi" customText="Rekening Resmi" />
-                      </div>
-                      <div className="flex items-center justify-between pt-0.5">
-                        <div>
-                          <span className="text-xs font-bold text-text">BANK BPD KALTIMTARA</span>
-                          <div className="text-lg font-mono font-black text-red tracking-wider font-tabular-nums">
-                            08115901119
-                          </div>
-                          <div className="text-2xs text-text-3 font-semibold">a.n. UPTD PASAR KEBUN SAYUR</div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="gap-1.5 px-3 py-1.5 font-bold shadow-2xs border-border hover:border-red hover:text-red min-h-9"
-                          onClick={() => {
-                            navigator.clipboard.writeText('08115901119');
-                            addToast('Nomor rekening berhasil disalin!', 'success');
-                          }}
-                        >
-                          <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
-                          <span>Salin</span>
-                        </Button>
-                      </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-3 font-black text-sm">
+                      Rp
                     </div>
-
-                    <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-input" required={!previewBukti}>
-                      <input
-                        id="upload-bukti-transfer-input"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="sr-only"
-                      />
-                      <label
-                        htmlFor="upload-bukti-transfer-input"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            document.getElementById('upload-bukti-transfer-input')?.click();
-                          }
-                        }}
-                        className="flex flex-col items-center justify-center gap-2 bg-mono-100/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-28 hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"
-                      >
-                        <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-7 text-red" />
-                        <span className="text-sm font-bold text-text">
-                          {buktiTransfer ? buktiTransfer.name : 'Upload / Ambil Foto Bukti Transfer'}
-                        </span>
-                        <span className="text-xs text-text-3 font-medium">
-                          Format: JPG, PNG, WEBP (Maks 5 MB)
-                        </span>
-                      </label>
-                      {previewBukti && (
-                        <div className="mt-2 border border-border rounded-lg p-2 bg-mono-100/30 flex justify-center">
-                          <img 
-                            src={previewBukti} 
-                            alt="Preview foto bukti transfer" 
-                            loading="lazy"
-                            className="max-h-48 rounded object-contain" 
-                          />
-                        </div>
+                    <input 
+                      type="text" 
+                      inputMode="numeric"
+                      placeholder="750.000" 
+                      value={formatRibuanDot(nominal)} 
+                      readOnly={!izinkanCicilan}
+                      onChange={(e) => { 
+                        if (izinkanCicilan) {
+                          const cleanDigits = e.target.value.replace(/\D/g, '');
+                          setNominal(cleanDigits); 
+                          if (nominalError) setNominalError(null); 
+                        }
+                      }} 
+                      className={cn(
+                        'w-full h-10.5 rounded-xl border border-border pl-10 pr-4 text-base font-extrabold font-tabular-nums transition-colors',
+                        !izinkanCicilan ? 'bg-mono-100/70 text-text cursor-default' : 'bg-white text-text focus:border-red'
                       )}
-                    </FormField>
+                    />
                   </div>
-                )}
+                </FormField>
+              </div>
 
+              {/* Error Box */}
+              {processError && (
+                <div className="bg-red-50 border border-red/30 rounded-xl p-3 flex items-start gap-2 text-xs text-red font-medium">
+                  <Icon icon="heroicons:exclamation-triangle" className="size-4 shrink-0 mt-0.5 text-red" />
+                  <span>{processError}</span>
+                </div>
+              )}
+
+              {/* Tombol Bayar Sekarang */}
+              <div className="pt-0.5">
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
                   disabled={isLoading || !isUnpaidLoaded}
-                  className="w-full h-12 text-base font-extrabold shadow-md mt-2"
+                  className="w-full h-11 text-sm font-black shadow-md rounded-xl cursor-pointer"
                 >
-                  Tinjau & Lanjutkan Pembayaran
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
+                      <span>Memproses...</span>
+                    </span>
+                  ) : (
+                    <span>Bayar Sekarang</span>
+                  )}
                 </Button>
-              </Card>
-            </form>
-          )}
-        </div>
-
-        {/* Kolom Kanan: Panduan & Info Rekening */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-5 bg-white border border-border shadow-sm rounded-2xl">
-            <div className="flex items-center gap-2.5 border-b border-border/80 pb-3.5">
-              <div className="size-8 rounded-lg bg-red/10 text-red flex items-center justify-center shrink-0">
-                <Icon icon="heroicons:information-circle-20-solid" className="size-5" />
               </div>
-              <h2 className="text-base font-extrabold text-text tracking-tight">
-                Panduan Pembayaran
-              </h2>
+
+            </div>
+          </div>
+
+          {/* KOLOM KANAN: SATU KARTU RINGKASAN TUNGGAL (RESPONSIVE & UN-SQUEEZED) */}
+          <div className="lg:col-span-5 flex flex-col gap-3.5 order-first lg:order-last lg:sticky lg:top-24">
+            
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                <h3 className="text-xs sm:text-sm font-extrabold text-text tracking-tight">
+                  Ringkasan Pembayaran
+                </h3>
+                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                  {displayedUnpaidBills.length} Bulan
+                </span>
+              </div>
+
+              {/* Rincian Item Tagihan */}
+              <div className="flex flex-col gap-2 text-xs">
+                {displayedUnpaidBills.map((bill, idx) => (
+                  <div key={bill.idTagihan || idx} className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-extrabold text-text block leading-snug">
+                        Sewa {formatPeriodeIndo(bill.periode)}
+                      </span>
+                      <span className="text-2xs text-text-3 block mt-0.5">
+                        Kios {bill.noKios} • {bill.lantai}
+                      </span>
+                    </div>
+                    <span className="font-bold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap">
+                      Rp {(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total & Rincian Transaksi */}
+              <div className="border-t border-dashed border-border/80 pt-2.5 flex justify-between items-baseline gap-2">
+                <span className="text-xs font-extrabold text-text shrink-0">Total yang Dibayar</span>
+                <span className="text-base sm:text-lg font-black font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
+                  Rp {Number(nominal || 0).toLocaleString('id-ID')}
+                </span>
+              </div>
+
+              {/* Live Status Pelunasan (Jika bayar multi-bulan) */}
+              {displayedUnpaidBills.length > 1 && fifoAllocations.length > 0 && (
+                <div className="p-2.5 bg-mono-50 rounded-xl border border-border/60 text-2xs flex flex-col gap-1 mt-0.5">
+                  <span className="font-extrabold text-text-2">Rencana Pelunasan:</span>
+                  {fifoAllocations.map((alloc) => (
+                    <div key={alloc.idTagihan} className="flex justify-between items-center text-text-2 gap-2">
+                      <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
+                      <span className={cn(
+                        "font-bold shrink-0 whitespace-nowrap",
+                        alloc.status === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'
+                      )}>
+                        {alloc.status} (Rp {alloc.allocated.toLocaleString('id-ID')})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bantuan / Izin Cicilan via WhatsApp (Responsive Micro Footer) */}
+              <div className="pt-2.5 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-2xs">
+                <span className="text-text-3 font-medium">
+                  Izin cicilan sewa?
+                </span>
+                <a
+                  href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi mengenai pengajuan pembayaran cicilan sewa kios.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
+                >
+                  <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5 shrink-0" />
+                  <span>Hubungi Pengelola (WA)</span>
+                </a>
+              </div>
+
             </div>
 
-            {metode === 'transfer_manual' && (
-              <div className="flex flex-col gap-4 text-sm text-text-2">
-                <p className="font-medium text-pretty leading-relaxed text-text">
-                  Silakan transfer sesuai nominal yang Anda tentukan ke nomor rekening resmi pengelola di bawah ini:
-                </p>
-
-                {/* Box Rekening BPD Kaltimtara */}
-                <div className="p-4 bg-mono-50 border border-border rounded-xl flex flex-col gap-3 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <span className="label-micro text-text-3 font-bold">BANK BPD KALTIMTARA</span>
-                    <Badge status="Terisi" customText="Rekening Resmi" />
-                  </div>
-                  <div className="flex items-center justify-between pt-1">
-                    <div>
-                      <span className="text-[11px] text-text-3 font-medium block">Nomor Rekening Tujuan:</span>
-                      <div className="text-xl font-mono font-black text-text tracking-wider mt-0.5">
-                        08115901119
-                      </div>
-                      <div className="text-xs text-text-2 font-bold mt-0.5">a.n. UPTD PASAR KEBUN SAYUR</div>
-                    </div>
-                    <div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="gap-1.5 px-3.5 font-bold shadow-2xs border-border hover:border-red hover:text-red"
-                        onClick={() => {
-                          navigator.clipboard.writeText('08115901119');
-                          addToast('Nomor rekening berhasil disalin!', 'success');
-                        }}
-                      >
-                        <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
-                        <span>Salin</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Langkah-langkah Singkat */}
-                <div className="p-3.5 bg-mono-100/50 border border-border/70 rounded-lg flex flex-col gap-2 text-xs">
-                  <span className="font-bold text-text flex items-center gap-1.5">
-                    <Icon icon="heroicons:check-circle-20-solid" className="size-4 text-emerald-700" />
-                    <span>Langkah Pembayaran Manual:</span>
-                  </span>
-                  <ol className="list-decimal ps-4 space-y-1 text-text-2 font-medium">
-                    <li>Lakukan transfer ke rekening di atas via ATM / M-Banking.</li>
-                    <li>Simpan atau <i>screenshot</i> bukti transfer yang sah.</li>
-                    <li>Unggah foto bukti pada formulir dan klik tombol kirim.</li>
-                  </ol>
-                </div>
-              </div>
-            )}
-
-            {metode === 'midtrans_gateway' && (
-              <div className="flex flex-col gap-4 text-sm text-text-2 leading-relaxed">
-                <div className="p-3.5 bg-orange-50/70 border border-orange-200 rounded-xl flex items-center gap-3">
-                  <div className="size-8 rounded-lg bg-orange-100 text-orange flex items-center justify-center shrink-0">
-                    <Icon icon="heroicons:bolt-20-solid" className="size-5" />
-                  </div>
-                  <div>
-                    <strong className="text-xs font-bold text-orange-950 block">Verifikasi Instan 24/7</strong>
-                    <span className="text-[11px] text-orange-900 font-medium">Lunas otomatis tanpa perlu menunggu konfirmasi admin.</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                  <p className="font-bold text-text text-xs">Saluran Pembayaran yang Didukung:</p>
-                  <ul className="space-y-2 ps-4 list-disc text-xs text-text-2 font-medium">
-                    <li>
-                      <strong className="text-text font-bold">QRIS</strong> (GoPay, ShopeePay, DANA, OVO, LinkAja, BCA Mobile, Livin' by Mandiri, BRImo, BNI Mobile).
-                    </li>
-                    <li>
-                      <strong className="text-text font-bold">Virtual Account (Bank Transfer)</strong> (BCA, BNI, BRI, Mandiri Bill Payment, CIMB Niaga, Permata).
-                    </li>
-                    <li>
-                      <strong className="text-text font-bold">E-Wallet Langsung</strong> (GoPay, GoPayLater, ShopeePay, DANA).
-                    </li>
-                    <li>
-                      <strong className="text-text font-bold">Gerai Retail Tunai</strong> (Alfamart, Indomaret).
-                    </li>
-                    <li>
-                      <strong className="text-text font-bold">Kartu Debit & Kredit</strong> (Visa, Mastercard, JCB berlisensi 3-D Secure).
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

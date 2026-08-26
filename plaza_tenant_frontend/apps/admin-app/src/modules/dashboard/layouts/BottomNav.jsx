@@ -1,16 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Icon } from '@bunsay/shared-ui';
+import { Icon, cn } from '@bunsay/shared-ui';
 
 function BottomNav() {
   const location = useLocation();
 
   const adminItems = [
-    { label: 'Beranda', path: '/admin/dashboard', icon: 'material-symbols:dashboard-outline' },
-    { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'material-symbols:fact-check-outline' },
-    { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'material-symbols:payments-outline' },
-    { label: 'Riwayat', path: '/admin/riwayat', icon: 'material-symbols:history' },
-    { label: 'Profil', path: '/admin/akun', icon: 'material-symbols:person-outline' }
+    { label: 'Beranda', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid', iconOutline: 'heroicons:squares-2x2' },
+    { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'heroicons:shield-check-20-solid', iconOutline: 'heroicons:shield-check' },
+    { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'heroicons:banknotes-20-solid', iconOutline: 'heroicons:banknotes' },
+    { label: 'Riwayat', path: '/admin/riwayat', icon: 'heroicons:clock-20-solid', iconOutline: 'heroicons:clock' },
+    { label: 'Akun', path: '/admin/akun', icon: 'heroicons:user-circle-20-solid', iconOutline: 'heroicons:user-circle' }
   ];
 
   const isActive = (path) => {
@@ -28,13 +28,9 @@ function BottomNav() {
     <nav 
       data-slot="bottom-nav-admin"
       aria-label="Navigasi Bawah Seluler Admin"
-      className="md:hidden fixed bottom-2 inset-x-2.5 z-30 bg-white/95 backdrop-blur-md border border-border/80 shadow-xl rounded-2xl overflow-hidden"
-      style={{
-        marginBottom: 'calc(env(safe-area-inset-bottom, 0px))',
-        fontFamily: "'Plus Jakarta Sans', sans-serif"
-      }}
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-border/80 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] pb-[env(safe-area-inset-bottom,0px)]"
     >
-      <div className="flex w-full h-16 items-center justify-between px-1.5 py-1">
+      <div className="grid grid-cols-5 items-center h-15 max-w-lg mx-auto px-1">
         {adminItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -44,20 +40,28 @@ function BottomNav() {
               onClick={triggerHaptic}
               aria-label={item.label}
               aria-current={active ? 'page' : undefined}
-              className="flex-1 flex flex-col items-center justify-center h-full px-0.5 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer select-none text-decoration-none min-w-0"
+              className={cn(
+                'flex flex-col items-center justify-center h-full py-1 transition-all active:scale-95 select-none relative group min-w-0',
+                active ? 'text-red' : 'text-text-3 hover:text-text-2'
+              )}
             >
-              <div className={`flex flex-col items-center justify-center w-full py-1 px-1 rounded-xl transition-all ${
-                active 
-                  ? 'bg-red/10 border border-red/20 shadow-2xs text-red' 
-                  : 'text-text-2 hover:text-text'
-              }`}>
+              {/* Active top accent indicator line */}
+              {active && (
+                <span className="absolute top-0 inset-x-3.5 h-[2.5px] bg-red rounded-full shadow-xs animate-[fadeIn_0.15s_ease-out]" aria-hidden="true" />
+              )}
+              
+              <div className="flex flex-col items-center justify-center gap-0.5">
                 <Icon 
-                  icon={item.icon} 
-                  className={`size-5 mb-0.5 shrink-0 transition-transform ${active ? 'scale-105 text-red font-bold' : 'text-text-2'}`}
+                  icon={active ? item.icon : (item.iconOutline || item.icon)} 
+                  className={cn(
+                    'size-5.5 transition-all duration-150',
+                    active ? 'scale-105 text-red font-bold' : 'text-text-3 group-hover:text-text-2'
+                  )}
                 />
-                <span className={`text-[11px] leading-tight tracking-tight truncate max-w-full text-center px-0.5 ${
-                  active ? 'font-extrabold text-red' : 'font-bold text-text-2'
-                }`}>
+                <span className={cn(
+                  'text-[10px] tracking-tight leading-tight truncate max-w-full text-center',
+                  active ? 'font-extrabold text-red' : 'font-semibold text-text-3'
+                )}>
                   {item.label}
                 </span>
               </div>

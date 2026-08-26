@@ -451,7 +451,7 @@ function AkunTenant() {
                   <Icon icon="heroicons:key-20-solid" className="size-5" />
                 </div>
                 <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
-                  Keamanan &amp; Kata Sandi
+                  Reset Kata Sandi
                 </h2>
               </div>
               

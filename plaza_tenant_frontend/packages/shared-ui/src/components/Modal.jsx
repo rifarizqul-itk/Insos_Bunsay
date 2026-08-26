@@ -7,6 +7,8 @@ function Modal({
   isOpen,
   onClose,
   title,
+  subtitle,
+  badge,
   children,
   footer,
   size = 'md',
@@ -77,14 +79,15 @@ function Modal({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
-    full: 'max-w-2xl',
+    '2xl': 'max-w-2xl',
+    full: 'max-w-3xl',
   };
 
   const modalContent = (
     <div
       data-slot="modal"
       style={{ position: 'fixed', inset: 0, zIndex: 10050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      className="fixed inset-0 z-[10050] flex items-center justify-center p-3 sm:p-6 bg-mono-900/50 backdrop-blur-xs page-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[10050] flex items-center justify-center p-3 sm:p-6 bg-mono-900/60 page-fade-in overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -95,16 +98,30 @@ function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto',
-          sizeClasses[size],
+          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto transform-gpu',
+          sizeClasses[size] || sizeClasses.md,
           className
         )}
       >
-        {title && (
+        {(title || subtitle || badge) && (
           <div className="flex justify-between items-center border-b border-border/80 px-5 sm:px-6 py-3.5 sm:py-4 bg-mono-50/70 flex-shrink-0 gap-3">
-            <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
-              {title}
-            </h3>
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {title && (
+                    <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-text tracking-tight truncate">
+                      {title}
+                    </h3>
+                  )}
+                  {badge}
+                </div>
+                {subtitle && (
+                  <p className="text-xs text-text-3 font-semibold mt-0.5 truncate">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
             <button
               type="button"
               onClick={onClose}
@@ -116,7 +133,7 @@ function Modal({
           </div>
         )}
 
-        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 overscroll-contain transform-gpu [will-change:scroll-position] custom-scrollbar">
           {children}
         </div>
 

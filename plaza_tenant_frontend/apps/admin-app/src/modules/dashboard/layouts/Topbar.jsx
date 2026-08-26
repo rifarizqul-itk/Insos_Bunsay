@@ -4,7 +4,7 @@ import { Icon, NotificationPopover, cn } from '@bunsay/shared-ui';
 import { getEcho } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 
-function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
+function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, variant = 'admin' }) {
   const navigate = useNavigate();
   const { httpClient } = useAdminAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -97,10 +97,10 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
     <header
       data-slot="topbar-admin"
       aria-label="Topbar Navigasi Admin"
-      className="topbar-container h-17 md:h-18 px-4 md:px-8 flex items-center justify-between font-sans border-b border-border/80 bg-white/85 backdrop-blur-xl shrink-0"
+      className="topbar-container h-16 px-4 md:px-5 flex items-center justify-between font-sans border-b border-border/80 bg-white/85 backdrop-blur-xl shrink-0 sticky top-0 z-20 shadow-2xs"
     >
-      {/* Left: Mobile Toggle & Breadcrumb / Context */}
-      <div className="flex items-center gap-3.5 min-w-0">
+      {/* Left: Mobile Toggle, Desktop Collapse Button & Breadcrumb / Context */}
+      <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -108,6 +108,18 @@ function Topbar({ userTitle, onToggleSidebar, variant = 'admin' }) {
           className="md:hidden size-11 flex items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-colors cursor-pointer active:scale-95"
         >
           <Icon icon="heroicons:bars-3-20-solid" className="size-6" />
+        </button>
+
+        {/* Desktop Collapse Toggle Button */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? "Buka menu samping navigasi (Ctrl+B)" : "Lipat menu samping navigasi (Ctrl+B)"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Buka menu samping (Ctrl+B)" : "Lipat menu samping (Ctrl+B)"}
+          className="hidden md:flex size-10 items-center justify-center rounded-xl text-text-2 hover:text-text hover:bg-mono-100 focus:outline-none focus:ring-2 focus:ring-red transition-all cursor-pointer active:scale-95 border border-border/80 shadow-2xs shrink-0"
+        >
+          <Icon icon={isCollapsed ? "heroicons:bars-3-bottom-left-20-solid" : "heroicons:bars-3-20-solid"} className="size-5" />
         </button>
 
         <div className="flex items-center gap-2 text-sm font-bold text-text-3 min-w-0">

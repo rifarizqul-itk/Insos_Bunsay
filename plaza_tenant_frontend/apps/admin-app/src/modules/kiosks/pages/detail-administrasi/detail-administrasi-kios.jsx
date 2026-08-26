@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Badge, Drawer, Modal, FormField, SkeletonCard, useToast, cn } from '@bunsay/shared-ui';
+import { Icon, Card, Button, Badge, Modal, FormField, SkeletonCard, useToast, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DetailAdministrasiKios() {
@@ -521,11 +521,12 @@ function DetailAdministrasiKios() {
         </div>
       )}
 
-      {/* DRAWER EDIT DATA ADMINISTRASI */}
-      <Drawer
+      {/* MODAL EDIT DATA ADMINISTRASI */}
+      <Modal
         isOpen={showEditDrawer}
         onClose={() => setShowEditDrawer(false)}
         title={`Edit Data Administrasi Kios ${displayKiosNo}`}
+        size="lg"
         footer={
           <div className="flex gap-3 w-full">
             <Button variant="secondary" fullWidth onClick={() => setShowEditDrawer(false)}>Batal</Button>
@@ -584,7 +585,7 @@ function DetailAdministrasiKios() {
             </select>
           </FormField>
         </form>
-      </Drawer>
+      </Modal>
 
       {/* MODAL RESET KATA SANDI TENANT */}
       <Modal

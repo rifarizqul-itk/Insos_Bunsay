@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Sheet, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, cn } from '@bunsay/shared-ui';
 import { resolveStorageUrl } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -461,9 +461,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         )}
       </div>
 
-      {/* SLIDE-OVER SHEET: Detail Verification Sheet */}
+      {/* MODAL: Detail Verification Modal */}
       {previewItem && (
-        <Sheet
+        <Modal
           isOpen={Boolean(previewItem)}
           onClose={() => {
             setPreviewItem(null);
@@ -473,7 +473,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           title="Verifikasi Bukti Transfer"
           subtitle={`ID: ${previewItem.trxCode || previewItem.id}`}
           badge={<Badge status={previewItem.status} />}
-          width="lg"
+          size="xl"
           footer={
             <div className="flex flex-col gap-3 w-full">
               {sheetAction === 'idle' ? (
@@ -704,7 +704,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               )}
             </div>
           </div>
-        </Sheet>
+        </Modal>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 import SidebarAdmin from './SidebarAdmin';
 import Topbar from './Topbar';
@@ -19,8 +20,37 @@ const adminTitles = {
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('bunsay_sidebar_collapsed_admin') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const location = useLocation();
   const { user, logoutAdmin } = useAdminAuth();
+
+  const toggleCollapse = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('bunsay_sidebar_collapsed_admin', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleCollapse();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const title = adminTitles[location.pathname] || 'Konsol Admin | Plaza Kebun Sayur';
@@ -33,16 +63,16 @@ function AdminLayout() {
 
   return (
     <div data-slot="admin-layout" className="min-h-dvh bg-[#F3F4F7] relative overflow-x-hidden">
-      {/* Background Atmosphere Glow (Bankoli-Inspired Soft Ambient Aura) */}
+      {/* Background Atmosphere Glow (Bankoli-Inspired Soft Ambient Aura - Hardware Accelerated) */}
       <div 
-        className="absolute top-0 inset-x-0 h-96 pointer-events-none z-0" 
+        className="fixed top-0 inset-x-0 h-96 pointer-events-none z-0 transform-gpu" 
         style={{
           background: 'radial-gradient(ellipse 90% 70% at 50% -20%, rgba(139, 26, 26, 0.07) 0%, rgba(139, 26, 26, 0.02) 60%, transparent 100%)'
         }}
         aria-hidden="true" 
       />
-      <div className="absolute -top-24 -right-24 size-96 rounded-full bg-red/4 blur-3xl pointer-events-none z-0" aria-hidden="true" />
-      <div className="absolute -top-24 -left-24 size-96 rounded-full bg-amber-500/3 blur-3xl pointer-events-none z-0" aria-hidden="true" />
+      <div className="fixed -top-24 -right-24 size-96 rounded-full bg-red/4 blur-3xl pointer-events-none z-0 transform-gpu" aria-hidden="true" />
+      <div className="fixed -top-24 -left-24 size-96 rounded-full bg-amber-500/3 blur-3xl pointer-events-none z-0 transform-gpu" aria-hidden="true" />
 
       {/* Skip Link for Keyboard Accessibility (WCAG 2.4.1 Level A) */}
       <a
@@ -56,6 +86,8 @@ function AdminLayout() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onLogout={logoutAdmin}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={toggleCollapse}
       />
 
       {isSidebarOpen && (
@@ -66,10 +98,12 @@ function AdminLayout() {
         />
       )}
 
-      <div className="main-layout relative z-10">
+      <div className={cn('main-layout relative z-10', isCollapsed && 'sidebar-collapsed')}>
         <Topbar
           userTitle={userTitle}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={toggleCollapse}
           variant="admin"
         />
 
