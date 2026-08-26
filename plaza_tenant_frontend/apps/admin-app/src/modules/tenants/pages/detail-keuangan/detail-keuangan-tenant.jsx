@@ -51,16 +51,13 @@ function DetailKeuanganTenant() {
         } catch (_) {}
       }
 
-      // 2. Fetch all payments and filter for this tenant/kios
-      const resPembayaran = await httpClient.get('/api/v1/admin/pembayaran');
+      // 2. Fetch all payments and tagihan in parallel (Zero Waterfall Latency)
+      const [resPembayaran, resTagihan] = await Promise.all([
+        httpClient.get('/api/v1/admin/pembayaran').catch(() => ({ data: [] })),
+        httpClient.get('/api/v1/admin/tagihan').catch(() => ({ data: [] }))
+      ]);
       const allPembayaran = resPembayaran?.data || [];
-
-      // 3. Fetch tagihan to calculate real outstanding tunggakan
-      let allTagihan = [];
-      try {
-        const resTagihan = await httpClient.get('/api/v1/admin/tagihan');
-        allTagihan = resTagihan?.data || [];
-      } catch (_) {}
+      const allTagihan = resTagihan?.data || [];
 
       const targetIdKios = currentTenant?.idKios || currentTenant?.id;
       const targetIdPemilik = currentTenant?.idPemilik;

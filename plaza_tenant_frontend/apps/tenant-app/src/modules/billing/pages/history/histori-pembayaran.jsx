@@ -390,9 +390,9 @@ function HistoriPembayaran() {
                           size="sm"
                           fullWidth
                           onClick={() => handleOpenSanggahanModal(row)}
-                          className="min-h-9 h-9 text-xs font-extrabold gap-1.5 shadow-2xs"
+                          className="min-h-10 text-xs sm:text-sm font-extrabold gap-1.5 shadow-2xs"
                         >
-                          <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5" />
+                          <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4" />
                           <span>Ajukan Sanggahan</span>
                         </Button>
                       </div>

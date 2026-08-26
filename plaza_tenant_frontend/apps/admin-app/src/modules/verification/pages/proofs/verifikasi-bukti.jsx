@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Modal, Sheet, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Sheet, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, cn } from '@bunsay/shared-ui';
 import { resolveStorageUrl } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -28,10 +28,11 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const [sortConfigAntrean, setSortConfigAntrean] = useState({ key: 'id', direction: 'desc' });
   const [sortConfigRiwayat, setSortConfigRiwayat] = useState({ key: 'id', direction: 'desc' });
 
-  // Modal state
-  const [confirmModal, setConfirmModal] = useState({ open: false, type: 'konfirmasi', item: null });
+  // Inline Sheet action state: 'idle' | 'konfirmasi' | 'tolak'
+  const [sheetAction, setSheetAction] = useState('idle');
   const [catatanRejection, setCatatanRejection] = useState('');
   const [rejectionError, setRejectionError] = useState('');
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   const fetchVerifikasiQueue = async () => {
     setIsLoading(true);
@@ -108,6 +109,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         if (match) {
           setActiveTab('antrean');
           setPreviewItem(match);
+          setSheetAction('idle');
           return;
         }
       }
@@ -117,6 +119,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         if (matchRiwayat) {
           setActiveTab('riwayat');
           setPreviewItem(matchRiwayat);
+          setSheetAction('idle');
         }
       }
     }
@@ -195,38 +198,35 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     { label: 'Aksi', align: 'center', sortable: false }
   ];
 
-  const triggerActionModal = (item, actionType) => {
-    setCatatanRejection(item?.catatan || '');
-    setRejectionError('');
-    setConfirmModal({ open: true, type: actionType, item });
-  };
-
-  const handleExecuteAksi = async () => {
-    const { item, type } = confirmModal;
-    if (!item) return;
+  const handleExecuteInlineAksi = async (type) => {
+    if (!previewItem) return;
 
     if (type === 'tolak' && !catatanRejection.trim()) {
       setRejectionError('Alasan penolakan wajib diisi agar tenant mengetahui penyebab penolakan.');
       return;
     }
 
+    setIsProcessingAction(true);
     const statusApi = type === 'konfirmasi' ? 'Diterima' : 'Ditolak';
     try {
-      await httpClient.put(`/api/v1/admin/pembayaran/${item.id}/konfirmasi`, {
+      await httpClient.put(`/api/v1/admin/pembayaran/${previewItem.id}/konfirmasi`, {
         status: statusApi,
         catatan_admin: type === 'tolak' ? catatanRejection.trim() : null
       });
 
-      setConfirmModal({ open: false, type: 'konfirmasi', item: null });
+      const processedTrx = previewItem.trxCode;
+      setSheetAction('idle');
       setPreviewItem(null);
       await fetchVerifikasiQueue();
 
       addToast(
-        `Bukti pembayaran ${item.trxCode} berhasil di-${type === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak dengan alasan'}.`,
+        `Bukti pembayaran ${processedTrx} berhasil di-${type === 'konfirmasi' ? 'setujui (Lunas)' : 'tolak dengan catatan'}.`,
         type === 'konfirmasi' ? 'success' : 'info'
       );
     } catch (err) {
       addToast(err?.response?.data?.message || 'Gagal memproses verifikasi. Coba lagi.', 'error');
+    } finally {
+      setIsProcessingAction(false);
     }
   };
 
@@ -465,33 +465,158 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       {previewItem && (
         <Sheet
           isOpen={Boolean(previewItem)}
-          onClose={() => setPreviewItem(null)}
+          onClose={() => {
+            setPreviewItem(null);
+            setSheetAction('idle');
+            setRejectionError('');
+          }}
           title="Verifikasi Bukti Transfer"
           subtitle={`ID: ${previewItem.trxCode || previewItem.id}`}
           badge={<Badge status={previewItem.status} />}
           width="lg"
           footer={
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              <Button
-                variant="primary"
-                fullWidth
-                size="md"
-                className="bg-green hover:bg-green/90 min-h-11 py-2.5 px-4 text-xs sm:text-sm font-extrabold gap-2 shadow-sm whitespace-nowrap"
-                onClick={() => triggerActionModal(previewItem, 'konfirmasi')}
-              >
-                <Icon icon="heroicons:check-circle-20-solid" className="size-4.5 shrink-0" />
-                <span>Terima & Konfirmasi Lunas</span>
-              </Button>
-              <Button
-                variant="danger"
-                fullWidth
-                size="md"
-                className="min-h-11 py-2.5 px-4 text-xs sm:text-sm font-bold gap-2 whitespace-nowrap"
-                onClick={() => triggerActionModal(previewItem, 'tolak')}
-              >
-                <Icon icon="heroicons:x-circle-20-solid" className="size-4.5 shrink-0" />
-                <span>Tolak Bukti</span>
-              </Button>
+            <div className="flex flex-col gap-3 w-full">
+              {sheetAction === 'idle' ? (
+                previewItem.status === 'Menunggu' ? (
+                  <div className="flex flex-col sm:flex-row gap-2.5 w-full">
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      size="md"
+                      className="bg-green hover:bg-green/90 min-h-11 py-2.5 px-4 text-xs sm:text-sm font-extrabold gap-2 shadow-sm whitespace-nowrap"
+                      onClick={() => setSheetAction('konfirmasi')}
+                    >
+                      <Icon icon="heroicons:check-circle-20-solid" className="size-4.5 shrink-0" />
+                      <span>Terima & Konfirmasi Lunas</span>
+                    </Button>
+                    <Button
+                      variant="danger"
+                      fullWidth
+                      size="md"
+                      className="min-h-11 py-2.5 px-4 text-xs sm:text-sm font-bold gap-2 whitespace-nowrap"
+                      onClick={() => {
+                        setCatatanRejection(previewItem.catatan || '');
+                        setRejectionError('');
+                        setSheetAction('tolak');
+                      }}
+                    >
+                      <Icon icon="heroicons:x-circle-20-solid" className="size-4.5 shrink-0" />
+                      <span>Tolak Bukti</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2.5 w-full justify-between items-center">
+                    <div className="text-xs text-text-3 font-semibold text-start">
+                      Status: <strong className="text-text">{previewItem.status === 'Diterima' ? 'Lunas / Diterima' : 'Ditolak'}</strong>
+                    </div>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="font-bold text-xs"
+                        onClick={() => {
+                          setPreviewItem(null);
+                          setSheetAction('idle');
+                        }}
+                      >
+                        Tutup
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="font-bold text-xs gap-1 border-amber-300 text-amber-900 hover:bg-amber-50"
+                        onClick={() => setSheetAction(previewItem.status === 'Diterima' ? 'tolak' : 'konfirmasi')}
+                      >
+                        <Icon icon="heroicons:arrow-path-20-solid" className="size-3.5" />
+                        <span>Ubah Keputusan</span>
+                      </Button>
+                    </div>
+                  </div>
+                )
+              ) : sheetAction === 'konfirmasi' ? (
+                <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-xl flex flex-col gap-3 text-xs sm:text-sm animate-fade-in">
+                  <div className="flex items-center gap-2 font-bold text-emerald-950">
+                    <Icon icon="heroicons:check-circle-20-solid" className="size-5 text-emerald-700 shrink-0" />
+                    <span>Konfirmasi Penerimaan Bukti Transfer</span>
+                  </div>
+                  <p className="text-text-2 font-medium leading-relaxed">
+                    Tandai pembayaran senilai <strong className="text-text font-bold font-tabular-nums">{previewItem.nominal}</strong> untuk kios <strong className="text-text font-bold font-tabular-nums">{previewItem.kios}</strong> sebagai <strong className="text-emerald-700 font-bold">LUNAS (Diterima)</strong>?
+                  </p>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isProcessingAction}
+                      onClick={() => setSheetAction('idle')}
+                      className="text-xs font-bold min-h-9"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={isProcessingAction}
+                      onClick={() => handleExecuteInlineAksi('konfirmasi')}
+                      className="bg-green hover:bg-green/90 text-xs font-extrabold gap-1.5 min-h-9"
+                    >
+                      {isProcessingAction ? (
+                        <Icon icon="heroicons:arrow-path-20-solid" className="size-4 animate-spin" />
+                      ) : (
+                        <Icon icon="heroicons:check-20-solid" className="size-4" />
+                      )}
+                      <span>Ya, Setujui Lunas</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-red-50/90 border border-red/20 rounded-xl flex flex-col gap-2.5 text-xs sm:text-sm animate-fade-in">
+                  <div className="flex items-center justify-between font-bold text-red">
+                    <span className="flex items-center gap-1.5">
+                      <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4.5 text-red shrink-0" />
+                      <span>Alasan Penolakan Bukti Transfer</span>
+                    </span>
+                    <span className="text-2xs font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded">Wajib Diisi</span>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={catatanRejection}
+                    onChange={(e) => {
+                      setCatatanRejection(e.target.value);
+                      if (rejectionError) setRejectionError('');
+                    }}
+                    placeholder="Contoh: Nominal transfer kurang, atau foto resi buram/tidak terbaca."
+                    className="w-full text-xs sm:text-sm p-2.5 border border-border rounded-lg focus:border-red focus:outline-none bg-white font-medium text-text"
+                  />
+                  {rejectionError && (
+                    <span className="text-2xs font-bold text-red">{rejectionError}</span>
+                  )}
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isProcessingAction}
+                      onClick={() => setSheetAction('idle')}
+                      className="text-xs font-bold min-h-9"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={isProcessingAction}
+                      onClick={() => handleExecuteInlineAksi('tolak')}
+                      className="text-xs font-extrabold gap-1.5 min-h-9"
+                    >
+                      {isProcessingAction ? (
+                        <Icon icon="heroicons:arrow-path-20-solid" className="size-4 animate-spin" />
+                      ) : (
+                        <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
+                      )}
+                      <span>Tolak Bukti Ini</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           }
         >
@@ -581,78 +706,6 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           </div>
         </Sheet>
       )}
-
-      {/* Confirmation & Rejection Modal - Layered Above Sheet Portal (z-10050) */}
-      <Modal
-        isOpen={confirmModal.open}
-        onClose={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
-        size="md"
-        title={
-          <div className="flex items-center gap-3">
-            <div className={cn('size-10 rounded-full flex items-center justify-center shrink-0', confirmModal.type === 'konfirmasi' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red')}>
-              <Icon icon={confirmModal.type === 'konfirmasi' ? 'heroicons:check-circle-20-solid' : 'heroicons:exclamation-triangle-20-solid'} className="size-6" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-base sm:text-lg text-text">
-                Konfirmasi {confirmModal.type === 'konfirmasi' ? 'Penerimaan' : 'Penolakan'}
-              </h3>
-              <p className="text-xs text-text-3 font-medium">
-                {confirmModal.item?.nama} ({confirmModal.item?.kios})
-              </p>
-            </div>
-          </div>
-        }
-        footer={
-          <div className="flex justify-end gap-3 w-full">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmModal({ open: false, type: 'konfirmasi', item: null })}
-            >
-              Batal
-            </Button>
-            <Button
-              variant={confirmModal.type === 'konfirmasi' ? 'primary' : 'danger'}
-              size="sm"
-              onClick={handleExecuteAksi}
-              className={confirmModal.type === 'konfirmasi' ? 'bg-green hover:bg-green/90' : ''}
-            >
-              {confirmModal.type === 'konfirmasi' ? 'Ya, Konfirmasi Lunas' : 'Ya, Tolak Bukti Ini'}
-            </Button>
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-3 font-sans text-sm">
-          {confirmModal.type === 'konfirmasi' ? (
-            <p className="text-text-2 leading-relaxed">
-              Apakah Anda yakin ingin memverifikasi dan menandai bukti transfer senilai <strong className="text-text font-bold">{confirmModal.item?.nominal}</strong> untuk kios <strong className="text-text font-bold">{confirmModal.item?.kios}</strong> sebagai <strong className="text-emerald-700 font-bold">LUNAS (Diterima)</strong>?
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-text-2 text-xs leading-relaxed">
-                Pembayaran akan ditolak dan tenant akan menerima notifikasi beserta alasan penolakan.
-              </p>
-              <label className="text-xs font-bold text-text flex items-center justify-between mt-1">
-                <span>Catatan Alasan Penolakan <span className="text-red">*</span></span>
-                <span className="text-text-3 font-normal">Wajib diisi</span>
-              </label>
-              <textarea
-                rows={3}
-                value={catatanRejection}
-                onChange={(e) => {
-                  setCatatanRejection(e.target.value);
-                  setRejectionError('');
-                }}
-                placeholder="Contoh: Nominal transfer kurang Rp 50.000, atau resi buram tidak terbaca."
-                className="w-full text-sm p-3 border border-border rounded-xl focus:border-red focus:outline-none bg-warm-gray/10"
-              />
-              {rejectionError && (
-                <p className="text-xs font-bold text-red">{rejectionError}</p>
-              )}
-            </div>
-          )}
-        </div>
-      </Modal>
     </div>
   );
 }

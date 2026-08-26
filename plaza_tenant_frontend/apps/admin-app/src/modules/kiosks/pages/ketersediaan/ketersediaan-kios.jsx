@@ -197,7 +197,7 @@ function KetersediaanKios() {
     { label: 'Nomor Kios', sortKey: 'noKios' },
     { label: 'Lokasi Lantai', sortKey: 'lantai' },
     { label: 'Nama Tenant / Penyewa', sortKey: 'penyewa' },
-    { label: 'Jenis Usaha', sortKey: 'usaha' },
+    { label: 'Jenis Usaha', sortKey: 'usaha', className: 'hidden md:table-cell' },
     { label: 'Status', sortKey: 'status' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
@@ -468,13 +468,13 @@ function KetersediaanKios() {
                   <td className="p-3 font-extrabold text-text font-tabular-nums">{kios.noKios}</td>
                   <td className="p-3 text-text-2 font-medium">{kios.lantai}</td>
                   <td className="p-3 font-semibold text-text">{kios.penyewa}</td>
-                  <td className="p-3 text-text-2 font-medium">{kios.usaha}</td>
+                  <td className="hidden md:table-cell p-3 text-text-2 font-medium">{kios.usaha}</td>
                   <td className="p-3">
                     <Badge status={kios.status === 'Terisi' ? 'Terisi' : 'Kosong'} customText={kios.status} />
                   </td>
                   <td className="p-3 text-center whitespace-nowrap">
                     {kios.status === 'Terisi' ? (
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Button
                           variant="secondary"
                           size="sm"
@@ -483,9 +483,9 @@ function KetersediaanKios() {
                             setIsDetailOpen(true);
                           }}
                           aria-label={`Lihat detail administrasi kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1 shadow-2xs"
+                          className="h-8 text-xs font-bold gap-1 shadow-2xs px-2.5"
                         >
-                          <Icon icon="heroicons:information-circle-20-solid" width="14" height="14" />
+                          <Icon icon="heroicons:information-circle-20-solid" className="size-3.5" />
                           <span>Detail</span>
                         </Button>
                         <Button
@@ -493,10 +493,10 @@ function KetersediaanKios() {
                           size="sm"
                           onClick={() => handleAkhiriSewa(kios)}
                           aria-label={`Akhiri masa sewa kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20 shadow-2xs"
+                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20 shadow-2xs px-2.5"
                         >
-                          <Icon icon="heroicons:stop-circle-20-solid" width="14" height="14" />
-                          <span>Akhiri Sewa</span>
+                          <Icon icon="heroicons:stop-circle-20-solid" className="size-3.5" />
+                          <span>Akhiri</span>
                         </Button>
                       </div>
                     ) : (
@@ -508,9 +508,9 @@ function KetersediaanKios() {
                             setFormTenant(prev => ({ ...prev, kios: kios.noKios }));
                             setIsDrawerOpen(true);
                           }}
-                          className="h-8 text-xs font-bold gap-1 shadow-2xs"
+                          className="h-8 text-xs font-bold gap-1 shadow-2xs px-3"
                         >
-                          <Icon icon="heroicons:plus-20-solid" width="14" height="14" />
+                          <Icon icon="heroicons:plus-20-solid" className="size-3.5" />
                           <span>Sewa Kios</span>
                         </Button>
                       </div>

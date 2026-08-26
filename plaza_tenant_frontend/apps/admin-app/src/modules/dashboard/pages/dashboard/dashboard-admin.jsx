@@ -148,7 +148,7 @@ function DashboardAdmin() {
   const tableHeaders = [
     { label: 'Nama Tenant', sortKey: 'nama' },
     { label: 'No. Kios', sortKey: 'kios' },
-    { label: 'Jenis Usaha', sortKey: 'usaha' },
+    { label: 'Jenis Usaha', sortKey: 'usaha', className: 'hidden sm:table-cell' },
     { label: 'Tunggakan', sortKey: 'tunggakan' },
     { label: 'Status Bulan Ini', sortKey: 'statusPembayaran' },
     { label: 'Aksi', align: 'center', sortable: false }
@@ -352,7 +352,7 @@ function DashboardAdmin() {
                       {tenant.kios}
                     </span>
                   </td>
-                  <td data-label="Jenis Usaha" className="py-3 px-3 sm:px-4 text-text-2 font-semibold text-xs sm:text-sm">
+                  <td data-label="Jenis Usaha" className="hidden sm:table-cell py-3 px-3 sm:px-4 text-text-2 font-semibold text-xs sm:text-sm">
                     {tenant.usaha}
                   </td>
                   <td data-label="Tunggakan" className={cn("font-tabular-nums py-3 px-3 sm:px-4 font-black text-xs sm:text-sm", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>

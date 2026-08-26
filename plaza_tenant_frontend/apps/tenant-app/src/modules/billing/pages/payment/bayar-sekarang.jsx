@@ -454,13 +454,13 @@ function BayarSekarang() {
           ) : (
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-6">
               <Card variant="elevated" className="flex flex-col gap-5 p-5 sm:p-7">
-                {/* Banner Izin Cicil via WhatsApp (Compact & Elegant) */}
-                <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                {/* Banner Izin Cicil via WhatsApp (Compact & Responsive) */}
+                <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm shadow-2xs">
                   <div className="flex items-start gap-2.5 min-w-0">
                     <Icon icon="heroicons:information-circle-20-solid" className="size-5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="min-w-0">
                       <div className="font-extrabold text-amber-900 text-xs sm:text-sm">Ingin Mengajukan Cicilan?</div>
-                      <p className="text-[11px] sm:text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
+                      <p className="text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
                         Hubungi pengelola terlebih dahulu untuk persetujuan nominal pembayaran bertahap.
                       </p>
                     </div>
@@ -469,7 +469,7 @@ function BayarSekarang() {
                     href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi dan mengajukan izin pembayaran cicilan sewa kios.')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shrink-0 shadow-2xs transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shrink-0 shadow-2xs transition-all cursor-pointer w-full sm:w-auto min-h-[44px]"
                   >
                     <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4" />
                     <span>Chat Pengelola (WA)</span>
@@ -536,53 +536,80 @@ function BayarSekarang() {
                   </div>
                 )}
 
-                {/* Rincian Periode Tagihan yang Perlu Dibayar (Clean Responsive Card) */}
+                {/* Rincian Periode Tagihan yang Perlu Dibayar (Clean Flat Summary Card) */}
                 {displayedUnpaidBills.length > 0 && (
-                  <div className="bg-mono-50/80 border border-border/80 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-border/60 pb-2.5">
+                  <div className="bg-mono-50/60 border border-border/80 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-2.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red shrink-0" />
-                        <span className="text-xs sm:text-sm font-extrabold text-text truncate">
-                          {selectedKiosFilter === 'semua' 
-                            ? `Rincian Tagihan (${displayedUnpaidBills.length} Periode)`
-                            : `Tagihan Kios ${selectedKiosFilter} (${displayedUnpaidBills.length} Periode)`}
+                        <span className="text-xs sm:text-sm font-extrabold text-text tracking-tight">
+                          {displayedUnpaidBills.length > 1 
+                            ? `Rincian Tagihan (${displayedUnpaidBills.length} Periode)` 
+                            : 'Rincian Tagihan Sewa'}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-2 text-xs sm:text-sm font-extrabold font-tabular-nums text-red shrink-0">
-                        <span className="text-2xs sm:text-xs text-text-3 font-semibold sm:hidden">Total Tagihan:</span>
-                        <span className="bg-red-50 text-red px-2.5 py-1 rounded-lg border border-red/20 font-tabular-nums">
-                          Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
-                        </span>
-                      </div>
+
+                      {displayedUnpaidBills.length > 1 && (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-text-3 font-tabular-nums shrink-0">
+                          <span className="hidden sm:inline">Total Akumulasi:</span>
+                          <span className="bg-red-50 text-red px-2.5 py-0.5 rounded-lg border border-red/20 font-extrabold font-tabular-nums text-xs">
+                            Rp {displayedUnpaidBills.reduce((s, b) => s + (b.sisaTagihan ?? b.totalTagihan), 0).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="divide-y divide-border/50 text-xs sm:text-sm">
+                    <div className="divide-y divide-border/60">
                       {displayedUnpaidBills.map((bill, bIdx) => {
                         const isLatest = bIdx === displayedUnpaidBills.length - 1;
                         const nominalBill = Number(bill.sisaTagihan ?? bill.totalTagihan);
+                        const isDicicil = bill.statusTagihan === 'Dicicil' || (bill.totalTerbayar > 0);
+
                         return (
                           <div 
                             key={bill.idTagihan || bIdx}
-                            className="py-2.5 flex items-center justify-between gap-3 text-text"
+                            className="py-3 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                           >
-                            <div className="flex items-center gap-2 flex-wrap min-w-0">
-                              <span className="size-1.5 rounded-full bg-red/80 shrink-0" />
-                              {availableKiosks.length > 1 && (
-                                <span className="font-extrabold text-red text-2xs px-1.5 py-0.5 rounded bg-red-50 border border-red/20 font-tabular-nums">
-                                  Kios {bill.noKios}
+                            {/* Left: Info Details */}
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-extrabold text-text text-sm sm:text-base tracking-tight">
+                                  Sewa Periode {formatPeriodeIndo(bill.periode)}
                                 </span>
-                              )}
-                              <span className="font-semibold text-text text-xs sm:text-sm">
-                                Sewa <strong className="font-bold text-text">{formatPeriodeIndo(bill.periode)}</strong>
-                              </span>
-                              {isLatest && displayedUnpaidBills.length > 1 && (
-                                <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                                  Bulan Berjalan
-                                </span>
-                              )}
+                                {bill.noKios && bill.noKios !== '—' && (
+                                  <span className="font-bold text-red text-xs">
+                                    • Kios {bill.noKios}
+                                  </span>
+                                )}
+                                {isLatest && displayedUnpaidBills.length > 1 && (
+                                  <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                    Bulan Berjalan
+                                  </span>
+                                )}
+                                {isDicicil && (
+                                  <span className="text-2xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                    Dicicil
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-text-3 font-medium mt-0.5">
+                                <span>{bill.lantai || 'Lantai 1'}</span>
+                                {bill.jenisUsaha && bill.jenisUsaha !== '—' && (
+                                  <span> — {bill.jenisUsaha}</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="font-tabular-nums font-extrabold text-text shrink-0 text-right whitespace-nowrap">
-                              Rp {nominalBill.toLocaleString('id-ID')}
+
+                            {/* Right: Nominal */}
+                            <div className="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center shrink-0 pt-1 sm:pt-0">
+                              <div className="text-base sm:text-lg font-black font-tabular-nums text-text">
+                                Rp {nominalBill.toLocaleString('id-ID')}
+                              </div>
+                              {bill.totalTerbayar > 0 && (
+                                <span className="text-2xs text-emerald-700 font-bold font-tabular-nums">
+                                  Sudah terbayar Rp {bill.totalTerbayar.toLocaleString('id-ID')}
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -685,44 +712,76 @@ function BayarSekarang() {
                 </div>
 
                 {metode === 'transfer_manual' && (
-                  <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-input" required={!previewBukti}>
-                    <input
-                      id="upload-bukti-transfer-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="upload-bukti-transfer-input"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          document.getElementById('upload-bukti-transfer-input')?.click();
-                        }
-                      }}
-                      className="flex flex-col items-center justify-center gap-2 bg-mono-100/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-28 hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"
-                    >
-                      <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-7 text-red" />
-                      <span className="text-sm font-bold text-text">
-                        {buktiTransfer ? buktiTransfer.name : 'Upload / Ambil Foto Bukti Transfer'}
-                      </span>
-                      <span className="text-xs text-text-3 font-medium">
-                        Format: JPG, PNG, WEBP (Maks 5 MB)
-                      </span>
-                    </label>
-                    {previewBukti && (
-                      <div className="mt-2 border border-border rounded-lg p-2 bg-mono-100/30 flex justify-center">
-                        <img 
-                          src={previewBukti} 
-                          alt="Preview foto bukti transfer" 
-                          loading="lazy"
-                          className="max-h-48 rounded object-contain" 
-                        />
+                  <div className="flex flex-col gap-4">
+                    {/* Rekening Tujuan Box (Visible on mobile/tablet directly above upload input) */}
+                    <div className="lg:hidden p-4 bg-mono-50 border border-border/90 rounded-2xl flex flex-col gap-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">Rekening Tujuan Transfer</span>
+                        <Badge status="Terisi" customText="Rekening Resmi" />
                       </div>
-                    )}
-                  </FormField>
+                      <div className="flex items-center justify-between pt-0.5">
+                        <div>
+                          <span className="text-xs font-bold text-text">BANK BPD KALTIMTARA</span>
+                          <div className="text-lg font-mono font-black text-red tracking-wider font-tabular-nums">
+                            08115901119
+                          </div>
+                          <div className="text-2xs text-text-3 font-semibold">a.n. UPTD PASAR KEBUN SAYUR</div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="gap-1.5 px-3 py-1.5 font-bold shadow-2xs border-border hover:border-red hover:text-red min-h-9"
+                          onClick={() => {
+                            navigator.clipboard.writeText('08115901119');
+                            addToast('Nomor rekening berhasil disalin!', 'success');
+                          }}
+                        >
+                          <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
+                          <span>Salin</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <FormField label="Unggah Foto Bukti Transfer" id="upload-bukti-transfer-input" required={!previewBukti}>
+                      <input
+                        id="upload-bukti-transfer-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="upload-bukti-transfer-input"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            document.getElementById('upload-bukti-transfer-input')?.click();
+                          }
+                        }}
+                        className="flex flex-col items-center justify-center gap-2 bg-mono-100/50 border-2 border-dashed border-border rounded-xl p-6 cursor-pointer text-center min-h-28 hover:border-red hover:bg-red-50/20 transition-all active:scale-[0.99]"
+                      >
+                        <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-7 text-red" />
+                        <span className="text-sm font-bold text-text">
+                          {buktiTransfer ? buktiTransfer.name : 'Upload / Ambil Foto Bukti Transfer'}
+                        </span>
+                        <span className="text-xs text-text-3 font-medium">
+                          Format: JPG, PNG, WEBP (Maks 5 MB)
+                        </span>
+                      </label>
+                      {previewBukti && (
+                        <div className="mt-2 border border-border rounded-lg p-2 bg-mono-100/30 flex justify-center">
+                          <img 
+                            src={previewBukti} 
+                            alt="Preview foto bukti transfer" 
+                            loading="lazy"
+                            className="max-h-48 rounded object-contain" 
+                          />
+                        </div>
+                      )}
+                    </FormField>
+                  </div>
                 )}
 
                 <Button

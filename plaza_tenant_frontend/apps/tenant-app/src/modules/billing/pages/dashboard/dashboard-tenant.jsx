@@ -233,61 +233,69 @@ function DashboardTenant() {
 
       {/* 2. ALERT BANNER STATUS TAGIHAN */}
       {perluBayar ? (
-        <div className="bg-red-50/70 border border-red/20 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex flex-col gap-1.5">
-            <span className="inline-flex items-center gap-1.5 text-2xs font-extrabold uppercase tracking-wider bg-red text-white px-2.5 py-0.5 rounded-md w-fit shadow-2xs">
-              <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-3.5" />
-              <span>Tagihan Sewa Perlu Dibayar</span>
-            </span>
-            <p className="text-sm sm:text-base text-text font-medium">
-              Total kewajiban sewa yang perlu diselesaikan bulan ini adalah <strong className="text-red font-extrabold font-tabular-nums">Rp {totalTagihanVal.toLocaleString('id-ID')}</strong>.
-            </p>
+        <div className="bg-red-50/80 border border-red/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="size-9 rounded-xl bg-red text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+              <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />
+            </div>
+            <div>
+              <span className="text-xs font-extrabold text-red block uppercase tracking-wider">
+                Kewajiban Sewa Menanti Pembayaran
+              </span>
+              <p className="text-xs sm:text-sm text-text font-medium mt-0.5 text-pretty">
+                Selesaikan tagihan sewa periode <strong className="text-text font-bold">{formatMonthYearText(tagihanBerjalan?.periode)}</strong> sebelum jatuh tempo.
+              </p>
+            </div>
           </div>
 
           <Button
             variant="primary"
             size="md"
             onClick={() => handleBayar(totalTagihanVal)}
-            className="w-full sm:w-auto h-11 px-6 font-extrabold gap-2 shrink-0 shadow-2xs"
+            className="w-full sm:w-auto h-10 px-5 font-extrabold gap-2 shrink-0 shadow-2xs text-xs sm:text-sm"
           >
             <span>Bayar Sekarang</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
           </Button>
         </div>
       ) : sedangVerifikasi ? (
-        <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex flex-col gap-1.5">
-            <span className="inline-flex items-center gap-1.5 text-2xs font-extrabold uppercase tracking-wider bg-amber-500 text-white px-2.5 py-0.5 rounded-md w-fit shadow-2xs">
-              <Icon icon="heroicons:clock-20-solid" className="size-3.5" />
-              <span>Menunggu Verifikasi Pembayaran</span>
-            </span>
-            <p className="text-sm sm:text-base text-text font-medium">
-              Bukti transfer pembayaran Anda sedang diverifikasi oleh kantor pengelola Plaza.
-            </p>
+        <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="size-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+              <Icon icon="heroicons:clock-20-solid" className="size-5" />
+            </div>
+            <div>
+              <span className="text-xs font-extrabold text-amber-900 block uppercase tracking-wider">
+                Menunggu Verifikasi Pembayaran
+              </span>
+              <p className="text-xs sm:text-sm text-amber-800 font-medium mt-0.5 text-pretty">
+                Bukti transfer sedang diperiksa oleh kantor pengelola Plaza Kebun Sayur.
+              </p>
+            </div>
           </div>
 
           <Button
             variant="secondary"
             size="md"
             onClick={() => navigate('/tenant/histori')}
-            className="w-full sm:w-auto h-11 px-5 font-extrabold gap-2 shrink-0 shadow-2xs bg-amber-100/70 hover:bg-amber-100 text-amber-900 border-amber-300"
+            className="w-full sm:w-auto h-10 px-4 font-extrabold gap-2 shrink-0 shadow-2xs bg-amber-100/80 hover:bg-amber-100 text-amber-900 border-amber-300 text-xs sm:text-sm"
           >
             <span>Cek Status Verifikasi</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
           </Button>
         </div>
       ) : (
-        <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+        <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-              <Icon icon="heroicons:check-badge-20-solid" className="size-6" />
+            <div className="size-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Icon icon="heroicons:check-badge-20-solid" className="size-5" />
             </div>
             <div>
-              <strong className="text-sm sm:text-base text-emerald-900 font-extrabold block">
-                Semua Kewajiban Sewa Kios Anda Lunas
+              <strong className="text-xs sm:text-sm text-emerald-950 font-extrabold block">
+                Semua Kewajiban Sewa Kios Lunas
               </strong>
-              <p className="text-xs sm:text-sm text-emerald-800/80 font-medium">
-                Terima kasih telah menyelesaikan pembayaran sewa tepat waktu untuk periode {formatMonthYearText(tagihanBerjalan?.periode)}.
+              <p className="text-2xs sm:text-xs text-emerald-800 font-medium text-pretty mt-0.5">
+                Terima kasih telah menyelesaikan pembayaran tepat waktu untuk periode {formatMonthYearText(tagihanBerjalan?.periode)}.
               </p>
             </div>
           </div>
@@ -296,10 +304,10 @@ function DashboardTenant() {
             variant="secondary"
             size="sm"
             onClick={() => navigate('/tenant/histori')}
-            className="w-full sm:w-auto h-10 px-4 font-extrabold gap-2 shrink-0 shadow-2xs bg-white text-emerald-900 border-emerald-200 hover:bg-emerald-50"
+            className="w-full sm:w-auto h-9 px-3.5 font-bold gap-1.5 shrink-0 shadow-2xs bg-white text-emerald-900 border-emerald-200 hover:bg-emerald-50 text-xs"
           >
             <span>Lihat Kuitansi</span>
-            <Icon icon="heroicons:document-text-20-solid" className="size-4" />
+            <Icon icon="heroicons:document-text-20-solid" className="size-3.5" />
           </Button>
         </div>
       )}
