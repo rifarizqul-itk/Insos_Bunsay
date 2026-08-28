@@ -108,11 +108,11 @@ function AuthPage() {
       } else {
         const nextAttempts = loginAttempts + 1;
         setLoginAttempts(nextAttempts);
-        if (nextAttempts >= 3) {
+        if (nextAttempts >= 5) {
           setLockoutSeconds(60);
           setUsernameError(null);
         } else {
-          const sisa = 3 - nextAttempts;
+          const sisa = 5 - nextAttempts;
           setUsernameError(`Username atau kata sandi salah. Sisa percobaan login: ${sisa} kali.`);
         }
       }
@@ -126,7 +126,7 @@ function AuthPage() {
         setUsernameError(null); // When locked, the dedicated top banner displays the lockout state cleanly
       } else if (respData?.remainingAttempts !== undefined) {
         const remaining = Number(respData.remainingAttempts);
-        setLoginAttempts(3 - remaining);
+        setLoginAttempts(5 - remaining);
         if (remaining <= 0) {
           setLockoutSeconds(retrySeconds);
           setUsernameError(null);
@@ -137,11 +137,11 @@ function AuthPage() {
       } else if (err?.response?.status === 401 || err?.response?.status === 422) {
         const nextAttempts = loginAttempts + 1;
         setLoginAttempts(nextAttempts);
-        if (nextAttempts >= 3) {
+        if (nextAttempts >= 5) {
           setLockoutSeconds(60);
           setUsernameError(null);
         } else {
-          const sisa = Math.max(0, 3 - nextAttempts);
+          const sisa = Math.max(0, 5 - nextAttempts);
           setUsernameError(`Username atau kata sandi salah. Sisa percobaan login: ${sisa} kali.`);
         }
       } else {
