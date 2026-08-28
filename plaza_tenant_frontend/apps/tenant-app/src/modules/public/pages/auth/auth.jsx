@@ -48,7 +48,15 @@ function AuthPage() {
   useEffect(() => {
     if (lockoutSeconds <= 0) return;
     const interval = setInterval(() => {
-      setLockoutSeconds((prev) => Math.max(0, prev - 1));
+      setLockoutSeconds((prev) => {
+        const next = Math.max(0, prev - 1);
+        if (next === 0) {
+          setLoginAttempts(0);
+          setUsernameError(null);
+          setPasswordError(null);
+        }
+        return next;
+      });
     }, 1000);
     return () => clearInterval(interval);
   }, [lockoutSeconds]);
@@ -74,7 +82,6 @@ function AuthPage() {
     e.preventDefault();
 
     if (lockoutSeconds > 0) {
-      setUsernameError(`Akun terkunci sementara. Silakan tunggu ${lockoutSeconds} detik atau gunakan fitur Lupa Kata Sandi.`);
       return;
     }
 
@@ -95,33 +102,50 @@ function AuthPage() {
       if (res?.accessToken) {
         setLoginAttempts(0);
         setLockoutSeconds(0);
+        setUsernameError(null);
+        setPasswordError(null);
         navigate('/tenant/dashboard');
       } else {
         const nextAttempts = loginAttempts + 1;
         setLoginAttempts(nextAttempts);
         if (nextAttempts >= 3) {
           setLockoutSeconds(60);
-          setUsernameError('Batas percobaan login gagal (3 kali) terlampaui. Akun dikunci sementara selama 60 detik.');
+          setUsernameError(null);
         } else {
           const sisa = 3 - nextAttempts;
-          setUsernameError(`Username atau kata sandi salah. Sisa percobaan: ${sisa} kali.`);
+          setUsernameError(`Username atau kata sandi salah. Sisa percobaan login: ${sisa} kali.`);
         }
       }
     } catch (err) {
       const respData = err?.response?.data;
-      const nextAttempts = loginAttempts + 1;
-      setLoginAttempts(nextAttempts);
+      const isLocked = respData?.isLocked || (respData?.retryAfter > 0) || (err?.response?.status === 429);
+      const retrySeconds = Number(respData?.retryAfter) > 0 ? Number(respData.retryAfter) : 60;
 
-      if (respData?.isLocked || respData?.retryAfter > 0 || nextAttempts >= 3) {
-        setLockoutSeconds(respData?.retryAfter || 60);
-        setUsernameError(respData?.message || 'Terlalu banyak percobaan login gagal (Maksimal 3 kali). Silakan coba lagi setelah 60 detik.');
-      } else if (respData?.message) {
-        setUsernameError(respData.message);
+      if (isLocked) {
+        setLockoutSeconds(retrySeconds);
+        setUsernameError(null); // When locked, the dedicated top banner displays the lockout state cleanly
+      } else if (respData?.remainingAttempts !== undefined) {
+        const remaining = Number(respData.remainingAttempts);
+        setLoginAttempts(3 - remaining);
+        if (remaining <= 0) {
+          setLockoutSeconds(retrySeconds);
+          setUsernameError(null);
+        } else {
+          setLockoutSeconds(0);
+          setUsernameError(respData.message || `Username atau kata sandi salah. Sisa percobaan login: ${remaining} kali.`);
+        }
       } else if (err?.response?.status === 401 || err?.response?.status === 422) {
-        const sisa = Math.max(0, 3 - nextAttempts);
-        setUsernameError(`Username atau kata sandi salah. Sisa percobaan: ${sisa} kali.`);
+        const nextAttempts = loginAttempts + 1;
+        setLoginAttempts(nextAttempts);
+        if (nextAttempts >= 3) {
+          setLockoutSeconds(60);
+          setUsernameError(null);
+        } else {
+          const sisa = Math.max(0, 3 - nextAttempts);
+          setUsernameError(`Username atau kata sandi salah. Sisa percobaan login: ${sisa} kali.`);
+        }
       } else {
-        setUsernameError('Tidak dapat terhubung ke server. Silakan periksa koneksi internet Anda atau coba lagi nanti.');
+        setUsernameError(respData?.message || 'Tidak dapat terhubung ke server. Silakan periksa koneksi internet Anda atau coba lagi nanti.');
       }
     } finally {
       setIsLoginLoading(false);
@@ -282,7 +306,7 @@ function AuthPage() {
               </div>
             )}
 
-            <FormField label="Username" id="auth-username-input" required error={usernameError}>
+            <FormField label="Username" id="auth-username-input" required error={lockoutSeconds > 0 ? null : usernameError}>
               <input
                 type="text"
                 name="username"
@@ -295,7 +319,7 @@ function AuthPage() {
               />
             </FormField>
 
-            <FormField label="Kata Sandi" id="auth-password-input" required error={passwordError}>
+            <FormField label="Kata Sandi" id="auth-password-input" required error={lockoutSeconds > 0 ? null : passwordError}>
               <div className="relative w-full">
                 <input
                   type={showPassword ? 'text' : 'password'}

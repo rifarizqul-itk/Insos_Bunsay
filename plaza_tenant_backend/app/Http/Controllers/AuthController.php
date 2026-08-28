@@ -35,12 +35,13 @@ class AuthController extends Controller
 
         $throttleKey = 'login_attempts_' . strtolower(trim((string) $request->username)) . '|' . $request->ip();
 
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return response()->json([
-                'message' => "Terlalu banyak percobaan login gagal (Maksimal 5 kali). Silakan coba lagi dalam {$seconds} detik atau gunakan fitur Lupa Kata Sandi.",
+                'message' => "Terlalu banyak percobaan login gagal (Maksimal 3 kali). Silakan coba lagi dalam {$seconds} detik atau gunakan fitur Lupa Kata Sandi.",
                 'retryAfter' => $seconds,
                 'isLocked' => true,
+                'remainingAttempts' => 0,
             ], 429);
         }
 
@@ -50,11 +51,11 @@ class AuthController extends Controller
 
         if (!$user || !$isPasswordValid) {
             RateLimiter::hit($throttleKey, 60);
-            $remaining = RateLimiter::remaining($throttleKey, 5);
+            $remaining = RateLimiter::remaining($throttleKey, 3);
             return response()->json([
                 'message' => $remaining > 0
                     ? "Username atau kata sandi salah. Sisa percobaan login: {$remaining} kali."
-                    : "Username atau kata sandi salah. Batas 5 kali percobaan terlampaui. Akun dikunci sementara 60 detik.",
+                    : "Username atau kata sandi salah. Batas 3 kali percobaan terlampaui. Akun dikunci sementara 60 detik.",
                 'remainingAttempts' => $remaining,
                 'isLocked' => $remaining <= 0,
                 'retryAfter' => $remaining <= 0 ? 60 : 0,
