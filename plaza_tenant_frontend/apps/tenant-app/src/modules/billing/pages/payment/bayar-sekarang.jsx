@@ -635,7 +635,7 @@ function BayarSekarang() {
               {/* Error Box */}
               {processError && (
                 <div className="bg-red-50 border border-red/30 rounded-xl p-3 flex items-start gap-2 text-xs text-red font-medium">
-                  <Icon icon="heroicons:exclamation-triangle" className="size-4 shrink-0 mt-0.5 text-red" />
+                  <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4 shrink-0 mt-0.5 text-red" />
                   <span>{processError}</span>
                 </div>
               )}
@@ -707,17 +707,21 @@ function BayarSekarang() {
               {displayedUnpaidBills.length > 1 && fifoAllocations.length > 0 && (
                 <div className="p-2.5 bg-mono-50 rounded-xl border border-border/60 text-[11px] flex flex-col gap-1 mt-0.5">
                   <span className="font-bold text-text-2">Rencana Pelunasan:</span>
-                  {fifoAllocations.map((alloc) => (
-                    <div key={alloc.idTagihan} className="flex justify-between items-center text-text-2 gap-2">
-                      <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
-                      <span className={cn(
-                        "font-semibold shrink-0 whitespace-nowrap",
-                        alloc.status === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'
-                      )}>
-                        {alloc.status} (Rp {alloc.allocated.toLocaleString('id-ID')})
-                      </span>
-                    </div>
-                  ))}
+                  {fifoAllocations.map((alloc) => {
+                    const status = alloc.statusAkhir || alloc.status || 'Belum Lunas';
+                    const amount = Number(alloc.nominalTeralokasi ?? alloc.allocated ?? 0);
+                    return (
+                      <div key={alloc.idTagihan || alloc.periode} className="flex justify-between items-center text-text-2 gap-2">
+                        <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
+                        <span className={cn(
+                          "font-semibold shrink-0 whitespace-nowrap",
+                          status === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'
+                        )}>
+                          {status} (Rp {amount.toLocaleString('id-ID')})
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 

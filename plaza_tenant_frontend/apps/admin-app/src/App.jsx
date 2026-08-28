@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider, VerifikasiResi } from '@bunsay/shared-ui';
+import { ToastProvider, VerifikasiResi, ErrorBoundary } from '@bunsay/shared-ui';
 import { AdminAuthProvider } from './modules/auth/AdminAuthProvider';
 import AdminProtectedRoute from './routes/AdminProtectedRoute';
 
@@ -34,62 +34,64 @@ function AdminAppRoutes() {
 
   return (
     <div data-slot="admin-app-root" className="contents">
-      <ToastProvider>
-        <AdminAuthProvider apiBaseUrl={adminApiUrl}>
-          <Suspense fallback={<AdminPageLoader />}>
-            <Routes>
-              {/* Public Admin Login & Verification Routes */}
-              <Route path="/login" element={<AdminLoginPage />} />
-              <Route path="/verifikasi" element={<VerifikasiResi />} />
-              <Route path="/admin/verifikasi" element={<VerifikasiResi />} />
+      <ErrorBoundary>
+        <ToastProvider>
+          <AdminAuthProvider apiBaseUrl={adminApiUrl}>
+            <Suspense fallback={<AdminPageLoader />}>
+              <Routes>
+                {/* Public Admin Login & Verification Routes */}
+                <Route path="/login" element={<AdminLoginPage />} />
+                <Route path="/verifikasi" element={<VerifikasiResi />} />
+                <Route path="/admin/verifikasi" element={<VerifikasiResi />} />
 
-              {/* Protected Admin Console Routes */}
-              <Route element={<AdminProtectedRoute />}>
-                <Route element={<AdminLayout />}>
-                  {/* Common Routes */}
-                  <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-                  <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
-                  <Route path="/admin/detail-keuangan" element={<DetailKeuanganTenant />} />
-                  <Route path="/admin/keuangan/:id" element={<DetailKeuanganTenant />} />
-                  <Route path="/admin/akun" element={<AkunAdmin />} />
+                {/* Protected Admin Console Routes */}
+                <Route element={<AdminProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    {/* Common Routes */}
+                    <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+                    <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
+                    <Route path="/admin/detail-keuangan" element={<DetailKeuanganTenant />} />
+                    <Route path="/admin/keuangan/:id" element={<DetailKeuanganTenant />} />
+                    <Route path="/admin/akun" element={<AkunAdmin />} />
 
-                  {/* Verifikasi Bukti Transfer */}
-                  <Route element={<AdminProtectedRoute requiredPermission="verifikasi_pembayaran" />}>
-                    <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
-                  </Route>
+                    {/* Verifikasi Bukti Transfer */}
+                    <Route element={<AdminProtectedRoute requiredPermission="verifikasi_pembayaran" />}>
+                      <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
+                    </Route>
 
-                  {/* Setoran Tunai Kasir */}
-                  <Route element={<AdminProtectedRoute requiredPermission="input_setoran" />}>
-                    <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
-                  </Route>
+                    {/* Setoran Tunai Kasir */}
+                    <Route element={<AdminProtectedRoute requiredPermission="input_setoran" />}>
+                      <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
+                    </Route>
 
-                  {/* Manajemen Unit Kios & Legalitas */}
-                  <Route element={<AdminProtectedRoute requiredPermission="kelola_kios" />}>
-                    <Route path="/admin/kios" element={<KetersediaanKios />} />
-                    <Route path="/admin/kios/:id" element={<DetailAdministrasiKios />} />
-                    <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
-                    <Route path="/admin/riwayat/:id" element={<RiwayatPemilikKios />} />
-                    <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
-                  </Route>
+                    {/* Manajemen Unit Kios & Legalitas */}
+                    <Route element={<AdminProtectedRoute requiredPermission="kelola_kios" />}>
+                      <Route path="/admin/kios" element={<KetersediaanKios />} />
+                      <Route path="/admin/kios/:id" element={<DetailAdministrasiKios />} />
+                      <Route path="/admin/riwayat-pemilik" element={<RiwayatPemilikKios />} />
+                      <Route path="/admin/riwayat/:id" element={<RiwayatPemilikKios />} />
+                      <Route path="/admin/detail-administrasi" element={<DetailAdministrasiKios />} />
+                    </Route>
 
-                  {/* Ekspor Laporan Keuangan */}
-                  <Route element={<AdminProtectedRoute requiredPermission="ekspor_laporan" />}>
-                    <Route path="/admin/ekspor" element={<EksporData />} />
-                  </Route>
+                    {/* Ekspor Laporan Keuangan */}
+                    <Route element={<AdminProtectedRoute requiredPermission="ekspor_laporan" />}>
+                      <Route path="/admin/ekspor" element={<EksporData />} />
+                    </Route>
 
-                  {/* Audit Trail Log */}
-                  <Route element={<AdminProtectedRoute requiredPermission="lihat_audit_log" />}>
-                    <Route path="/admin/audit-log" element={<AuditLogPage />} />
+                    {/* Audit Trail Log */}
+                    <Route element={<AdminProtectedRoute requiredPermission="lihat_audit_log" />}>
+                      <Route path="/admin/audit-log" element={<AuditLogPage />} />
+                    </Route>
                   </Route>
                 </Route>
-              </Route>
 
-              {/* Fallback Redirect */}
-              <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </AdminAuthProvider>
-      </ToastProvider>
+                {/* Fallback Redirect */}
+                <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+              </Routes>
+            </Suspense>
+          </AdminAuthProvider>
+        </ToastProvider>
+      </ErrorBoundary>
     </div>
   );
 }

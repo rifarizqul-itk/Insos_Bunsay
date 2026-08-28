@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider, VerifikasiResi } from '@bunsay/shared-ui';
+import { ToastProvider, VerifikasiResi, ErrorBoundary } from '@bunsay/shared-ui';
 import { TenantAuthProvider } from './modules/public/TenantAuthProvider';
 import TenantProtectedRoute from './routes/TenantProtectedRoute';
 
@@ -29,34 +29,36 @@ function TenantAppRoutes() {
 
   return (
     <div data-slot="tenant-app-root" className="contents">
-      <ToastProvider>
-        <TenantAuthProvider apiBaseUrl={tenantApiUrl}>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public Tenant Routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/auth/lupa-sandi" element={<AuthPage />} />
-              <Route path="/verifikasi" element={<VerifikasiResi />} />
+      <ErrorBoundary>
+        <ToastProvider>
+          <TenantAuthProvider apiBaseUrl={tenantApiUrl}>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public Tenant Routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/auth/lupa-sandi" element={<AuthPage />} />
+                <Route path="/verifikasi" element={<VerifikasiResi />} />
 
-              {/* Protected Tenant Routes */}
-              <Route element={<TenantProtectedRoute />}>
-                <Route element={<TenantLayout />}>
-                  <Route path="/tenant/dashboard" element={<DashboardTenant />} />
-                  <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
-                  <Route path="/tenant/histori" element={<HistoriPembayaran />} />
-                  <Route path="/tenant/tagihan" element={<TunggakanAR />} />
-                  <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
-                  <Route path="/tenant/akun" element={<AkunTenant />} />
+                {/* Protected Tenant Routes */}
+                <Route element={<TenantProtectedRoute />}>
+                  <Route element={<TenantLayout />}>
+                    <Route path="/tenant/dashboard" element={<DashboardTenant />} />
+                    <Route path="/tenant/pembayaran" element={<BayarSekarang />} />
+                    <Route path="/tenant/histori" element={<HistoriPembayaran />} />
+                    <Route path="/tenant/tagihan" element={<TunggakanAR />} />
+                    <Route path="/tenant/tunggakan" element={<TunggakanAR />} />
+                    <Route path="/tenant/akun" element={<AkunTenant />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Fallback Redirect */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </TenantAuthProvider>
-      </ToastProvider>
+                {/* Fallback Redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </TenantAuthProvider>
+        </ToastProvider>
+      </ErrorBoundary>
     </div>
   );
 }
