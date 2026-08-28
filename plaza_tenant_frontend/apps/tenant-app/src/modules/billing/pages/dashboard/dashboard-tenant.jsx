@@ -188,8 +188,10 @@ function DashboardTenant() {
     );
   }
 
-  const { nama, kios, siklusSewa, tagihanBerjalan, kiosBreakdown, totalTagihanSemuaKios, totalTunggakanLalu, tarifBulanIni } = dashboardData || {};
+  const { nama, kios, siklusSewa, tagihanBerjalan, kiosBreakdown, totalTagihanSemuaKios, totalTunggakanLalu, tarifBulanIni, hasActiveKios } = dashboardData || {};
   
+  const hasActiveKiosks = (hasActiveKios !== false) && Boolean(kios && kios !== '—' && kios.trim() !== '') && (Array.isArray(kiosBreakdown) && kiosBreakdown.length > 0);
+
   const tarifSewaVal = Number(tarifBulanIni ?? (tagihanBerjalan ? (tagihanBerjalan.tarifSewa ?? 0) : 0));
   const hutangTunggakanVal = Number(totalTunggakanLalu ?? (tagihanBerjalan ? (tagihanBerjalan.hutangTunggakan ?? 0) : 0));
   const totalTagihanVal = Number(totalTagihanSemuaKios ?? (tarifSewaVal + hutangTunggakanVal));
@@ -202,9 +204,9 @@ function DashboardTenant() {
     ? kiosBreakdown.some(k => k.tagihan && k.tagihan.statusTagihan === 'Menunggu Verifikasi')
     : (tagihanBerjalan?.statusTagihan === 'Menunggu Verifikasi');
 
-  const statusTagihan = hasUnpaidKiosk ? 'Belum Bayar' : (hasVerifikasiKiosk ? 'Menunggu Verifikasi' : (tagihanBerjalan?.statusTagihan || 'Lunas'));
-  const perluBayar = hasUnpaidKiosk && totalTagihanVal > 0;
-  const sedangVerifikasi = hasVerifikasiKiosk && !hasUnpaidKiosk;
+  const statusTagihan = !hasActiveKiosks ? 'Lunas' : (hasUnpaidKiosk ? 'Belum Bayar' : (hasVerifikasiKiosk ? 'Menunggu Verifikasi' : (tagihanBerjalan?.statusTagihan || 'Lunas')));
+  const perluBayar = hasActiveKiosks && hasUnpaidKiosk && totalTagihanVal > 0;
+  const sedangVerifikasi = hasActiveKiosks && hasVerifikasiKiosk && !hasUnpaidKiosk;
 
   return (
     <div data-slot="dashboard-tenant" className="page-fade-in flex flex-col gap-4 sm:gap-5 font-sans max-w-6xl mx-auto w-full">
@@ -215,24 +217,59 @@ function DashboardTenant() {
             <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
               Halo, {nama || 'Penyewa Kios'}
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-red-50 border border-red/20 text-red text-xs font-semibold font-tabular-nums shrink-0">
-              <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-red shrink-0" />
-              <span>Kios {kios}</span>
-            </span>
+            {hasActiveKiosks ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-red-50 border border-red/20 text-red text-xs font-semibold font-tabular-nums shrink-0">
+                <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-red shrink-0" />
+                <span>Kios {kios}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-mono-100 border border-border text-text-3 text-xs font-semibold shrink-0">
+                <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-mono-400 shrink-0" />
+                <span>Tidak Ada Kios Aktif</span>
+              </span>
+            )}
           </div>
           <p className="text-text-2 text-xs sm:text-sm font-normal mt-0.5 text-pretty">
-            Portal layanan sewa dan tagihan kios Anda.
+            {hasActiveKiosks ? 'Portal layanan sewa dan tagihan kios Anda.' : 'Akun arsip riwayat sewa dan transaksi Anda.'}
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-text-3 bg-white border border-border/80 px-3 py-1.5 rounded-xl shadow-xs">
-          <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-mono-400" />
-          <span>{getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}</span>
-        </div>
+        {hasActiveKiosks && (
+          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-text-3 bg-white border border-border/80 px-3 py-1.5 rounded-xl shadow-xs">
+            <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-mono-400" />
+            <span>{getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}</span>
+          </div>
+        )}
       </div>
 
       {/* 2. ALERT BANNER STATUS TAGIHAN */}
-      {perluBayar ? (
+      {!hasActiveKiosks ? (
+        <div className="bg-mono-50 border border-border/80 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-mono-200 text-mono-700 flex items-center justify-center shrink-0">
+              <Icon icon="heroicons:archive-box-20-solid" className="size-5" />
+            </div>
+            <div>
+              <strong className="text-xs sm:text-sm text-text font-bold block">
+                Masa Sewa Telah Selesai
+              </strong>
+              <p className="text-xs text-text-2 font-normal text-pretty mt-0.5">
+                Anda saat ini tidak memiliki unit kios aktif. Seluruh rekap kwitansi dan riwayat transaksi masa lalu tetap tersimpan di akun Anda.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/tenant/histori')}
+            className="w-full sm:w-auto h-9 px-3.5 font-bold gap-1.5 shrink-0 bg-white text-text border-border hover:bg-mono-50 text-xs whitespace-nowrap"
+          >
+            <span>Lihat Riwayat Transaksi</span>
+            <Icon icon="heroicons:document-text-20-solid" className="size-3.5" />
+          </Button>
+        </div>
+      ) : perluBayar ? (
         <div className="bg-red-50/80 border border-red/20 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-start sm:items-center gap-3">
             <div className="size-9 rounded-xl bg-red text-white flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
@@ -318,18 +355,20 @@ function DashboardTenant() {
         <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
             <span className="text-xs font-bold text-text-3 uppercase block">
-              Periode Sewa Aktif
+              {hasActiveKiosks ? 'Periode Sewa Aktif' : 'Status Kontrak Sewa'}
             </span>
             <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1 mb-0.5 leading-tight">
-              {formatMonthYearText(tagihanBerjalan?.periode)}
+              {hasActiveKiosks ? formatMonthYearText(tagihanBerjalan?.periode) : 'Selesai / Nonaktif'}
             </div>
             <div className="text-xs sm:text-sm text-text-2 font-medium font-tabular-nums">
-              {getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}
+              {hasActiveKiosks ? getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa) : 'Tidak ada unit kios yang sedang disewa'}
             </div>
           </div>
 
           <div className="border-t border-border/60 pt-2.5 text-xs sm:text-sm text-text-2 font-semibold">
-            {statusTagihan !== 'Lunas' ? (
+            {!hasActiveKiosks ? (
+              <span className="text-text-3 font-normal">Hubungi pengelola untuk pengajuan sewa baru</span>
+            ) : statusTagihan !== 'Lunas' ? (
               <span>Jatuh tempo: <strong className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</strong></span>
             ) : (
               <span className="text-emerald-700 font-bold flex items-center gap-1.5">
@@ -347,20 +386,24 @@ function DashboardTenant() {
               <span className="text-xs font-bold text-text-3 uppercase block">
                 Total Kewajiban Sewa
               </span>
-              <Badge status={statusTagihan} />
+              <Badge status={!hasActiveKiosks ? 'Lunas' : statusTagihan} />
             </div>
             <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text my-0.5">
-              Rp {totalTagihanVal.toLocaleString('id-ID')}
+              Rp {hasActiveKiosks ? totalTagihanVal.toLocaleString('id-ID') : '0'}
             </div>
           </div>
 
           <div className="border-t border-border/60 pt-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs sm:text-sm">
             <span className="text-text-2 font-medium">
-              {hutangTunggakanVal > 0 
-                ? `Rincian: Rp ${tarifSewaVal.toLocaleString('id-ID')} (Bulan Ini) + Rp ${hutangTunggakanVal.toLocaleString('id-ID')} (Tunggakan Lalu)`
-                : (statusTagihan === 'Lunas' ? 'Semua kewajiban sewa periode ini telah lunas' : 'Sewa unit kios bulan berjalan')}
+              {!hasActiveKiosks ? (
+                'Tidak ada tagihan sewa aktif yang perlu dibayar'
+              ) : hutangTunggakanVal > 0 ? (
+                `Rincian: Rp ${tarifSewaVal.toLocaleString('id-ID')} (Bulan Ini) + Rp ${hutangTunggakanVal.toLocaleString('id-ID')} (Tunggakan Lalu)`
+              ) : (
+                statusTagihan === 'Lunas' ? 'Semua kewajiban sewa periode ini telah lunas' : 'Sewa unit kios bulan berjalan'
+              )}
             </span>
-            {hutangTunggakanVal > 0 && (
+            {hasActiveKiosks && hutangTunggakanVal > 0 && (
               <button 
                 type="button"
                 onClick={() => navigate('/tenant/tunggakan')}

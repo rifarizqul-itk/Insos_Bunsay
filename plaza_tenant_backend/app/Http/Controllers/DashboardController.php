@@ -46,27 +46,34 @@ class DashboardController extends Controller
             return response()->json(['message' => 'Data pemilik tidak ditemukan.'], 404);
         }
 
-        // Ambil sewa aktif paling baru
-        $sewaTerbaru = $pemilik->sewa->sortByDesc('Tanggal_Mulai')->first();
+        // 1. Ambil sewa AKTIF (Status = 'Aktif')
+        $sewaAktif = $pemilik->sewa->where('Status', 'Aktif');
+        $hasActiveKios = $sewaAktif->count() > 0;
+
+        // Sewa terbaru (prioritas sewa aktif, jika tidak ada fallback ke sewa historis)
+        $sewaTerbaru = $sewaAktif->sortByDesc('Tanggal_Mulai')->first()
+            ?? $pemilik->sewa->sortByDesc('Tanggal_Mulai')->first();
+
         $allTagihan = $pemilik->sewa->flatMap->tagihan;
         
         // Tagihan belum lunas dari seluruh kios
         $unpaidTagihanAll = $allTagihan->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']);
         $totalKewajibanSemua = (float) $unpaidTagihanAll->sum(fn($t) => (float)($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0));
 
-        // Tagihan periode berjalan (paling baru)
-        $tagihanBerjalan = $allTagihan->sortByDesc('Periode')->first()
-            ?? $allTagihan->sortByDesc('Id_Tagihan')->first();
+        // Tagihan periode berjalan
+        $tagihanBerjalan = $hasActiveKios 
+            ? ($sewaAktif->flatMap->tagihan->sortByDesc('Periode')->first() ?? $sewaAktif->flatMap->tagihan->sortByDesc('Id_Tagihan')->first())
+            : ($allTagihan->sortByDesc('Periode')->first() ?? $allTagihan->sortByDesc('Id_Tagihan')->first());
 
         // Hitung tarif sewa bulan ini (paling baru) vs total tunggakan bulan-bulan sebelumnya
-        $tarifBulanIni = ($tagihanBerjalan && in_array($tagihanBerjalan->Status_Tagihan, ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']))
+        $tarifBulanIni = ($hasActiveKios && $tagihanBerjalan && in_array($tagihanBerjalan->Status_Tagihan, ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']))
             ? (float) ($tagihanBerjalan->Sisa_Tagihan ?? $tagihanBerjalan->Total_Tagihan ?? $tagihanBerjalan->Tarif_Sewa ?? 0)
             : 0.0;
         
         $totalTunggakanLalu = max(0.0, $totalKewajibanSemua - $tarifBulanIni);
 
-        // Kumpulkan breakdown tagihan per masing-masing unit kios
-        $kiosBreakdown = $pemilik->sewa->map(function ($sewaItem) {
+        // Kumpulkan breakdown tagihan HANYA untuk unit kios aktif
+        $kiosBreakdown = $sewaAktif->map(function ($sewaItem) {
             $unpaidKiosBills = $sewaItem->tagihan->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']);
             $totalUnpaidKios = (float) $unpaidKiosBills->sum(fn($t) => (float)($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0));
 
@@ -97,17 +104,18 @@ class DashboardController extends Controller
             ];
         })->values();
 
-        // Kumpulkan semua nomor kios yang dimiliki pemilik ini
-        $kiosList = $pemilik->sewa->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
+        // Kumpulkan semua nomor kios aktif yang dimiliki pemilik ini
+        $kiosList = $sewaAktif->map(fn($s) => optional($s->kios)->No_Kios)->filter()->unique()->values();
 
         return response()->json([
             'idPemilik'              => $pemilik->Id_Pemilik,
+            'hasActiveKios'          => $hasActiveKios,
             'nama'                   => $pemilik->Nama,
             'nik'                    => $pemilik->No_KTP ?: '—',
             'telepon'                => $pemilik->No_Telepon ?: '—',
             'email'                  => $user->email ?? $user->Username,
             'alamat'                 => $pemilik->Alamat ?: '—',
-            'kios'                   => $kiosList->implode(', '),
+            'kios'                   => $hasActiveKios ? $kiosList->implode(', ') : '',
             'kiosList'               => $kiosList,
             'kiosBreakdown'          => $kiosBreakdown,
             'totalTagihanSemuaKios'  => (float) $totalKewajibanSemua,
@@ -121,9 +129,9 @@ class DashboardController extends Controller
                 'sertifikat' => $sewaTerbaru?->kios?->Sertifikat ?? '—',
                 'sp'         => '—',
                 'ppjb'       => '—',
-                'catatan'    => $sewaTerbaru?->kios?->Catatan ?? 'Izin usaha aktif.'
+                'catatan'    => $hasActiveKios ? ($sewaTerbaru?->kios?->Catatan ?? 'Izin usaha aktif.') : 'Tidak memiliki izin sewa kios aktif.'
             ],
-            'siklusSewa' => $sewaTerbaru ? [
+            'siklusSewa' => ($hasActiveKios && $sewaTerbaru) ? [
                 'idSewa'         => $sewaTerbaru->Id_Sewa,
                 'tanggalMulai'   => $sewaTerbaru->Tanggal_Mulai,
                 'tanggalSelesai' => $sewaTerbaru->Tanggal_Selesai,
@@ -134,7 +142,7 @@ class DashboardController extends Controller
             'tagihanBerjalan' => $tagihanBerjalan ? [
                 'idTagihan'       => $tagihanBerjalan->Id_Tagihan,
                 'periode'         => $tagihanBerjalan->Periode,
-                'tarifSewa'       => (float) ($tagihanBerjalan->Tarif_Sewa ?? $sewaTerbaru->Tarif_Bulanan ?? 750000),
+                'tarifSewa'       => (float) ($tagihanBerjalan->Tarif_Sewa ?? $sewaTerbaru?->Tarif_Bulanan ?? 750000),
                 'hutangTunggakan' => (float) ($totalTunggakanLalu),
                 'totalTagihan'    => (float) $tagihanBerjalan->Total_Tagihan,
                 'statusTagihan'   => $unpaidTagihanAll->count() > 0 ? ($tagihanBerjalan->Status_Tagihan === 'Lunas' ? 'Menunggak' : $tagihanBerjalan->Status_Tagihan) : 'Lunas',
