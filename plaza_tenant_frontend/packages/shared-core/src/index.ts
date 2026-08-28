@@ -16,9 +16,6 @@ export { allocatePaymentFIFO, calculateBillStatus } from './utils/fifoAllocator'
 // Export HTTP Client & Storage URL Resolver
 export { httpClient, apiClient, resolveStorageUrl } from './api/client';
 
-// Export Shared Transaction Model (mock adapter only — use context httpClient for real API calls)
-export { MockTransactionAdapter, transactionPort } from './api/transactions';
-
 // Export Excel Rekap Utility
 export { downloadExcelRekap } from './utils/exportExcel';
 

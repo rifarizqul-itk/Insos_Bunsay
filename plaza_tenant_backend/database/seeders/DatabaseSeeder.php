@@ -17,8 +17,6 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             KiosSeeder::class,               // Master ~300 Unit Kios Fisik Blok A-H (Status awal: Kosong)
             SimulationScenarioSeeder::class, // Skenario Simulasi 10 Orang Tim (100% State Coverage)
-            // RealTenantSeeder::class,      // [OPSIONAL] Aktifkan jika ingin menyertakan 886 data riil
-            // ScenarioSeeder::class,        // [NONAKTIF] Seeder skenario lama
         ]);
     }
 }
