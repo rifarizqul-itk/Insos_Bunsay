@@ -94,22 +94,26 @@ class PembayaranController extends Controller
         $idTagihanTarget = $request->Id_Tagihan;
         $tagihanTarget   = Tagihan::find($idTagihanTarget);
 
-        // Proses upload bukti pembayaran (Base64 → file)
+        // Proses upload bukti pembayaran (Base64 → file) dengan whitelist ekstensi & validasi ukuran
         $buktiPath = $request->Bukti_Pembayaran;
         if (is_string($request->Bukti_Pembayaran) && str_starts_with($request->Bukti_Pembayaran, 'data:image/')) {
             try {
-                preg_match('/data:image\/(?<type>\w+);base64,(?<data>.+)/', $request->Bukti_Pembayaran, $matches);
+                preg_match('/data:image\/(?<type>[a-zA-Z0-9_-]+);base64,(?<data>.+)/', $request->Bukti_Pembayaran, $matches);
                 if (isset($matches['data'])) {
-                    $imageType = strtolower($matches['type'] ?? 'png');
-                    $imageData = base64_decode($matches['data']);
-                    $filename  = 'bukti_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
-
-                    $destinationPath = public_path('storage/bukti');
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
+                    $rawType = strtolower($matches['type'] ?? 'png');
+                    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+                    $imageType = in_array($rawType, $allowedExts, true) ? ($rawType === 'jpeg' ? 'jpg' : $rawType) : 'png';
+                    
+                    $imageData = base64_decode($matches['data'], true);
+                    if ($imageData !== false && strlen($imageData) > 0 && strlen($imageData) <= (5 * 1024 * 1024)) {
+                        $filename  = 'bukti_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
+                        $destinationPath = public_path('storage/bukti');
+                        if (!file_exists($destinationPath)) {
+                            mkdir($destinationPath, 0777, true);
+                        }
+                        file_put_contents($destinationPath . '/' . $filename, $imageData);
+                        $buktiPath = 'storage/bukti/' . $filename;
                     }
-                    file_put_contents($destinationPath . '/' . $filename, $imageData);
-                    $buktiPath = 'storage/bukti/' . $filename;
                 }
             } catch (\Throwable $e) {}
         }
@@ -432,18 +436,22 @@ class PembayaranController extends Controller
         $buktiPath = $request->bukti_sanggahan;
         if (is_string($request->bukti_sanggahan) && str_starts_with($request->bukti_sanggahan, 'data:image/')) {
             try {
-                preg_match('/data:image\/(?<type>\w+);base64,(?<data>.+)/', $request->bukti_sanggahan, $matches);
+                preg_match('/data:image\/(?<type>[a-zA-Z0-9_-]+);base64,(?<data>.+)/', $request->bukti_sanggahan, $matches);
                 if (isset($matches['data'])) {
-                    $imageType = strtolower($matches['type'] ?? 'png');
-                    $imageData = base64_decode($matches['data']);
-                    $filename = 'sanggahan_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
+                    $rawType = strtolower($matches['type'] ?? 'png');
+                    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+                    $imageType = in_array($rawType, $allowedExts, true) ? ($rawType === 'jpeg' ? 'jpg' : $rawType) : 'png';
 
-                    $destinationPath = public_path('storage/bukti');
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
+                    $imageData = base64_decode($matches['data'], true);
+                    if ($imageData !== false && strlen($imageData) > 0 && strlen($imageData) <= (5 * 1024 * 1024)) {
+                        $filename = 'sanggahan_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
+                        $destinationPath = public_path('storage/bukti');
+                        if (!file_exists($destinationPath)) {
+                            mkdir($destinationPath, 0777, true);
+                        }
+                        file_put_contents($destinationPath . '/' . $filename, $imageData);
+                        $buktiPath = 'storage/bukti/' . $filename;
                     }
-                    file_put_contents($destinationPath . '/' . $filename, $imageData);
-                    $buktiPath = 'storage/bukti/' . $filename;
                 }
             } catch (\Throwable $e) {}
         }

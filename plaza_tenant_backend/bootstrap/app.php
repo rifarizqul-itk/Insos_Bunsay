@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->statefulApi();
         $middleware->redirectGuestsTo(fn (Request $request) => null);
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdminRole::class,
         ]);

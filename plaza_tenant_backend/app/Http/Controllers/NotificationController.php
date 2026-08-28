@@ -71,7 +71,17 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, int $id): JsonResponse
     {
-        $notif = Notification::find($id);
+        $user = $request->user();
+        $query = Notification::where('id', $id);
+
+        if ($user && (int)$user->Id_roles !== 1) {
+            // Tenant context: ensure notification belongs to this tenant or is broadcast
+            $query->where('target_type', 'tenant')->where(function ($q) use ($user) {
+                $q->where('id_user', $user->Id_user)->orWhereNull('id_user');
+            });
+        }
+
+        $notif = $query->first();
 
         if ($notif) {
             $notif->is_read = true;

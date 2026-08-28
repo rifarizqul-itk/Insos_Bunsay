@@ -42,10 +42,42 @@ class StafManagementController extends Controller
     }
 
     /**
+     * Helper to verify if the requesting user has permission to manage staff.
+     */
+    private function authorizeStaffManager(Request $request): ?JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $rawPerms = $user->permissions;
+        $permsArray = [];
+        if ($rawPerms) {
+            $permsArray = is_string($rawPerms) ? json_decode($rawPerms, true) : (array)$rawPerms;
+        } else {
+            $permsArray = ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
+        }
+
+        $isSuperadmin = ($user->sub_role === 'superadmin') || in_array('kelola_admin', $permsArray, true);
+        if (!$isSuperadmin) {
+            return response()->json([
+                'message' => 'Akses ditolak. Anda memerlukan hak akses Kelola Admin / Superadmin untuk melakukan aksi ini.',
+            ], 403);
+        }
+
+        return null;
+    }
+
+    /**
      * Store new admin staff account.
      */
     public function store(Request $request): JsonResponse
     {
+        if ($deny = $this->authorizeStaffManager($request)) {
+            return $deny;
+        }
+
         $request->validate([
             'username'     => 'required|string|unique:user,Username',
             'nama_lengkap' => 'required|string',
@@ -84,6 +116,10 @@ class StafManagementController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
+        if ($deny = $this->authorizeStaffManager($request)) {
+            return $deny;
+        }
+
         $staf = User::where('Id_roles', 1)->find($id);
 
         if (!$staf) {
@@ -127,6 +163,10 @@ class StafManagementController extends Controller
      */
     public function toggleStatus(Request $request, int $id): JsonResponse
     {
+        if ($deny = $this->authorizeStaffManager($request)) {
+            return $deny;
+        }
+
         $currentUser = $request->user();
         if ($currentUser && (int)$currentUser->Id_user === (int)$id) {
             return response()->json([
@@ -164,6 +204,10 @@ class StafManagementController extends Controller
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($deny = $this->authorizeStaffManager($request)) {
+            return $deny;
+        }
+
         $currentUser = $request->user();
         if ($currentUser && (int)$currentUser->Id_user === (int)$id) {
             return response()->json([

@@ -433,6 +433,15 @@ class AuthController extends Controller
             'identifier' => 'required|string',
         ]);
 
+        $throttleKey = 'forgot_pw_' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'message' => "Terlalu banyak permintaan reset kata sandi. Silakan coba lagi dalam {$seconds} detik.",
+            ], 429);
+        }
+        RateLimiter::hit($throttleKey, 300); // Max 3 requests per 5 minutes
+
         $identifier = trim($request->identifier);
         $cleanPhone = preg_replace('/\D/', '', $identifier);
 
@@ -466,6 +475,7 @@ class AuthController extends Controller
 
         // Simpan di Cache selama 15 menit
         Cache::put("password_reset_otp_{$user->Id_user}", $otp, now()->addMinutes(15));
+        Cache::forget("otp_fail_count_{$user->Id_user}");
 
         $namaUser = $user->nama_lengkap ?? $user->Username;
         $noHp = $user->pemilik?->No_Telepon;
@@ -538,11 +548,28 @@ class AuthController extends Controller
             ], 404);
         }
 
+        $otpAttemptKey = "otp_fail_count_{$user->Id_user}";
+        $failedAttempts = (int) Cache::get($otpAttemptKey, 0);
+
+        if ($failedAttempts >= 5) {
+            Cache::forget("password_reset_otp_{$user->Id_user}");
+            Cache::forget($otpAttemptKey);
+            return response()->json([
+                'message' => 'Batas percobaan verifikasi OTP terlampaui (maksimal 5 kali gagal). Kode OTP telah dibatalkan demi keamanan. Silakan minta kode OTP baru.',
+            ], 429);
+        }
+
         $cachedOtp = Cache::get("password_reset_otp_{$user->Id_user}");
 
         if (!$cachedOtp || $cachedOtp !== trim($request->otp)) {
+            $newFails = $failedAttempts + 1;
+            Cache::put($otpAttemptKey, $newFails, now()->addMinutes(15));
+            $sisa = 5 - $newFails;
+
             return response()->json([
-                'message' => 'Kode verifikasi salah atau sudah kadaluarsa (berlaku 15 menit).',
+                'message' => $sisa > 0
+                    ? "Kode verifikasi salah atau sudah kadaluarsa. Sisa percobaan: {$sisa} kali."
+                    : 'Kode verifikasi salah. Batas 5 kali percobaan terlampaui. Kode OTP dibatalkan. Silakan minta kode OTP baru.',
             ], 422);
         }
 
@@ -550,8 +577,9 @@ class AuthController extends Controller
         $user->Password = Hash::make($request->kataSandiBaru);
         $user->save();
 
-        // Hapus OTP dari cache
+        // Hapus OTP dan counter dari cache
         Cache::forget("password_reset_otp_{$user->Id_user}");
+        Cache::forget($otpAttemptKey);
 
         return response()->json([
             'success' => true,
