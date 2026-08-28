@@ -119,16 +119,16 @@ function RiwayatTransaksiAdmin() {
   ];
 
   return (
-    <div data-slot="riwayat-transaksi-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div data-slot="riwayat-transaksi-admin" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Riwayat Transaksi
           </h1>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <label htmlFor="filter-metode-admin" className="text-xs sm:text-sm font-bold text-text-2">Metode:</label>
+          <label htmlFor="filter-metode-admin" className="text-xs sm:text-sm font-semibold text-text-2">Metode:</label>
           <select
             id="filter-metode-admin"
             aria-label="Filter Metode Pembayaran Transaksi Admin"
@@ -137,7 +137,7 @@ function RiwayatTransaksiAdmin() {
               setFilterMetode(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 rounded-md border border-border bg-white pl-3.5 pr-9 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
+            className="h-9 rounded-lg border border-border bg-white pl-3 pr-8 text-xs sm:text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-xs"
           >
             <option value="Semua">Semua Metode</option>
             <option value="Transfer">Transfer Bank</option>
@@ -148,7 +148,7 @@ function RiwayatTransaksiAdmin() {
       </div>
 
       {/* Main Global Transaction History Table (Seamless Edge-to-Edge Surface) */}
-      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+      <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
         {isLoading ? (
           <div className="p-6">
             <SkeletonTable rows={5} cols={7} />

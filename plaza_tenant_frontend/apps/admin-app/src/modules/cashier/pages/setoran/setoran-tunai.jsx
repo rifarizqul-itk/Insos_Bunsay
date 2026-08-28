@@ -245,9 +245,9 @@ function SetoranTunai() {
   };
 
   return (
-    <div data-slot="setoran-tunai" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="setoran-tunai" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       {toastMsg && (
-        <div className="bg-emerald-600 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
+        <div className="bg-emerald-600 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-lg shadow-xs flex items-center justify-between animate-fade-in">
           <span>{toastMsg}</span>
           <button
             type="button"
@@ -260,53 +260,53 @@ function SetoranTunai() {
       )}
 
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+        <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
           Setoran Tunai
         </h1>
       </div>
 
-      <Card variant="elevated" className="max-w-2xl p-6 sm:p-8 flex flex-col gap-6">
+      <Card variant="elevated" className="max-w-2xl p-4 sm:p-6 flex flex-col gap-4">
         {showKonfirmasi ? (
-          <div className="flex flex-col gap-5 page-fade-in" role="region" aria-label="Tinjauan Konfirmasi Setoran Tunai">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <Icon icon="heroicons:shield-check-20-solid" className="size-6 text-green" />
-              <h2 className="text-lg font-extrabold text-text tracking-tight text-balance">
+          <div className="flex flex-col gap-4 page-fade-in" role="region" aria-label="Tinjauan Konfirmasi Setoran Tunai">
+            <div className="flex items-center gap-2 border-b border-border pb-2.5">
+              <Icon icon="heroicons:shield-check-20-solid" className="size-5.5 text-green" />
+              <h2 className="text-base sm:text-lg font-bold text-text text-balance">
                 Konfirmasi Setoran Tunai
               </h2>
             </div>
-            <p className="text-sm text-text-2 text-pretty">
+            <p className="text-xs sm:text-sm text-text-2 text-pretty">
               Periksa rincian setoran sebelum menyimpan pencatatan.
             </p>
 
-            <Card variant="inset" className="p-4 flex flex-col gap-2.5 text-sm">
+            <Card variant="inset" className="p-3.5 flex flex-col gap-2 text-xs sm:text-sm">
               <div><span className="text-text-3 font-semibold">Tenant:</span> <strong className="text-text font-bold">{selectedTenantObj?.nama} ({selectedTenantObj?.kios})</strong></div>
-              <div><span className="text-text-3 font-semibold">Nominal Tunai:</span> <strong className="text-text font-bold font-tabular-nums text-base text-red">Rp {parseInt(nominalTunai, 10).toLocaleString('id-ID')}</strong></div>
+              <div><span className="text-text-3 font-semibold">Nominal Tunai:</span> <strong className="text-text font-bold font-tabular-nums text-sm sm:text-base text-red">Rp {parseInt(nominalTunai, 10).toLocaleString('id-ID')}</strong></div>
               {buktiTunai && <div><span className="text-text-3 font-semibold">Bukti:</span> <strong className="text-text font-bold">{buktiTunai.name}</strong></div>}
             </Card>
 
             <FIFOPreview allocations={fifoAllocations} nominal={Number(nominalTunai) || 0} />
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2.5 pt-1">
               <Button
                 type="button"
                 variant="secondary"
-                size="lg"
+                size="md"
                 onClick={() => setShowKonfirmasi(false)}
-                className="flex-1 h-12 text-sm font-extrabold"
+                className="flex-1 h-10.5 text-sm font-bold"
               >
                 Ubah Data
               </Button>
               <Button
                 type="button"
                 variant="primary"
-                size="lg"
+                size="md"
                 disabled={isSubmitting}
                 onClick={handleSimpanTunaiFinal}
-                className="flex-1 h-12 text-sm font-extrabold shadow-md bg-green hover:bg-green/90"
+                className="flex-1 h-10.5 text-sm font-bold shadow-xs bg-green hover:bg-green/90"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-5" />
+                    <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                     <span>Menyimpan...</span>
                   </span>
                 ) : (

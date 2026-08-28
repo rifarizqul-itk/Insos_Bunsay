@@ -483,10 +483,10 @@ function KetersediaanKios() {
   };
 
   return (
-    <div data-slot="ketersediaan-kios" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div data-slot="ketersediaan-kios" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Ketersediaan Kios
           </h1>
         </div>
@@ -494,50 +494,50 @@ function KetersediaanKios() {
         <Button
           variant="primary"
           onClick={() => setIsDrawerOpen(true)}
-          className="gap-2 self-start sm:self-auto shadow-md"
+          className="gap-2 self-start sm:self-auto shadow-xs h-9 text-xs sm:text-sm font-bold"
         >
-          <Icon icon="heroicons:user-plus-20-solid" className="size-5" />
+          <Icon icon="heroicons:user-plus-20-solid" className="size-4" />
           <span>Tambah Penyewa</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <Card variant="elevated" className="p-6 flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+        <Card variant="elevated" className="p-4 sm:p-5 flex items-center justify-between shadow-xs">
           <div>
             <div className="label-micro text-text-3">Total Kios</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-text mt-1.5 font-tabular-nums">{dataKios.length} Unit</div>
+            <div className="text-xl sm:text-2xl font-bold text-text mt-1 font-tabular-nums">{dataKios.length} Unit</div>
           </div>
-          <div className="size-12 rounded-md bg-mono-100 text-text flex items-center justify-center border border-border/60">
-            <Icon icon="heroicons:building-storefront-20-solid" className="size-6" />
+          <div className="size-10 rounded-lg bg-mono-100 text-text flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
           </div>
         </Card>
 
-        <Card variant="elevated" className="p-6 flex items-center justify-between">
+        <Card variant="elevated" className="p-4 sm:p-5 flex items-center justify-between shadow-xs">
           <div>
             <div className="label-micro text-text-3">Kios Terisi</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-green mt-1.5 font-tabular-nums">{totalTerisi} Unit</div>
+            <div className="text-xl sm:text-2xl font-bold text-green mt-1 font-tabular-nums">{totalTerisi} Unit</div>
           </div>
-          <div className="size-12 rounded-md bg-mono-100 text-green flex items-center justify-center border border-border/60">
-            <Icon icon="heroicons:check-circle-20-solid" className="size-6" />
+          <div className="size-10 rounded-lg bg-mono-100 text-green flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
           </div>
         </Card>
 
-        <Card variant="elevated" className="p-6 flex items-center justify-between">
+        <Card variant="elevated" className="p-4 sm:p-5 flex items-center justify-between shadow-xs">
           <div>
             <div className="label-micro text-text-3">Kios Tersedia</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-red mt-1.5 font-tabular-nums">{totalTersedia} Unit</div>
+            <div className="text-xl sm:text-2xl font-bold text-red mt-1 font-tabular-nums">{totalTersedia} Unit</div>
           </div>
-          <div className="size-12 rounded-md bg-mono-100 text-red flex items-center justify-center border border-border/60">
-            <Icon icon="heroicons:key-20-solid" className="size-6" />
+          <div className="size-10 rounded-lg bg-mono-100 text-red flex items-center justify-center border border-border/60">
+            <Icon icon="heroicons:key-20-solid" className="size-5" />
           </div>
         </Card>
       </div>
 
       {/* Main Kiosk Inventory Table (Seamless Edge-to-Edge Surface) */}
-      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-3 justify-between items-center border-b border-border/80 bg-white">
+      <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
+        <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row gap-2.5 justify-between items-center border-b border-border/80 bg-white">
           <div className="w-full sm:w-80 relative">
-            <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3" />
+            <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-3" />
             <input
               type="text"
               aria-label="Cari nomor kios, nama penyewa, atau jenis usaha"
@@ -547,11 +547,11 @@ function KetersediaanKios() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-2xs"
+              className="w-full h-9 pl-9 pr-3.5 text-xs sm:text-sm font-medium rounded-lg border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-xs"
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <select
               aria-label="Filter berdasarkan lantai kios"
               value={filterLantai}
@@ -559,7 +559,7 @@ function KetersediaanKios() {
                 setFilterLantai(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
+              className="h-9 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
             >
               <option value="Semua">Semua Lantai</option>
               <option value="Lantai 1">Lantai 1</option>
@@ -573,7 +573,7 @@ function KetersediaanKios() {
                 setFilterStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
+              className="h-9 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
             >
               <option value="Semua">Semua Status</option>
               <option value="Terisi">Terisi</option>

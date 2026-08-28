@@ -128,7 +128,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
       {/* Navigation Groups */}
       <nav className={cn(
         'flex-1 overflow-y-auto custom-scrollbar flex flex-col',
-        isCollapsed ? 'px-2 py-4 gap-3' : 'px-3 py-4 gap-6'
+        isCollapsed ? 'px-2 py-3 gap-2.5' : 'px-3 py-3 gap-4'
       )}>
         {menuSections.map((section) => {
           const visibleItems = section.items.filter(item => {
@@ -139,9 +139,9 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
           if (visibleItems.length === 0) return null;
 
           return (
-            <div key={section.title} className="flex flex-col gap-1.5">
+            <div key={section.title} className="flex flex-col gap-1">
               {!isCollapsed ? (
-                <span className="px-3.5 text-xs font-extrabold text-text-3 tracking-wider uppercase mb-1">
+                <span className="px-3 text-[11px] font-bold text-text-3 uppercase mb-0.5">
                   {section.title}
                 </span>
               ) : (
@@ -158,10 +158,10 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
                     aria-label={item.label}
                     title={isCollapsed ? item.label : undefined}
                     className={cn(
-                      'flex items-center rounded-xl font-extrabold transition-colors duration-100 cursor-pointer relative group text-start min-h-[44px]',
+                      'flex items-center rounded-xl font-bold transition-colors duration-100 cursor-pointer relative group text-start min-h-[40px]',
                       isCollapsed 
-                        ? 'size-11 min-w-[44px] justify-center mx-auto' 
-                        : 'w-full gap-3.5 px-3.5 py-3 text-[14.5px]',
+                        ? 'size-10 min-w-[40px] justify-center mx-auto' 
+                        : 'w-full gap-3 px-3 py-2 text-sm',
                       active
                         ? 'bg-red text-white shadow-xs'
                         : 'text-text-2 hover:text-text hover:bg-mono-100/80 active:scale-[0.98]'
@@ -170,7 +170,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
                     <Icon
                       icon={item.icon}
                       className={cn(
-                        'size-5 shrink-0 transition-colors',
+                        'size-4.5 shrink-0 transition-colors',
                         active ? 'text-white' : 'text-text-3 group-hover:text-red'
                       )}
                     />
@@ -180,7 +180,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
 
                     {/* Accessible Desktop Tooltip in Collapsed Mode */}
                     {isCollapsed && (
-                      <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-3 py-1.5 bg-mono-900 text-white text-xs font-extrabold rounded-xl shadow-xl pointer-events-none whitespace-nowrap z-[100] animate-[fadeIn_0.15s_ease-out]">
+                      <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
                         {item.label}
                       </span>
                     )}
@@ -195,19 +195,19 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
       {/* Bottom User Card */}
       <div className={cn(
         'border-t border-border/80 bg-mono-50/70 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]',
-        isCollapsed ? 'p-2' : 'p-3'
+        isCollapsed ? 'p-2' : 'p-2.5'
       )}>
         {!isCollapsed ? (
-          <div className="p-3 rounded-xl bg-white border border-border/80 shadow-2xs flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="size-10 rounded-full bg-red text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-2xs">
+          <div className="p-2.5 rounded-xl bg-white border border-border/80 shadow-xs flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="size-9 rounded-full bg-red text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {userInitials}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[13.5px] font-extrabold text-text block truncate leading-tight">
+                <span className="text-xs sm:text-[13px] font-bold text-text block truncate leading-tight">
                   {displayName}
                 </span>
-                <span className="text-[11px] font-bold text-text-3 block uppercase tracking-wide mt-0.5">
+                <span className="text-[11px] font-semibold text-text-3 block uppercase mt-0.5">
                   {displayRole}
                 </span>
               </div>
@@ -217,19 +217,19 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
               onClick={onLogout}
               title="Keluar dari Akun Admin"
               aria-label="Keluar dari Akun Admin"
-              className="size-9 rounded-xl text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-all active:scale-95 shrink-0"
+              className="size-8 rounded-lg text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-colors active:scale-95 shrink-0"
             >
-              <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-5" />
+              <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-4.5" />
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 p-1.5 bg-white rounded-xl border border-border/80 shadow-2xs">
+          <div className="flex flex-col items-center gap-1.5 p-1 bg-white rounded-xl border border-border/80 shadow-xs">
             <div 
-              className="size-9 rounded-full bg-red text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-2xs cursor-default relative group"
+              className="size-8 rounded-full bg-red text-white flex items-center justify-center font-bold text-xs shrink-0 cursor-default relative group"
               title={`${displayName} (${displayRole})`}
             >
               {userInitials}
-              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-3 py-1.5 bg-mono-900 text-white text-xs font-extrabold rounded-xl shadow-xl pointer-events-none whitespace-nowrap z-[100] animate-[fadeIn_0.15s_ease-out]">
+              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
                 {displayName} ({displayRole})
               </span>
             </div>
@@ -238,10 +238,10 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
               onClick={onLogout}
               title="Keluar dari Akun Admin"
               aria-label="Keluar dari Akun Admin"
-              className="size-9 rounded-xl text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-all active:scale-95 shrink-0 relative group"
+              className="size-8 rounded-lg text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-colors active:scale-95 shrink-0 relative group"
             >
-              <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-5" />
-              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-3 py-1.5 bg-mono-900 text-white text-xs font-extrabold rounded-xl shadow-xl pointer-events-none whitespace-nowrap z-[100] animate-[fadeIn_0.15s_ease-out]">
+              <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-4.5" />
+              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
                 Keluar
               </span>
             </button>

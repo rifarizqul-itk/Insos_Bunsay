@@ -249,13 +249,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Verifikasi Bukti Transfer
           </h1>
           {selectedTenant && (
-            <p className="text-text-2 text-sm font-medium mt-1">
+            <p className="text-text-2 text-xs sm:text-sm font-normal mt-0.5">
               Menampilkan bukti transfer untuk: <strong>{selectedTenant}</strong>
             </p>
           )}
@@ -268,14 +268,14 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             size="sm"
             onClick={fetchVerifikasiQueue}
             disabled={isLoading}
-            className="text-xs font-bold gap-1.5 h-9 px-3"
+            className="text-xs font-semibold gap-1 h-8.5 px-2.5 shadow-xs"
             title="Muat ulang data terbaru"
           >
-            <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-4", isLoading && "animate-spin text-red")} />
+            <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-3.5", isLoading && "animate-spin text-red")} />
             <span className="hidden sm:inline">Segarkan</span>
           </Button>
 
-          <div role="tablist" aria-label="Status Antrean Verifikasi" className="flex flex-1 sm:flex-initial bg-warm-gray/60 p-1 rounded-xl border border-border">
+          <div role="tablist" aria-label="Status Antrean Verifikasi" className="flex flex-1 sm:flex-initial bg-mono-100 p-0.5 rounded-lg border border-border/70">
             <button
               id="tab-antrean"
               role="tab"
@@ -283,10 +283,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               aria-controls="tabpanel-antrean"
               type="button"
               onClick={() => setActiveTab('antrean')}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 sm:px-4 py-2 min-h-10 sm:min-h-9 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
                 activeTab === 'antrean'
-                  ? 'bg-red text-white shadow-sm'
-                  : 'text-text-2 hover:text-text hover:bg-white/50'
+                  ? 'bg-red text-white shadow-xs'
+                  : 'text-text-2 hover:text-text'
               }`}
             >
               <span>Antrean ({antrean.length})</span>
@@ -298,10 +298,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               aria-controls="tabpanel-riwayat"
               type="button"
               onClick={() => setActiveTab('riwayat')}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 sm:px-4 py-2 min-h-10 sm:min-h-9 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
                 activeTab === 'riwayat'
-                  ? 'bg-red text-white shadow-sm'
-                  : 'text-text-2 hover:text-text hover:bg-white/50'
+                  ? 'bg-red text-white shadow-xs'
+                  : 'text-text-2 hover:text-text'
               }`}
             >
               <span>Terproses ({riwayatProses.length})</span>
@@ -315,7 +315,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
         id={activeTab === 'antrean' ? 'tabpanel-antrean' : 'tabpanel-riwayat'}
         role="tabpanel"
         aria-labelledby={activeTab === 'antrean' ? 'tab-antrean' : 'tab-riwayat'}
-        className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col"
+        className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col"
       >
         {activeTab === 'antrean' ? (
           isLoading ? (

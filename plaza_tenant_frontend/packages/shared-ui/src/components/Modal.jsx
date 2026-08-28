@@ -88,8 +88,7 @@ function Modal({
   const modalContent = (
     <div
       data-slot="modal"
-      style={{ position: 'fixed', inset: 0, zIndex: 10050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      className="fixed inset-0 z-[10050] flex items-center justify-center p-3 sm:p-6 bg-mono-900/60 page-fade-in overflow-hidden"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-mono-900/60 page-fade-in overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget && !disableBackdropClick) {
           onClose();
@@ -102,25 +101,25 @@ function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto transform-gpu',
+          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92dvh] sm:max-h-[88dvh] flex flex-col overflow-hidden my-auto transform-gpu',
           sizeClasses[size] || sizeClasses.md,
           className
         )}
       >
         {(title || subtitle || badge) && (
-          <div className="flex justify-between items-center border-b border-border/80 px-5 sm:px-6 py-3.5 sm:py-4 bg-mono-50/70 flex-shrink-0 gap-3">
+          <div className="flex justify-between items-center border-b border-border/80 px-4 sm:px-5 py-3 sm:py-3.5 bg-mono-50/70 flex-shrink-0 gap-3">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   {title && (
-                    <h3 id={titleId} className="text-base sm:text-lg font-extrabold text-text tracking-tight truncate">
+                    <h3 id={titleId} className="text-base sm:text-lg font-bold text-text truncate text-balance">
                       {title}
                     </h3>
                   )}
                   {badge}
                 </div>
                 {subtitle && (
-                  <p className="text-xs text-text-3 font-semibold mt-0.5 truncate">
+                  <p className="text-xs text-text-3 font-medium mt-0.5 truncate text-pretty">
                     {subtitle}
                   </p>
                 )}
@@ -137,12 +136,12 @@ function Modal({
           </div>
         )}
 
-        <div className="px-5 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1 overscroll-contain transform-gpu [will-change:scroll-position] custom-scrollbar">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 overflow-y-auto flex-1 overscroll-contain transform-gpu custom-scrollbar">
           {children}
         </div>
 
         {footer && (
-          <div className="border-t border-border/80 px-5 sm:px-6 py-3.5 sm:py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex gap-3 justify-end flex-shrink-0 bg-mono-50/50">
+          <div className="border-t border-border/80 px-4 sm:px-5 py-3 sm:py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex gap-3 justify-end flex-shrink-0 bg-mono-50/50">
             {footer}
           </div>
         )}

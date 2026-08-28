@@ -207,25 +207,25 @@ function DashboardTenant() {
   const sedangVerifikasi = hasVerifikasiKiosk && !hasUnpaidKiosk;
 
   return (
-    <div data-slot="dashboard-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-7 font-sans max-w-6xl mx-auto w-full">
+    <div data-slot="dashboard-tenant" className="page-fade-in flex flex-col gap-4 sm:gap-5 font-sans max-w-6xl mx-auto w-full">
       {/* 1. HEADER: Sapaan Personal & Info Kios */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
               Halo, {nama || 'Penyewa Kios'}
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-50 border border-red/20 text-red text-xs font-bold font-tabular-nums shrink-0 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-red-50 border border-red/20 text-red text-xs font-semibold font-tabular-nums shrink-0">
               <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-red shrink-0" />
               <span>Kios {kios}</span>
             </span>
           </div>
-          <p className="text-text-2 text-xs sm:text-sm font-medium mt-1">
+          <p className="text-text-2 text-xs sm:text-sm font-normal mt-0.5 text-pretty">
             Portal layanan sewa dan tagihan kios Anda.
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-text-3 bg-white border border-border/80 px-3.5 py-2 rounded-xl shadow-2xs">
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-text-3 bg-white border border-border/80 px-3 py-1.5 rounded-xl shadow-xs">
           <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-mono-400" />
           <span>{getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}</span>
         </div>
@@ -233,16 +233,16 @@ function DashboardTenant() {
 
       {/* 2. ALERT BANNER STATUS TAGIHAN */}
       {perluBayar ? (
-        <div className="bg-red-50/80 border border-red/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+        <div className="bg-red-50/80 border border-red/20 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-start sm:items-center gap-3">
-            <div className="size-9 rounded-xl bg-red text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+            <div className="size-9 rounded-xl bg-red text-white flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
               <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />
             </div>
             <div>
-              <span className="text-xs font-extrabold text-red block uppercase tracking-wider">
+              <span className="text-xs font-bold text-red block uppercase">
                 Tagihan Perlu Dibayar
               </span>
-              <p className="text-xs sm:text-sm text-text font-medium mt-0.5 text-pretty">
+              <p className="text-xs sm:text-sm text-text font-normal mt-0.5 text-pretty">
                 Selesaikan tagihan sewa periode <strong className="text-text font-bold">{formatMonthYearText(tagihanBerjalan?.periode)}</strong> sebelum jatuh tempo.
               </p>
             </div>
@@ -252,23 +252,23 @@ function DashboardTenant() {
             variant="primary"
             size="md"
             onClick={() => handleBayar(totalTagihanVal)}
-            className="w-full sm:w-auto h-10 px-5 font-extrabold gap-2 shrink-0 shadow-2xs text-xs sm:text-sm"
+            className="w-full sm:w-auto h-9 px-4 font-bold gap-1.5 shrink-0 text-xs sm:text-sm whitespace-nowrap"
           >
             <span>Bayar Sekarang</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
           </Button>
         </div>
       ) : sedangVerifikasi ? (
-        <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+        <div className="bg-amber-50/80 border border-amber-200/90 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-start sm:items-center gap-3">
-            <div className="size-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+            <div className="size-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
               <Icon icon="heroicons:clock-20-solid" className="size-5" />
             </div>
             <div>
-              <span className="text-xs font-extrabold text-amber-900 block uppercase tracking-wider">
+              <span className="text-xs font-bold text-amber-900 block uppercase">
                 Pembayaran Sedang Diverifikasi
               </span>
-              <p className="text-xs sm:text-sm text-amber-800 font-medium mt-0.5 text-pretty">
+              <p className="text-xs sm:text-sm text-amber-800 font-normal mt-0.5 text-pretty">
                 Bukti transfer sedang diperiksa oleh kantor pengelola.
               </p>
             </div>
@@ -278,23 +278,23 @@ function DashboardTenant() {
             variant="secondary"
             size="md"
             onClick={() => navigate('/tenant/histori')}
-            className="w-full sm:w-auto h-10 px-4 font-extrabold gap-2 shrink-0 shadow-2xs bg-amber-100/80 hover:bg-amber-100 text-amber-900 border-amber-300 text-xs sm:text-sm"
+            className="w-full sm:w-auto h-9 px-4 font-bold gap-1.5 shrink-0 bg-amber-100/80 hover:bg-amber-100 text-amber-900 border-amber-300 text-xs sm:text-sm whitespace-nowrap"
           >
             <span>Lihat Status</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
           </Button>
         </div>
       ) : (
-        <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+        <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+            <div className="size-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
               <Icon icon="heroicons:check-badge-20-solid" className="size-5" />
             </div>
             <div>
-              <strong className="text-xs sm:text-sm text-emerald-950 font-extrabold block">
+              <strong className="text-xs sm:text-sm text-emerald-950 font-bold block">
                 Semua Tagihan Lunas
               </strong>
-              <p className="text-2xs sm:text-xs text-emerald-800 font-medium text-pretty mt-0.5">
+              <p className="text-xs text-emerald-800 font-normal text-pretty mt-0.5">
                 Terima kasih telah menyelesaikan pembayaran periode {formatMonthYearText(tagihanBerjalan?.periode)}.
               </p>
             </div>
@@ -304,7 +304,7 @@ function DashboardTenant() {
             variant="secondary"
             size="sm"
             onClick={() => navigate('/tenant/histori')}
-            className="w-full sm:w-auto h-9 px-3.5 font-bold gap-1.5 shrink-0 shadow-2xs bg-white text-emerald-900 border-emerald-200 hover:bg-emerald-50 text-xs"
+            className="w-full sm:w-auto h-9 px-3.5 font-bold gap-1.5 shrink-0 bg-white text-emerald-900 border-emerald-200 hover:bg-emerald-50 text-xs whitespace-nowrap"
           >
             <span>Lihat Kuitansi</span>
             <Icon icon="heroicons:document-text-20-solid" className="size-3.5" />
@@ -313,14 +313,14 @@ function DashboardTenant() {
       )}
 
       {/* 3. DUA CARD UTAMA: PERIODE AKTIF & TOTAL KEWAJIBAN */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
         {/* Card 1: Periode Sewa Aktif */}
-        <Card variant="default" className="p-6 rounded-3xl bg-white border border-border/80 shadow-2xs flex flex-col justify-between gap-4">
+        <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
-            <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-text-3 uppercase block">
               Periode Sewa Aktif
             </span>
-            <div className="font-tabular-nums text-2xl sm:text-3xl font-extrabold text-text mt-1.5 mb-1 leading-tight">
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1 mb-0.5 leading-tight">
               {formatMonthYearText(tagihanBerjalan?.periode)}
             </div>
             <div className="text-xs sm:text-sm text-text-2 font-medium font-tabular-nums">
@@ -328,12 +328,12 @@ function DashboardTenant() {
             </div>
           </div>
 
-          <div className="border-t border-border/60 pt-3.5 text-xs sm:text-sm text-text-2 font-semibold">
+          <div className="border-t border-border/60 pt-2.5 text-xs sm:text-sm text-text-2 font-semibold">
             {statusTagihan !== 'Lunas' ? (
-              <span>Jatuh tempo pelunasan: <strong className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</strong></span>
+              <span>Jatuh tempo: <strong className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</strong></span>
             ) : (
               <span className="text-emerald-700 font-bold flex items-center gap-1.5">
-                <Icon icon="heroicons:check-circle-20-solid" className="size-4.5 text-emerald-600 shrink-0" />
+                <Icon icon="heroicons:check-circle-20-solid" className="size-4 text-emerald-600 shrink-0" />
                 <span>Kewajiban sewa bulan ini telah lunas</span>
               </span>
             )}
@@ -341,21 +341,21 @@ function DashboardTenant() {
         </Card>
 
         {/* Card 2: Total Kewajiban Sewa */}
-        <Card variant="default" className="p-6 rounded-3xl bg-white border border-border/80 shadow-2xs flex flex-col justify-between gap-4">
+        <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
             <div className="flex justify-between items-center mb-1">
-              <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-text-3 uppercase block">
                 Total Kewajiban Sewa
               </span>
               <Badge status={statusTagihan} />
             </div>
-            <div className="font-tabular-nums text-2xl sm:text-3xl font-extrabold text-text tracking-tight my-1">
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text my-0.5">
               Rp {totalTagihanVal.toLocaleString('id-ID')}
             </div>
           </div>
 
-          <div className="border-t border-border/60 pt-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm">
-            <span className="text-text-2 font-semibold">
+          <div className="border-t border-border/60 pt-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs sm:text-sm">
+            <span className="text-text-2 font-medium">
               {hutangTunggakanVal > 0 
                 ? `Rincian: Rp ${tarifSewaVal.toLocaleString('id-ID')} (Bulan Ini) + Rp ${hutangTunggakanVal.toLocaleString('id-ID')} (Tunggakan Lalu)`
                 : (statusTagihan === 'Lunas' ? 'Semua kewajiban sewa periode ini telah lunas' : 'Sewa unit kios bulan berjalan')}
@@ -374,31 +374,31 @@ function DashboardTenant() {
       </div>
 
       {/* 4. MENU CEPAT (Bento Grid) */}
-      <div className="flex flex-col gap-3.5">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between px-0.5">
+          <span className="text-xs font-bold text-text uppercase flex items-center gap-1.5">
             <Icon icon="heroicons:squares-2x2-20-solid" className="size-4 text-red" />
             <span>Menu Cepat</span>
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
           {/* Bento Card 1: Bayar Sewa */}
           <div
             role="button"
             tabIndex={0}
             onClick={() => navigate('/tenant/pembayaran')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tenant/pembayaran'); } }}
-            className="bg-white border border-border/80 hover:border-red/40 hover:shadow-card active:scale-[0.97] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-2xs group select-none"
+            className="bg-white border border-border/80 hover:border-red/40 hover:shadow-sm active:scale-[0.98] rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 transition-all cursor-pointer shadow-xs group select-none"
           >
-            <div className="size-10 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <Icon icon="heroicons:credit-card-20-solid" className="size-5" />
+            <div className="size-9 rounded-lg bg-red-50 text-red border border-red/20 flex items-center justify-center shrink-0">
+              <Icon icon="heroicons:credit-card-20-solid" className="size-4.5" />
             </div>
             <div className="flex flex-col">
-              <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-red transition-colors">
+              <strong className="text-xs sm:text-sm font-bold text-text group-hover:text-red transition-colors">
                 Bayar Sewa
               </strong>
-              <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate">
+              <span className="text-[11px] text-text-3 font-normal mt-0.5 truncate">
                 Transfer &amp; Online
               </span>
             </div>
@@ -410,16 +410,16 @@ function DashboardTenant() {
             tabIndex={0}
             onClick={() => navigate('/tenant/tagihan')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tenant/tagihan'); } }}
-            className="bg-white border border-border/80 hover:border-amber-400/60 hover:shadow-card active:scale-[0.97] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-2xs group select-none"
+            className="bg-white border border-border/80 hover:border-red/40 hover:shadow-sm active:scale-[0.98] rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 transition-all cursor-pointer shadow-xs group select-none"
           >
-            <div className="size-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <Icon icon="heroicons:document-duplicate-20-solid" className="size-5" />
+            <div className="size-9 rounded-lg bg-red-50 text-red border border-red/20 flex items-center justify-center shrink-0">
+              <Icon icon="heroicons:document-duplicate-20-solid" className="size-4.5" />
             </div>
             <div className="flex flex-col">
-              <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-amber-800 transition-colors">
+              <strong className="text-xs sm:text-sm font-bold text-text group-hover:text-red transition-colors">
                 Tagihan Sewa
               </strong>
-              <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate font-tabular-nums">
+              <span className="text-[11px] text-text-3 font-normal mt-0.5 truncate font-tabular-nums">
                 {hutangTunggakanVal > 0 ? `Rp ${hutangTunggakanVal.toLocaleString('id-ID')}` : 'Tagihan Bersih'}
               </span>
             </div>
@@ -431,37 +431,37 @@ function DashboardTenant() {
             tabIndex={0}
             onClick={() => navigate('/tenant/histori')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tenant/histori'); } }}
-            className="bg-white border border-border/80 hover:border-indigo-400/60 hover:shadow-card active:scale-[0.97] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-2xs group select-none"
+            className="bg-white border border-border/80 hover:border-red/40 hover:shadow-sm active:scale-[0.98] rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 transition-all cursor-pointer shadow-xs group select-none"
           >
-            <div className="size-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <Icon icon="heroicons:receipt-percent-20-solid" className="size-5" />
+            <div className="size-9 rounded-lg bg-red-50 text-red border border-red/20 flex items-center justify-center shrink-0">
+              <Icon icon="heroicons:receipt-percent-20-solid" className="size-4.5" />
             </div>
             <div className="flex flex-col">
-              <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-indigo-700 transition-colors">
+              <strong className="text-xs sm:text-sm font-bold text-text group-hover:text-red transition-colors">
                 Riwayat Transaksi
               </strong>
-              <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate">
+              <span className="text-[11px] text-text-3 font-normal mt-0.5 truncate">
                 Bukti &amp; Kuitansi
               </span>
             </div>
           </div>
 
-          {/* Bento Card 4: Kios & Legalitas */}
+          {/* Bento Card 4: Kios & Akun */}
           <div
             role="button"
             tabIndex={0}
             onClick={() => navigate('/tenant/akun')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tenant/akun'); } }}
-            className="bg-white border border-border/80 hover:border-emerald-400/60 hover:shadow-card active:scale-[0.97] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 transition-all cursor-pointer shadow-2xs group select-none"
+            className="bg-white border border-border/80 hover:border-red/40 hover:shadow-sm active:scale-[0.98] rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 transition-all cursor-pointer shadow-xs group select-none"
           >
-            <div className="size-10 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-              <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
+            <div className="size-9 rounded-lg bg-red-50 text-red border border-red/20 flex items-center justify-center shrink-0">
+              <Icon icon="heroicons:building-storefront-20-solid" className="size-4.5" />
             </div>
             <div className="flex flex-col">
-              <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-emerald-800 transition-colors">
+              <strong className="text-xs sm:text-sm font-bold text-text group-hover:text-red transition-colors">
                 Kios &amp; Akun
               </strong>
-              <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate font-tabular-nums">
+              <span className="text-[11px] text-text-3 font-normal mt-0.5 truncate font-tabular-nums">
                 Kios {kios}
               </span>
             </div>
@@ -470,23 +470,23 @@ function DashboardTenant() {
       </div>
 
       {/* 5. AKTIVITAS TRANSAKSI TERAKHIR (Recent Payments Feed) */}
-      <div className="flex flex-col gap-3.5">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
-            <Icon icon="heroicons:clock-20-solid" className="size-4 text-indigo-600" />
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between px-0.5">
+          <span className="text-xs font-bold text-text uppercase flex items-center gap-1.5">
+            <Icon icon="heroicons:clock-20-solid" className="size-4 text-red" />
             <span>Transaksi Terakhir</span>
           </span>
           <button
             type="button"
             onClick={() => navigate('/tenant/histori')}
-            className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-red hover:underline flex items-center gap-1 cursor-pointer"
           >
             <span>Lihat Semua</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5" />
           </button>
         </div>
 
-        <div className="bg-white rounded-3xl border border-border/80 shadow-2xs p-5 sm:p-6 flex flex-col gap-3">
+        <div className="bg-white rounded-2xl border border-border/80 shadow-xs p-4 sm:p-5 flex flex-col gap-2.5">
           {recentPayments.length === 0 ? (
             <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
               <Icon icon="heroicons:receipt-percent-20-solid" className="size-10 text-mono-300" />
@@ -539,22 +539,22 @@ function DashboardTenant() {
 
       {/* 6. SEKSI: RINCIAN TAGIHAN PER UNIT KIOS (JIKA MEMILIKI MULTI-KIOS) */}
       {kiosBreakdown && Array.isArray(kiosBreakdown) && kiosBreakdown.length > 1 && (
-        <div className="flex flex-col gap-4 mt-2">
+        <div className="flex flex-col gap-3 mt-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="size-9 rounded-xl bg-red-50 text-red flex items-center justify-center font-bold">
-                <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-red-50 text-red flex items-center justify-center font-bold">
+                <Icon icon="heroicons:building-storefront-20-solid" className="size-4.5" />
               </div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight">
+              <h2 className="text-base sm:text-lg font-bold text-text text-balance">
                 Rincian Tagihan per Unit Kios
               </h2>
             </div>
-            <span className="text-xs font-bold text-text-2 bg-mono-100 px-3 py-1 rounded-full border border-border">
+            <span className="text-xs font-semibold text-text-2 bg-mono-100 px-2.5 py-0.5 rounded-full border border-border">
               {kiosBreakdown.length} Unit Kios
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
             {kiosBreakdown.map((item, idx) => {
               const tagihan = item.tagihan;
               const totalKiosOwed = Number(item.totalKewajiban ?? (tagihan ? (tagihan.sisaTagihan ?? tagihan.totalTagihan) : 0));
@@ -566,49 +566,49 @@ function DashboardTenant() {
                   key={item.idSewa || idx} 
                   variant="default" 
                   className={cn(
-                    "p-5 flex flex-col justify-between gap-4 rounded-2xl border transition-all duration-200 bg-white",
-                    !isLunas ? "border-red/30 hover:border-red/60 shadow-card" : "border-border/80 hover:border-border shadow-2xs"
+                    "p-4 flex flex-col justify-between gap-3 rounded-xl border transition-colors bg-white",
+                    !isLunas ? "border-red/30 shadow-sm" : "border-border/80 shadow-xs"
                   )}
                 >
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-start gap-2 border-b border-border/60 pb-3">
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex justify-between items-start gap-2 border-b border-border/60 pb-2.5">
                       <div>
                         <div className="flex items-center gap-2">
-                          <strong className="text-sm font-extrabold text-red font-tabular-nums tracking-tight">
+                          <strong className="text-sm font-bold text-red font-tabular-nums">
                             Kios {item.noKios}
                           </strong>
-                          <span className="text-2xs font-bold text-text-3 bg-mono-100 border border-border px-1.5 py-0.5 rounded">
+                          <span className="text-[11px] font-medium text-text-3 bg-mono-100 border border-border px-1.5 py-0.2 rounded">
                             {item.lantai}
                           </span>
                         </div>
-                        <span className="text-xs text-text-2 font-semibold block mt-0.5">
+                        <span className="text-xs text-text-2 font-medium block mt-0.5">
                           {item.jenisUsaha}
                         </span>
                       </div>
                       <Badge status={statusBadge} />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-text-3 font-semibold block text-2xs uppercase tracking-wide">Ukuran:</span>
-                        <strong className="text-text font-bold">{item.ukuran}</strong>
+                        <span className="text-text-3 font-medium block text-[11px] uppercase">Ukuran:</span>
+                        <strong className="text-text font-semibold">{item.ukuran}</strong>
                       </div>
                       <div>
-                        <span className="text-text-3 font-semibold block text-2xs uppercase tracking-wide">Tarif Sewa:</span>
-                        <strong className="text-text font-bold font-tabular-nums">
+                        <span className="text-text-3 font-medium block text-[11px] uppercase">Tarif Sewa:</span>
+                        <strong className="text-text font-semibold font-tabular-nums">
                           Rp {Number(item.tarifBulanan || 750000).toLocaleString('id-ID')}
                         </strong>
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-border/60 pt-3 flex items-center justify-between">
+                  <div className="border-t border-border/60 pt-2.5 flex items-center justify-between">
                     <div>
-                      <span className="text-2xs text-text-3 font-semibold uppercase tracking-wider block">
+                      <span className="text-[11px] text-text-3 font-medium uppercase block">
                         {item.unpaidCount && item.unpaidCount > 1 ? `Kewajiban (${item.unpaidCount} Periode):` : 'Kewajiban:'}
                       </span>
                       <strong className={cn(
-                        "text-sm font-extrabold font-tabular-nums",
+                        "text-sm font-bold font-tabular-nums",
                         isLunas ? "text-emerald-700" : "text-red"
                       )}>
                         {isLunas ? "Lunas (Rp 0)" : `Rp ${Number(totalKiosOwed).toLocaleString('id-ID')}`}
@@ -620,7 +620,7 @@ function DashboardTenant() {
                         variant="primary"
                         size="xs"
                         onClick={() => handleBayar(totalKiosOwed, item.noKios)}
-                        className="h-8 px-3 text-2xs font-extrabold gap-1 shadow-2xs"
+                        className="h-8 px-2.5 text-xs font-bold gap-1"
                       >
                         <span>Bayar Kios</span>
                         <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5" />

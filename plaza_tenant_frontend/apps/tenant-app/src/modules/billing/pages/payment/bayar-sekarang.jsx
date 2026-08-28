@@ -387,13 +387,13 @@ function BayarSekarang() {
         <form onSubmit={handleProsesPembayaran} className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
           
           {/* KOLOM KIRI: FORMULIR PEMBAYARAN */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-4">
+          <div className="lg:col-span-7 flex flex-col gap-3.5">
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-3.5">
               
               {/* Multi-Kiosk Filter (Jika punya > 1 kios) */}
               {availableKiosks.length > 1 && (
-                <div className="flex flex-col gap-1.5 pb-3 border-b border-border/70">
-                  <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">
+                <div className="flex flex-col gap-1.5 pb-2.5 border-b border-border/70">
+                  <span className="text-[11px] font-bold text-text-3 uppercase">
                     Pilih Unit Kios:
                   </span>
                   
@@ -402,7 +402,7 @@ function BayarSekarang() {
                       type="button"
                       onClick={() => handleSelectKiosFilter('semua')}
                       className={cn(
-                        "px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer",
+                        "px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer",
                         selectedKiosFilter === 'semua'
                           ? "bg-red text-white shadow-xs"
                           : "bg-mono-100 text-text-2 hover:bg-mono-200/80"
@@ -416,14 +416,14 @@ function BayarSekarang() {
                         type="button"
                         onClick={() => handleSelectKiosFilter(k.noKios)}
                         className={cn(
-                          "px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1",
+                          "px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1",
                           selectedKiosFilter === k.noKios
                             ? "bg-red text-white shadow-xs"
                             : "bg-mono-100 text-text-2 hover:bg-mono-200/80"
                         )}
                       >
                         <span>Kios {k.noKios}</span>
-                        <span className="text-2xs opacity-80">({k.jenisUsaha})</span>
+                        <span className="text-[11px] opacity-80">({k.jenisUsaha})</span>
                       </button>
                     ))}
                   </div>
@@ -431,8 +431,8 @@ function BayarSekarang() {
               )}
 
               {/* Pilihan Metode Bayar (Segmented Tabs) */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs sm:text-sm font-extrabold text-text">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs sm:text-sm font-bold text-text">
                   Metode Pembayaran
                 </span>
 
@@ -443,9 +443,9 @@ function BayarSekarang() {
                     aria-selected={metode === 'transfer_manual'}
                     onClick={() => setMetode('transfer_manual')}
                     className={cn(
-                      "py-2 px-2.5 rounded-lg font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'transfer_manual'
-                        ? "bg-white text-red shadow-2xs border border-border/40 font-black"
+                        ? "bg-white text-red shadow-xs border border-border/40"
                         : "text-text-2 hover:text-text"
                     )}
                   >
@@ -459,9 +459,9 @@ function BayarSekarang() {
                     aria-selected={metode === 'midtrans_gateway'}
                     onClick={() => setMetode('midtrans_gateway')}
                     className={cn(
-                      "py-2 px-2.5 rounded-lg font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'midtrans_gateway'
-                        ? "bg-white text-red shadow-2xs border border-border/40 font-black"
+                        ? "bg-white text-red shadow-xs border border-border/40"
                         : "text-text-2 hover:text-text"
                     )}
                   >
@@ -473,15 +473,15 @@ function BayarSekarang() {
 
               {/* Konten Sesuai Metode */}
               {metode === 'transfer_manual' ? (
-                <div className="flex flex-col gap-3.5 page-fade-in">
+                <div className="flex flex-col gap-3 page-fade-in">
                   {/* Kartu Rekening Bersih (1x Saja) */}
-                  <div className="p-3.5 bg-mono-50/80 border border-border/80 rounded-xl flex items-center justify-between gap-3">
+                  <div className="p-3 bg-mono-50/80 border border-border/80 rounded-xl flex items-center justify-between gap-3">
                     <div>
-                      <span className="text-2xs text-text-3 font-semibold block">Transfer ke Bank BPD Kaltimtara:</span>
-                      <div className="text-lg sm:text-xl font-mono font-black text-red tracking-wider font-tabular-nums mt-0.5 select-all">
+                      <span className="text-[11px] text-text-3 font-medium block">Transfer ke Bank BPD Kaltimtara:</span>
+                      <div className="text-base sm:text-lg font-mono font-bold text-red font-tabular-nums mt-0.5 select-all">
                         08115901119
                       </div>
-                      <span className="text-2xs text-text-2 font-bold block mt-0.5">
+                      <span className="text-[11px] text-text-2 font-semibold block mt-0.5">
                         a.n. UPTD PASAR KEBUN SAYUR
                       </span>
                     </div>
@@ -490,7 +490,7 @@ function BayarSekarang() {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="gap-1 px-3 py-1.5 text-xs font-bold shadow-2xs border-border hover:border-red hover:text-red shrink-0"
+                      className="gap-1 px-2.5 py-1 text-xs font-semibold shadow-xs border-border hover:border-red hover:text-red shrink-0"
                       onClick={() => {
                         navigator.clipboard.writeText('08115901119');
                         addToast('Nomor rekening disalin', 'success');
@@ -647,7 +647,7 @@ function BayarSekarang() {
                   variant="primary"
                   size="lg"
                   disabled={isLoading || !isUnpaidLoaded}
-                  className="w-full h-11 text-sm font-black shadow-md rounded-xl cursor-pointer"
+                  className="w-full h-10.5 text-sm font-bold shadow-xs rounded-xl cursor-pointer"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -664,14 +664,14 @@ function BayarSekarang() {
           </div>
 
           {/* KOLOM KANAN: SATU KARTU RINGKASAN TUNGGAL (RESPONSIVE & UN-SQUEEZED) */}
-          <div className="lg:col-span-5 flex flex-col gap-3.5 order-first lg:order-last lg:sticky lg:top-24">
+          <div className="lg:col-span-5 flex flex-col gap-3 order-first lg:order-last lg:sticky lg:top-24">
             
-            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
-                <h3 className="text-xs sm:text-sm font-extrabold text-text tracking-tight">
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-2.5">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <h3 className="text-xs sm:text-sm font-bold text-text text-balance">
                   Ringkasan Pembayaran
                 </h3>
-                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
                   {displayedUnpaidBills.length} Bulan
                 </span>
               </div>
@@ -681,14 +681,14 @@ function BayarSekarang() {
                 {displayedUnpaidBills.map((bill, idx) => (
                   <div key={bill.idTagihan || idx} className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="font-extrabold text-text block leading-snug">
+                      <span className="font-bold text-text block leading-snug">
                         Sewa {formatPeriodeIndo(bill.periode)}
                       </span>
-                      <span className="text-2xs text-text-3 block mt-0.5">
+                      <span className="text-[11px] text-text-3 block mt-0.5">
                         Kios {bill.noKios} • {bill.lantai}
                       </span>
                     </div>
-                    <span className="font-bold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap">
+                    <span className="font-semibold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap">
                       Rp {(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -696,22 +696,22 @@ function BayarSekarang() {
               </div>
 
               {/* Total & Rincian Transaksi */}
-              <div className="border-t border-dashed border-border/80 pt-2.5 flex justify-between items-baseline gap-2">
-                <span className="text-xs font-extrabold text-text shrink-0">Total yang Dibayar</span>
-                <span className="text-base sm:text-lg font-black font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
+              <div className="border-t border-dashed border-border/80 pt-2 flex justify-between items-baseline gap-2">
+                <span className="text-xs font-bold text-text shrink-0">Total yang Dibayar</span>
+                <span className="text-base sm:text-lg font-bold font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
                   Rp {Number(nominal || 0).toLocaleString('id-ID')}
                 </span>
               </div>
 
               {/* Live Status Pelunasan (Jika bayar multi-bulan) */}
               {displayedUnpaidBills.length > 1 && fifoAllocations.length > 0 && (
-                <div className="p-2.5 bg-mono-50 rounded-xl border border-border/60 text-2xs flex flex-col gap-1 mt-0.5">
-                  <span className="font-extrabold text-text-2">Rencana Pelunasan:</span>
+                <div className="p-2.5 bg-mono-50 rounded-xl border border-border/60 text-[11px] flex flex-col gap-1 mt-0.5">
+                  <span className="font-bold text-text-2">Rencana Pelunasan:</span>
                   {fifoAllocations.map((alloc) => (
                     <div key={alloc.idTagihan} className="flex justify-between items-center text-text-2 gap-2">
                       <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
                       <span className={cn(
-                        "font-bold shrink-0 whitespace-nowrap",
+                        "font-semibold shrink-0 whitespace-nowrap",
                         alloc.status === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'
                       )}>
                         {alloc.status} (Rp {alloc.allocated.toLocaleString('id-ID')})
@@ -722,15 +722,15 @@ function BayarSekarang() {
               )}
 
               {/* Bantuan / Izin Cicilan via WhatsApp (Responsive Micro Footer) */}
-              <div className="pt-2.5 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-2xs">
-                <span className="text-text-3 font-medium">
+              <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px]">
+                <span className="text-text-3 font-normal">
                   Izin cicilan sewa?
                 </span>
                 <a
                   href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengelola Plaza Kebun Sayur, saya tenant ingin berkonsultasi mengenai pengajuan pembayaran cicilan sewa kios.')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
+                  className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
                 >
                   <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5 shrink-0" />
                   <span>Hubungi Pengelola (WA)</span>

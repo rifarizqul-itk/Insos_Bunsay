@@ -90,16 +90,16 @@ function FormField({
 
   return (
     <FormFieldContext.Provider value={contextValue}>
-      <div data-slot="formfield" className={cn('flex flex-col gap-1.5', className)}>
+      <div data-slot="formfield" className={cn('flex flex-col gap-1', className)}>
         {label && (
           <label
             htmlFor={fieldId}
-            className={cn('text-sm sm:text-base font-bold text-text', labelClassName)}
+            className={cn('text-xs sm:text-sm font-semibold text-text', labelClassName)}
           >
             {label}
             {required && (
               <>
-                <span className="text-red ms-1 font-extrabold" aria-hidden="true">*</span>
+                <span className="text-red ms-1 font-bold" aria-hidden="true">*</span>
                 <span className="sr-only"> (wajib diisi)</span>
               </>
             )}
@@ -109,13 +109,13 @@ function FormField({
         {React.Children.map(children, (child) => injectFormProps(child, fieldProps, true))}
 
         {hint && !error && (
-          <span id={hintId} className="text-xs sm:text-sm text-text-3 font-medium">
+          <span id={hintId} className="text-xs text-text-3 font-normal">
             {hint}
           </span>
         )}
 
         {error && (
-          <span id={errorId} role="alert" className="text-xs sm:text-sm text-red font-bold">
+          <span id={errorId} role="alert" className="text-xs text-red font-semibold">
             {error}
           </span>
         )}

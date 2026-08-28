@@ -150,48 +150,48 @@ function DetailKeuanganTenant() {
   }, [riwayat, currentPage, pageSize]);
 
   return (
-    <div data-slot="detail-keuangan-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="detail-keuangan-tenant" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       <div>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => navigate(-1)}
-          className="mb-4 gap-2 font-bold"
+          className="mb-2 gap-1.5 font-bold h-8 text-xs px-2.5"
         >
-          <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
+          <Icon icon="heroicons:arrow-left-20-solid" className="size-4" />
           <span>Kembali</span>
         </Button>
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+            <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
               Detail Keuangan: {tenantInfo.nama}
             </h1>
-            <p className="text-text-2 text-sm sm:text-base font-medium mt-1">
+            <p className="text-text-2 text-xs sm:text-sm font-normal mt-0.5">
               Nomor Kios: <strong className="font-tabular-nums text-red">{tenantInfo.kios}</strong> — {tenantInfo.usaha}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Card variant="elevated" className="p-5 flex flex-col justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <Card variant="elevated" className="p-4 sm:p-5 flex flex-col justify-between shadow-xs">
               <span className="label-micro text-text-3">Status Pembayaran Terakhir</span>
-              <div className="mt-2">
+              <div className="mt-1.5">
                 <Badge status={tenantInfo.statusPembayaran} />
               </div>
             </Card>
 
-            <Card variant="elevated" className="p-5 flex flex-col justify-between">
+            <Card variant="elevated" className="p-4 sm:p-5 flex flex-col justify-between shadow-xs">
               <span className="label-micro text-text-3">Total Tunggakan</span>
-              <div className={cn("text-2xl sm:text-3xl font-extrabold font-tabular-nums mt-1", tenantInfo.tunggakan > 0 ? 'text-orange' : 'text-green')}>
+              <div className={cn("text-xl sm:text-2xl font-bold font-tabular-nums mt-1", tenantInfo.tunggakan > 0 ? 'text-orange' : 'text-green')}>
                 Rp {tenantInfo.tunggakan.toLocaleString('id-ID')}
               </div>
             </Card>

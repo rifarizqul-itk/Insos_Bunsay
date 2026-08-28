@@ -57,19 +57,19 @@ function RiwayatPemilikKios() {
   }, [filteredData, currentPage, pageSize]);
 
   return (
-    <div data-slot="riwayat-pemilik-kios" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div data-slot="riwayat-pemilik-kios" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <Button
             variant="secondary"
             size="sm"
             onClick={() => navigate('/admin/kios')}
-            className="mb-3 gap-2 font-bold"
+            className="mb-2 gap-1.5 font-bold h-8 text-xs px-2.5"
           >
-            <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
+            <Icon icon="heroicons:arrow-left-20-solid" className="size-4" />
             <span>Kembali</span>
           </Button>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Riwayat Pemilik Kios
           </h1>
         </div>
@@ -82,12 +82,12 @@ function RiwayatPemilikKios() {
             setSearchQuery(e.target.value);
             setCurrentPage(1);
           }}
-          className="h-10 px-3.5 rounded-md border border-border bg-white text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red self-start sm:self-auto"
+          className="h-9 px-3 rounded-lg border border-border bg-mono-50/70 text-xs sm:text-sm font-medium w-full sm:w-60 focus:outline-none focus:ring-2 focus:ring-red shadow-xs self-start sm:self-auto"
         />
       </div>
 
       {/* Main Riwayat Pemilik Table (Seamless Edge-to-Edge Surface) */}
-      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+      <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
         {filteredData.length === 0 ? (
           <div className="p-8">
             <EmptyState

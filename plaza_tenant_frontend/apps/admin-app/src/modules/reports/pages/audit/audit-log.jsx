@@ -145,21 +145,21 @@ function AuditLogPage() {
   ];
 
   return (
-    <div data-slot="audit-log-page" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="audit-log-page" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+        <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
           Log Aktivitas
         </h1>
       </div>
 
       {/* Main Audit Log Table (Seamless Edge-to-Edge Surface) */}
-      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/80 bg-white">
-          <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
+      <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
+        <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border/80 bg-white">
+          <h3 className="text-sm sm:text-base font-bold text-text">
             Riwayat Aktivitas ({filteredLogs.length})
           </h3>
 
-          <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
             <input
               type="text"
               aria-label="Cari admin, aksi, atau deskripsi aktivitas"
@@ -169,7 +169,7 @@ function AuditLogPage() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 rounded-xl border border-border bg-mono-50/70 text-xs sm:text-sm font-semibold w-full sm:w-60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
+              className="h-9 px-3 rounded-lg border border-border bg-mono-50/70 text-xs sm:text-sm font-medium w-full sm:w-60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
             />
             <select
               aria-label="Filter berdasarkan modul sistem"
@@ -178,7 +178,7 @@ function AuditLogPage() {
                 setFilterModul(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 rounded-xl border border-border bg-white text-xs sm:text-sm font-extrabold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-2xs"
+              className="h-9 px-3 rounded-lg border border-border bg-white text-xs sm:text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-xs"
             >
               <option value="Semua">Semua Modul</option>
               <option value="Pembayaran">Pembayaran</option>
@@ -194,7 +194,7 @@ function AuditLogPage() {
                 setFilterRole(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 px-3.5 rounded-xl border border-border bg-white text-xs sm:text-sm font-extrabold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-2xs"
+              className="h-9 px-3 rounded-lg border border-border bg-white text-xs sm:text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-xs"
             >
               <option value="Semua">Semua Role</option>
               <option value="superadmin">Superadmin</option>

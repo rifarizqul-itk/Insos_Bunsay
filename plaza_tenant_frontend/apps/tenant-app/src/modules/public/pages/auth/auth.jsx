@@ -224,24 +224,24 @@ function AuthPage() {
 
   return (
     <div data-slot="auth-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80 rounded-2xl shadow-xl bg-white relative">
+      <Card variant="elevated" className="w-full max-w-md p-5 sm:p-7 border-border/80 rounded-2xl shadow-sm bg-white relative">
         {/* Tombol Mundur / Back hanya pada mode Lupa Kata Sandi */}
         {isForgotMode && (
-          <div className="mb-4">
+          <div className="mb-3">
             <button
               type="button"
               onClick={handleNavBack}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-text-2 hover:text-red transition-colors py-1 px-2 rounded-md hover:bg-warm-gray/60"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-2 hover:text-red transition-colors py-1 px-2 rounded-md hover:bg-warm-gray/60"
               aria-label="Kembali ke halaman sebelumnya"
             >
-              <Icon icon="heroicons:arrow-left-20-solid" width="16" height="16" />
+              <Icon icon="heroicons:arrow-left-20-solid" className="size-4" />
               <span>{forgotStep === 'verify' ? 'Kembali' : 'Kembali ke Halaman Login'}</span>
             </button>
           </div>
         )}
 
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
+        <div className="text-center mb-5">
+          <div className="flex justify-center mb-2.5">
             <picture>
               <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
               <img 
@@ -249,16 +249,16 @@ function AuthPage() {
                 alt="Logo Resmi Plaza Kebun Sayur Balikpapan" 
                 loading="lazy"
                 decoding="async"
-                className="h-12 object-contain" 
+                className="h-10 sm:h-11 object-contain" 
               />
             </picture>
           </div>
 
           <div key={isForgotMode ? `title-forgot-${forgotStep}` : 'title-login'} className="page-fade-in">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-red tracking-tight mb-1 text-balance">
+            <h1 className="text-xl sm:text-2xl font-bold text-red mb-1 text-balance">
               {isForgotMode ? 'Pemulihan Kata Sandi' : 'Login Tenant'}
             </h1>
-            <p className="text-text-2 text-sm font-medium text-pretty">
+            <p className="text-text-2 text-xs sm:text-sm font-normal text-pretty">
               {!isForgotMode 
                 ? 'Masuk ke akun tenant Plaza Kebun Sayur'
                 : forgotStep === 'request'
@@ -271,13 +271,13 @@ function AuthPage() {
         </div>
 
         {!isForgotMode ? (
-          <form key="form-login" onSubmit={handleLoginSubmit} className="flex flex-col gap-4 page-fade-in">
+          <form key="form-login" onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5 page-fade-in">
             {lockoutSeconds > 0 && (
-              <div className="bg-red-50 border border-red-300 text-red text-xs p-3.5 rounded-lg flex items-start gap-2.5">
-                <Icon icon="heroicons:lock-closed-20-solid" width="20" height="20" className="flex-shrink-0 mt-0.5" />
+              <div className="bg-red-50 border border-red-300 text-red text-xs p-3 rounded-lg flex items-start gap-2">
+                <Icon icon="heroicons:lock-closed-20-solid" className="size-4.5 flex-shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
                   <strong className="font-bold block">Akun Terkunci Sementara (Batas 3x Gagal)</strong>
-                  Silakan tunggu <strong className="font-mono font-bold text-sm text-red">{lockoutSeconds} detik</strong> atau klik menu <strong>Lupa Kata Sandi</strong> di bawah.
+                  Silakan tunggu <strong className="font-mono font-bold text-sm text-red font-tabular-nums">{lockoutSeconds} detik</strong> atau klik menu <strong>Lupa Kata Sandi</strong> di bawah.
                 </div>
               </div>
             )}
@@ -291,7 +291,7 @@ function AuthPage() {
                 onChange={handleInputChange}
                 autoComplete="username"
                 disabled={lockoutSeconds > 0 || isLoginLoading}
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:outline-none focus:border-red transition-colors disabled:opacity-60"
+                className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 px-3 text-sm focus:bg-white focus:outline-none focus:border-red transition-colors disabled:opacity-60"
               />
             </FormField>
 
@@ -305,32 +305,32 @@ function AuthPage() {
                   onChange={handleInputChange}
                   autoComplete="current-password"
                   disabled={lockoutSeconds > 0 || isLoginLoading}
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none focus:border-red transition-colors disabled:opacity-60"
+                  className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 ps-3 pe-11 text-sm focus:bg-white focus:outline-none focus:border-red transition-colors disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(prev => !prev)}
-                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] size-10 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-lg"
                   aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
                 >
-                  <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-4.5" />
                 </button>
               </div>
             </FormField>
 
-            <div className="flex items-center justify-between mt-1 text-sm">
-              <label className="flex items-center gap-2 font-semibold text-text-2 cursor-pointer select-none min-h-[44px] py-1">
+            <div className="flex items-center justify-between text-xs">
+              <label className="flex items-center gap-2 font-medium text-text-2 cursor-pointer select-none py-1">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="size-4.5 accent-red cursor-pointer rounded"
+                  className="size-4 accent-red cursor-pointer rounded"
                 />
                 <span>Ingat Saya</span>
               </label>
               <Link
                 to="/auth/lupa-sandi"
-                className="text-red hover:underline font-semibold text-sm transition-colors min-h-[44px] inline-flex items-center px-1"
+                className="text-red hover:underline font-semibold text-xs transition-colors py-1 inline-flex items-center"
               >
                 Lupa Kata Sandi?
               </Link>
@@ -342,11 +342,11 @@ function AuthPage() {
               size="md"
               fullWidth
               disabled={isLoginLoading || lockoutSeconds > 0}
-              className="mt-2 h-12 text-base font-extrabold shadow-md"
+              className="mt-1 h-10.5 text-sm font-bold shadow-xs"
             >
               {isLoginLoading ? (
                 <span className="flex items-center gap-2">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                   <span>Memproses...</span>
                 </span>
               ) : lockoutSeconds > 0 ? (
@@ -356,14 +356,14 @@ function AuthPage() {
 
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 text-text-2 hover:text-red font-semibold text-sm transition-colors py-1 mt-1"
+              className="inline-flex items-center justify-center gap-1.5 text-text-2 hover:text-red font-medium text-xs transition-colors py-1 mt-0.5"
             >
-              <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
+              <Icon icon="heroicons:arrow-left-20-solid" className="size-4" />
               <span>Kembali ke Beranda</span>
             </Link>
           </form>
         ) : forgotStep === 'request' ? (
-          <form key="form-forgot-request" onSubmit={handleForgotRequestSubmit} className="flex flex-col gap-4 page-fade-in">
+          <form key="form-forgot-request" onSubmit={handleForgotRequestSubmit} className="flex flex-col gap-3.5 page-fade-in">
             <FormField label="Nomor WhatsApp atau Email Terdaftar" id="forgot-identifier-input" required error={forgotError}>
               <input
                 type="text"
@@ -371,7 +371,7 @@ function AuthPage() {
                 value={identifier}
                 onChange={(e) => { setIdentifier(e.target.value); if (forgotError) setForgotError(null); }}
                 autoComplete="username"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white focus:outline-none focus:border-red transition-colors"
+                className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 px-3 text-sm focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
             </FormField>
 
@@ -381,11 +381,11 @@ function AuthPage() {
               size="md"
               fullWidth
               disabled={isForgotSubmitting}
-              className="h-11 text-base font-extrabold shadow-md gap-2"
+              className="h-10.5 text-sm font-bold shadow-xs gap-2"
             >
               {isForgotSubmitting ? (
                 <span role="status" className="flex items-center gap-2">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                   <span>Mengirim Kode...</span>
                 </span>
               ) : (

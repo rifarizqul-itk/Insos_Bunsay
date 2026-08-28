@@ -36,9 +36,9 @@ function AdminLoginPage() {
 
   return (
     <div data-slot="admin-login-page" className="min-h-dvh bg-cream flex items-center justify-center p-4 sm:p-6 font-sans">
-      <Card variant="elevated" className="w-full max-w-md p-6 sm:p-8 border-border/80 rounded-2xl shadow-xl bg-white">
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
+      <Card variant="elevated" className="w-full max-w-md p-5 sm:p-7 border-border/80 rounded-2xl shadow-sm bg-white">
+        <div className="text-center mb-5">
+          <div className="flex justify-center mb-2.5">
             <picture>
               <source srcSet="/assets/main_logo_transparent_for_light_bg.webp" type="image/webp" />
               <img
@@ -46,28 +46,28 @@ function AdminLoginPage() {
                 alt="Logo Resmi Plaza Kebun Sayur Balikpapan"
                 loading="lazy"
                 decoding="async"
-                className="h-12 object-contain"
+                className="h-10 sm:h-11 object-contain"
               />
             </picture>
           </div>
 
           <div className="page-fade-in">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-red tracking-tight mb-1 text-balance">
+            <h1 className="text-xl sm:text-2xl font-bold text-red mb-1 text-balance">
               Konsol Pengelola
             </h1>
-            <p className="text-text-2 text-sm font-medium text-pretty">
+            <p className="text-text-2 text-xs sm:text-sm font-normal text-pretty">
               Masuk ke akun staf pengelola Plaza Kebun Sayur
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="p-3.5 mb-4 rounded-xl bg-red-50 border border-red-100 text-red text-sm font-semibold text-center" role="alert">
+          <div className="p-3 mb-3.5 rounded-lg bg-red-50 border border-red-100 text-red text-xs sm:text-sm font-semibold text-center" role="alert">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 page-fade-in">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 page-fade-in">
           <FormField label="Username" id="admin-login-username" required>
             <input
               type="text"
@@ -79,7 +79,7 @@ function AdminLoginPage() {
                 if (error) setError('');
               }}
               autoComplete="username"
-              className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
+              className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 px-3 text-sm text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
             />
           </FormField>
 
@@ -95,15 +95,15 @@ function AdminLoginPage() {
                   if (error) setError('');
                 }}
                 autoComplete="current-password"
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 ps-3.5 pe-12 text-base text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
+                className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 ps-3 pe-11 text-sm text-text focus:bg-white focus:outline-none focus:border-red transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
-                className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] size-10 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-lg"
                 aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
               >
-                <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                <Icon icon={showPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-4.5" />
               </button>
             </div>
           </FormField>
@@ -114,11 +114,11 @@ function AdminLoginPage() {
             size="md"
             fullWidth
             disabled={isSubmitting}
-            className="mt-2 h-12 text-base font-extrabold shadow-md"
+            className="mt-1 h-10.5 text-sm font-bold shadow-xs"
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
-                <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
+                <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                 <span>Memproses...</span>
               </span>
             ) : 'Masuk'}

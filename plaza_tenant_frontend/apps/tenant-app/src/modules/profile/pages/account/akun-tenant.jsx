@@ -307,7 +307,7 @@ function AkunTenant() {
                     aria-readonly={!isEditing}
                     autoComplete="tel"
                     className={cn(
-                      'w-full h-11 rounded-md border px-3.5 text-base font-semibold font-tabular-nums transition-colors',
+                      'w-full h-10 rounded-lg border px-3 text-sm font-semibold font-tabular-nums transition-colors',
                       isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text',
                       fieldError?.field === 'telepon' && 'border-red ring-1 ring-red'
                     )}
@@ -324,20 +324,20 @@ function AkunTenant() {
                   aria-readonly={!isEditing}
                   autoComplete="street-address"
                   rows={2}
-                  className={`w-full rounded-md border p-3 text-base font-medium leading-relaxed resize-none transition-colors ${
+                  className={`w-full rounded-lg border p-2.5 text-sm font-normal leading-relaxed resize-none transition-colors ${
                     isEditing ? 'bg-white border-border focus:ring-2 focus:ring-red' : 'bg-warm-gray/50 border-border/80 text-text'
                   }`}
                 />
               </FormField>
 
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-1">
                 {isEditing ? (
                   <>
                     <Button 
                       type="button" 
                       variant="secondary" 
                       onClick={() => { setFormData({ ...adminDetail }); setFieldError(null); setIsEditing(false); }}
-                      className="w-full sm:w-auto min-h-11 sm:min-h-9"
+                      className="w-full sm:w-auto min-h-9 text-xs"
                     >
                       Batal
                     </Button>
@@ -345,7 +345,7 @@ function AkunTenant() {
                       type="submit" 
                       variant="primary" 
                       disabled={isSubmitting}
-                      className="w-full sm:w-auto min-h-11 sm:min-h-9"
+                      className="w-full sm:w-auto min-h-9 text-xs"
                     >
                       {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </Button>
@@ -355,9 +355,9 @@ function AkunTenant() {
                     type="button" 
                     variant="secondary" 
                     onClick={handleStartEdit}
-                    className="gap-2 w-full sm:w-auto min-h-11 sm:min-h-9 shadow-2xs"
+                    className="gap-1.5 w-full sm:w-auto min-h-9 text-xs shadow-xs"
                   >
-                    <Icon icon="heroicons:pencil-square-20-solid" width="18" height="18" />
+                    <Icon icon="heroicons:pencil-square-20-solid" className="size-4" />
                     <span>Ubah Data Kontak</span>
                   </Button>
                 )}
@@ -366,13 +366,13 @@ function AkunTenant() {
           </Card>
 
           {/* CARD DETAIL ADMINISTRASI & LEGALITAS KIOS UNTUK TENANT */}
-          <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-6 rounded-3xl bg-white border border-border/80 shadow-card">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/70 pb-4 gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="size-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center justify-center font-bold shrink-0 shadow-2xs">
-                  <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
+          <Card variant="elevated" className="p-4 sm:p-5 flex flex-col gap-4 rounded-2xl bg-white border border-border/80 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/70 pb-3 gap-2">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/80 flex items-center justify-center font-bold shrink-0">
+                  <Icon icon="heroicons:building-storefront-20-solid" className="size-4.5" />
                 </div>
-                <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
+                <h2 className="text-sm sm:text-base font-bold text-text text-balance">
                   Administrasi &amp; Legalitas Kios
                 </h2>
               </div>
@@ -383,56 +383,56 @@ function AkunTenant() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3.5">
               <div>
-                <span className="label-micro text-text-3 block mb-1">Nomor Kios</span>
-                <strong className="text-lg font-extrabold text-red font-tabular-nums tracking-tight">{adminDetail.kios}</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Nomor Kios</span>
+                <strong className="text-base font-bold text-red font-tabular-nums">{adminDetail.kios}</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Lokasi &amp; Ukuran</span>
-                <strong className="text-sm font-bold text-text">{adminDetail.lantai} ({adminDetail.ukuran})</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Lokasi &amp; Ukuran</span>
+                <strong className="text-xs sm:text-sm font-semibold text-text">{adminDetail.lantai} ({adminDetail.ukuran})</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Tarif Retribusi Bulanan</span>
-                <strong className="text-base font-extrabold text-emerald-700 font-tabular-nums whitespace-nowrap">
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Tarif Retribusi Bulanan</span>
+                <strong className="text-sm font-bold text-emerald-700 font-tabular-nums whitespace-nowrap">
                   Rp {Number(adminDetail.tarifBulanan || 750000).toLocaleString('id-ID')}
                 </strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Jenis Usaha Terdaftar</span>
-                <strong className="text-sm font-bold text-text">{adminDetail.jenisUsaha}</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Jenis Usaha Terdaftar</span>
+                <strong className="text-xs sm:text-sm font-semibold text-text">{adminDetail.jenisUsaha}</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Surat Perjanjian (SP)</span>
-                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.sp}</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Surat Perjanjian (SP)</span>
+                <strong className="text-xs sm:text-sm font-semibold text-text font-tabular-nums">{adminDetail.sp}</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Dokumen PPJB</span>
-                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.ppjb}</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Dokumen PPJB</span>
+                <strong className="text-xs sm:text-sm font-semibold text-text font-tabular-nums">{adminDetail.ppjb}</strong>
               </div>
 
               <div>
-                <span className="label-micro text-text-3 block mb-1">Sertifikat Hak Guna</span>
-                <strong className="text-sm font-bold text-text font-tabular-nums">{adminDetail.sertifikat}</strong>
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Sertifikat Hak Guna</span>
+                <strong className="text-xs sm:text-sm font-semibold text-text font-tabular-nums">{adminDetail.sertifikat}</strong>
               </div>
 
               <div className="sm:col-span-2">
-                <span className="label-micro text-text-3 block mb-1">Masa Berlaku Sewa Kios</span>
-                <strong className="text-sm font-extrabold text-text font-tabular-nums">
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-0.5">Masa Berlaku Sewa Kios</span>
+                <strong className="text-xs sm:text-sm font-bold text-text font-tabular-nums">
                   {adminDetail.tanggalMulai} s/d {adminDetail.tanggalSelesai}
                 </strong>
               </div>
             </div>
 
             {adminDetail.catatan && (
-              <div className="border-t border-border/60 pt-4">
-                <span className="label-micro text-text-3 block mb-1.5">Catatan Resmi Administrasi Pengelola</span>
-                <p className="text-xs sm:text-sm text-text-2 font-medium leading-relaxed bg-mono-100/60 p-3.5 rounded-xl border border-border/60">
+              <div className="border-t border-border/60 pt-3">
+                <span className="text-[11px] font-semibold text-text-3 uppercase block mb-1">Catatan Resmi Administrasi Pengelola</span>
+                <p className="text-xs text-text-2 font-normal leading-relaxed bg-mono-100/60 p-2.5 rounded-lg border border-border/60">
                   {adminDetail.catatan}
                 </p>
               </div>
@@ -440,14 +440,14 @@ function AkunTenant() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-4">
           <form onSubmit={handleSavePassword}>
-            <Card variant="elevated" className="flex flex-col gap-5 p-6 sm:p-7 rounded-3xl bg-white border border-border/80 shadow-card">
-              <div className="flex items-center gap-2.5 border-b border-border/70 pb-3.5">
-                <div className="size-9 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center justify-center font-bold shrink-0 shadow-2xs">
-                  <Icon icon="heroicons:key-20-solid" className="size-5" />
+            <Card variant="elevated" className="flex flex-col gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs">
+              <div className="flex items-center gap-2 border-b border-border/70 pb-3">
+                <div className="size-8 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center justify-center font-bold shrink-0">
+                  <Icon icon="heroicons:key-20-solid" className="size-4.5" />
                 </div>
-                <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
+                <h2 className="text-sm sm:text-base font-bold text-text text-balance">
                   Ubah Kata Sandi
                 </h2>
               </div>

@@ -207,29 +207,29 @@ function DashboardAdmin() {
       )}
 
       {/* Header & Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Dashboard Pengelola
           </h1>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-mono-100 border border-border text-xs sm:text-sm font-bold text-text-2 shadow-2xs">
-            <Icon icon="heroicons:calendar-days-20-solid" className="size-4.5 text-red" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-mono-100 border border-border text-xs sm:text-sm font-semibold text-text-2 shadow-xs">
+            <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-red" />
             <span>Periode: {new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date())}</span>
           </span>
         </div>
       </div>
 
       {/* 3 Summary StatCards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
         <StatCard
           label="Total Kios Terisi"
           value={metrics?.kios_terisi ?? totalTenant}
           color="text"
           subtext="Unit aktif terdaftar"
-          icon={<Icon icon="heroicons:building-storefront-20-solid" className="size-5.5" />}
+          icon={<Icon icon="heroicons:building-storefront-20-solid" className="size-5" />}
         />
         <StatCard
           label="Menunggu Verifikasi"
@@ -238,7 +238,7 @@ function DashboardAdmin() {
           subtext="Perlu konfirmasi loket"
           trend={verifikasiCount > 0 ? "action" : "optimal"}
           trendLabel={verifikasiCount > 0 ? `${verifikasiCount} Antrean` : "Selesai"}
-          icon={<Icon icon="heroicons:clock-20-solid" className="size-5.5" />}
+          icon={<Icon icon="heroicons:clock-20-solid" className="size-5" />}
         />
         <StatCard
           label="Belum Bayar Bulan Ini"
@@ -247,27 +247,27 @@ function DashboardAdmin() {
           subtext="Siklus sewa berjalan"
           trend={belumBayarCount > 0 ? "warning" : "positive"}
           trendLabel={belumBayarCount > 0 ? "Perlu Follow-up" : "100% Lunas"}
-          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5.5" />}
+          icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5" />}
         />
       </div>
 
       {/* Main Kiosk Administration Data Table (Seamless Edge-to-Edge Surface) */}
-      <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
+      <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
         {/* Table Toolbar Header */}
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/80 bg-white">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0 shadow-2xs">
-              <Icon icon="heroicons:table-cells-20-solid" className="size-5" />
+        <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border/80 bg-white">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-lg bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0">
+              <Icon icon="heroicons:table-cells-20-solid" className="size-4.5" />
             </div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
+            <h2 className="text-base sm:text-lg font-bold text-text text-balance">
               Daftar Administrasi Kios
             </h2>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             {/* Search Input */}
             <div className="relative flex-1 sm:w-72">
-              <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3" />
+              <Icon icon="heroicons:magnifying-glass-20-solid" className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-3" />
               <input
                 type="text"
                 placeholder="Cari nama tenant / nomor kios..."
@@ -277,7 +277,7 @@ function DashboardAdmin() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full h-10 pl-10 pr-4 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-2xs"
+                className="w-full h-9 pl-9 pr-3.5 text-xs sm:text-sm font-medium rounded-lg border border-border bg-mono-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-xs"
               />
             </div>
 
@@ -289,7 +289,7 @@ function DashboardAdmin() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 text-xs sm:text-sm font-extrabold rounded-xl border border-border bg-white text-text px-3.5 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-2xs"
+              className="h-9 text-xs sm:text-sm font-semibold rounded-lg border border-border bg-white text-text px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
             >
               <option value="Semua">Semua Status</option>
               <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>

@@ -368,21 +368,21 @@ function AkunAdmin() {
   };
 
   return (
-    <div data-slot="akun-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="akun-admin" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+        <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
           Pengaturan Akun
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
-          <div className="flex items-center gap-3 border-b border-border/80 pb-4">
-            <Icon icon="heroicons:user-circle-20-solid" className="size-6 text-red" />
-            <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Data Profil Pengelola</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
+          <div className="flex items-center gap-2.5 border-b border-border/80 pb-3">
+            <Icon icon="heroicons:user-circle-20-solid" className="size-5.5 text-red" />
+            <h3 className="text-base sm:text-lg font-bold text-text text-balance">Data Profil Pengelola</h3>
           </div>
 
-          <form onSubmit={handleSimpanProfil} className="flex flex-col gap-5">
+          <form onSubmit={handleSimpanProfil} className="flex flex-col gap-3.5">
             <FormField label="Username Login Utama" id="admin-profile-username" required>
               <input
                 type="text"
@@ -390,7 +390,7 @@ function AkunAdmin() {
                 value={formData.username}
                 onChange={handleInputChange}
                 autoComplete="username"
-                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
+                className="w-full h-10 rounded-lg border border-border/80 bg-mono-100/50 px-3 text-sm font-semibold text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -401,7 +401,7 @@ function AkunAdmin() {
                 value={formData.nama}
                 onChange={handleInputChange}
                 autoComplete="name"
-                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold text-text focus:bg-white transition-colors"
+                className="w-full h-10 rounded-lg border border-border/80 bg-mono-100/50 px-3 text-sm font-semibold text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -412,7 +412,7 @@ function AkunAdmin() {
                 value={formData.email}
                 onChange={handleInputChange}
                 autoComplete="email"
-                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-semibold text-text focus:bg-white transition-colors"
+                className="w-full h-10 rounded-lg border border-border/80 bg-mono-100/50 px-3 text-sm font-medium text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -423,7 +423,7 @@ function AkunAdmin() {
                 value={formData.telepon}
                 onChange={handleInputChange}
                 autoComplete="tel"
-                className="w-full h-11 rounded-md border border-border/80 bg-mono-100/50 px-3.5 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors"
+                className="w-full h-10 rounded-lg border border-border/80 bg-mono-100/50 px-3 text-sm font-semibold font-tabular-nums text-text focus:bg-white transition-colors"
               />
             </FormField>
 
@@ -432,7 +432,7 @@ function AkunAdmin() {
               variant="primary"
               size="md"
               disabled={isLoadingProfile}
-              className="mt-2 h-11 text-base font-extrabold shadow-sm"
+              className="mt-1 h-10.5 text-sm font-bold shadow-xs"
             >
               {isLoadingProfile ? 'Menyimpan...' : 'Simpan Profil'}
             </Button>
@@ -440,13 +440,13 @@ function AkunAdmin() {
         </Card>
 
         {/* Form Ubah Password Admin */}
-        <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
-          <div className="flex items-center gap-3 border-b border-border/80 pb-4">
-            <Icon icon="heroicons:lock-closed-20-solid" className="size-6 text-amber-700" />
-            <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Ubah Kata Sandi</h3>
+        <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
+          <div className="flex items-center gap-2.5 border-b border-border/80 pb-3">
+            <Icon icon="heroicons:lock-closed-20-solid" className="size-5.5 text-amber-700" />
+            <h3 className="text-base sm:text-lg font-bold text-text text-balance">Ubah Kata Sandi</h3>
           </div>
 
-          <form onSubmit={handleUbahSandi} className="flex flex-col gap-5">
+          <form onSubmit={handleUbahSandi} className="flex flex-col gap-3.5">
             <FormField label="Kata Sandi Saat Ini" id="admin-pwd-old" required error={oldPasswordError}>
               <div className="relative w-full">
                 <input
@@ -457,17 +457,17 @@ function AkunAdmin() {
                   onChange={handleInputChange}
                   autoComplete="current-password"
                   className={cn(
-                    'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                    'w-full h-10 rounded-lg border bg-mono-100/50 ps-3 pe-11 text-sm focus:bg-white focus:outline-none transition-colors',
                     oldPasswordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowOldPassword(prev => !prev)}
-                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] size-10 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-lg"
                   aria-label={showOldPassword ? 'Sembunyikan kata sandi saat ini' : 'Tampilkan kata sandi saat ini'}
                 >
-                  <Icon icon={showOldPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  <Icon icon={showOldPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-4.5" />
                 </button>
               </div>
             </FormField>
@@ -482,17 +482,17 @@ function AkunAdmin() {
                   onChange={handleInputChange}
                   autoComplete="new-password"
                   className={cn(
-                    'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                    'w-full h-10 rounded-lg border bg-mono-100/50 ps-3 pe-11 text-sm focus:bg-white focus:outline-none transition-colors',
                     passwordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(prev => !prev)}
-                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] size-10 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-lg"
                   aria-label={showNewPassword ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'}
                 >
-                  <Icon icon={showNewPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  <Icon icon={showNewPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-4.5" />
                 </button>
               </div>
             </FormField>
@@ -507,17 +507,17 @@ function AkunAdmin() {
                   onChange={handleInputChange}
                   autoComplete="new-password"
                   className={cn(
-                    'w-full h-11 rounded-md border bg-mono-100/50 ps-3.5 pe-12 text-base focus:bg-white focus:outline-none transition-colors',
+                    'w-full h-10 rounded-lg border bg-mono-100/50 ps-3 pe-11 text-sm focus:bg-white focus:outline-none transition-colors',
                     confirmPasswordError ? 'border-red focus:border-red' : 'border-border/80 focus:border-red'
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(prev => !prev)}
-                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] size-11 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-md"
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] size-10 flex items-center justify-center text-text-3 hover:text-text active:scale-95 transition-all focus:outline-none cursor-pointer rounded-lg"
                   aria-label={showConfirmPassword ? 'Sembunyikan konfirmasi kata sandi' : 'Tampilkan konfirmasi kata sandi'}
                 >
-                  <Icon icon={showConfirmPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-5" />
+                  <Icon icon={showConfirmPassword ? 'heroicons:eye-slash-20-solid' : 'heroicons:eye-20-solid'} className="size-4.5" />
                 </button>
               </div>
             </FormField>
@@ -525,10 +525,10 @@ function AkunAdmin() {
             <Button
               type="submit"
               variant="primary"
-              size="lg"
+              size="md"
               fullWidth
               disabled={isLoadingPassword}
-              className="mt-2 h-12 text-base font-extrabold shadow-md"
+              className="mt-1 h-10.5 text-sm font-bold shadow-xs"
             >
               {isLoadingPassword ? 'Memperbarui...' : 'Perbarui Kata Sandi'}
             </Button>
@@ -538,11 +538,11 @@ function AkunAdmin() {
 
       {/* SUPERADMIN SECTION: Manajemen Staf & Role Presets */}
       {isSuperadmin && (
-        <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col mt-2">
-          <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 bg-white">
+        <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col mt-1">
+          <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 bg-white">
             <div className="flex items-center gap-2">
-              <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
-              <h3 className="text-xl font-extrabold text-text tracking-tight">
+              <Icon icon="heroicons:key-20-solid" className="size-5 text-red" />
+              <h3 className="text-base sm:text-lg font-bold text-text">
                 Hak Akses & Staf Pengelola
               </h3>
             </div>
@@ -551,9 +551,9 @@ function AkunAdmin() {
               variant="primary"
               size="sm"
               onClick={() => handleOpenStafModal()}
-              className="gap-2 font-bold self-start sm:self-auto h-10 px-4 shadow-2xs"
+              className="gap-1.5 font-bold self-start sm:self-auto h-8.5 px-3 text-xs sm:text-sm shadow-xs"
             >
-              <Icon icon="heroicons:user-plus-20-solid" className="size-4.5" />
+              <Icon icon="heroicons:user-plus-20-solid" className="size-4" />
               <span>Tambah Staf</span>
             </Button>
           </div>
@@ -591,11 +591,11 @@ function AkunAdmin() {
                   const isSelf = isSelfUser(staf);
                   return (
                     <tr key={staf.id} className={cn("border-b border-border/80 last:border-b-0 transition-colors", isSelf ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-red-50/20")}>
-                      <td className="py-3 px-4 font-extrabold text-text text-sm">
+                      <td className="py-2.5 px-3 font-semibold text-text text-xs sm:text-sm">
                         <div className="flex items-center gap-1.5">
                           <span>{staf.nama_lengkap}</span>
                           {isSelf && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red text-white font-black uppercase tracking-wider shadow-2xs">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red text-white font-bold uppercase">
                               Anda
                             </span>
                           )}

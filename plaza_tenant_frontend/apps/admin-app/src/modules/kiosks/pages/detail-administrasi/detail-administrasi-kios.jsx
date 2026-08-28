@@ -238,17 +238,17 @@ function DetailAdministrasiKios() {
       {isLoading ? (
         <SkeletonCard className="h-64" />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
             
             {/* CARD 1: PROFIL & IDENTITAS PEMILIK */}
-            <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-6">
-              <div className="flex justify-between items-center border-b border-border pb-4">
+            <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
+              <div className="flex justify-between items-center border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-lg bg-red-50 text-red flex items-center justify-center font-bold">
-                    <Icon icon="heroicons:user-20-solid" className="size-5" />
+                  <div className="size-7 rounded-lg bg-red-50 text-red flex items-center justify-center font-bold">
+                    <Icon icon="heroicons:user-20-solid" className="size-4" />
                   </div>
-                  <h2 className="text-lg font-extrabold text-text tracking-tight">Profil & Identitas Pemilik</h2>
+                  <h2 className="text-base sm:text-lg font-bold text-text">Profil & Identitas Pemilik</h2>
                 </div>
                 <Badge 
                   status={editData.statusKios === 'Kosong' ? 'Ditolak' : (editData.statusPemilik === 'Aktif' ? 'Lunas' : 'Belum Bayar')} 
@@ -256,41 +256,41 @@ function DetailAdministrasiKios() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Nama Pemilik / Tenant</span>
-                  <strong className={cn("font-extrabold text-base", editData.statusKios === 'Kosong' ? "text-text-3 italic font-medium" : "text-text")}>
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">Nama Pemilik / Tenant</span>
+                  <strong className={cn("font-bold text-sm sm:text-base", editData.statusKios === 'Kosong' ? "text-text-3 italic font-medium" : "text-text")}>
                     {editData.tenant}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Nomor Kios & Lokasi</span>
-                  <strong className="text-red font-extrabold text-base font-tabular-nums">{editData.nomorKios} ({editData.lantai})</strong>
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">Nomor Kios & Lokasi</span>
+                  <strong className="text-red font-bold text-sm sm:text-base font-tabular-nums">{editData.nomorKios} ({editData.lantai})</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">NIK KTP</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.nik}</strong>
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">NIK KTP</span>
+                  <strong className="text-text font-semibold font-tabular-nums">{editData.nik}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Jenis Usaha</span>
-                  <strong className="text-text font-bold">{editData.usaha}</strong>
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">Jenis Usaha</span>
+                  <strong className="text-text font-semibold">{editData.usaha}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Nominal Tagihan Sewa per Bulan</span>
-                  <strong className="text-emerald-700 font-extrabold font-tabular-nums text-base">
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">Nominal Tagihan Sewa per Bulan</span>
+                  <strong className="text-emerald-700 font-bold font-tabular-nums text-sm sm:text-base">
                     Rp {Number(editData.tarifBulanan || 750000).toLocaleString('id-ID')}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Kontak Telepon</span>
-                  <strong className="text-text font-bold font-tabular-nums">{editData.telepon}</strong>
+                  <span className="text-xs text-text-3 font-semibold uppercase block mb-0.5">Kontak Telepon</span>
+                  <strong className="text-text font-semibold font-tabular-nums">{editData.telepon}</strong>
                 </div>
 
                 {/* UNIT KIOS LAIN MILIK TENANT (JIKA MULTI-KIOS) */}
                 {editData.otherKiosks && editData.otherKiosks.length > 0 && (
-                  <div className="sm:col-span-2 pt-3 border-t border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-mono-50/70 p-3 rounded-xl">
+                  <div className="sm:col-span-2 pt-2.5 border-t border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-mono-50/70 p-2.5 rounded-xl">
                     <div>
-                      <span className="text-2xs text-text-3 font-extrabold uppercase tracking-wider block mb-1">
+                      <span className="text-2xs text-text-3 font-bold uppercase block mb-1">
                         Unit Kios Lain Milik Penyewa Ini ({editData.otherKiosks.length} Kios):
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -299,16 +299,16 @@ function DetailAdministrasiKios() {
                             key={kNo}
                             type="button"
                             onClick={() => navigate(`/admin/kios/${kNo}`)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red border border-red/30 rounded-lg text-xs font-extrabold font-tabular-nums transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red border border-red/30 rounded-md text-xs font-bold font-tabular-nums transition-colors cursor-pointer"
                           >
-                            <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5" />
+                            <Icon icon="heroicons:building-storefront-20-solid" className="size-3" />
                             <span>Kios {kNo}</span>
                             <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3 text-red/70" />
                           </button>
                         ))}
                       </div>
                     </div>
-                    <span className="text-2xs text-text-3 font-semibold sm:text-right">
+                    <span className="text-2xs text-text-3 font-medium sm:text-right">
                       *Klik nomor kios untuk berpindah administrasi
                     </span>
                   </div>
@@ -317,15 +317,15 @@ function DetailAdministrasiKios() {
             </Card>
 
             {/* CARD 2: KREDENSIAL & AKSES AKUN PORTAL TENANT */}
-            <Card variant="elevated" className="p-6 sm:p-7 flex flex-col gap-5 border border-border/90">
-              <div className="flex justify-between items-center border-b border-border pb-4">
+            <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 border border-border/90 shadow-xs">
+              <div className="flex justify-between items-center border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                    <Icon icon="heroicons:shield-check-20-solid" className="size-5" />
+                  <div className="size-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    <Icon icon="heroicons:shield-check-20-solid" className="size-4" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-extrabold text-text tracking-tight">Kredensial & Akses Portal Tenant</h2>
-                    <p className="text-xs text-text-3 font-medium">Informasi akun yang digunakan tenant untuk login ke portal pembayaran.</p>
+                    <h2 className="text-base sm:text-lg font-bold text-text">Kredensial & Akses Portal Tenant</h2>
+                    <p className="text-xs text-text-3 font-normal">Informasi akun yang digunakan tenant untuk login ke portal pembayaran.</p>
                   </div>
                 </div>
                 <span className={cn(

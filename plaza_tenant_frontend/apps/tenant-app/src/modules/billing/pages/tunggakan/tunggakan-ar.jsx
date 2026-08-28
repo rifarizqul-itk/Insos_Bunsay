@@ -129,12 +129,12 @@ function TunggakanAR() {
         <Card variant="default" className="p-6 sm:p-7 rounded-3xl bg-white border border-border/80 shadow-2xs flex flex-col gap-5">
           <div className="flex flex-col gap-1">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">
+              <span className="text-xs font-bold text-text-3 uppercase">
                 Total Tagihan
               </span>
               <Badge status={totalTunggakanVal > 0 ? 'Belum Bayar' : 'Lunas'} />
             </div>
-            <div className={cn('text-3xl sm:text-4xl font-extrabold font-tabular-nums tracking-tight mt-1', totalTunggakanVal > 0 ? 'text-text' : 'text-emerald-700')}>
+            <div className={cn('text-2xl sm:text-3xl font-bold font-tabular-nums mt-1', totalTunggakanVal > 0 ? 'text-text' : 'text-emerald-700')}>
               Rp {totalTunggakanVal.toLocaleString('id-ID')}
             </div>
           </div>
@@ -147,9 +147,9 @@ function TunggakanAR() {
             const tunggakanLalu = Math.max(0, totalTunggakanVal - tarifBulanIni);
 
             return (
-              <div className="bg-mono-50/80 rounded-2xl p-4 border border-border/70 flex flex-col gap-3 text-xs sm:text-sm text-text-2">
+              <div className="bg-mono-50/80 rounded-xl p-3.5 border border-border/70 flex flex-col gap-2.5 text-xs sm:text-sm text-text-2">
                 <div className="flex justify-between items-center gap-2">
-                  <span className="font-semibold flex items-center gap-2 text-text-2 min-w-0">
+                  <span className="font-medium flex items-center gap-2 text-text-2 min-w-0">
                     <Icon icon="heroicons:clock-20-solid" className="size-4 text-amber-700 shrink-0" />
                     <span className="truncate">Tunggakan Lalu:</span>
                   </span>
@@ -158,8 +158,8 @@ function TunggakanAR() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center gap-2 border-t border-border/50 pt-2.5">
-                  <span className="font-semibold flex items-center gap-2 text-text-2 min-w-0">
+                <div className="flex justify-between items-center gap-2 border-t border-border/50 pt-2">
+                  <span className="font-medium flex items-center gap-2 text-text-2 min-w-0">
                     <Icon icon="heroicons:building-storefront-20-solid" className="size-4 text-text-3 shrink-0" />
                     <span className="truncate">Tarif Sewa ({latestBill?.periode ? formatPeriodeToIndo(latestBill.periode) : 'Berjalan'}):</span>
                   </span>
@@ -168,7 +168,7 @@ function TunggakanAR() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center gap-2 border-t border-border/50 pt-2.5 font-extrabold text-text">
+                <div className="flex justify-between items-center gap-2 border-t border-border/50 pt-2 font-bold text-text">
                   <span className="flex items-center gap-2">
                     <Icon icon="heroicons:document-text-20-solid" className="size-4 text-red shrink-0" />
                     <span>Total Tagihan:</span>
@@ -187,28 +187,28 @@ function TunggakanAR() {
               size="lg"
               onClick={handleBayar}
               aria-label={`Bayar sewa sebesar total Rp ${totalTunggakanVal.toLocaleString('id-ID')}`}
-              className="w-full h-12 font-extrabold text-sm sm:text-base gap-2 shadow-2xs"
+              className="w-full h-10.5 font-bold text-sm sm:text-base gap-2 shadow-xs"
             >
-              <Icon icon="heroicons:bolt-20-solid" className="size-5" />
+              <Icon icon="heroicons:bolt-20-solid" className="size-4.5" />
               <span>Bayar Sekarang</span>
               <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
             </Button>
           ) : (
-            <div className="py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
-              <Icon icon="heroicons:check-circle-20-solid" className="size-5 text-emerald-600" />
+            <div className="py-2.5 px-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
+              <Icon icon="heroicons:check-circle-20-solid" className="size-4.5 text-emerald-600" />
               <span>Tidak Ada Tagihan Menunggak</span>
             </div>
           )}
         </Card>
 
         {/* KOLOM KANAN: DAFTAR TAGIHAN */}
-        <Card variant="default" className="p-6 sm:p-7 rounded-3xl bg-white border border-border/80 shadow-2xs flex flex-col gap-4">
-          <div className="flex justify-between items-center border-b border-border/70 pb-3">
-            <h2 className="text-base font-extrabold text-text flex items-center gap-2">
+        <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col gap-3">
+          <div className="flex justify-between items-center border-b border-border/70 pb-2.5">
+            <h2 className="text-sm sm:text-base font-bold text-text flex items-center gap-2">
               <Icon icon="heroicons:queue-list-20-solid" className="size-4.5 text-red" />
               <span>Daftar Tagihan</span>
             </h2>
-            <span className="text-xs font-extrabold text-red bg-red-50 border border-red/20 px-2.5 py-0.5 rounded-full font-tabular-nums">
+            <span className="text-xs font-bold text-red bg-red-50 border border-red/20 px-2 py-0.5 rounded-full font-tabular-nums">
               {listTagihan.length} Periode
             </span>
           </div>

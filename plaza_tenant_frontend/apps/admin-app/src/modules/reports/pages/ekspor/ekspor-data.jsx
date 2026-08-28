@@ -31,26 +31,26 @@ function EksporData() {
   };
 
   return (
-    <div data-slot="ekspor-data" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="ekspor-data" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+        <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
           Ekspor Laporan
         </h1>
       </div>
 
-      <div className="ekspor-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        <Card variant="elevated" className="lg:col-span-8 p-6 sm:p-8 flex flex-col gap-6">
-          <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
+      <div className="ekspor-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+        <Card variant="elevated" className="lg:col-span-8 p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
+          <h3 className="text-base sm:text-lg font-bold text-text border-b border-border pb-2.5 text-balance">
             Pilih Periode Laporan
           </h3>
           
-          <form onSubmit={handleDownloadExcel} className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <form onSubmit={handleDownloadExcel} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <FormField label="Bulan Laporan" id="ekspor-bulan">
                 <select 
                   value={bulanFilter} 
                   onChange={(e) => setBulanFilter(e.target.value)} 
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-semibold text-text focus:bg-white transition-colors cursor-pointer"
+                  className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 pl-3 pr-8 text-sm font-medium text-text focus:bg-white transition-colors cursor-pointer"
                 >
                   {['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'].map(b => (
                     <option key={b} value={b}>{b}</option>
@@ -62,7 +62,7 @@ function EksporData() {
                 <select 
                   value={tahunFilter} 
                   onChange={(e) => setTahunFilter(e.target.value)} 
-                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:bg-white transition-colors cursor-pointer"
+                  className="w-full h-10 rounded-lg border border-border bg-warm-gray/50 pl-3 pr-8 text-sm font-bold font-tabular-nums text-text focus:bg-white transition-colors cursor-pointer"
                 >
                   {['2024','2025','2026'].map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -74,18 +74,18 @@ function EksporData() {
             <Button
               type="submit"
               variant="primary"
-              size="lg"
+              size="md"
               disabled={isDownloading}
-              className="h-13 px-8 text-base font-extrabold gap-2.5 shadow-md w-full sm:w-auto sm:self-start"
+              className="h-10.5 px-6 text-sm font-bold gap-2 shadow-xs w-full sm:w-auto sm:self-start"
             >
               {isDownloading ? (
                 <span role="status" className="flex items-center gap-2 justify-center">
-                  <Icon icon="heroicons:arrow-path-20-solid" className="size-5 animate-spin" />
+                  <Icon icon="heroicons:arrow-path-20-solid" className="size-4 animate-spin" />
                   <span>Memproses...</span>
                 </span>
               ) : (
                 <>
-                  <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-5.5" />
+                  <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-4.5" />
                   <span>Unduh Rekap Excel</span>
                 </>
               )}
@@ -93,16 +93,16 @@ function EksporData() {
           </form>
         </Card>
 
-        <Card variant="elevated" className="lg:col-span-4 p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
-            <Icon icon="heroicons:table-cells-20-solid" className="size-5.5 text-red" />
-            <h3 className="text-base font-extrabold text-text tracking-tight text-balance">Format Laporan (.xlsx)</h3>
+        <Card variant="elevated" className="lg:col-span-4 p-4 sm:p-5 flex flex-col gap-3 shadow-xs">
+          <div className="flex items-center gap-2 border-b border-border pb-2.5">
+            <Icon icon="heroicons:table-cells-20-solid" className="size-5 text-red" />
+            <h3 className="text-sm sm:text-base font-bold text-text text-balance">Format Laporan (.xlsx)</h3>
           </div>
           
-          <ul className="text-sm text-text-2 space-y-3 leading-relaxed">
+          <ul className="text-xs sm:text-sm text-text-2 space-y-2 leading-relaxed">
             <li className="flex gap-2">
               <strong className="text-text font-bold flex-shrink-0">Sheet 1:</strong>
-              <span>Rekap Transaksi Pembayaran (Tunai, Transfer, Midtrans)</span>
+              <span>Rekap Transaksi Pembayaran</span>
             </li>
             <li className="flex gap-2">
               <strong className="text-text font-bold flex-shrink-0">Sheet 2:</strong>

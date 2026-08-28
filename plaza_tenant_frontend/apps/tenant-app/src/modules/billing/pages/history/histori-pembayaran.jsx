@@ -146,11 +146,11 @@ function HistoriPembayaran() {
   }, [filteredHistory, currentPage, pageSize]);
 
   return (
-    <div data-slot="histori-pembayaran" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
+    <div data-slot="histori-pembayaran" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
       {toastMsg && (
-        <div className="bg-red text-white font-bold text-sm px-4 py-3.5 rounded-xl shadow-card flex items-center justify-between animate-fade-in border border-red-rich">
-          <div className="flex items-center gap-2.5">
-            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5 shrink-0" />
+        <div className="bg-red text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-xs flex items-center justify-between animate-fade-in border border-red-rich">
+          <div className="flex items-center gap-2">
+            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4.5 shrink-0" />
             <span>{toastMsg}</span>
           </div>
           <button
@@ -164,15 +164,15 @@ function HistoriPembayaran() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
+          <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
             Histori Pembayaran
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="filter-metode" className="text-xs font-bold text-text-2 shrink-0">
+          <label htmlFor="filter-metode" className="text-xs font-semibold text-text-2 shrink-0">
             Metode:
           </label>
           <select
@@ -182,7 +182,7 @@ function HistoriPembayaran() {
               setSelectedMetode(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 rounded-md border border-border bg-white pl-3.5 pr-9 text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer"
+            className="h-9 rounded-lg border border-border bg-white pl-3 pr-8 text-xs sm:text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-xs"
           >
             <option value="Semua">Semua Metode</option>
             <option value="Transfer">Transfer Bank</option>
@@ -192,11 +192,11 @@ function HistoriPembayaran() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 md:bg-white md:border md:border-border/80 md:rounded-2xl md:p-6 md:shadow-card">
+      <div className="flex flex-col gap-4 md:bg-white md:border md:border-border/80 md:rounded-2xl md:p-4 sm:md:p-5 md:shadow-xs">
         {loading ? (
           <SkeletonTable rows={5} />
         ) : filteredHistory.length === 0 ? (
-          <div className="bg-white border border-border/80 rounded-2xl p-6 sm:p-8">
+          <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-6">
             <EmptyState
               icon="heroicons:receipt-refund-20-solid"
               title="Belum ada transaksi"
