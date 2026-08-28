@@ -354,10 +354,10 @@ function DashboardTenant() {
         {/* Card 1: Periode Sewa Aktif */}
         <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
-            <span className="text-xs font-bold text-text-3 uppercase block">
+            <span className="text-xs font-bold text-text-3 uppercase block tracking-wider">
               {hasActiveKiosks ? 'Periode Sewa Aktif' : 'Status Kontrak Sewa'}
             </span>
-            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1 mb-0.5 leading-tight">
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 mb-0.5 leading-tight">
               {hasActiveKiosks ? formatMonthYearText(tagihanBerjalan?.periode) : 'Selesai / Nonaktif'}
             </div>
             <div className="text-xs sm:text-sm text-text-2 font-medium font-tabular-nums">
@@ -365,11 +365,14 @@ function DashboardTenant() {
             </div>
           </div>
 
-          <div className="border-t border-border/60 pt-2.5 text-xs sm:text-sm text-text-2 font-semibold">
+          <div className="border-t border-border/60 pt-2.5 text-xs text-text-2 font-medium">
             {!hasActiveKiosks ? (
               <span className="text-text-3 font-normal">Hubungi pengelola untuk pengajuan sewa baru</span>
             ) : statusTagihan !== 'Lunas' ? (
-              <span>Jatuh tempo: <strong className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</strong></span>
+              <div className="flex items-center justify-between">
+                <span className="text-text-3 font-medium">Batas Pembayaran:</span>
+                <span className="font-tabular-nums text-red font-bold">{getFixedJatuhTempo(tagihanBerjalan?.periode, tagihanBerjalan?.jatuhTempo)}</span>
+              </div>
             ) : (
               <span className="text-emerald-700 font-bold flex items-center gap-1.5">
                 <Icon icon="heroicons:check-circle-20-solid" className="size-4 text-emerald-600 shrink-0" />
@@ -382,8 +385,8 @@ function DashboardTenant() {
         {/* Card 2: Total Kewajiban Sewa */}
         <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-text-3 uppercase block">
+            <div className="flex justify-between items-center mb-1.5 gap-2">
+              <span className="text-xs font-bold text-text-3 uppercase block tracking-wider">
                 Total Kewajiban Sewa
               </span>
               <Badge status={!hasActiveKiosks ? 'Lunas' : statusTagihan} />
@@ -393,24 +396,41 @@ function DashboardTenant() {
             </div>
           </div>
 
-          <div className="border-t border-border/60 pt-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs sm:text-sm">
-            <span className="text-text-2 font-medium">
-              {!hasActiveKiosks ? (
-                'Tidak ada tagihan sewa aktif yang perlu dibayar'
-              ) : hutangTunggakanVal > 0 ? (
-                `Rincian: Rp ${tarifSewaVal.toLocaleString('id-ID')} (Bulan Ini) + Rp ${hutangTunggakanVal.toLocaleString('id-ID')} (Tunggakan Lalu)`
-              ) : (
-                statusTagihan === 'Lunas' ? 'Semua kewajiban sewa periode ini telah lunas' : 'Sewa unit kios bulan berjalan'
-              )}
-            </span>
-            {hasActiveKiosks && hutangTunggakanVal > 0 && (
-              <button 
-                type="button"
-                onClick={() => navigate('/tenant/tunggakan')}
-                className="text-xs font-bold text-amber-800 hover:underline cursor-pointer shrink-0"
-              >
-                Rincian Tunggakan →
-              </button>
+          <div className="border-t border-border/60 pt-2.5">
+            {!hasActiveKiosks ? (
+              <p className="text-xs text-text-3 font-normal">
+                Tidak ada tagihan sewa aktif yang perlu dibayar
+              </p>
+            ) : hutangTunggakanVal > 0 ? (
+              <div className="flex flex-col gap-1.5 text-xs">
+                <div className="flex items-center justify-between text-text-2">
+                  <span className="font-medium">Sewa Bulan Ini:</span>
+                  <span className="font-tabular-nums font-semibold text-text">
+                    Rp {tarifSewaVal.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between bg-amber-50/80 border border-amber-200/90 rounded-lg px-2.5 py-1.5 text-amber-950">
+                  <span className="font-medium">Tunggakan Lalu:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-tabular-nums font-bold text-red">
+                      Rp {hutangTunggakanVal.toLocaleString('id-ID')}
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={() => navigate('/tenant/tagihan')}
+                      className="text-[11px] font-bold text-amber-900 underline hover:text-red cursor-pointer"
+                    >
+                      Rincian &rarr;
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-text-2 font-medium">
+                {statusTagihan === 'Lunas'
+                  ? 'Semua kewajiban sewa periode ini telah lunas'
+                  : 'Sewa unit kios bulan berjalan'}
+              </p>
             )}
           </div>
         </Card>
