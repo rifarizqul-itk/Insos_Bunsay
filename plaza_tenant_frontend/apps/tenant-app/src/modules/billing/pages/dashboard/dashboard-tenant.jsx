@@ -391,46 +391,36 @@ function DashboardTenant() {
               </span>
               <Badge status={!hasActiveKiosks ? 'Lunas' : statusTagihan} />
             </div>
-            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text my-0.5">
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 mb-0.5 leading-tight">
               Rp {hasActiveKiosks ? totalTagihanVal.toLocaleString('id-ID') : '0'}
+            </div>
+            <div className="text-xs sm:text-sm text-text-2 font-medium">
+              {hasActiveKiosks ? (kios ? `Sewa Unit Kios ${kios}` : 'Sewa Unit Kios') : 'Tidak ada tagihan aktif'}
             </div>
           </div>
 
-          <div className="border-t border-border/60 pt-2.5">
+          <div className="border-t border-border/60 pt-2.5 text-xs text-text-2 font-medium">
             {!hasActiveKiosks ? (
-              <p className="text-xs text-text-3 font-normal">
-                Tidak ada tagihan sewa aktif yang perlu dibayar
-              </p>
+              <span className="text-text-3 font-normal">Tidak ada tagihan sewa yang perlu dibayar</span>
             ) : hutangTunggakanVal > 0 ? (
-              <div className="flex flex-col gap-1.5 text-xs">
-                <div className="flex items-center justify-between text-text-2">
-                  <span className="font-medium">Sewa Bulan Ini:</span>
-                  <span className="font-tabular-nums font-semibold text-text">
-                    Rp {tarifSewaVal.toLocaleString('id-ID')}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between bg-amber-50/80 border border-amber-200/90 rounded-lg px-2.5 py-1.5 text-amber-950">
-                  <span className="font-medium">Tunggakan Lalu:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-tabular-nums font-bold text-red">
-                      Rp {hutangTunggakanVal.toLocaleString('id-ID')}
-                    </span>
-                    <button 
-                      type="button"
-                      onClick={() => navigate('/tenant/tagihan')}
-                      className="text-[11px] font-bold text-amber-900 underline hover:text-red cursor-pointer"
-                    >
-                      Rincian &rarr;
-                    </button>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-text-3">
+                  Termasuk tunggakan <strong className="text-red font-bold font-tabular-nums">Rp {hutangTunggakanVal.toLocaleString('id-ID')}</strong>
+                </span>
+                <button 
+                  type="button"
+                  onClick={() => navigate('/tenant/tagihan')}
+                  className="text-xs font-bold text-red hover:underline cursor-pointer shrink-0"
+                >
+                  Rincian &rarr;
+                </button>
               </div>
             ) : (
-              <p className="text-xs text-text-2 font-medium">
+              <span className="text-text-3">
                 {statusTagihan === 'Lunas'
-                  ? 'Semua kewajiban sewa periode ini telah lunas'
+                  ? 'Semua kewajiban periode ini telah lunas'
                   : 'Sewa unit kios bulan berjalan'}
-              </p>
+              </span>
             )}
           </div>
         </Card>
