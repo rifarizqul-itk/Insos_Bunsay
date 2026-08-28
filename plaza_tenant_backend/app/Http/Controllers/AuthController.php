@@ -20,7 +20,7 @@ class AuthController extends Controller
     /**
      * Duration of the HttpOnly Refresh Cookie in minutes (7 days = 10080 minutes).
      */
-    private const REFRESH_COOKIE_MINUTES = 10080;
+    private const REFRESH_COOKIE_MINUTES = 43200; // 30 days
 
     /**
      * Login handler for Tenant Portal & Admin Console.
@@ -90,14 +90,14 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Revoke prior tokens for security and table cleanup
-        $user->tokens()->delete();
+        // Prune only expired tokens to keep database light while allowing multi-device testing
+        $user->tokens()->where('expires_at', '<', now())->delete();
 
-        // 1. Create short-lived Access Token for In-Memory storage (15 mins)
-        $accessToken = $user->createToken('access_token', ['*'], now()->addMinutes(15))->plainTextToken;
+        // 1. Create Access Token for In-Memory storage (24 hours TTL for active testing stability)
+        $accessToken = $user->createToken('access_token', ['*'], now()->addHours(24))->plainTextToken;
 
-        // 2. Create Refresh Token instance in DB (7 days)
-        $refreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(7));
+        // 2. Create Refresh Token instance in DB (30 days TTL)
+        $refreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30));
 
         // 3. Construct HttpOnly Host-Only Secure Cookie
         $cookieName = ($portalScope === 'admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
@@ -209,7 +209,7 @@ class AuthController extends Controller
         // Issue new Refresh Token (7 days) and send as rotated HttpOnly Cookie
         $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
         $sameSite = 'none';
-        $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(7));
+        $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30));
         $newRefreshCookie = cookie(
             $cookieName,
             $newRefreshTokenObj->plainTextToken,
@@ -222,8 +222,8 @@ class AuthController extends Controller
             $sameSite
         );
 
-        // Issue NEW short-lived Access Token (15 mins) for in-memory frontend storage
-        $newAccessToken = $user->createToken('access_token', ['*'], now()->addMinutes(15))->plainTextToken;
+        // Issue NEW Access Token (24 hours TTL) for in-memory frontend storage
+        $newAccessToken = $user->createToken('access_token', ['*'], now()->addHours(24))->plainTextToken;
 
         $rawPerms = $user->permissions;
         $permsArray = [];
