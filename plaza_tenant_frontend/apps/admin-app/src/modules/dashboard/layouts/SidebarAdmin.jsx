@@ -15,24 +15,24 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
     {
       title: 'MENU UTAMA',
       items: [
-        { id: 'dashboard', label: 'Dashboard Admin', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid' },
-        { id: 'verifikasi-bukti', label: 'Verifikasi Transfer', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran', icon: 'heroicons:clipboard-document-check-20-solid' },
-        { id: 'setoran-tunai', label: 'Setoran Tunai Kasir', path: '/admin/setoran-tunai', perm: 'input_setoran', icon: 'heroicons:banknotes-20-solid' },
+        { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid' },
+        { id: 'verifikasi-bukti', label: 'Verifikasi Bukti', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran', icon: 'heroicons:clipboard-document-check-20-solid' },
+        { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai', perm: 'input_setoran', icon: 'heroicons:banknotes-20-solid' },
       ]
     },
     {
       title: 'DATA & AUDIT',
       items: [
         { id: 'riwayat', label: 'Riwayat Transaksi', path: '/admin/riwayat', icon: 'heroicons:clock-20-solid' },
-        { id: 'kios', label: 'Manajemen Unit Kios', path: '/admin/kios', perm: 'kelola_kios', icon: 'heroicons:building-storefront-20-solid' },
-        { id: 'ekspor', label: 'Ekspor Rekap Data', path: '/admin/ekspor', perm: 'ekspor_laporan', icon: 'heroicons:arrow-down-tray-20-solid' },
-        { id: 'audit-log', label: 'Audit Trail Log', path: '/admin/audit-log', perm: 'lihat_audit_log', icon: 'heroicons:shield-check-20-solid' },
+        { id: 'kios', label: 'Ketersediaan Kios', path: '/admin/kios', perm: 'kelola_kios', icon: 'heroicons:building-storefront-20-solid' },
+        { id: 'ekspor', label: 'Ekspor Laporan', path: '/admin/ekspor', perm: 'ekspor_laporan', icon: 'heroicons:arrow-down-tray-20-solid' },
+        { id: 'audit-log', label: 'Log Aktivitas', path: '/admin/audit-log', perm: 'lihat_audit_log', icon: 'heroicons:shield-check-20-solid' },
       ]
     },
     {
       title: 'PENGATURAN',
       items: [
-        { id: 'akun', label: 'Akun Pengelola', path: '/admin/akun', icon: 'heroicons:user-group-20-solid' }
+        { id: 'akun', label: 'Akun Staf', path: '/admin/akun', icon: 'heroicons:user-group-20-solid' }
       ]
     }
   ];

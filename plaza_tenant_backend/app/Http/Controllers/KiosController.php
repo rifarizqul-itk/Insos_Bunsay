@@ -114,10 +114,17 @@ class KiosController extends Controller
             'Status'  => $request->input('statusKios', $kios->Status),
         ]);
 
-        if ($request->has('tenant') && $kios->sewa && $kios->sewa->pemilik) {
-            $kios->sewa->pemilik->update([
-                'Nama' => $request->input('tenant')
-            ]);
+        if ($kios->sewa && $kios->sewa->pemilik) {
+            $pemilikUpdate = [];
+            if ($request->has('tenant')) $pemilikUpdate['Nama'] = $request->input('tenant');
+            if ($request->has('nik')) $pemilikUpdate['No_KTP'] = $request->input('nik');
+            if ($request->has('No_KTP')) $pemilikUpdate['No_KTP'] = $request->input('No_KTP');
+            if ($request->has('telepon')) $pemilikUpdate['No_Telepon'] = $request->input('telepon');
+            if ($request->has('No_Telepon')) $pemilikUpdate['No_Telepon'] = $request->input('No_Telepon');
+            if ($request->has('alamat')) $pemilikUpdate['Alamat'] = $request->input('alamat');
+            if (!empty($pemilikUpdate)) {
+                $kios->sewa->pemilik->update($pemilikUpdate);
+            }
         }
 
         if ($request->has('tarifBulanan') && $kios->sewa) {

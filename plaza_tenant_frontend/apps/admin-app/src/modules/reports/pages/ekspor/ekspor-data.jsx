@@ -34,17 +34,14 @@ function EksporData() {
     <div data-slot="ekspor-data" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Ekspor Laporan Keuangan
+          Ekspor Laporan
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Unduh rekap transaksi sewa dan akumulasi tunggakan tenant ke berkas Excel (.xlsx).
-        </p>
       </div>
 
       <div className="ekspor-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <Card variant="elevated" className="lg:col-span-8 p-6 sm:p-8 flex flex-col gap-6">
           <h3 className="text-lg font-extrabold text-text tracking-tight border-b border-border pb-3 text-balance">
-            Pilih Periode Laporan Keuangan
+            Pilih Periode Laporan
           </h3>
           
           <form onSubmit={handleDownloadExcel} className="flex flex-col gap-6">
@@ -84,12 +81,12 @@ function EksporData() {
               {isDownloading ? (
                 <span role="status" className="flex items-center gap-2 justify-center">
                   <Icon icon="heroicons:arrow-path-20-solid" className="size-5 animate-spin" />
-                  <span>Memproses Rekap...</span>
+                  <span>Memproses...</span>
                 </span>
               ) : (
                 <>
                   <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-5.5" />
-                  <span>Unduh Rekap Excel (.xlsx)</span>
+                  <span>Unduh Rekap Excel</span>
                 </>
               )}
             </Button>
@@ -99,21 +96,21 @@ function EksporData() {
         <Card variant="elevated" className="lg:col-span-4 p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2 border-b border-border pb-3">
             <Icon icon="heroicons:table-cells-20-solid" className="size-5.5 text-red" />
-            <h3 className="text-base font-extrabold text-text tracking-tight text-balance">Lembar Kerja (.xlsx)</h3>
+            <h3 className="text-base font-extrabold text-text tracking-tight text-balance">Format Laporan (.xlsx)</h3>
           </div>
           
           <ul className="text-sm text-text-2 space-y-3 leading-relaxed">
             <li className="flex gap-2">
               <strong className="text-text font-bold flex-shrink-0">Sheet 1:</strong>
-              <span>Rekap Seluruh Transaksi Pembayaran Sewa (Tunai, Transfer, Midtrans).</span>
+              <span>Rekap Transaksi Pembayaran (Tunai, Transfer, Midtrans)</span>
             </li>
             <li className="flex gap-2">
               <strong className="text-text font-bold flex-shrink-0">Sheet 2:</strong>
-              <span>Akumulasi Tunggakan Berjalan per Tenant.</span>
+              <span>Akumulasi Tunggakan per Tenant</span>
             </li>
             <li className="flex gap-2">
               <strong className="text-text font-bold flex-shrink-0">Sheet 3:</strong>
-              <span>Rekap Pemetaan Status & Ketersediaan Unit Kios Plaza.</span>
+              <span>Pemetaan Status Kios Plaza</span>
             </li>
           </ul>
         </Card>

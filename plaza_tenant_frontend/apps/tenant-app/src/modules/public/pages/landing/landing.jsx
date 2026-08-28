@@ -47,10 +47,10 @@ function LandingPage() {
                   Pelayanan Resmi
                 </span>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-text leading-tight mt-2.5 tracking-tight text-balance">
-                  Selamat Datang<br className="hidden sm:inline" /> di Portal Plaza Kebun Sayur
+                  Portal Layanan<br className="hidden sm:inline" /> Plaza Kebun Sayur
                 </h1>
                 <p className="text-text-2 text-sm sm:text-base font-medium mt-3 text-pretty leading-relaxed">
-                  Portal resmi pembayaran sewa kios dan pengelolaan administrasi tenant Plaza Kebun Sayur Balikpapan.
+                  Layanan pembayaran sewa kios dan administrasi tenant Plaza Kebun Sayur Balikpapan.
                 </p>
               </div>
 
@@ -62,7 +62,7 @@ function LandingPage() {
                   className="sm:w-auto h-13 px-8 text-base font-extrabold gap-2.5 shadow-md"
                   onClick={handleAuthRedirect}
                 >
-                  <span>{isLoggedIn ? 'Buka Dashboard Tenant' : 'Login Portal'}</span>
+                  <span>{isLoggedIn ? 'Buka Dashboard' : 'Masuk Portal'}</span>
                   <Icon icon={isLoggedIn ? "material-symbols:dashboard" : "material-symbols:login"} className="size-5.5" />
                 </Button>
               </div>
@@ -92,17 +92,17 @@ function LandingPage() {
                   <Icon icon="heroicons:clock-20-solid" className="size-6.5" />
                 </div>
                 <h2 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
-                  Jam Operasional Gedung
+                  Jam Operasional
                 </h2>
                 <p className="text-text-2 text-base font-medium leading-relaxed mb-4 text-pretty">
-                  Gedung Plaza Kebun Sayur buka setiap hari melayani pedagang dan pengunjung pada jam:
+                  Waktu operasional gedung untuk pedagang dan pengunjung:
                 </p>
                 <div className="text-3xl sm:text-4xl font-extrabold text-red font-tabular-nums mb-2">
                   09.00 - 21.00 WITA
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-sm text-text font-bold">
                   <Icon icon="heroicons:calendar-days-20-solid" className="size-4.5 text-red shrink-0" />
-                  <span>Hari Senin s/d Hari Minggu (Buka Setiap Hari)</span>
+                  <span>Senin – Minggu (Setiap Hari)</span>
                 </div>
               </div>
             </Card>
@@ -113,7 +113,7 @@ function LandingPage() {
                   <Icon icon="heroicons:building-office-20-solid" className="size-6.5" />
                 </div>
                 <h2 className="text-xl font-extrabold text-text mb-3 tracking-tight text-balance">
-                  Informasi Kontak Kantor Pengelola
+                  Kontak Pengelola
                 </h2>
                 
                 <div className="space-y-2 text-sm sm:text-base text-text font-medium leading-relaxed mb-4">

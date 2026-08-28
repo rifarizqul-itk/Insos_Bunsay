@@ -183,10 +183,10 @@ export function NotificationPopover({
               <Icon icon="heroicons:bell-slash-20-solid" className="size-6" />
             </div>
             <p className="text-xs font-bold text-text-2">
-              {activeFilter === 'unread' ? 'Semua notifikasi sudah dibaca' : 'Belum ada notifikasi saat ini'}
+              {activeFilter === 'unread' ? 'Semua notifikasi sudah dibaca' : 'Belum ada notifikasi'}
             </p>
             <span className="text-2xs text-text-3 font-medium max-w-xs">
-              Pemberitahuan tagihan, verifikasi bukti bayar, dan info terkini akan muncul di sini.
+              Pemberitahuan tagihan dan pembayaran akan muncul di sini.
             </span>
           </div>
         ) : (

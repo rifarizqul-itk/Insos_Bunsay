@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             AdminSeeder::class,
-            RealTenantSeeder::class,   // 886 tenant real murni dari Data Kios BY LEGAL
-            // ScenarioSeeder::class,  // [NONAKTIF] dinonaktifkan agar 100% data real
+            KiosSeeder::class,               // Master ~300 Unit Kios Fisik Blok A-H (Status awal: Kosong)
+            SimulationScenarioSeeder::class, // Skenario Simulasi 10 Orang Tim (100% State Coverage)
+            // RealTenantSeeder::class,      // [OPSIONAL] Aktifkan jika ingin menyertakan 886 data riil
+            // ScenarioSeeder::class,        // [NONAKTIF] Seeder skenario lama
         ]);
     }
 }

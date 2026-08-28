@@ -5,8 +5,8 @@ import Button from './Button';
 
 function EmptyState({
   icon = 'heroicons:inbox-20-solid',
-  title = 'Tidak Ada Data Terkait',
-  description = 'Saat ini belum ada catatan data yang dapat ditampilkan di tabel ini.',
+  title = 'Belum ada data',
+  description = 'Belum ada data untuk ditampilkan saat ini.',
   actionLabel,
   onAction,
   className = '',
@@ -25,9 +25,11 @@ function EmptyState({
       <h4 className="text-lg font-bold text-text tracking-tight text-balance mb-1">
         {title}
       </h4>
-      <p className="text-sm text-text-2 font-medium max-w-md leading-relaxed text-pretty mb-6">
-        {description}
-      </p>
+      {description && (
+        <p className={cn("text-sm text-text-2 font-medium max-w-md leading-relaxed text-pretty", actionLabel && onAction ? "mb-6" : "mb-0")}>
+          {description}
+        </p>
+      )}
       {actionLabel && onAction && (
         <Button variant="primary" size="sm" onClick={onAction}>
           {actionLabel}

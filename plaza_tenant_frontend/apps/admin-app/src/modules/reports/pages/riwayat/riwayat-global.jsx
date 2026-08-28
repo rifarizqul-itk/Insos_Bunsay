@@ -123,11 +123,8 @@ function RiwayatTransaksiAdmin() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-            Riwayat Transaksi Admin
+            Riwayat Transaksi
           </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-            Log seluruh transaksi lintas metode (Transfer Bank, Tunai Loket, Midtrans Gateway).
-          </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -144,7 +141,7 @@ function RiwayatTransaksiAdmin() {
           >
             <option value="Semua">Semua Metode</option>
             <option value="Transfer">Transfer Bank</option>
-            <option value="Tunai">Tunai (Loket)</option>
+            <option value="Tunai">Tunai (Kasir)</option>
             <option value="Midtrans">Midtrans Gateway</option>
           </select>
         </div>
@@ -160,8 +157,8 @@ function RiwayatTransaksiAdmin() {
           <div className="p-8">
             <EmptyState
               icon="heroicons:receipt-percent-20-solid"
-              title="Riwayat Transaksi Kosong"
-              description="Belum ada transaksi pembayaran yang tercatat untuk filter metode ini."
+              title="Belum ada transaksi"
+              description="Belum ada riwayat transaksi pembayaran untuk filter metode ini."
             />
           </div>
         ) : (

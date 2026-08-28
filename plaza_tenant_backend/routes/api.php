@@ -132,6 +132,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function
     Route::post('/staf', [\App\Http\Controllers\StafManagementController::class, 'store']);
     Route::put('/staf/{id}', [\App\Http\Controllers\StafManagementController::class, 'update']);
     Route::put('/staf/{id}/toggle-status', [\App\Http\Controllers\StafManagementController::class, 'toggleStatus']);
+    Route::delete('/staf/{id}', [\App\Http\Controllers\StafManagementController::class, 'destroy']);
 
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'adminNotifications']);

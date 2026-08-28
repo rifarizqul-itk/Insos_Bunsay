@@ -28,6 +28,17 @@ function KetersediaanKios() {
   const [tenantSearchQuery, setTenantSearchQuery] = useState('');
   const [selectedPemilikId, setSelectedPemilikId] = useState('');
   const [selectedKiosList, setSelectedKiosList] = useState([]);
+  const [selectedKiosListTambahan, setSelectedKiosListTambahan] = useState([]);
+
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getDefaultJatuhTempo = (startDateStr) => {
+    if (!startDateStr) return '';
+    const parts = startDateStr.split('-');
+    if (parts.length >= 2) {
+      return `${parts[0]}-${parts[1]}-12`;
+    }
+    return '';
+  };
 
   const initialFormState = {
     nama: '',
@@ -37,7 +48,11 @@ function KetersediaanKios() {
     email: '',
     telepon: '',
     usaha: '',
-    tarifBulanan: '750000',
+    usahaPerKios: {},
+    tarifBulanan: '',
+    tarifPerKios: {},
+    tanggalMulai: getTodayStr(),
+    jatuhTempo: getDefaultJatuhTempo(getTodayStr()),
     usernameMode: 'auto',
     username: ''
   };
@@ -46,11 +61,64 @@ function KetersediaanKios() {
   const [formKiosTambahan, setFormKiosTambahan] = useState({
     kios: '',
     usaha: '',
-    tarifBulanan: '750000'
+    usahaPerKios: {},
+    tarifBulanan: '',
+    tarifPerKios: {},
+    tanggalMulai: getTodayStr(),
+    jatuhTempo: getDefaultJatuhTempo(getTodayStr())
   });
 
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmExitOpen, setIsConfirmExitOpen] = useState(false);
+
+  const isFormDirty = () => {
+    if (modePendaftaran === 'baru') {
+      return Boolean(
+        formTenant.nama.trim() ||
+        formTenant.nik.trim() ||
+        formTenant.alamat.trim() ||
+        formTenant.telepon.trim() ||
+        formTenant.email.trim() ||
+        formTenant.usaha.trim() ||
+        Object.keys(formTenant.usahaPerKios || {}).length > 0 ||
+        formTenant.tarifBulanan ||
+        Object.keys(formTenant.tarifPerKios || {}).length > 0 ||
+        selectedKiosList.length > 0 ||
+        formTenant.kios
+      );
+    } else {
+      return Boolean(
+        selectedPemilikId ||
+        selectedKiosListTambahan.length > 0 ||
+        formKiosTambahan.kios ||
+        formKiosTambahan.usaha.trim() ||
+        Object.keys(formKiosTambahan.usahaPerKios || {}).length > 0 ||
+        formKiosTambahan.tarifBulanan ||
+        Object.keys(formKiosTambahan.tarifPerKios || {}).length > 0
+      );
+    }
+  };
+
+  const handleRequestCloseRegistration = () => {
+    if (isFormDirty()) {
+      setIsConfirmExitOpen(true);
+    } else {
+      setIsDrawerOpen(false);
+      setFieldError(null);
+    }
+  };
+
+  const handleForceCloseRegistration = () => {
+    setIsConfirmExitOpen(false);
+    setIsDrawerOpen(false);
+    setFormTenant(initialFormState);
+    setFormKiosTambahan({ kios: '', usaha: '', usahaPerKios: {}, tarifBulanan: '', tarifPerKios: {}, tanggalMulai: getTodayStr(), jatuhTempo: getDefaultJatuhTempo(getTodayStr()) });
+    setSelectedKiosList([]);
+    setSelectedKiosListTambahan([]);
+    setSelectedPemilikId('');
+    setFieldError(null);
+  };
 
   const fallbackKiosData = [
     { id: 1, noKios: 'B-1001', lantai: 'Lantai 1', penyewa: 'Hj. Yuliana', usaha: 'Sembako & Kelontong', status: 'Terisi', masaSewa: 'Mei 2026' },
@@ -185,11 +253,11 @@ function KetersediaanKios() {
     setConfirmAkhiriKios(null);
     try {
       await httpClient.post(`/api/v1/admin/sewa/${kios.id}/akhiri`);
-      addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri. Status kios kembali Kosong/Tersedia.`, 'success');
+      addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri`, 'success');
       fetchKiosData();
     } catch (err) {
       setDataKios(prev => prev.map(k => k.id === kios.id ? { ...k, status: 'Tersedia', penyewa: '-', usaha: '-', masaSewa: '-' } : k));
-      addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri. Status kios kembali Kosong.`, 'success');
+      addToast(`Masa sewa Kios ${kios.noKios} telah diakhiri`, 'success');
     }
   };
 
@@ -233,6 +301,43 @@ function KetersediaanKios() {
       return;
     }
 
+    // Validasi Jenis Usaha & Tarif Sewa per Kios
+    let finalUsahaMap = {};
+    let finalTarifMap = {};
+
+    if (finalKiosList.length > 1) {
+      const missingUsaha = finalKiosList.find(kNo => !formTenant.usahaPerKios?.[kNo]?.trim() && !formTenant.usaha?.trim());
+      if (missingUsaha) {
+        setFieldError({ field: 'usaha', message: `Jenis usaha untuk Kios ${missingUsaha} wajib diisi.` });
+        return;
+      }
+      finalKiosList.forEach(kNo => {
+        finalUsahaMap[kNo] = formTenant.usahaPerKios?.[kNo]?.trim() || formTenant.usaha?.trim() || 'Perdagangan Umum';
+      });
+
+      const missingKios = finalKiosList.find(kNo => !formTenant.tarifPerKios[kNo] || Number(formTenant.tarifPerKios[kNo]) <= 0);
+      if (missingKios) {
+        setFieldError({ field: 'tarifBulanan', message: `Nominal tarif sewa untuk Kios ${missingKios} wajib diisi.` });
+        return;
+      }
+      finalTarifMap = formTenant.tarifPerKios;
+    } else {
+      const singleKios = finalKiosList[0];
+      const singleUsaha = formTenant.usahaPerKios?.[singleKios]?.trim() || formTenant.usaha?.trim();
+      if (!singleUsaha) {
+        setFieldError({ field: 'usaha', message: 'Jenis usaha tenant wajib diisi.' });
+        return;
+      }
+      finalUsahaMap = { [singleKios]: singleUsaha };
+
+      const singleRate = formTenant.tarifPerKios[singleKios] || formTenant.tarifBulanan;
+      if (!singleRate || Number(singleRate) <= 0) {
+        setFieldError({ field: 'tarifBulanan', message: 'Nominal tarif sewa bulanan wajib diisi.' });
+        return;
+      }
+      finalTarifMap = { [singleKios]: singleRate };
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -242,10 +347,14 @@ function KetersediaanKios() {
         Telepon: formTenant.telepon.trim(),
         Alamat: formTenant.alamat.trim(),
         Email: formTenant.email,
-        Jenis_Usaha: formTenant.usaha || 'Perdagangan Umum',
+        Jenis_Usaha: Object.values(finalUsahaMap)[0] || formTenant.usaha || 'Perdagangan Umum',
+        usaha_kios_map: finalUsahaMap,
         No_Kios: finalKiosList.join(', '),
         kios_list: finalKiosList,
-        Tarif_Bulanan: Number(formTenant.tarifBulanan) || 750000,
+        Tarif_Bulanan: Number(formTenant.tarifBulanan) || Number(Object.values(finalTarifMap)[0]) || 0,
+        tarif_kios_map: finalTarifMap,
+        Tanggal_Mulai: formTenant.tanggalMulai || getTodayStr(),
+        Jatuh_Tempo: formTenant.jatuhTempo || getDefaultJatuhTempo(formTenant.tanggalMulai || getTodayStr()),
         Username: formTenant.usernameMode === 'custom' ? formTenant.username.trim() : ''
       };
       
@@ -285,33 +394,78 @@ function KetersediaanKios() {
       setFieldError({ field: 'pemilikId', message: 'Silakan pilih tenant terdaftar terlebih dahulu.' });
       return;
     }
-    if (!formKiosTambahan.kios) {
-      setFieldError({ field: 'kiosTambahan', message: 'Silakan pilih unit kios kosong yang ingin ditambahkan.' });
+
+    const finalKiosListTambahan = selectedKiosListTambahan.length > 0 
+      ? selectedKiosListTambahan 
+      : (formKiosTambahan.kios ? [formKiosTambahan.kios] : []);
+
+    if (finalKiosListTambahan.length === 0) {
+      setFieldError({ field: 'kiosTambahan', message: 'Silakan pilih minimal 1 unit kios kosong yang ingin ditambahkan.' });
       return;
     }
 
-    const selectedKiosObj = dataKios.find(k => k.noKios === formKiosTambahan.kios);
+    let finalUsahaMap = {};
+    let finalTarifMap = {};
+
+    if (finalKiosListTambahan.length > 1) {
+      const missingUsaha = finalKiosListTambahan.find(kNo => !formKiosTambahan.usahaPerKios?.[kNo]?.trim() && !formKiosTambahan.usaha?.trim());
+      if (missingUsaha) {
+        setFieldError({ field: 'usahaTambahan', message: `Jenis usaha untuk Kios ${missingUsaha} wajib diisi.` });
+        return;
+      }
+      finalKiosListTambahan.forEach(kNo => {
+        finalUsahaMap[kNo] = formKiosTambahan.usahaPerKios?.[kNo]?.trim() || formKiosTambahan.usaha?.trim() || 'Perdagangan Umum';
+      });
+
+      const missingKios = finalKiosListTambahan.find(kNo => !formKiosTambahan.tarifPerKios?.[kNo] || Number(formKiosTambahan.tarifPerKios[kNo]) <= 0);
+      if (missingKios) {
+        setFieldError({ field: 'tarifTambahan', message: `Nominal tarif sewa untuk Kios ${missingKios} wajib diisi.` });
+        return;
+      }
+      finalTarifMap = formKiosTambahan.tarifPerKios;
+    } else {
+      const singleKios = finalKiosListTambahan[0];
+      const singleUsaha = formKiosTambahan.usahaPerKios?.[singleKios]?.trim() || formKiosTambahan.usaha?.trim();
+      if (!singleUsaha) {
+        setFieldError({ field: 'usahaTambahan', message: 'Jenis usaha untuk kios tambahan wajib diisi.' });
+        return;
+      }
+      finalUsahaMap = { [singleKios]: singleUsaha };
+
+      const singleRate = formKiosTambahan.tarifPerKios?.[singleKios] || formKiosTambahan.tarifBulanan;
+      if (!singleRate || Number(singleRate) <= 0) {
+        setFieldError({ field: 'tarifTambahan', message: 'Nominal tarif sewa bulanan untuk kios tambahan wajib diisi.' });
+        return;
+      }
+      finalTarifMap = { [singleKios]: singleRate };
+    }
+
     const selectedOwner = existingTenants.find(t => String(t.Id_Pemilik) === String(selectedPemilikId));
 
     setIsSubmitting(true);
     try {
       const payload = {
         Id_Pemilik: Number(selectedPemilikId),
-        Id_Kios: selectedKiosObj?.id,
-        Jenis_Usaha: formKiosTambahan.usaha || 'Perdagangan Umum',
-        Tarif_Bulanan: Number(formKiosTambahan.tarifBulanan) || 750000,
-        Tanggal_Mulai: new Date().toISOString().split('T')[0]
+        No_Kios: finalKiosListTambahan.join(', '),
+        kios_list: finalKiosListTambahan,
+        Jenis_Usaha: Object.values(finalUsahaMap)[0] || formKiosTambahan.usaha || 'Perdagangan Umum',
+        usaha_kios_map: finalUsahaMap,
+        Tarif_Bulanan: Number(formKiosTambahan.tarifBulanan) || Number(Object.values(finalTarifMap)[0]) || 0,
+        tarif_kios_map: finalTarifMap,
+        Tanggal_Mulai: formKiosTambahan.tanggalMulai || getTodayStr(),
+        Jatuh_Tempo: formKiosTambahan.jatuhTempo || getDefaultJatuhTempo(formKiosTambahan.tanggalMulai || getTodayStr())
       };
 
       await httpClient.post('/api/v1/admin/sewa', payload);
-      addToast(`Kios ${formKiosTambahan.kios} berhasil ditambahkan ke kepemilikan ${selectedOwner?.Nama || 'tenant'}!`, 'success');
+      addToast(`Kios ${finalKiosListTambahan.join(', ')} berhasil ditambahkan ke kepemilikan ${selectedOwner?.Nama || 'tenant'}!`, 'success');
       setIsDrawerOpen(false);
-      setFormKiosTambahan({ kios: '', usaha: '', tarifBulanan: '750000' });
+      setFormKiosTambahan({ kios: '', usaha: '', usahaPerKios: {}, tarifBulanan: '', tarifPerKios: {}, tanggalMulai: getTodayStr(), jatuhTempo: getDefaultJatuhTempo(getTodayStr()) });
+      setSelectedKiosListTambahan([]);
       setSelectedPemilikId('');
       fetchKiosData();
       fetchExistingTenants();
     } catch (err) {
-      console.error('Error assigning extra kiosk:', err);
+      console.error('Error assigning extra kiosks:', err);
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal menambahkan unit kios.';
       addToast(errMsg, 'error');
     } finally {
@@ -333,11 +487,8 @@ function KetersediaanKios() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-            Manajemen Ketersediaan Kios
+            Ketersediaan Kios
           </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-            Pantau status okupansi kios Plaza Kebun Sayur dan daftarkan tenant baru secara real-time.
-          </p>
         </div>
 
         <Button
@@ -346,7 +497,7 @@ function KetersediaanKios() {
           className="gap-2 self-start sm:self-auto shadow-md"
         >
           <Icon icon="heroicons:user-plus-20-solid" className="size-5" />
-          <span>Daftarkan Tenant Baru</span>
+          <span>Tambah Penyewa</span>
         </Button>
       </div>
 
@@ -478,12 +629,9 @@ function KetersediaanKios() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            setSelectedKios(kios);
-                            setIsDetailOpen(true);
-                          }}
+                          onClick={() => navigate(`/admin/kios/${kios.noKios}`)}
                           aria-label={`Lihat detail administrasi kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1 shadow-2xs px-2.5"
+                          className="h-8 text-xs font-bold gap-1 shadow-2xs px-2.5 cursor-pointer"
                         >
                           <Icon icon="heroicons:information-circle-20-solid" className="size-3.5" />
                           <span>Detail</span>
@@ -493,7 +641,7 @@ function KetersediaanKios() {
                           size="sm"
                           onClick={() => handleAkhiriSewa(kios)}
                           aria-label={`Akhiri masa sewa kios ${kios.noKios} (${kios.penyewa})`}
-                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20 shadow-2xs px-2.5"
+                          className="h-8 text-xs font-bold gap-1 bg-red-50 text-red hover:bg-red-100 border border-red/20 shadow-2xs px-2.5 cursor-pointer"
                         >
                           <Icon icon="heroicons:stop-circle-20-solid" className="size-3.5" />
                           <span>Akhiri</span>
@@ -524,16 +672,17 @@ function KetersediaanKios() {
 
       <Modal
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={handleRequestCloseRegistration}
+        disableBackdropClick={true}
         title={modePendaftaran === 'baru' ? "Form Pendaftaran Tenant Baru" : "Tambah Unit Kios ke Tenant Terdaftar"}
-        size="xl"
+        size="2xl"
         footer={
           <div className="flex gap-3 w-full">
             <Button
               type="button"
               variant="secondary"
               fullWidth
-              onClick={() => setIsDrawerOpen(false)}
+              onClick={handleRequestCloseRegistration}
             >
               Batal
             </Button>
@@ -546,7 +695,7 @@ function KetersediaanKios() {
             >
               {isSubmitting 
                 ? (modePendaftaran === 'baru' ? 'Mendaftarkan...' : 'Menambahkan...') 
-                : (modePendaftaran === 'baru' ? 'Daftarkan Tenant Baru' : 'Tambahkan Kios ke Tenant')}
+                : (modePendaftaran === 'baru' ? 'Daftarkan Tenant' : 'Tambahkan Kios')}
             </Button>
           </div>
         }
@@ -749,29 +898,206 @@ function KetersediaanKios() {
               )}
             </div>
 
-            <FormField label="Jenis Usaha" id="tambah-tenant-usaha">
-              <input 
-                type="text" 
-                placeholder="Contoh: Kerajinan, Fashion, Sembako" 
-                value={formTenant.usaha} 
-                onChange={(e) => setFormTenant(prev => ({ ...prev, usaha: e.target.value }))} 
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-              />
-            </FormField>
+            {/* PENGATURAN KIOS & RINCIAN TARIF (DINAMIS UNTUK SINGLE & MULTI-KIOS) */}
+            {selectedKiosList.length > 1 ? (
+              <div className="flex flex-col gap-2.5 p-3.5 bg-mono-50/90 rounded-xl border border-border/90">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xs font-extrabold text-text uppercase tracking-wider">
+                    Rincian per Kios ({selectedKiosList.length} Unit) <span className="text-red">*</span>
+                  </span>
+                  {(formTenant.tarifPerKios[selectedKiosList[0]] || formTenant.usahaPerKios?.[selectedKiosList[0]]) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstRate = formTenant.tarifPerKios[selectedKiosList[0]] || formTenant.tarifBulanan;
+                        const firstUsaha = formTenant.usahaPerKios?.[selectedKiosList[0]] || formTenant.usaha;
+                        const syncedRate = {};
+                        const syncedUsaha = {};
+                        selectedKiosList.forEach(k => {
+                          if (firstRate) syncedRate[k] = firstRate;
+                          if (firstUsaha) syncedUsaha[k] = firstUsaha;
+                        });
+                        setFormTenant(prev => ({
+                          ...prev,
+                          tarifPerKios: syncedRate,
+                          tarifBulanan: firstRate || prev.tarifBulanan,
+                          usahaPerKios: syncedUsaha,
+                          usaha: firstUsaha || prev.usaha
+                        }));
+                        addToast('Jenis usaha & tarif kios pertama berhasil disamakan ke semua unit!', 'info');
+                      }}
+                      className="text-2xs font-bold text-red hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Icon icon="heroicons:bolt-20-solid" className="size-3 text-red" />
+                      <span>Samakan ke Semua</span>
+                    </button>
+                  )}
+                </div>
 
-            <FormField label="Nominal Tagihan per Bulan per Kios (Rp)" id="tambah-tenant-tarif" required hint="Nominal sewa rutin bulanan yang akan ditagihkan untuk tiap kios">
-              <input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="Contoh: 750.000" 
-                value={formTenant.tarifBulanan ? Number(formTenant.tarifBulanan).toLocaleString('id-ID') : ''} 
-                onChange={(e) => {
-                  const cleanDigits = e.target.value.replace(/\D/g, '');
-                  setFormTenant(prev => ({ ...prev, tarifBulanan: cleanDigits }));
-                }} 
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
-              />
-            </FormField>
+                <div className="flex flex-col gap-2">
+                  {selectedKiosList.map((kNo) => {
+                    const kObj = dataKios.find(item => item.noKios === kNo);
+                    const currentRate = formTenant.tarifPerKios[kNo] || '';
+                    const currentUsaha = formTenant.usahaPerKios?.[kNo] || '';
+                    return (
+                      <div key={kNo} className="p-2.5 bg-white rounded-lg border border-border flex flex-col gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-text bg-mono-100 px-2 py-0.5 rounded border border-border/80">
+                            Kios {kNo}
+                          </span>
+                          <span className="text-2xs text-text-3 font-semibold">
+                            {kObj?.lantai || 'Lantai 1'} {kObj?.ukuran ? `• ${kObj.ukuran}` : ''}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-2xs font-bold text-text-2 block mb-1">
+                              Jenis Usaha <span className="text-red">*</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              placeholder="Fashion, Kuliner, dll" 
+                              value={currentUsaha} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormTenant(prev => ({
+                                  ...prev,
+                                  usahaPerKios: {
+                                    ...(prev.usahaPerKios || {}),
+                                    [kNo]: val
+                                  }
+                                }));
+                              }} 
+                              className="w-full h-8.5 rounded-md border border-border bg-warm-gray/30 px-2.5 text-xs focus:bg-white focus:border-red transition-colors" 
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-2xs font-bold text-text-2 block mb-1">
+                              Tarif / Bulan (Rp) <span className="text-red">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-2xs font-bold text-text-3">
+                                Rp
+                              </span>
+                              <input 
+                                type="text" 
+                                inputMode="numeric"
+                                placeholder="750.000"
+                                value={currentRate ? Number(currentRate).toLocaleString('id-ID') : ''}
+                                onChange={(e) => {
+                                  const cleanDigits = e.target.value.replace(/\D/g, '');
+                                  setFormTenant(prev => ({
+                                    ...prev,
+                                    tarifPerKios: {
+                                      ...prev.tarifPerKios,
+                                      [kNo]: cleanDigits
+                                    }
+                                  }));
+                                }}
+                                className="w-full h-8.5 rounded-md border border-border bg-warm-gray/30 pl-7 pr-2.5 text-xs font-bold font-tabular-nums focus:bg-white focus:border-red transition-colors text-end"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* TOTAL BILLING SUMMARY */}
+                {(() => {
+                  const totalBulan = selectedKiosList.reduce((acc, kNo) => {
+                    return acc + (Number(formTenant.tarifPerKios[kNo]) || 0);
+                  }, 0);
+                  return (
+                    <div className="px-3 py-2 bg-emerald-50 border border-emerald-200/80 rounded-lg flex items-center justify-between text-xs">
+                      <span className="font-bold text-emerald-950">Total Tagihan Bulanan:</span>
+                      <span className="font-extrabold text-emerald-700 font-tabular-nums text-sm">
+                        Rp {totalBulan.toLocaleString('id-ID')} <span className="text-2xs font-semibold text-emerald-800">/ bulan</span>
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {fieldError?.field === 'usaha' && (
+                  <span className="text-2xs font-bold text-red">{fieldError.message}</span>
+                )}
+                {fieldError?.field === 'tarifBulanan' && (
+                  <span className="text-2xs font-bold text-red">{fieldError.message}</span>
+                )}
+              </div>
+            ) : (
+              <>
+                <FormField label="Jenis Usaha" id="tambah-tenant-usaha" required error={fieldError?.field === 'usaha' ? fieldError.message : undefined}>
+                  <input 
+                    type="text" 
+                    placeholder="Contoh: Kerajinan, Fashion, Sembako" 
+                    value={formTenant.usaha} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormTenant(prev => ({ 
+                        ...prev, 
+                        usaha: val,
+                        usahaPerKios: selectedKiosList[0] ? { [selectedKiosList[0]]: val } : {}
+                      }));
+                    }} 
+                    className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                  />
+                </FormField>
+
+                <FormField 
+                  label="Nominal Tagihan per Bulan (Rp)" 
+                  id="tambah-tenant-tarif" 
+                  required 
+                  error={fieldError?.field === 'tarifBulanan' ? fieldError.message : undefined}
+                >
+                  <input 
+                    type="text" 
+                    inputMode="numeric"
+                    placeholder="Contoh: 750.000" 
+                    value={formTenant.tarifBulanan ? Number(formTenant.tarifBulanan).toLocaleString('id-ID') : ''} 
+                    onChange={(e) => {
+                      const cleanDigits = e.target.value.replace(/\D/g, '');
+                      setFormTenant(prev => ({ 
+                        ...prev, 
+                        tarifBulanan: cleanDigits,
+                        tarifPerKios: selectedKiosList[0] ? { [selectedKiosList[0]]: cleanDigits } : {}
+                      }));
+                    }} 
+                    className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
+                  />
+                </FormField>
+              </>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <FormField label="Tanggal Mulai Sewa" id="tambah-tenant-tgl-mulai" required hint="Awal periode sewa tenant">
+                <input 
+                  type="date" 
+                  value={formTenant.tanggalMulai} 
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setFormTenant(prev => ({
+                      ...prev,
+                      tanggalMulai: newDate,
+                      jatuhTempo: getDefaultJatuhTempo(newDate)
+                    }));
+                  }} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                />
+              </FormField>
+
+              <FormField label="Jatuh Tempo Tagihan Pertama" id="tambah-tenant-jatuh-tempo" required hint="Default tanggal 12 pada bulan sewa">
+                <input 
+                  type="date" 
+                  value={formTenant.jatuhTempo} 
+                  onChange={(e) => setFormTenant(prev => ({ ...prev, jatuhTempo: e.target.value }))} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                />
+              </FormField>
+            </div>
           </form>
         ) : (
           /* MODE 2: TAMBAH KIOS UNTUK PENYEWA TERDAFTAR */
@@ -964,13 +1290,27 @@ function KetersediaanKios() {
               )}
             </div>
 
-            <FormField label="Pilih Unit Kios Kosong Tambahan" id="pilih-kios-tambahan" required error={fieldError?.field === 'kiosTambahan' ? fieldError.message : undefined}>
+            {/* PILIHAN KIOS DENGAN DUKUNGAN MULTI-KIOS */}
+            <div className="flex flex-col gap-2 p-3.5 bg-mono-50/70 rounded-xl border border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
+                  <Icon icon="heroicons:building-storefront-20-solid" className="size-4 text-blue-600" />
+                  <span>Pilih Unit Kios Kosong ({selectedKiosListTambahan.length > 0 ? selectedKiosListTambahan.length : (formKiosTambahan.kios ? 1 : 0)} Unit Terpilih)</span>
+                </label>
+              </div>
+
               <select
                 value={formKiosTambahan.kios}
-                onChange={(e) => setFormKiosTambahan(prev => ({ ...prev, kios: e.target.value }))}
-                className="w-full h-11 rounded-md border border-border bg-white pl-3.5 pr-9 text-base font-bold font-tabular-nums text-text focus:border-red cursor-pointer"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormKiosTambahan(prev => ({ ...prev, kios: val }));
+                  if (val && !selectedKiosListTambahan.includes(val)) {
+                    setSelectedKiosListTambahan(prev => [...prev, val]);
+                  }
+                }}
+                className="w-full h-11 rounded-md border border-border bg-white pl-3.5 pr-9 text-sm font-bold font-tabular-nums text-text focus:border-blue-600 cursor-pointer"
               >
-                <option value="">-- Pilih Unit Kios Kosong --</option>
+                <option value="">-- Tambah / Pilih Kios Kosong --</option>
                 {dataKios
                   .filter(k => k.status === 'Tersedia' || k.status === 'Kosong')
                   .map((k) => (
@@ -979,31 +1319,238 @@ function KetersediaanKios() {
                     </option>
                   ))}
               </select>
-            </FormField>
 
-            <FormField label="Jenis Usaha untuk Kios Baru Ini" id="tambah-usaha-tambahan">
-              <input 
-                type="text" 
-                placeholder="Contoh: Cabang Pakaian, Gudang Stok, Aksesoris" 
-                value={formKiosTambahan.usaha} 
-                onChange={(e) => setFormKiosTambahan(prev => ({ ...prev, usaha: e.target.value }))} 
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
-              />
-            </FormField>
+              {/* CHIP UNIT KIOS TERPILIH (MULTI-KIOS) */}
+              {selectedKiosListTambahan.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1.5">
+                  {selectedKiosListTambahan.map((kNo) => (
+                    <span 
+                      key={kNo} 
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white text-xs font-extrabold rounded-lg shadow-xs font-tabular-nums"
+                    >
+                      <span>Kios {kNo}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = selectedKiosListTambahan.filter(item => item !== kNo);
+                          setSelectedKiosListTambahan(updated);
+                          if (formKiosTambahan.kios === kNo) {
+                            setFormKiosTambahan(prev => ({ ...prev, kios: updated[0] || '' }));
+                          }
+                        }}
+                        className="hover:bg-blue-700 rounded-full p-0.5"
+                      >
+                        <Icon icon="heroicons:x-mark-20-solid" className="size-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {fieldError?.field === 'kiosTambahan' && (
+                <span className="text-2xs font-bold text-red mt-1">{fieldError.message}</span>
+              )}
+            </div>
 
-            <FormField label="Nominal Tagihan per Bulan (Rp)" id="tambah-tarif-tambahan" required hint="Tarif sewa bulanan untuk unit kios tambahan ini">
-              <input 
-                type="text" 
-                inputMode="numeric"
-                placeholder="Contoh: 750.000" 
-                value={formKiosTambahan.tarifBulanan ? Number(formKiosTambahan.tarifBulanan).toLocaleString('id-ID') : ''} 
-                onChange={(e) => {
-                  const cleanDigits = e.target.value.replace(/\D/g, '');
-                  setFormKiosTambahan(prev => ({ ...prev, tarifBulanan: cleanDigits }));
-                }} 
-                className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
-              />
-            </FormField>
+            {/* PENGATURAN KIOS & RINCIAN TARIF TAMBAHAN (DINAMIS UNTUK SINGLE & MULTI-KIOS) */}
+            {selectedKiosListTambahan.length > 1 ? (
+              <div className="flex flex-col gap-2.5 p-3.5 bg-mono-50/90 rounded-xl border border-border/90">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xs font-extrabold text-text uppercase tracking-wider">
+                    Rincian Kios Tambahan ({selectedKiosListTambahan.length} Unit) <span className="text-red">*</span>
+                  </span>
+                  {(formKiosTambahan.tarifPerKios?.[selectedKiosListTambahan[0]] || formKiosTambahan.usahaPerKios?.[selectedKiosListTambahan[0]]) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstRate = formKiosTambahan.tarifPerKios?.[selectedKiosListTambahan[0]] || formKiosTambahan.tarifBulanan;
+                        const firstUsaha = formKiosTambahan.usahaPerKios?.[selectedKiosListTambahan[0]] || formKiosTambahan.usaha;
+                        const syncedRate = {};
+                        const syncedUsaha = {};
+                        selectedKiosListTambahan.forEach(k => {
+                          if (firstRate) syncedRate[k] = firstRate;
+                          if (firstUsaha) syncedUsaha[k] = firstUsaha;
+                        });
+                        setFormKiosTambahan(prev => ({
+                          ...prev,
+                          tarifPerKios: syncedRate,
+                          tarifBulanan: firstRate || prev.tarifBulanan,
+                          usahaPerKios: syncedUsaha,
+                          usaha: firstUsaha || prev.usaha
+                        }));
+                        addToast('Jenis usaha & tarif kios pertama berhasil disamakan ke semua kios tambahan!', 'info');
+                      }}
+                      className="text-2xs font-bold text-red hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Icon icon="heroicons:bolt-20-solid" className="size-3 text-red" />
+                      <span>Samakan ke Semua</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {selectedKiosListTambahan.map((kNo) => {
+                    const kObj = dataKios.find(item => item.noKios === kNo);
+                    const currentRate = formKiosTambahan.tarifPerKios?.[kNo] || '';
+                    const currentUsaha = formKiosTambahan.usahaPerKios?.[kNo] || '';
+                    return (
+                      <div key={kNo} className="p-2.5 bg-white rounded-lg border border-border flex flex-col gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-text bg-mono-100 px-2 py-0.5 rounded border border-border/80">
+                            Kios {kNo}
+                          </span>
+                          <span className="text-2xs text-text-3 font-semibold">
+                            {kObj?.lantai || 'Lantai 1'} {kObj?.ukuran ? `• ${kObj.ukuran}` : ''}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-2xs font-bold text-text-2 block mb-1">
+                              Jenis Usaha <span className="text-red">*</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              placeholder="Fashion, Kuliner, dll" 
+                              value={currentUsaha} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormKiosTambahan(prev => ({
+                                  ...prev,
+                                  usahaPerKios: {
+                                    ...(prev.usahaPerKios || {}),
+                                    [kNo]: val
+                                  }
+                                }));
+                              }} 
+                              className="w-full h-8.5 rounded-md border border-border bg-warm-gray/30 px-2.5 text-xs focus:bg-white focus:border-red transition-colors" 
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-2xs font-bold text-text-2 block mb-1">
+                              Tarif / Bulan (Rp) <span className="text-red">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-2xs font-bold text-text-3">
+                                Rp
+                              </span>
+                              <input 
+                                type="text" 
+                                inputMode="numeric"
+                                placeholder="750.000"
+                                value={currentRate ? Number(currentRate).toLocaleString('id-ID') : ''}
+                                onChange={(e) => {
+                                  const cleanDigits = e.target.value.replace(/\D/g, '');
+                                  setFormKiosTambahan(prev => ({
+                                    ...prev,
+                                    tarifPerKios: {
+                                      ...(prev.tarifPerKios || {}),
+                                      [kNo]: cleanDigits
+                                    }
+                                  }));
+                                }}
+                                className="w-full h-8.5 rounded-md border border-border bg-warm-gray/30 pl-7 pr-2.5 text-xs font-bold font-tabular-nums focus:bg-white focus:border-red transition-colors text-end"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* TOTAL BILLING SUMMARY */}
+                {(() => {
+                  const totalBulan = selectedKiosListTambahan.reduce((acc, kNo) => {
+                    return acc + (Number(formKiosTambahan.tarifPerKios?.[kNo]) || 0);
+                  }, 0);
+                  return (
+                    <div className="px-3 py-2 bg-emerald-50 border border-emerald-200/80 rounded-lg flex items-center justify-between text-xs">
+                      <span className="font-bold text-emerald-950">Total Tagihan Bulanan:</span>
+                      <span className="font-extrabold text-emerald-700 font-tabular-nums text-sm">
+                        Rp {totalBulan.toLocaleString('id-ID')} <span className="text-2xs font-semibold text-emerald-800">/ bulan</span>
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {fieldError?.field === 'usahaTambahan' && (
+                  <span className="text-2xs font-bold text-red">{fieldError.message}</span>
+                )}
+                {fieldError?.field === 'tarifTambahan' && (
+                  <span className="text-2xs font-bold text-red">{fieldError.message}</span>
+                )}
+              </div>
+            ) : (
+              <>
+                <FormField label="Jenis Usaha untuk Kios Baru Ini" id="tambah-usaha-tambahan" required error={fieldError?.field === 'usahaTambahan' ? fieldError.message : undefined}>
+                  <input 
+                    type="text" 
+                    placeholder="Contoh: Cabang Pakaian, Gudang Stok, Aksesoris" 
+                    value={formKiosTambahan.usaha} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormKiosTambahan(prev => ({ 
+                        ...prev, 
+                        usaha: val,
+                        usahaPerKios: selectedKiosListTambahan[0] ? { [selectedKiosListTambahan[0]]: val } : {}
+                      }));
+                    }} 
+                    className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                  />
+                </FormField>
+
+                <FormField 
+                  label="Nominal Tagihan per Bulan (Rp)" 
+                  id="tambah-tarif-tambahan" 
+                  required 
+                  error={fieldError?.field === 'tarifTambahan' ? fieldError.message : undefined}
+                >
+                  <input 
+                    type="text" 
+                    inputMode="numeric"
+                    placeholder="Contoh: 750.000" 
+                    value={formKiosTambahan.tarifBulanan ? Number(formKiosTambahan.tarifBulanan).toLocaleString('id-ID') : ''} 
+                    onChange={(e) => {
+                      const cleanDigits = e.target.value.replace(/\D/g, '');
+                      setFormKiosTambahan(prev => ({ 
+                        ...prev, 
+                        tarifBulanan: cleanDigits,
+                        tarifPerKios: selectedKiosListTambahan[0] ? { [selectedKiosListTambahan[0]]: cleanDigits } : {}
+                      }));
+                    }} 
+                    className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base font-bold font-tabular-nums focus:bg-white transition-colors" 
+                  />
+                </FormField>
+              </>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <FormField label="Tanggal Mulai Sewa" id="tambah-kios-tgl-mulai" required hint="Awal periode sewa unit kios ini">
+                <input 
+                  type="date" 
+                  value={formKiosTambahan.tanggalMulai} 
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setFormKiosTambahan(prev => ({
+                      ...prev,
+                      tanggalMulai: newDate,
+                      jatuhTempo: getDefaultJatuhTempo(newDate)
+                    }));
+                  }} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                />
+              </FormField>
+
+              <FormField label="Jatuh Tempo Tagihan Pertama" id="tambah-kios-jatuh-tempo" required hint="Default tanggal 12 pada bulan sewa">
+                <input 
+                  type="date" 
+                  value={formKiosTambahan.jatuhTempo} 
+                  onChange={(e) => setFormKiosTambahan(prev => ({ ...prev, jatuhTempo: e.target.value }))} 
+                  className="w-full h-11 rounded-md border border-border bg-warm-gray/50 px-3.5 text-base focus:bg-white transition-colors" 
+                />
+              </FormField>
+            </div>
           </form>
         )}
       </Modal>
@@ -1114,6 +1661,40 @@ function KetersediaanKios() {
             </p>
           </div>
         )}
+      </Modal>
+      {/* MODAL KONFIRMASI BATAL / KELUAR FORM PENDAFTARAN */}
+      <Modal
+        isOpen={isConfirmExitOpen}
+        onClose={() => setIsConfirmExitOpen(false)}
+        title="Tinggalkan Formulir?"
+        size="sm"
+        disableBackdropClick={true}
+        footer={
+          <div className="flex gap-2.5 w-full">
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={() => setIsConfirmExitOpen(false)}
+              className="font-bold whitespace-nowrap"
+            >
+              Lanjutkan
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              fullWidth
+              onClick={handleForceCloseRegistration}
+              className="font-bold whitespace-nowrap"
+            >
+              Ya, Keluar
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-text-2 leading-relaxed font-sans py-1">
+          Data formulir yang sudah Anda ketik belum disimpan. Yakin ingin keluar?
+        </p>
       </Modal>
     </div>
   );

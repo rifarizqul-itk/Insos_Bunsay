@@ -210,11 +210,8 @@ function DashboardAdmin() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-            Dashboard Pengelola Plaza
+            Dashboard Pengelola
           </h1>
-          <p className="text-text-2 text-xs sm:text-sm font-medium mt-1 text-pretty">
-            Ringkasan data pembayaran sewa, antrean verifikasi bukti transfer, dan administrasi kios.
-          </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -238,16 +235,16 @@ function DashboardAdmin() {
           label="Menunggu Verifikasi"
           value={verifikasiCount}
           color={verifikasiCount > 0 ? "amber" : "text"}
-          subtext="Perlu konfirmasi loket admin"
+          subtext="Perlu konfirmasi loket"
           trend={verifikasiCount > 0 ? "action" : "optimal"}
-          trendLabel={verifikasiCount > 0 ? `${verifikasiCount} Antrean` : "Semua Beres"}
+          trendLabel={verifikasiCount > 0 ? `${verifikasiCount} Antrean` : "Selesai"}
           icon={<Icon icon="heroicons:clock-20-solid" className="size-5.5" />}
         />
         <StatCard
           label="Belum Bayar Bulan Ini"
           value={belumBayarCount}
           color={belumBayarCount > 0 ? "red" : "green"}
-          subtext="Siklus sewa bulan berjalan"
+          subtext="Siklus sewa berjalan"
           trend={belumBayarCount > 0 ? "warning" : "positive"}
           trendLabel={belumBayarCount > 0 ? "Perlu Follow-up" : "100% Lunas"}
           icon={<Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5.5" />}
@@ -262,14 +259,9 @@ function DashboardAdmin() {
             <div className="size-10 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0 shadow-2xs">
               <Icon icon="heroicons:table-cells-20-solid" className="size-5" />
             </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
-                Daftar Administrasi Kios
-              </h2>
-              <p className="text-xs sm:text-sm text-text-3 font-medium">
-                Status pembayaran dan kewajiban sewa seluruh unit kios pada siklus berjalan.
-              </p>
-            </div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight text-balance">
+              Daftar Administrasi Kios
+            </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -316,8 +308,8 @@ function DashboardAdmin() {
           <div className="p-8">
             <EmptyState
               icon="heroicons:user-group-20-solid"
-              title="Tenant Tidak Ditemukan"
-              description="Tidak ada data tenant yang cocok dengan kriteria pencarian atau filter status."
+              title="Data tenant tidak ditemukan"
+              description="Tidak ada tenant yang sesuai dengan kriteria pencarian atau filter status."
             />
           </div>
         ) : (

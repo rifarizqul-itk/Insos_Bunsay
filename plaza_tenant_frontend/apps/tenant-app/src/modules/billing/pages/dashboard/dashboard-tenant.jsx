@@ -221,7 +221,7 @@ function DashboardTenant() {
             </span>
           </div>
           <p className="text-text-2 text-xs sm:text-sm font-medium mt-1">
-            Selamat datang di Portal Layanan Tenant Plaza Kebun Sayur Balikpapan.
+            Portal layanan sewa dan tagihan kios Anda.
           </p>
         </div>
 
@@ -240,7 +240,7 @@ function DashboardTenant() {
             </div>
             <div>
               <span className="text-xs font-extrabold text-red block uppercase tracking-wider">
-                Kewajiban Sewa Menanti Pembayaran
+                Tagihan Perlu Dibayar
               </span>
               <p className="text-xs sm:text-sm text-text font-medium mt-0.5 text-pretty">
                 Selesaikan tagihan sewa periode <strong className="text-text font-bold">{formatMonthYearText(tagihanBerjalan?.periode)}</strong> sebelum jatuh tempo.
@@ -266,10 +266,10 @@ function DashboardTenant() {
             </div>
             <div>
               <span className="text-xs font-extrabold text-amber-900 block uppercase tracking-wider">
-                Menunggu Verifikasi Pembayaran
+                Pembayaran Sedang Diverifikasi
               </span>
               <p className="text-xs sm:text-sm text-amber-800 font-medium mt-0.5 text-pretty">
-                Bukti transfer sedang diperiksa oleh kantor pengelola Plaza Kebun Sayur.
+                Bukti transfer sedang diperiksa oleh kantor pengelola.
               </p>
             </div>
           </div>
@@ -280,7 +280,7 @@ function DashboardTenant() {
             onClick={() => navigate('/tenant/histori')}
             className="w-full sm:w-auto h-10 px-4 font-extrabold gap-2 shrink-0 shadow-2xs bg-amber-100/80 hover:bg-amber-100 text-amber-900 border-amber-300 text-xs sm:text-sm"
           >
-            <span>Cek Status Verifikasi</span>
+            <span>Lihat Status</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
           </Button>
         </div>
@@ -292,10 +292,10 @@ function DashboardTenant() {
             </div>
             <div>
               <strong className="text-xs sm:text-sm text-emerald-950 font-extrabold block">
-                Semua Kewajiban Sewa Kios Lunas
+                Semua Tagihan Lunas
               </strong>
               <p className="text-2xs sm:text-xs text-emerald-800 font-medium text-pretty mt-0.5">
-                Terima kasih telah menyelesaikan pembayaran tepat waktu untuk periode {formatMonthYearText(tagihanBerjalan?.periode)}.
+                Terima kasih telah menyelesaikan pembayaran periode {formatMonthYearText(tagihanBerjalan?.periode)}.
               </p>
             </div>
           </div>
@@ -373,12 +373,12 @@ function DashboardTenant() {
         </Card>
       </div>
 
-      {/* 4. MENU & LAYANAN CEPAT (Bento Grid) */}
+      {/* 4. MENU CEPAT (Bento Grid) */}
       <div className="flex flex-col gap-3.5">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
             <Icon icon="heroicons:squares-2x2-20-solid" className="size-4 text-red" />
-            <span>Menu &amp; Layanan Cepat</span>
+            <span>Menu Cepat</span>
           </span>
         </div>
 
@@ -399,7 +399,7 @@ function DashboardTenant() {
                 Bayar Sewa
               </strong>
               <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate">
-                Transfer &amp; Otomatis
+                Transfer &amp; Online
               </span>
             </div>
           </div>
@@ -438,7 +438,7 @@ function DashboardTenant() {
             </div>
             <div className="flex flex-col">
               <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-indigo-700 transition-colors">
-                Histori &amp; Resi
+                Riwayat Transaksi
               </strong>
               <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate">
                 Bukti &amp; Kuitansi
@@ -459,7 +459,7 @@ function DashboardTenant() {
             </div>
             <div className="flex flex-col">
               <strong className="text-sm font-extrabold text-text tracking-tight group-hover:text-emerald-800 transition-colors">
-                Kios &amp; Legalitas
+                Kios &amp; Akun
               </strong>
               <span className="text-2xs text-text-3 font-semibold mt-0.5 truncate font-tabular-nums">
                 Kios {kios}
@@ -474,14 +474,14 @@ function DashboardTenant() {
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-extrabold text-text uppercase tracking-wider flex items-center gap-1.5">
             <Icon icon="heroicons:clock-20-solid" className="size-4 text-indigo-600" />
-            <span>Aktivitas Transaksi Terakhir</span>
+            <span>Transaksi Terakhir</span>
           </span>
           <button
             type="button"
             onClick={() => navigate('/tenant/histori')}
             className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>Lihat Seluruh Histori</span>
+            <span>Lihat Semua</span>
             <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5" />
           </button>
         </div>
@@ -490,7 +490,7 @@ function DashboardTenant() {
           {recentPayments.length === 0 ? (
             <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
               <Icon icon="heroicons:receipt-percent-20-solid" className="size-10 text-mono-300" />
-              <span className="text-xs font-bold text-text-2">Belum ada riwayat transaksi pembayaran tercatat.</span>
+              <span className="text-xs font-bold text-text-2">Belum ada transaksi tercatat.</span>
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-border/60">
@@ -545,14 +545,9 @@ function DashboardTenant() {
               <div className="size-9 rounded-xl bg-red-50 text-red flex items-center justify-center font-bold">
                 <Icon icon="heroicons:building-storefront-20-solid" className="size-5" />
               </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight">
-                  Rincian Tagihan per Unit Kios
-                </h2>
-                <p className="text-xs sm:text-sm text-text-3 font-medium">
-                  Informasi rincian sewa aktif masing-masing unit kios yang Anda kelola.
-                </p>
-              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-text tracking-tight">
+                Rincian Tagihan per Unit Kios
+              </h2>
             </div>
             <span className="text-xs font-bold text-text-2 bg-mono-100 px-3 py-1 rounded-full border border-border">
               {kiosBreakdown.length} Unit Kios

@@ -230,11 +230,8 @@ function AkunTenant() {
     <div data-slot="akun-tenant" className="page-fade-in flex flex-col gap-6 sm:gap-7 font-sans max-w-6xl mx-auto w-full">
       <div>
         <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Pengaturan Akun &amp; Administrasi Kios
+          Pengaturan Akun &amp; Kios
         </h1>
-        <p className="text-text-2 text-xs sm:text-sm font-medium mt-1 text-pretty">
-          Rincian administrasi kios, profil pemilik, dokumen legalitas resmi, dan keamanan kata sandi.
-        </p>
       </div>
 
       <div className="akun-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -451,7 +448,7 @@ function AkunTenant() {
                   <Icon icon="heroicons:key-20-solid" className="size-5" />
                 </div>
                 <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
-                  Reset Kata Sandi
+                  Ubah Kata Sandi
                 </h2>
               </div>
               
@@ -537,7 +534,7 @@ function AkunTenant() {
                 disabled={isChangingPassword}
                 className="mt-1 h-11 text-sm font-extrabold shadow-sm"
               >
-                {isChangingPassword ? 'Memperbarui...' : 'Perbarui Kata Sandi'}
+                {isChangingPassword ? 'Menyimpan...' : 'Simpan Kata Sandi'}
               </Button>
             </Card>
           </form>
@@ -547,17 +544,17 @@ function AkunTenant() {
               Keluar Akun
             </h2>
             <p className="text-sm text-text-2 font-medium leading-relaxed text-pretty">
-              Keluar dari akun tenant untuk mengakhiri sesi aktif Anda pada perangkat ini.
+              Akhiri sesi masuk Anda di perangkat ini.
             </p>
             <Button
               type="button"
               variant="danger"
               fullWidth
               className="h-11 text-sm font-bold gap-2"
-              onClick={() => { logout(); addToast('Anda telah logout.', 'info'); }}
+              onClick={() => { logout(); addToast('Berhasil keluar', 'info'); }}
             >
               <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" width="18" height="18" />
-              <span>Keluar dari Akun</span>
+              <span>Keluar</span>
             </Button>
           </Card>
         </div>

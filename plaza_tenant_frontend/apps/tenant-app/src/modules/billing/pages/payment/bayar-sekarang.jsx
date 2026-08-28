@@ -340,14 +340,11 @@ function BayarSekarang() {
 
   return (
     <div data-slot="bayar-sekarang" className="page-fade-in flex flex-col gap-6 font-sans max-w-6xl mx-auto w-full">
-      {/* Header Sederhana & Ramah */}
+      {/* Header Halaman */}
       <div className="flex flex-col gap-1 border-b border-border/70 pb-4">
         <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
           Pembayaran Sewa Kios
         </h1>
-        <p className="text-text-2 text-xs sm:text-sm font-medium">
-          Pilih metode dan selesaikan pembayaran sewa kios Anda.
-        </p>
       </div>
 
       {/* Main Content */}
@@ -362,27 +359,25 @@ function BayarSekarang() {
             <Icon icon="heroicons:check-circle-20-solid" className="size-9" />
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-text tracking-tight mb-2">
-            Semua Tagihan Sewa Sudah Lunas!
+            Semua Tagihan Lunas
           </h2>
           <p className="text-text-2 text-xs sm:text-sm font-medium max-w-sm mb-6 leading-relaxed">
             Tidak ada tagihan sewa kios yang perlu dibayar saat ini. Terima kasih telah membayar tepat waktu.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
             <Button
               variant="primary"
               size="md"
-              fullWidth
               onClick={() => navigate('/tenant/dashboard')}
-              className="font-extrabold shadow-sm bg-emerald-600 hover:bg-emerald-700 h-10 text-xs"
+              className="w-full sm:w-auto font-extrabold shadow-sm bg-emerald-600 hover:bg-emerald-700 h-10 text-xs px-6 whitespace-nowrap"
             >
-              Ke Dashboard
+              Buka Dashboard
             </Button>
             <Button
               variant="secondary"
               size="md"
-              fullWidth
               onClick={() => navigate('/tenant/histori')}
-              className="font-extrabold h-10 text-xs"
+              className="w-full sm:w-auto font-extrabold h-10 text-xs px-6 whitespace-nowrap"
             >
               Lihat Riwayat
             </Button>
@@ -471,7 +466,7 @@ function BayarSekarang() {
                     )}
                   >
                     <Icon icon="heroicons:qr-code-20-solid" className="size-4 shrink-0" />
-                    <span>Pembayaran Otomatis</span>
+                    <span>Pembayaran Online</span>
                   </button>
                 </div>
               </div>
@@ -498,7 +493,7 @@ function BayarSekarang() {
                       className="gap-1 px-3 py-1.5 text-xs font-bold shadow-2xs border-border hover:border-red hover:text-red shrink-0"
                       onClick={() => {
                         navigator.clipboard.writeText('08115901119');
-                        addToast('Nomor rekening berhasil disalin!', 'success');
+                        addToast('Nomor rekening disalin', 'success');
                       }}
                     >
                       <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
@@ -534,7 +529,7 @@ function BayarSekarang() {
                           <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-4" />
                         </div>
                         <p className="text-xs font-bold text-text">
-                          <span className="text-red hover:underline">Pilih foto bukti</span> atau seret file ke sini
+                          <span className="text-red hover:underline">Pilih foto</span> atau tarik file ke sini
                         </p>
                       </div>
                     ) : (

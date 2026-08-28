@@ -13,20 +13,20 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
       title: 'UTAMA',
       items: [
         { id: 'dashboard', label: 'Dashboard', path: '/tenant/dashboard', icon: 'heroicons:squares-2x2-20-solid' },
-        { id: 'pembayaran', label: 'Bayar Sekarang', path: '/tenant/pembayaran', icon: 'heroicons:credit-card-20-solid' },
+        { id: 'pembayaran', label: 'Bayar Sewa', path: '/tenant/pembayaran', icon: 'heroicons:credit-card-20-solid' },
       ]
     },
     {
-      title: 'TAGIHAN & HISTORI',
+      title: 'TAGIHAN & RIWAYAT',
       items: [
-        { id: 'tagihan', label: 'Tagihan Sewa', path: '/tenant/tagihan', icon: 'heroicons:document-duplicate-20-solid' },
-        { id: 'histori', label: 'Histori Pembayaran', path: '/tenant/histori', icon: 'heroicons:clock-20-solid' },
+        { id: 'tagihan', label: 'Tagihan', path: '/tenant/tagihan', icon: 'heroicons:document-duplicate-20-solid' },
+        { id: 'histori', label: 'Riwayat Transaksi', path: '/tenant/histori', icon: 'heroicons:clock-20-solid' },
       ]
     },
     {
       title: 'PENGATURAN',
       items: [
-        { id: 'akun', label: 'Akun Tenant', path: '/tenant/akun', icon: 'heroicons:user-circle-20-solid' }
+        { id: 'akun', label: 'Akun', path: '/tenant/akun', icon: 'heroicons:user-circle-20-solid' }
       ]
     }
   ];

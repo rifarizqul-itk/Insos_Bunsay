@@ -252,13 +252,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-            Verifikasi Bukti Transfer Bank
+            Verifikasi Bukti Transfer
           </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-            {selectedTenant
-              ? `Menampilkan data bukti transfer manual untuk: ${selectedTenant}`
-              : 'Khusus memproses dan mengonfirmasi bukti transfer bank manual yang diunggah oleh tenant.'}
-          </p>
+          {selectedTenant && (
+            <p className="text-text-2 text-sm font-medium mt-1">
+              Menampilkan bukti transfer untuk: <strong>{selectedTenant}</strong>
+            </p>
+          )}
         </div>
 
         {/* Tab Switcher & Refresh Button */}
@@ -269,7 +269,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             onClick={fetchVerifikasiQueue}
             disabled={isLoading}
             className="text-xs font-bold gap-1.5 h-9 px-3"
-            title="Muat ulang antrean data terbaru"
+            title="Muat ulang data terbaru"
           >
             <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-4", isLoading && "animate-spin text-red")} />
             <span className="hidden sm:inline">Segarkan</span>
@@ -326,8 +326,8 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             <div className="p-8">
               <EmptyState
                 icon="heroicons:document-check-20-solid"
-                title="Antrean Verifikasi Kosong"
-                description={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada antrean transfer manual yang menunggu verifikasi saat ini.'}
+                title="Belum ada antrean verifikasi"
+                description={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada pembayaran yang menunggu verifikasi saat ini.'}
               />
             </div>
           ) : (
@@ -537,10 +537,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                 <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-xl flex flex-col gap-3 text-xs sm:text-sm animate-fade-in">
                   <div className="flex items-center gap-2 font-bold text-emerald-950">
                     <Icon icon="heroicons:check-circle-20-solid" className="size-5 text-emerald-700 shrink-0" />
-                    <span>Konfirmasi Penerimaan Bukti Transfer</span>
+                    <span>Setujui Pembayaran?</span>
                   </div>
                   <p className="text-text-2 font-medium leading-relaxed">
-                    Tandai pembayaran senilai <strong className="text-text font-bold font-tabular-nums">{previewItem.nominal}</strong> untuk kios <strong className="text-text font-bold font-tabular-nums">{previewItem.kios}</strong> sebagai <strong className="text-emerald-700 font-bold">LUNAS (Diterima)</strong>?
+                    Tandai pembayaran senilai <strong className="text-text font-bold font-tabular-nums">{previewItem.nominal}</strong> untuk kios <strong className="text-text font-bold font-tabular-nums">{previewItem.kios}</strong> sebagai <strong className="text-emerald-700 font-bold">Lunas</strong>?
                   </p>
                   <div className="flex justify-end gap-2 pt-1">
                     <Button
@@ -564,7 +564,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                       ) : (
                         <Icon icon="heroicons:check-20-solid" className="size-4" />
                       )}
-                      <span>Ya, Setujui Lunas</span>
+                      <span>Setujui</span>
                     </Button>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   <div className="flex items-center justify-between font-bold text-red">
                     <span className="flex items-center gap-1.5">
                       <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4.5 text-red shrink-0" />
-                      <span>Alasan Penolakan Bukti Transfer</span>
+                      <span>Alasan Penolakan</span>
                     </span>
                     <span className="text-2xs font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded">Wajib Diisi</span>
                   </div>
@@ -612,7 +612,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                       ) : (
                         <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
                       )}
-                      <span>Tolak Bukti Ini</span>
+                      <span>Tolak</span>
                     </Button>
                   </div>
                 </div>

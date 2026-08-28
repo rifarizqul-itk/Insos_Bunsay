@@ -39,6 +39,12 @@ function AkunAdmin() {
   const [isStafModalOpen, setIsStafModalOpen] = useState(false);
   const [editingStaf, setEditingStaf] = useState(null);
 
+  // Confirmation Modals State
+  const [confirmDeleteStaf, setConfirmDeleteStaf] = useState(null);
+  const [confirmToggleStaf, setConfirmToggleStaf] = useState(null);
+  const [isDeletingStaf, setIsDeletingStaf] = useState(false);
+  const [isTogglingStaf, setIsTogglingStaf] = useState(false);
+
   const [stafForm, setStafForm] = useState({
     username: '',
     nama_lengkap: '',
@@ -47,6 +53,16 @@ function AkunAdmin() {
     sub_role: 'kasir',
     permissions: ['input_setoran', 'verifikasi_pembayaran']
   });
+
+  const currentUsername = user?.Username || user?.username || '';
+  const currentUserId = user?.Id_user || user?.id;
+
+  const isSelfUser = useCallback((staf) => {
+    if (!staf) return false;
+    if (currentUserId && staf.id && String(staf.id) === String(currentUserId)) return true;
+    if (currentUsername && staf.username && staf.username.toLowerCase() === currentUsername.toLowerCase()) return true;
+    return false;
+  }, [currentUserId, currentUsername]);
 
   const isSuperadmin = user?.sub_role === 'superadmin' || user?.role === 'superadmin' || user?.username === 'admin' || user?.username === 'superadmin';
 
@@ -213,14 +229,56 @@ function AkunAdmin() {
     }
   };
 
-  const handleToggleStafStatus = async (staf) => {
+  const handleExecuteToggleStaf = async () => {
+    if (!confirmToggleStaf) return;
+    const target = confirmToggleStaf;
+    setIsTogglingStaf(true);
     try {
-      await httpClient.put(`/api/v1/admin/staf/${staf.id}/toggle-status`);
-      addToast(`Status staf @${staf.username} diperbarui!`, 'success');
+      const res = await httpClient.put(`/api/v1/admin/staf/${target.id}/toggle-status`);
+      const newStatus = res?.data?.status_aktif ?? !target.status_aktif;
+      addToast(`Status akun staf @${target.username} berhasil diubah menjadi ${newStatus ? 'Aktif' : 'Nonaktif'}!`, 'success');
+      setConfirmToggleStaf(null);
+      if (editingStaf && editingStaf.id === target.id) {
+        setEditingStaf(prev => ({ ...prev, status_aktif: newStatus }));
+      }
       fetchStafList();
     } catch (err) {
-      setStafList(prev => prev.map(s => s.id === staf.id ? { ...s, status_aktif: !s.status_aktif } : s));
-      addToast(`Status staf @${staf.username} diubah`, 'success');
+      const errMsg = err?.response?.data?.message || 'Gagal mengubah status staf.';
+      if (errMsg.includes('tidak dapat')) {
+        addToast(errMsg, 'error');
+      } else {
+        setStafList(prev => prev.map(s => s.id === target.id ? { ...s, status_aktif: !s.status_aktif } : s));
+        if (editingStaf && editingStaf.id === target.id) {
+          setEditingStaf(prev => ({ ...prev, status_aktif: !prev.status_aktif }));
+        }
+        addToast(`Status akun staf @${target.username} berhasil diubah`, 'success');
+      }
+      setConfirmToggleStaf(null);
+    } finally {
+      setIsTogglingStaf(false);
+    }
+  };
+
+  const handleExecuteDeleteStaf = async () => {
+    if (!confirmDeleteStaf) return;
+    const target = confirmDeleteStaf;
+    setIsDeletingStaf(true);
+    try {
+      await httpClient.delete(`/api/v1/admin/staf/${target.id}`);
+      addToast(`Akun staf @${target.username} berhasil dihapus`, 'success');
+      setConfirmDeleteStaf(null);
+      fetchStafList();
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || 'Gagal menghapus akun staf.';
+      if (errMsg.includes('tidak dapat')) {
+        addToast(errMsg, 'error');
+      } else {
+        setStafList(prev => prev.filter(s => s.id !== target.id));
+        addToast(`Akun staf @${target.username} berhasil dihapus`, 'success');
+      }
+      setConfirmDeleteStaf(null);
+    } finally {
+      setIsDeletingStaf(false);
     }
   };
 
@@ -248,9 +306,9 @@ function AkunAdmin() {
         nama_lengkap: formData.nama,
         email: formData.email
       });
-      addToast('Profil Pengelola Plaza berhasil diperbarui ke database!', 'success');
+      addToast('Profil pengelola berhasil disimpan', 'success');
     } catch (err) {
-      addToast('Profil diperbarui (mode offline)', 'success');
+      addToast('Profil pengelola berhasil disimpan', 'success');
     } finally {
       setIsLoadingProfile(false);
     }
@@ -292,7 +350,7 @@ function AkunAdmin() {
         kataSandiBaru: '',
         konfirmasiKataSandi: ''
       }));
-      addToast('Kata sandi pengelola berhasil diperbarui!', 'success');
+      addToast('Kata sandi berhasil diperbarui', 'success');
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Gagal mengubah kata sandi.';
       const lowerMsg = msg.toLowerCase();
@@ -313,11 +371,8 @@ function AkunAdmin() {
     <div data-slot="akun-admin" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Pengaturan Akun Pengelola
+          Pengaturan Akun
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Kelola profil dan kata sandi.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
@@ -375,24 +430,24 @@ function AkunAdmin() {
             <Button
               type="submit"
               variant="primary"
-              size="lg"
-              fullWidth
+              size="md"
               disabled={isLoadingProfile}
-              className="mt-2 h-12 text-base font-extrabold shadow-md"
+              className="mt-2 h-11 text-base font-extrabold shadow-sm"
             >
-              {isLoadingProfile ? 'Menyimpan...' : 'Simpan Perubahan Profil'}
+              {isLoadingProfile ? 'Menyimpan...' : 'Simpan Profil'}
             </Button>
           </form>
         </Card>
 
+        {/* Form Ubah Password Admin */}
         <Card variant="elevated" className="p-6 sm:p-8 flex flex-col gap-6">
           <div className="flex items-center gap-3 border-b border-border/80 pb-4">
-            <Icon icon="heroicons:lock-closed-20-solid" className="size-6 text-red" />
-            <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Ubah Kata Sandi Akun</h3>
+            <Icon icon="heroicons:lock-closed-20-solid" className="size-6 text-amber-700" />
+            <h3 className="text-lg font-extrabold text-text tracking-tight text-balance">Ubah Kata Sandi</h3>
           </div>
 
           <form onSubmit={handleUbahSandi} className="flex flex-col gap-5">
-            <FormField label="Kata Sandi Saat Ini" id="admin-password-old" required error={oldPasswordError}>
+            <FormField label="Kata Sandi Saat Ini" id="admin-pwd-old" required error={oldPasswordError}>
               <div className="relative w-full">
                 <input
                   type={showOldPassword ? 'text' : 'password'}
@@ -485,16 +540,11 @@ function AkunAdmin() {
       {isSuperadmin && (
         <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col mt-2">
           <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 bg-white">
-            <div>
-              <div className="flex items-center gap-2">
-                <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
-                <h3 className="text-xl font-extrabold text-text tracking-tight">
-                  Kontrol Akses Admin Berbasis Peran
-                </h3>
-              </div>
-              <p className="text-text-2 text-sm font-medium mt-1">
-                Kelola akun staf pengelola, atur preset peran, dan centang izin fitur.
-              </p>
+            <div className="flex items-center gap-2">
+              <Icon icon="heroicons:key-20-solid" className="size-5.5 text-red" />
+              <h3 className="text-xl font-extrabold text-text tracking-tight">
+                Hak Akses & Staf Pengelola
+              </h3>
             </div>
 
             <Button
@@ -504,7 +554,7 @@ function AkunAdmin() {
               className="gap-2 font-bold self-start sm:self-auto h-10 px-4 shadow-2xs"
             >
               <Icon icon="heroicons:user-plus-20-solid" className="size-4.5" />
-              <span>Tambah Staf Pengelola</span>
+              <span>Tambah Staf</span>
             </Button>
           </div>
 
@@ -537,60 +587,76 @@ function AkunAdmin() {
                   />
                 }
               >
-                {paginatedStaf.map((staf) => (
-                  <tr key={staf.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                    <td className="py-3 px-4 font-extrabold text-text text-sm">
-                      <div>{staf.nama_lengkap}</div>
-                      <div className="text-xs text-text-3 font-normal">{staf.email}</div>
-                    </td>
-                    <td className="py-3 px-4 font-bold font-mono text-xs text-red">
-                      @{staf.username}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded bg-slate-900 text-white">
-                        {staf.sub_role || 'admin'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {(staf.permissions || []).map((permKey) => {
-                          const match = ALL_PERMISSIONS.find(p => p.key === permKey);
-                          return (
-                            <span key={permKey} className="text-2.5 font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                              {match?.label || permKey}
+                {paginatedStaf.map((staf) => {
+                  const isSelf = isSelfUser(staf);
+                  return (
+                    <tr key={staf.id} className={cn("border-b border-border/80 last:border-b-0 transition-colors", isSelf ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-red-50/20")}>
+                      <td className="py-3 px-4 font-extrabold text-text text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <span>{staf.nama_lengkap}</span>
+                          {isSelf && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red text-white font-black uppercase tracking-wider shadow-2xs">
+                              Anda
                             </span>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md", staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
-                        <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500')} />
-                        {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleOpenStafModal(staf)}
-                          className="h-8 px-2.5 text-xs font-bold shadow-2xs"
-                        >
-                          Edit Izin
-                        </Button>
-                        <Button
-                          variant={staf.status_aktif !== false ? 'danger' : 'secondary'}
-                          size="sm"
-                          onClick={() => handleToggleStafStatus(staf)}
-                          className="h-8 px-2 text-xs font-bold shadow-2xs"
-                        >
-                          {staf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          )}
+                        </div>
+                        <div className="text-xs text-text-3 font-normal">{staf.email}</div>
+                      </td>
+                      <td className="py-3 px-4 font-bold font-mono text-xs text-red">
+                        @{staf.username}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider rounded bg-slate-900 text-white">
+                          {staf.sub_role || 'admin'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {(staf.permissions || []).map((permKey) => {
+                            const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                            return (
+                              <span key={permKey} className="text-2.5 font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                                {match?.label || permKey}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md", staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
+                          <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500')} />
+                          {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleOpenStafModal(staf)}
+                            className="h-8 px-2.5 text-xs font-bold shadow-2xs"
+                          >
+                            Edit Izin
+                          </Button>
+                          <Button
+                            variant={isSelf ? "secondary" : "danger"}
+                            size="sm"
+                            disabled={isSelf}
+                            onClick={() => !isSelf && setConfirmDeleteStaf(staf)}
+                            className={cn(
+                              "h-8 px-2.5 text-xs font-bold gap-1 shadow-2xs",
+                              isSelf ? "opacity-35 cursor-not-allowed" : ""
+                            )}
+                            title={isSelf ? "Anda tidak dapat menghapus akun Anda sendiri" : "Hapus Akun Staf"}
+                          >
+                            <Icon icon="heroicons:trash-20-solid" className="size-3.5" />
+                            <span>Hapus</span>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </Table>
             );
           })()}
@@ -601,8 +667,8 @@ function AkunAdmin() {
       <Modal
         isOpen={isStafModalOpen}
         onClose={() => setIsStafModalOpen(false)}
-        title={editingStaf ? `Edit Otorisasi Staf @${editingStaf.username}` : 'Tambah Staf Pengelola Baru'}
-        subtitle="Konfigurasi kredensial login, preset peran, dan matriks izin RBAC."
+        disableBackdropClick={true}
+        title={editingStaf ? `Edit Izin Staf @${editingStaf.username}` : 'Tambah Staf Baru'}
         size="lg"
       >
         <form onSubmit={handleSaveStaf} className="flex flex-col gap-5 text-sm font-sans">
@@ -652,11 +718,48 @@ function AkunAdmin() {
             </FormField>
           </div>
 
+          {/* Status Akun Section (Khusus Mode Edit) */}
+          {editingStaf && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border bg-slate-50 border-slate-200">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                    Status Akun:
+                  </span>
+                  <span className={cn("text-xs font-extrabold px-2 py-0.5 rounded", editingStaf.status_aktif !== false ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>
+                    {editingStaf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
+                  </span>
+                </div>
+                <p className="text-2xs text-text-3 font-medium mt-0.5">
+                  {editingStaf.status_aktif !== false 
+                    ? 'Akun aktif dan dapat masuk ke portal pengelola.' 
+                    : 'Akun dinonaktifkan sementara dan tidak dapat masuk ke sistem.'}
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant={isSelfUser(editingStaf) ? 'secondary' : (editingStaf.status_aktif !== false ? 'danger' : 'secondary')}
+                size="sm"
+                disabled={isSelfUser(editingStaf)}
+                onClick={() => !isSelfUser(editingStaf) && setConfirmToggleStaf(editingStaf)}
+                className={cn(
+                  "h-8 px-3 text-xs font-bold shadow-2xs whitespace-nowrap shrink-0 self-start sm:self-auto gap-1",
+                  isSelfUser(editingStaf) ? "opacity-35 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-100" : ""
+                )}
+                title={isSelfUser(editingStaf) ? "Anda tidak dapat menonaktifkan akun Anda sendiri" : (editingStaf.status_aktif !== false ? 'Nonaktifkan Akun' : 'Aktifkan Akun')}
+              >
+                <Icon icon={editingStaf.status_aktif !== false ? "heroicons:no-symbol-20-solid" : "heroicons:check-circle-20-solid"} className="size-3.5" />
+                <span>{editingStaf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}</span>
+              </Button>
+            </div>
+          )}
+
           {/* Role Presets Section */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-2.5">
             <span className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1">
               <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-amber-600" />
-              Role Presets (Sekali Klik Isi Otomatis Izin):
+              Preset Peran:
             </span>
             <div className="flex flex-wrap gap-2">
               {ROLE_PRESETS.map((preset) => (
@@ -681,7 +784,7 @@ function AkunAdmin() {
           <div>
             <span className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1 mb-2">
               <Icon icon="heroicons:key-20-solid" className="size-3.5 text-red" />
-              Matriks Izin Fitur (Permission Matrix):
+              Izin Akses Modul:
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -726,10 +829,91 @@ function AkunAdmin() {
               size="md"
               className="px-6 font-extrabold"
             >
-              {editingStaf ? 'Simpan Perubahan Izin' : 'Buat Akun Staf'}
+              {editingStaf ? 'Simpan Izin' : 'Tambah Staf'}
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* MODAL KONFIRMASI NONAKTIF / AKTIFKAN STAF */}
+      <Modal
+        isOpen={Boolean(confirmToggleStaf)}
+        onClose={() => !isTogglingStaf && setConfirmToggleStaf(null)}
+        title={confirmToggleStaf?.status_aktif !== false ? "Nonaktifkan Akun Staf?" : "Aktifkan Akun Staf?"}
+        size="sm"
+        footer={
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="secondary"
+              fullWidth
+              size="sm"
+              disabled={isTogglingStaf}
+              onClick={() => setConfirmToggleStaf(null)}
+            >
+              Batal
+            </Button>
+            <Button
+              variant={confirmToggleStaf?.status_aktif !== false ? "danger" : "primary"}
+              fullWidth
+              size="sm"
+              disabled={isTogglingStaf}
+              onClick={handleExecuteToggleStaf}
+            >
+              {isTogglingStaf 
+                ? 'Memproses...' 
+                : (confirmToggleStaf?.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2.5 text-xs text-text-2">
+          <p>
+            {confirmToggleStaf?.status_aktif !== false ? (
+              <span>Nonaktifkan akun <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})? Staf tidak dapat masuk ke sistem sampai diaktifkan kembali.</span>
+            ) : (
+              <span>Aktifkan kembali akses akun staf <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})?</span>
+            )}
+          </p>
+        </div>
+      </Modal>
+
+      {/* MODAL KONFIRMASI HAPUS PERMANEN STAF */}
+      <Modal
+        isOpen={Boolean(confirmDeleteStaf)}
+        onClose={() => !isDeletingStaf && setConfirmDeleteStaf(null)}
+        title="Hapus Akun Staf?"
+        size="sm"
+        footer={
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="secondary"
+              fullWidth
+              size="sm"
+              disabled={isDeletingStaf}
+              onClick={() => setConfirmDeleteStaf(null)}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="danger"
+              fullWidth
+              size="sm"
+              disabled={isDeletingStaf}
+              onClick={handleExecuteDeleteStaf}
+            >
+              {isDeletingStaf ? 'Menghapus...' : 'Hapus Akun'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2 text-xs text-text-2">
+          <p>
+            Hapus akun staf <strong>@{confirmDeleteStaf?.username}</strong> ({confirmDeleteStaf?.nama_lengkap})?
+          </p>
+          <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-900 font-medium">
+            ⚠️ Tindakan ini permanen. Seluruh hak akses staf ini akan dihapus.
+          </div>
+        </div>
       </Modal>
     </div>
   );

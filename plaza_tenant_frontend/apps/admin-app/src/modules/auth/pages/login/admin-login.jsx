@@ -56,7 +56,7 @@ function AdminLoginPage() {
               Konsol Pengelola
             </h1>
             <p className="text-text-2 text-sm font-medium text-pretty">
-              Masuk ke akun administrator resmi Plaza Kebun Sayur
+              Masuk ke akun staf pengelola Plaza Kebun Sayur
             </p>
           </div>
         </div>
@@ -68,11 +68,11 @@ function AdminLoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 page-fade-in">
-          <FormField label="Username Admin" id="admin-login-username" required>
+          <FormField label="Username" id="admin-login-username" required>
             <input
               type="text"
               name="username"
-              placeholder="Masukkan username admin"
+              placeholder="Masukkan username"
               value={formData.username}
               onChange={(e) => {
                 setFormData(prev => ({ ...prev, username: e.target.value }));
@@ -121,7 +121,7 @@ function AdminLoginPage() {
                 <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
                 <span>Memproses...</span>
               </span>
-            ) : 'Masuk Konsol Admin'}
+            ) : 'Masuk'}
           </Button>
         </form>
       </Card>

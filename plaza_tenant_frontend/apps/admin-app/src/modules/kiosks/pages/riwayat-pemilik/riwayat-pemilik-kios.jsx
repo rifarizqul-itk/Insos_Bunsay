@@ -67,19 +67,16 @@ function RiwayatPemilikKios() {
             className="mb-3 gap-2 font-bold"
           >
             <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
-            <span>Kembali ke Ketersediaan Kios</span>
+            <span>Kembali</span>
           </Button>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
             Riwayat Pemilik Kios
           </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1">
-            Arsip seluruh pemilik kios yang sudah tidak aktif berjualan di Plaza Kebun Sayur.
-          </p>
         </div>
 
         <input
           type="text"
-          placeholder="Cari mantan pemilik..."
+          placeholder="Cari mantan penyewa..."
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -95,8 +92,8 @@ function RiwayatPemilikKios() {
           <div className="p-8">
             <EmptyState
               icon="heroicons:user-minus-20-solid"
-              title="Arsip Nonaktif Kosong"
-              description="Tidak ada catatan mantan pemilik kios nonaktif yang cocok dengan pencarian."
+              title="Belum ada riwayat penyewa"
+              description="Tidak ada data pemilik sebelumnya yang cocok dengan pencarian."
             />
           </div>
         ) : (
@@ -142,7 +139,7 @@ function RiwayatPemilikKios() {
                       onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
                       className="h-8 px-3 text-xs font-bold shadow-2xs"
                     >
-                      Detail Legalitas
+                      Lihat Detail
                     </Button>
                   </td>
                 </tr>

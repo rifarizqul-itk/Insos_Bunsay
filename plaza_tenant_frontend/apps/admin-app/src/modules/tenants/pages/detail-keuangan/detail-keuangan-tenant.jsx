@@ -183,14 +183,14 @@ function DetailKeuanganTenant() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Card variant="elevated" className="p-5 flex flex-col justify-between">
-              <span className="label-micro text-text-3">Status Pembayaran Tagihan Terakhir</span>
+              <span className="label-micro text-text-3">Status Pembayaran Terakhir</span>
               <div className="mt-2">
                 <Badge status={tenantInfo.statusPembayaran} />
               </div>
             </Card>
 
             <Card variant="elevated" className="p-5 flex flex-col justify-between">
-              <span className="label-micro text-text-3">Total Tunggakan Akumulatif</span>
+              <span className="label-micro text-text-3">Total Tunggakan</span>
               <div className={cn("text-2xl sm:text-3xl font-extrabold font-tabular-nums mt-1", tenantInfo.tunggakan > 0 ? 'text-orange' : 'text-green')}>
                 Rp {tenantInfo.tunggakan.toLocaleString('id-ID')}
               </div>
@@ -202,7 +202,7 @@ function DetailKeuanganTenant() {
         <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
           <div className="p-4 sm:p-6 border-b border-border/80 bg-white">
             <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
-              Riwayat Transaksi Pembayaran Tenant
+              Riwayat Transaksi
             </h3>
           </div>
 
@@ -214,8 +214,8 @@ function DetailKeuanganTenant() {
             <div className="p-8">
               <EmptyState
                 icon="heroicons:receipt-refund-20-solid"
-                title="Belum Ada Transaksi"
-                description="Tenant ini belum memiliki riwayat transaksi pembayaran di database."
+                title="Belum ada transaksi"
+                description="Belum ada riwayat transaksi pembayaran untuk tenant ini."
               />
             </div>
           ) : (

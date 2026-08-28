@@ -21,9 +21,9 @@ export class ErrorBoundary extends React.Component {
           <div className="size-12 rounded-full bg-red-100 flex items-center justify-center text-red font-bold text-xl">
             !
           </div>
-          <h2 className="text-lg font-bold text-text">Terjadi Kendala Memuat Halaman</h2>
+          <h2 className="text-lg font-bold text-text">Gagal Memuat Halaman</h2>
           <p className="text-sm text-text-2 max-w-md">
-            {this.state.error?.message || 'Gagal memuat komponen halaman ini. Silakan coba muat ulang halaman.'}
+            {this.state.error?.message || 'Gagal memuat komponen halaman. Silakan coba muat ulang.'}
           </p>
           <button
             type="button"
@@ -33,7 +33,7 @@ export class ErrorBoundary extends React.Component {
             }}
             className="px-4 py-2 bg-red text-white text-sm font-bold rounded-lg hover:bg-red-rich transition-colors cursor-pointer"
           >
-            Muat Ulang Halaman
+            Muat Ulang
           </button>
         </div>
       );

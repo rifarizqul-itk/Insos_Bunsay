@@ -56,3 +56,5 @@ plaza_tenant_backend/.phpunit.result.cache
 scratch/
 *.tmp
 *.bak
+
+SKEMA DATABASE.md

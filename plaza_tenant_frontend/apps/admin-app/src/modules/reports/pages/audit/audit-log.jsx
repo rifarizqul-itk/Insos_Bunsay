@@ -148,18 +148,15 @@ function AuditLogPage() {
     <div data-slot="audit-log-page" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Audit Trail Aktivitas Admin
+          Log Aktivitas
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Rekam jejak kepatuhan dan histori tindakan seluruh staf pengelola Plaza Kebun Sayur.
-        </p>
       </div>
 
       {/* Main Audit Log Table (Seamless Edge-to-Edge Surface) */}
       <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/80 bg-white">
           <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
-            Riwayat Aktivitas Staf ({filteredLogs.length} Entri)
+            Riwayat Aktivitas ({filteredLogs.length})
           </h3>
 
           <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -216,8 +213,8 @@ function AuditLogPage() {
           <div className="p-8">
             <EmptyState
               icon="heroicons:document-magnifying-glass-20-solid"
-              title="Log Aktivitas Kosong"
-              description="Tidak ada rekam aktivitas yang cocok dengan filter atau kata kunci pencarian."
+              title="Belum ada aktivitas"
+              description="Tidak ada aktivitas yang sesuai dengan filter atau kata kunci pencarian."
             />
           </div>
         ) : (

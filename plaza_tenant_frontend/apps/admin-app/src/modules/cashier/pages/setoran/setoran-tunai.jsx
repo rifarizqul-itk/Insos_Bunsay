@@ -231,7 +231,7 @@ function SetoranTunai() {
         Bukti_Pembayaran: refCode,
       });
 
-      addToast('Setoran tunai loket berhasil dicatat di database!', 'success');
+      addToast('Setoran tunai berhasil dicatat', 'success');
       setNominalTunai('');
       setSelectedTenantId('');
       setBuktiTunai(null);
@@ -248,15 +248,11 @@ function SetoranTunai() {
     <div data-slot="setoran-tunai" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       {toastMsg && (
         <div className="bg-emerald-600 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-2">
-            <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
-            <span>{toastMsg}</span>
-          </div>
+          <span>{toastMsg}</span>
           <button
             type="button"
             onClick={() => setToastMsg(null)}
-            aria-label="Tutup notifikasi"
-            className="text-white hover:opacity-80 p-1 cursor-pointer"
+            className="text-white hover:opacity-80 p-1"
           >
             <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
           </button>
@@ -265,11 +261,8 @@ function SetoranTunai() {
 
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Loket Setoran Tunai Admin
+          Setoran Tunai
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Pencatatan resmi pembayaran sewa kios secara tunai di kantor pengelola.
-        </p>
       </div>
 
       <Card variant="elevated" className="max-w-2xl p-6 sm:p-8 flex flex-col gap-6">
@@ -278,11 +271,11 @@ function SetoranTunai() {
             <div className="flex items-center gap-2 border-b border-border pb-3">
               <Icon icon="heroicons:shield-check-20-solid" className="size-6 text-green" />
               <h2 className="text-lg font-extrabold text-text tracking-tight text-balance">
-                Konfirmasi Setoran Tunai Loket
+                Konfirmasi Setoran Tunai
               </h2>
             </div>
             <p className="text-sm text-text-2 text-pretty">
-              Mohon periksa kembali rincian setoran tunai sebelum menyimpan pencatatan transaksi secara permanen.
+              Periksa rincian setoran sebelum menyimpan pencatatan.
             </p>
 
             <Card variant="inset" className="p-4 flex flex-col gap-2.5 text-sm">
@@ -317,7 +310,7 @@ function SetoranTunai() {
                     <span>Menyimpan...</span>
                   </span>
                 ) : (
-                  'Konfirmasi & Simpan Setoran'
+                  'Simpan Setoran'
                 )}
               </Button>
             </div>
@@ -603,7 +596,7 @@ function SetoranTunai() {
 
             <div className="p-3.5 bg-mono-100/60 border border-border/80 rounded-lg flex items-center gap-3 text-xs text-text-2">
               <Icon icon="heroicons:shield-check-20-solid" className="size-5 text-emerald-700 shrink-0" />
-              <span>Setoran tunai akan otomatis dibukukan lunas dan menghasilkan Kuitansi SSRD Elektronik resmi ber-QR Code untuk dicetak seketika.</span>
+              <span>Setoran tunai otomatis dibukukan dan kuitansi SSRD ber-QR code dapat langsung dicetak.</span>
             </div>
 
             <Button
@@ -613,7 +606,7 @@ function SetoranTunai() {
               fullWidth
               className="mt-2 h-13 text-base font-extrabold shadow-md"
             >
-              Tinjau & Konfirmasi Setoran Tunai
+              Lanjutkan Setoran
             </Button>
           </form>
         )}

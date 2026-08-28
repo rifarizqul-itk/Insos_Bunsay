@@ -215,16 +215,13 @@ function DetailAdministrasiKios() {
           className="mb-4 gap-2 font-bold"
         >
           <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
-          <span>Kembali ke Ketersediaan Kios</span>
+          <span>Kembali</span>
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
               Administrasi Kios <span className="font-tabular-nums text-red">{displayKiosNo}</span>
             </h1>
-            <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-              Detail profil pemilik, kredensial portal, berkas legalitas, dan administrasi sewa.
-            </p>
           </div>
 
           <Button
@@ -233,7 +230,7 @@ function DetailAdministrasiKios() {
             className="gap-2 self-start sm:self-auto shadow-md"
           >
             <Icon icon="heroicons:pencil-square-20-solid" className="size-4.5" />
-            <span>Edit Data Administrasi</span>
+            <span>Edit Data</span>
           </Button>
         </div>
       </div>
@@ -357,53 +354,45 @@ function DetailAdministrasiKios() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm bg-mono-50/60 p-4 rounded-xl border border-border/80">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-sm bg-mono-50/60 p-4 rounded-xl border border-border/80 items-start">
                     <div>
-                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Username Login Portal</span>
-                      <div className="flex items-center gap-2">
-                        <code className={cn(
-                          "px-3 py-1 rounded-md text-sm font-mono font-extrabold tracking-tight border",
-                          editData.username === 'Belum Dibuat' ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-white border-border text-text"
-                        )}>
-                          {editData.username}
-                        </code>
-                        {editData.username !== '—' && editData.username !== 'Belum Dibuat' && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="xs"
-                            onClick={() => {
+                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1.5">Username Login Portal</span>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editData.username && editData.username !== '—' && editData.username !== 'Belum Dibuat') {
                               navigator.clipboard.writeText(editData.username);
                               addToast('Username berhasil disalin ke clipboard!', 'success');
-                            }}
-                            className="h-7 px-2.5 text-2xs font-bold gap-1 bg-white hover:bg-mono-100"
-                            title="Salin Username"
-                          >
-                            <Icon icon="heroicons:clipboard-document-20-solid" className="size-3.5" />
-                            <span>Salin</span>
-                          </Button>
-                        )}
+                            }
+                          }}
+                          className={cn(
+                            "inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-sm font-mono font-extrabold tracking-tight border transition-all text-start",
+                            editData.username === 'Belum Dibuat' 
+                              ? "bg-amber-50 border-amber-200 text-amber-900 cursor-default" 
+                              : "bg-white border-border text-text hover:border-text-3 hover:bg-mono-50 active:scale-98 cursor-pointer shadow-2xs group"
+                          )}
+                          title={editData.username !== '—' && editData.username !== 'Belum Dibuat' ? "Klik untuk menyalin username" : undefined}
+                        >
+                          <span>{editData.username}</span>
+                          {editData.username !== '—' && editData.username !== 'Belum Dibuat' && (
+                            <Icon 
+                              icon="heroicons:document-duplicate-20-solid" 
+                              className="size-3.5 text-text-3 group-hover:text-text shrink-0 transition-colors" 
+                            />
+                          )}
+                        </button>
                       </div>
                     </div>
 
                     <div>
-                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Email Notifikasi Terdaftar</span>
-                      <strong className="text-text font-bold text-sm block mt-1">{editData.email}</strong>
+                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1.5">Email Notifikasi Terdaftar</span>
+                      <strong className="text-text font-bold text-sm block pt-1 truncate">{editData.email}</strong>
                     </div>
 
                     <div>
-                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">No. WhatsApp / SMS</span>
-                      <strong className="text-text font-bold text-sm font-tabular-nums block mt-1">{editData.telepon}</strong>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1">Kata Sandi Portal</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="font-mono tracking-widest text-text-3 font-extrabold text-sm">••••••••</span>
-                        <span className="text-2xs text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-2 py-0.5 rounded font-extrabold">
-                          Terenkripsi (bcrypt)
-                        </span>
-                      </div>
+                      <span className="text-xs text-text-3 font-semibold uppercase tracking-wider block mb-1.5">No. WhatsApp / SMS</span>
+                      <strong className="text-text font-bold text-sm font-tabular-nums block pt-1">{editData.telepon}</strong>
                     </div>
                   </div>
 
@@ -412,9 +401,9 @@ function DetailAdministrasiKios() {
                     <div className="flex-1 leading-relaxed">
                       <p className="font-medium">
                         {editData.username === 'Belum Dibuat' ? (
-                          <span>Penyewa ini belum memiliki username akun di portal. Anda dapat langsung mengklik tombol <strong>Reset Password Tenant</strong> di samping untuk membuatkan akun dan mengirimkan kredensial login via WhatsApp.</span>
+                          <span>Penyewa belum memiliki username akun. Klik <strong>Reset Kata Sandi</strong> untuk membuat akun dan mengirimkan kredensial via WhatsApp.</span>
                         ) : (
-                          <span>Tenant dapat masuk menggunakan <strong>Username</strong> (<code className="font-mono font-bold text-blue-900">{editData.username}</code>) atau <strong>Email</strong>. Jika penyewa lupa kata sandi, admin dapat men-generate password baru melalui tombol <em>Reset Password</em> di samping.</span>
+                          <span>Tenant dapat masuk menggunakan <strong>Username</strong> (<code className="font-mono font-bold text-blue-900">{editData.username}</code>) atau <strong>Email</strong>. Gunakan tombol <em>Reset Kata Sandi</em> jika tenant lupa sandi.</span>
                         )}
                       </p>
                     </div>
@@ -465,7 +454,7 @@ function DetailAdministrasiKios() {
           {/* SIDEBAR RIGHT: AKSI CEPAT ADMIN */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <Card variant="elevated" className="p-6 flex flex-col gap-4">
-              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3">Aksi Cepat Admin</h3>
+              <h3 className="text-base font-extrabold text-text tracking-tight border-b border-border pb-3">Aksi Cepat</h3>
               
               <Button
                 variant={izinkanCicilanAdmin ? "warning" : "secondary"}
@@ -482,7 +471,7 @@ function DetailAdministrasiKios() {
                   className={cn("size-4.5", izinkanCicilanAdmin ? "text-amber-600" : "text-gray-500")}
                 />
                 <span>
-                  {isTogglingCicilan ? 'Memproses Status...' : (izinkanCicilanAdmin ? 'Cabut / Kunci Akses Cicilan' : 'Buka Akses Cicilan Tenant')}
+                  {isTogglingCicilan ? 'Memproses...' : (izinkanCicilanAdmin ? 'Kunci Cicilan' : 'Buka Cicilan')}
                 </span>
               </Button>
 
@@ -493,7 +482,7 @@ function DetailAdministrasiKios() {
                 className="h-11 text-xs font-bold gap-2"
               >
                 <Icon icon="heroicons:banknotes-20-solid" className="size-4.5 text-green" />
-                <span>Lihat Detail Keuangan Tenant</span>
+                <span>Detail Keuangan</span>
               </Button>
 
               <Button
@@ -503,7 +492,7 @@ function DetailAdministrasiKios() {
                 className="h-11 text-xs font-bold gap-2"
               >
                 <Icon icon="heroicons:clock-20-solid" className="size-4.5 text-amber-700" />
-                <span>Riwayat Kepemilikan Kios</span>
+                <span>Riwayat Kepemilikan</span>
               </Button>
 
               <Button
@@ -514,7 +503,7 @@ function DetailAdministrasiKios() {
                 className="h-11 text-xs font-bold gap-2 text-red hover:bg-red-50 disabled:opacity-50"
               >
                 <Icon icon="heroicons:key-20-solid" className="size-4.5" />
-                <span>{isResettingPassword ? 'Mereset Kata Sandi...' : 'Reset Password Tenant'}</span>
+                <span>{isResettingPassword ? 'Mereset...' : 'Reset Kata Sandi'}</span>
               </Button>
             </Card>
           </div>
@@ -525,12 +514,13 @@ function DetailAdministrasiKios() {
       <Modal
         isOpen={showEditDrawer}
         onClose={() => setShowEditDrawer(false)}
+        disableBackdropClick={true}
         title={`Edit Data Administrasi Kios ${displayKiosNo}`}
         size="lg"
         footer={
           <div className="flex gap-3 w-full">
             <Button variant="secondary" fullWidth onClick={() => setShowEditDrawer(false)}>Batal</Button>
-            <Button variant="primary" fullWidth onClick={handleSaveEdit}>Simpan Perubahan</Button>
+            <Button variant="primary" fullWidth onClick={handleSaveEdit}>Simpan Data</Button>
           </div>
         }
       >
@@ -550,7 +540,7 @@ function DetailAdministrasiKios() {
           <FormField label="Email Tenant" id="edit-email">
             <input type="email" name="email" value={editData.email} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white" />
           </FormField>
-          <FormField label="Jenis Usaha" id="edit-usaha">
+          <FormField label="Jenis Usaha" id="edit-usaha" required>
             <input type="text" name="usaha" value={editData.usaha} onChange={handleEditChange} className="w-full h-10 px-3 rounded border border-border bg-white" />
           </FormField>
           <FormField label="Nominal Tagihan per Bulan (Rp)" id="edit-tarifBulanan">

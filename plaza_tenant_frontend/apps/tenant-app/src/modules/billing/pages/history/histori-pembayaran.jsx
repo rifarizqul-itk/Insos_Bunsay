@@ -122,7 +122,7 @@ function HistoriPembayaran() {
       });
 
       setSanggahanModalItem(null);
-      addToast('Sanggahan pembayaran Anda berhasil dikirim! Status kembali Menunggu Verifikasi.', 'success');
+      addToast('Sanggahan berhasil dikirim', 'success');
       await fetchHistory();
     } catch (err) {
       addToast(err?.response?.data?.message || 'Gagal mengirim sanggahan. Coba lagi.', 'error');
@@ -148,15 +148,15 @@ function HistoriPembayaran() {
   return (
     <div data-slot="histori-pembayaran" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans">
       {toastMsg && (
-        <div className="bg-emerald-600 text-white font-bold text-sm px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-2">
-            <Icon icon="heroicons:check-circle-20-solid" className="size-5" />
+        <div className="bg-red text-white font-bold text-sm px-4 py-3.5 rounded-xl shadow-card flex items-center justify-between animate-fade-in border border-red-rich">
+          <div className="flex items-center gap-2.5">
+            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5 shrink-0" />
             <span>{toastMsg}</span>
           </div>
           <button
             type="button"
             onClick={() => setToastMsg(null)}
-            aria-label="Tutup notifikasi"
+            aria-label="Tutup notifikasi error"
             className="text-white hover:opacity-80 p-1 cursor-pointer"
           >
             <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
@@ -169,9 +169,6 @@ function HistoriPembayaran() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
             Histori Pembayaran
           </h1>
-          <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-            Daftar seluruh transaksi pembayaran sewa kios yang pernah Anda lakukan.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -202,8 +199,8 @@ function HistoriPembayaran() {
           <div className="bg-white border border-border/80 rounded-2xl p-6 sm:p-8">
             <EmptyState
               icon="heroicons:receipt-refund-20-solid"
-              title="Belum Ada Riwayat Transaksi"
-              description="Riwayat pembayaran sewa kios Anda akan otomatis tercatat di sini setelah melakukan pembayaran."
+              title="Belum ada transaksi"
+              description="Pembayaran sewa kios Anda akan otomatis tercatat di sini."
             />
           </div>
         ) : (
@@ -438,7 +435,8 @@ function HistoriPembayaran() {
         <Modal
           isOpen={Boolean(sanggahanModalItem)}
           onClose={() => setSanggahanModalItem(null)}
-          title={`Form Sanggahan ${sanggahanModalItem.id}`}
+          disableBackdropClick={true}
+          title="Ajukan Sanggahan Pembayaran"
           size="md"
           footer={
             <div className="flex gap-3 w-full">
@@ -458,7 +456,7 @@ function HistoriPembayaran() {
                 onClick={handleSubmitSanggahan}
                 className="bg-amber-500 hover:bg-amber-600 border-none font-extrabold text-white"
               >
-                {isSubmittingSanggahan ? 'Kirim Sanggahan...' : 'Kirim Sanggahan'}
+                {isSubmittingSanggahan ? 'Mengirim...' : 'Kirim Sanggahan'}
               </Button>
             </div>
           }
@@ -472,7 +470,7 @@ function HistoriPembayaran() {
               </div>
             </div>
 
-            <FormField label="Alasan Sanggahan Anda" id="teks-sanggahan-field" required error={sanggahanError}>
+            <FormField label="Alasan Sanggahan" id="teks-sanggahan-field" required error={sanggahanError}>
               <textarea
                 rows={3}
                 value={teksSanggahan}
@@ -480,12 +478,12 @@ function HistoriPembayaran() {
                   setTeksSanggahan(e.target.value);
                   setSanggahanError('');
                 }}
-                placeholder="Jelaskan alasan sanggahan Anda (Contoh: Pembayaran sudah sesuai dengan resi terlampir / sudah transfer ulang kekurangan Rp 50.000)."
+                placeholder="Jelaskan alasan sanggahan (Contoh: Pembayaran sudah sesuai resi / sudah transfer ulang selisih Rp 50.000)."
                 className="w-full text-sm p-3 border border-border rounded-xl focus:border-amber-500 focus:outline-none bg-warm-gray/10 font-medium"
               />
             </FormField>
 
-            <FormField label="Foto Bukti Transfer Baru / Perbaikan (Opsional)" id="bukti-sanggahan-field">
+            <FormField label="Foto Bukti Perbaikan (Opsional)" id="bukti-sanggahan-field">
               <input
                 id="bukti-sanggahan-input"
                 type="file"
@@ -499,7 +497,7 @@ function HistoriPembayaran() {
               >
                 <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-6 text-amber-600" />
                 <span className="text-xs font-bold text-text">
-                  {buktiSanggahanFile ? buktiSanggahanFile.name : 'Upload Foto Resi Baru'}
+                  {buktiSanggahanFile ? buktiSanggahanFile.name : 'Upload Foto Bukti Baru'}
                 </span>
                 <span className="text-xs text-text-3">Format JPG, PNG, atau WEBP</span>
               </label>

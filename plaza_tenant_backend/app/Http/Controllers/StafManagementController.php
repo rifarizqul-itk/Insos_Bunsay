@@ -127,6 +127,13 @@ class StafManagementController extends Controller
      */
     public function toggleStatus(Request $request, int $id): JsonResponse
     {
+        $currentUser = $request->user();
+        if ($currentUser && (int)$currentUser->Id_user === (int)$id) {
+            return response()->json([
+                'message' => 'Anda tidak dapat menonaktifkan akun yang sedang Anda gunakan saat ini.',
+            ], 422);
+        }
+
         $staf = User::where('Id_roles', 1)->find($id);
 
         if (!$staf) {
@@ -149,6 +156,40 @@ class StafManagementController extends Controller
         return response()->json([
             'message' => "Akun staf @{$staf->Username} berhasil {$statusStr}.",
             'status_aktif' => $newStatus === 1,
+        ]);
+    }
+
+    /**
+     * Delete an admin staff account permanently.
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $currentUser = $request->user();
+        if ($currentUser && (int)$currentUser->Id_user === (int)$id) {
+            return response()->json([
+                'message' => 'Anda tidak dapat menghapus akun yang sedang Anda gunakan saat ini.',
+            ], 422);
+        }
+
+        $staf = User::where('Id_roles', 1)->find($id);
+
+        if (!$staf) {
+            return response()->json(['message' => 'Akun staf tidak ditemukan.'], 404);
+        }
+
+        $username = $staf->Username;
+        $namaLengkap = $staf->nama_lengkap ?? $username;
+        $staf->delete();
+
+        ActivityLog::record(
+            $request,
+            'User',
+            'Hapus Staf',
+            "Menghapus akun staf pengelola {$namaLengkap} (@{$username})."
+        );
+
+        return response()->json([
+            'message' => "Akun staf @{$username} berhasil dihapus permanen.",
         ]);
     }
 }

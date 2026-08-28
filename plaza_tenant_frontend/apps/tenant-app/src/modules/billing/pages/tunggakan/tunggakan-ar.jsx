@@ -120,11 +120,8 @@ function TunggakanAR() {
     <div data-slot="tunggakan-ar" className="page-fade-in flex flex-col gap-6 sm:gap-8 font-sans max-w-6xl mx-auto w-full">
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight text-balance">
-          Tagihan &amp; Tunggakan Sewa
+          Tagihan &amp; Tunggakan
         </h1>
-        <p className="text-text-2 text-sm sm:text-base font-medium mt-1 text-pretty">
-          Rincian kewajiban sewa aktif dan sisa bulan sebelumnya yang belum lunas.
-        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -133,7 +130,7 @@ function TunggakanAR() {
           <div className="flex flex-col gap-1">
             <div className="flex justify-between items-center gap-2">
               <span className="text-2xs font-extrabold text-text-3 uppercase tracking-wider">
-                Total Tagihan Kumulatif
+                Total Tagihan
               </span>
               <Badge status={totalTunggakanVal > 0 ? 'Belum Bayar' : 'Lunas'} />
             </div>
@@ -189,11 +186,11 @@ function TunggakanAR() {
               variant="primary"
               size="lg"
               onClick={handleBayar}
-              aria-label={`Bayar cicilan atau pelunasan sebesar total Rp ${totalTunggakanVal.toLocaleString('id-ID')}`}
+              aria-label={`Bayar sewa sebesar total Rp ${totalTunggakanVal.toLocaleString('id-ID')}`}
               className="w-full h-12 font-extrabold text-sm sm:text-base gap-2 shadow-2xs"
             >
               <Icon icon="heroicons:bolt-20-solid" className="size-5" />
-              <span>Bayar Tagihan Sekarang</span>
+              <span>Bayar Sekarang</span>
               <Icon icon="heroicons:arrow-right-20-solid" className="size-4" />
             </Button>
           ) : (
@@ -204,12 +201,12 @@ function TunggakanAR() {
           )}
         </Card>
 
-        {/* KOLOM KANAN: DAFTAR TAGIHAN MENUNGGAK */}
+        {/* KOLOM KANAN: DAFTAR TAGIHAN */}
         <Card variant="default" className="p-6 sm:p-7 rounded-3xl bg-white border border-border/80 shadow-2xs flex flex-col gap-4">
           <div className="flex justify-between items-center border-b border-border/70 pb-3">
             <h2 className="text-base font-extrabold text-text flex items-center gap-2">
               <Icon icon="heroicons:queue-list-20-solid" className="size-4.5 text-red" />
-              <span>Daftar Tagihan Menunggak</span>
+              <span>Daftar Tagihan</span>
             </h2>
             <span className="text-xs font-extrabold text-red bg-red-50 border border-red/20 px-2.5 py-0.5 rounded-full font-tabular-nums">
               {listTagihan.length} Periode
@@ -220,8 +217,8 @@ function TunggakanAR() {
             <div className="py-8">
               <EmptyState
                 icon="heroicons:check-circle-20-solid"
-                title="Semua Tagihan Lunas!"
-                description="Hebat! Tidak ada tunggakan sewa kios untuk akun Anda saat ini."
+                title="Semua Tagihan Lunas"
+                description="Tidak ada tagihan sewa kios untuk akun Anda saat ini."
               />
             </div>
           ) : (

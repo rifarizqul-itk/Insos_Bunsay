@@ -13,6 +13,8 @@ function Modal({
   footer,
   size = 'md',
   className = '',
+  disableBackdropClick = false,
+  disableEscapeKey = false,
 }) {
   const modalRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -42,7 +44,7 @@ function Modal({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape' && isOpen && !disableEscapeKey) {
         onClose();
         return;
       }
@@ -69,7 +71,7 @@ function Modal({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, disableEscapeKey]);
 
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
@@ -89,7 +91,9 @@ function Modal({
       style={{ position: 'fixed', inset: 0, zIndex: 10050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       className="fixed inset-0 z-[10050] flex items-center justify-center p-3 sm:p-6 bg-mono-900/60 page-fade-in overflow-hidden"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !disableBackdropClick) {
+          onClose();
+        }
       }}
       role="dialog"
       aria-modal="true"

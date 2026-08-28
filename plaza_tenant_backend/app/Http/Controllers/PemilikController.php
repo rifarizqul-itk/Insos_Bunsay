@@ -97,28 +97,50 @@ class PemilikController extends Controller
                 : (is_string($kiosListRaw) ? array_filter(array_map('trim', explode(',', $kiosListRaw))) : []);
 
             $assignedKiosNames = [];
+            $tanggalMulaiInput = $request->Tanggal_Mulai ?? $request->tanggal_mulai ?? $request->tanggalMulai ?? date('Y-m-d');
+            $periodeSewa = date('Y-m', strtotime($tanggalMulaiInput));
+            $defaultJatuhTempo = date('Y-m-12', strtotime($tanggalMulaiInput));
+            $jatuhTempoInput = $request->Jatuh_Tempo ?? $request->jatuh_tempo ?? $request->jatuhTempo ?? $defaultJatuhTempo;
+            
+            $tarifKiosMap = $request->tarif_kios_map ?? $request->tarifKiosMap ?? [];
+            if (is_string($tarifKiosMap)) {
+                $tarifKiosMap = json_decode($tarifKiosMap, true) ?: [];
+            }
+
+            $usahaKiosMap = $request->usaha_kios_map ?? $request->usahaKiosMap ?? [];
+            if (is_string($usahaKiosMap)) {
+                $usahaKiosMap = json_decode($usahaKiosMap, true) ?: [];
+            }
+
             foreach ($kiosList as $noKiosItem) {
                 if (empty($noKiosItem)) continue;
                 $kiosTarget = \App\Models\Kios::where('No_Kios', $noKiosItem)->first();
                 if ($kiosTarget) {
-                    $tarifCustom = (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 750000);
+                    if (isset($tarifKiosMap[$noKiosItem]) && $tarifKiosMap[$noKiosItem] !== '') {
+                        $tarifCustom = (float) $tarifKiosMap[$noKiosItem];
+                    } else {
+                        $tarifCustom = (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 0);
+                    }
+
+                    $jenisUsahaPerKios = !empty($usahaKiosMap[$noKiosItem]) ? $usahaKiosMap[$noKiosItem] : $jenisUsaha;
+
                     $newSewa = \App\Models\Sewa::create([
                         'Id_Kios'        => $kiosTarget->Id_Kios,
                         'Id_Pemilik'     => $pemilik->Id_Pemilik,
-                        'Tanggal_Mulai'  => date('Y-m-d'),
+                        'Tanggal_Mulai'  => $tanggalMulaiInput,
                         'Tanggal_Selesai'=> $request->Tanggal_Selesai ?? null,
-                        'Jenis_Usaha'    => $jenisUsaha,
+                        'Jenis_Usaha'    => $jenisUsahaPerKios,
                         'Tarif_Bulanan'  => $tarifCustom,
                         'Status'         => 'Aktif',
                     ]);
                     $kiosTarget->update(['Status' => 'Terisi']);
                     $assignedKiosNames[] = $kiosTarget->No_Kios;
 
-                    // Automatically generate first month's invoice (due on the 25th)
+                    // Automatically generate first month's invoice with customizable due date (default: 12th)
                     \App\Models\Tagihan::create([
                         'Id_Sewa'          => $newSewa->Id_Sewa,
-                        'Periode'          => date('Y-m'),
-                        'Jatuh_Tempo'      => date('Y-m-25'),
+                        'Periode'          => $periodeSewa,
+                        'Jatuh_Tempo'      => $jatuhTempoInput,
                         'Tarif_Sewa'       => $tarifCustom,
                         'Hutang_Tunggakan' => 0,
                         'Total_Tagihan'    => $tarifCustom,

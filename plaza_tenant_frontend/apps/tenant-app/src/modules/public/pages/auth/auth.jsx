@@ -260,7 +260,7 @@ function AuthPage() {
             </h1>
             <p className="text-text-2 text-sm font-medium text-pretty">
               {!isForgotMode 
-                ? 'Masuk ke Akun Sewa Kios Plaza Kebun Sayur'
+                ? 'Masuk ke akun tenant Plaza Kebun Sayur'
                 : forgotStep === 'request'
                 ? 'Masukkan nomor WhatsApp atau email untuk menerima kode verifikasi.'
                 : forgotStep === 'verify'
@@ -359,7 +359,7 @@ function AuthPage() {
               className="inline-flex items-center justify-center gap-2 text-text-2 hover:text-red font-semibold text-sm transition-colors py-1 mt-1"
             >
               <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
-              <span>Kembali ke Beranda Utama</span>
+              <span>Kembali ke Beranda</span>
             </Link>
           </form>
         ) : forgotStep === 'request' ? (
@@ -386,10 +386,10 @@ function AuthPage() {
               {isForgotSubmitting ? (
                 <span role="status" className="flex items-center gap-2">
                   <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4.5" />
-                  <span>Mengirim Kode OTP...</span>
+                  <span>Mengirim Kode...</span>
                 </span>
               ) : (
-                'Kirim Kode Verifikasi'
+                'Kirim Kode'
               )}
             </Button>
 
@@ -419,7 +419,7 @@ function AuthPage() {
               className="inline-flex items-center justify-center gap-2 text-text-2 hover:text-red font-semibold text-sm transition-colors py-1 mt-1"
             >
               <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
-              <span>Kembali ke Halaman Login</span>
+              <span>Kembali ke Login</span>
             </Link>
           </form>
         ) : forgotStep === 'verify' ? (
@@ -490,7 +490,7 @@ function AuthPage() {
                   <span>Menyimpan Kata Sandi...</span>
                 </span>
               ) : (
-                'Simpan Kata Sandi Baru'
+                'Simpan Kata Sandi'
               )}
             </Button>
 
@@ -500,7 +500,7 @@ function AuthPage() {
                 onClick={() => setForgotStep('request')}
                 className="text-text-2 hover:text-red text-xs font-semibold text-center transition-colors py-1 cursor-pointer"
               >
-                Kirim ulang kode verifikasi ke akun lain
+                Kirim ulang kode ke akun lain
               </button>
               <a
                 href="https://wa.me/628115901119?text=Halo%20Pengelola%20Plaza%20Kebun%20Sayur,%20saya%20tenant%20belum%20menerima%20kode%20OTP%20pemulihan%20kata%20sandi."
@@ -518,10 +518,10 @@ function AuthPage() {
             <div className="bg-green-bg/60 border border-green/30 rounded-xl p-5 text-center flex flex-col items-center gap-2">
               <Icon icon="heroicons:check-circle-20-solid" width="36" height="36" className="text-green" />
               <div className="text-green font-bold text-base">
-                Kata Sandi Berhasil Diperbarui!
+                Kata Sandi Berhasil Diperbarui
               </div>
               <p className="text-xs sm:text-sm text-text leading-relaxed">
-                Anda sekarang dapat masuk ke akun tenant Anda menggunakan kata sandi yang baru.
+                Silakan masuk ke akun tenant menggunakan kata sandi baru.
               </p>
             </div>
             <Button
@@ -531,7 +531,7 @@ function AuthPage() {
               onClick={() => navigate('/auth')}
               className="h-11 text-base font-extrabold shadow-md gap-2"
             >
-              <span>Masuk Sekarang</span>
+              <span>Masuk</span>
               <Icon icon="heroicons:arrow-right-20-solid" width="18" height="18" />
             </Button>
           </div>

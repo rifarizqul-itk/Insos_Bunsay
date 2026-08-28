@@ -51,58 +51,115 @@ class SewaController extends Controller
         // 1. Validasi Input
         $validatedData = $request->validate([
             'Id_Pemilik'     => 'required|exists:pemilik,Id_Pemilik',
-            'Id_Kios'        => 'required|exists:kios,Id_Kios',
+            'Id_Kios'        => 'nullable|exists:kios,Id_Kios',
+            'kios_list'      => 'nullable',
+            'kios_ids'       => 'nullable|array',
+            'No_Kios'        => 'nullable|string',
             'Jenis_Usaha'    => 'required|string|max:255',
             'Tanggal_Mulai'  => 'nullable|date',
             'Tanggal_Selesai'=> 'nullable|date',
             'Tarif_Bulanan'  => 'nullable|numeric|min:0',
+            'tarif_kios_map' => 'nullable',
             'Keterangan'     => 'nullable|string',
         ]);
 
         try {
-            // 2. Guard: Cek apakah kios ini sudah punya sewa Aktif
-            $sewaAktifExist = Sewa::where('Id_Kios', $request->Id_Kios)
-                ->where('Status', 'Aktif')
-                ->exists();
+            // 2. Tentukan target kios (single atau multi-kios)
+            $kiosTargets = collect([]);
+            if (!empty($request->kios_list)) {
+                $rawList = is_array($request->kios_list) ? $request->kios_list : array_filter(array_map('trim', explode(',', $request->kios_list)));
+                $kiosTargets = \App\Models\Kios::whereIn('No_Kios', $rawList)->get();
+            } elseif (!empty($request->kios_ids) && is_array($request->kios_ids)) {
+                $kiosTargets = \App\Models\Kios::whereIn('Id_Kios', $request->kios_ids)->get();
+            } elseif (!empty($request->Id_Kios)) {
+                $single = \App\Models\Kios::find($request->Id_Kios);
+                if ($single) $kiosTargets = collect([$single]);
+            } elseif (!empty($request->No_Kios)) {
+                $names = array_filter(array_map('trim', explode(',', $request->No_Kios)));
+                $kiosTargets = \App\Models\Kios::whereIn('No_Kios', $names)->get();
+            }
 
-            if ($sewaAktifExist) {
+            if ($kiosTargets->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Kios ini sudah memiliki sewa aktif. Akhiri sewa yang ada terlebih dahulu sebelum membuat sewa baru.',
+                    'message' => 'Silakan pilih minimal 1 unit kios kosong yang valid.',
                 ], 422);
             }
 
-            // 3. Simpan Transaksi Sewa dengan Status default 'Aktif'
-            $validatedData['Status'] = 'Aktif';
-            $validatedData['Tanggal_Mulai'] = $validatedData['Tanggal_Mulai'] ?? date('Y-m-d');
-            $validatedData['Tanggal_Selesai'] = $validatedData['Tanggal_Selesai'] ?? null;
-            $validatedData['Tarif_Bulanan'] = (float) ($validatedData['Tarif_Bulanan'] ?? 750000);
-            
-            $sewa = Sewa::create($validatedData);
+            // 3. Guard: Cek apakah ada kios yang sudah memiliki sewa Aktif
+            $targetIds = $kiosTargets->pluck('Id_Kios');
+            $conflictKios = Sewa::whereIn('Id_Kios', $targetIds)
+                ->where('Status', 'Aktif')
+                ->with('kios')
+                ->get();
 
-            // 4. Otomatis Update Status Kios menjadi 'Terisi'
-            $kios = Kios::find($request->Id_Kios);
-            if ($kios) {
-                $kios->update(['Status' => 'Terisi']);
+            if ($conflictKios->isNotEmpty()) {
+                $conflictNames = $conflictKios->pluck('kios.No_Kios')->join(', ');
+                return response()->json([
+                    'success' => false,
+                    'message' => "Kios ({$conflictNames}) sudah memiliki sewa aktif. Akhiri sewa yang ada terlebih dahulu.",
+                ], 422);
             }
 
-            // 5. Otomatis buat Tagihan awal bulan ini
-            $tarif = (float) $validatedData['Tarif_Bulanan'];
-            \App\Models\Tagihan::create([
-                'Id_Sewa'          => $sewa->Id_Sewa,
-                'Periode'          => date('Y-m'),
-                'Jatuh_Tempo'      => date('Y-m-25'),
-                'Tarif_Sewa'       => $tarif,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => $tarif,
-                'Sisa_Tagihan'     => $tarif,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]);
+            // 4. Parameter Waktu & Tarif
+            $tanggalMulaiInput = $validatedData['Tanggal_Mulai'] ?? $request->tanggal_mulai ?? $request->tanggalMulai ?? date('Y-m-d');
+            $periodeSewa = date('Y-m', strtotime($tanggalMulaiInput));
+            $defaultJatuhTempo = date('Y-m-12', strtotime($tanggalMulaiInput));
+            $jatuhTempoInput = $request->Jatuh_Tempo ?? $request->jatuh_tempo ?? $request->jatuhTempo ?? $defaultJatuhTempo;
+
+            $tarifKiosMap = $request->tarif_kios_map ?? $request->tarifKiosMap ?? [];
+            if (is_string($tarifKiosMap)) {
+                $tarifKiosMap = json_decode($tarifKiosMap, true) ?: [];
+            }
+
+            $usahaKiosMap = $request->usaha_kios_map ?? $request->usahaKiosMap ?? [];
+            if (is_string($usahaKiosMap)) {
+                $usahaKiosMap = json_decode($usahaKiosMap, true) ?: [];
+            }
+
+            $createdSewas = [];
+
+            foreach ($kiosTargets as $kiosTarget) {
+                if (isset($tarifKiosMap[$kiosTarget->No_Kios]) && $tarifKiosMap[$kiosTarget->No_Kios] !== '') {
+                    $tarifCustom = (float) $tarifKiosMap[$kiosTarget->No_Kios];
+                } else {
+                    $tarifCustom = (float) ($validatedData['Tarif_Bulanan'] ?? 0);
+                }
+
+                $jenisUsahaPerKios = !empty($usahaKiosMap[$kiosTarget->No_Kios]) ? $usahaKiosMap[$kiosTarget->No_Kios] : $validatedData['Jenis_Usaha'];
+
+                $sewa = Sewa::create([
+                    'Id_Kios'        => $kiosTarget->Id_Kios,
+                    'Id_Pemilik'     => $validatedData['Id_Pemilik'],
+                    'Tanggal_Mulai'  => $tanggalMulaiInput,
+                    'Tanggal_Selesai'=> $validatedData['Tanggal_Selesai'] ?? null,
+                    'Jenis_Usaha'    => $jenisUsahaPerKios,
+                    'Tarif_Bulanan'  => $tarifCustom,
+                    'Status'         => 'Aktif',
+                    'Keterangan'     => $validatedData['Keterangan'] ?? null,
+                ]);
+
+                $kiosTarget->update(['Status' => 'Terisi']);
+
+                // Buat tagihan perdana untuk kios ini
+                \App\Models\Tagihan::create([
+                    'Id_Sewa'          => $sewa->Id_Sewa,
+                    'Periode'          => $periodeSewa,
+                    'Jatuh_Tempo'      => $jatuhTempoInput,
+                    'Tarif_Sewa'       => $tarifCustom,
+                    'Hutang_Tunggakan' => 0.00,
+                    'Total_Tagihan'    => $tarifCustom,
+                    'Sisa_Tagihan'     => $tarifCustom,
+                    'Status_Tagihan'   => 'Belum Bayar',
+                ]);
+
+                $createdSewas[] = $sewa;
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi sewa kios berhasil dibuat',
-                'data'    => $sewa->load(['kios', 'pemilik'])
+                'message' => count($createdSewas) . ' unit sewa kios berhasil ditambahkan ke tenant',
+                'data'    => $createdSewas
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
