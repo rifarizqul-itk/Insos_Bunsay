@@ -233,13 +233,6 @@ function DashboardTenant() {
             {hasActiveKiosks ? 'Portal layanan sewa dan tagihan kios Anda.' : 'Akun arsip riwayat sewa dan transaksi Anda.'}
           </p>
         </div>
-
-        {hasActiveKiosks && (
-          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-text-3 bg-white border border-border/80 px-3 py-1.5 rounded-xl shadow-xs">
-            <Icon icon="heroicons:calendar-days-20-solid" className="size-4 text-mono-400" />
-            <span>{getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa)}</span>
-          </div>
-        )}
       </div>
 
       {/* 2. ALERT BANNER STATUS TAGIHAN */}
@@ -402,25 +395,27 @@ function DashboardTenant() {
           <div className="border-t border-border/60 pt-2.5 text-xs text-text-2 font-medium">
             {!hasActiveKiosks ? (
               <span className="text-text-3 font-normal">Tidak ada tagihan sewa yang perlu dibayar</span>
-            ) : hutangTunggakanVal > 0 ? (
+            ) : (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-text-3">
-                  Termasuk tunggakan <strong className="text-red font-bold font-tabular-nums">Rp {hutangTunggakanVal.toLocaleString('id-ID')}</strong>
-                </span>
+                <div className="flex items-center gap-1.5 font-tabular-nums text-text-3 truncate">
+                  <span>Bulanan: <strong className="text-text font-semibold">Rp {tarifSewaVal.toLocaleString('id-ID')}</strong></span>
+                  {hutangTunggakanVal > 0 ? (
+                    <>
+                      <span className="text-mono-400 font-bold">+</span>
+                      <span>Tunggakan: <strong className="text-red font-bold">Rp {hutangTunggakanVal.toLocaleString('id-ID')}</strong></span>
+                    </>
+                  ) : (
+                    <span className="text-text-3">(Tanpa tunggakan)</span>
+                  )}
+                </div>
                 <button 
                   type="button"
                   onClick={() => navigate('/tenant/tagihan')}
-                  className="text-xs font-bold text-red hover:underline cursor-pointer shrink-0"
+                  className="text-xs font-bold text-red hover:underline cursor-pointer shrink-0 ml-auto min-h-0 h-auto p-0 bg-transparent border-0 inline-flex items-center"
                 >
                   Rincian &rarr;
                 </button>
               </div>
-            ) : (
-              <span className="text-text-3">
-                {statusTagihan === 'Lunas'
-                  ? 'Semua kewajiban periode ini telah lunas'
-                  : 'Sewa unit kios bulan berjalan'}
-              </span>
             )}
           </div>
         </Card>

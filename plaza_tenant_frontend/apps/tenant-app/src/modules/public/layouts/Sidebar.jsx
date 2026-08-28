@@ -90,7 +90,7 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
               alt="Logo Plaza Kebun Sayur"
               className="size-9 rounded-xl object-contain shadow-xs bg-white p-0.5 border border-border/60 group-hover:scale-105 transition-transform"
             />
-            <span className="hidden md:group-hover:flex items-center fixed left-[80px] px-3 py-1.5 bg-mono-900 text-white text-xs font-extrabold rounded-xl shadow-xl pointer-events-none whitespace-nowrap z-[100] animate-[fadeIn_0.15s_ease-out]">
+            <span className="hidden md:group-hover:flex items-center fixed left-[80px] px-3 py-1.5 bg-mono-900 text-white text-xs font-extrabold rounded-xl shadow-xl pointer-events-none whitespace-nowrap z-[100] origin-left animate-[popoverIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
               Buka Menu (Ctrl+B)
             </span>
           </button>
@@ -166,7 +166,7 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
 
                   {/* Accessible Desktop Tooltip in Collapsed Mode */}
                   {isCollapsed && (
-                    <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
+                    <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 origin-left animate-[popoverIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
                       {item.label}
                     </span>
                   )}
@@ -214,7 +214,7 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
               title={`${displayName} (${displayKios})`}
             >
               {userInitials}
-              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
+              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 origin-left animate-[popoverIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
                 {displayName} ({displayKios})
               </span>
             </div>
@@ -226,7 +226,7 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
               className="size-8 rounded-lg text-text-3 hover:text-red hover:bg-red-50 flex items-center justify-center cursor-pointer transition-colors active:scale-95 shrink-0 relative group"
             >
               <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" className="size-4.5" />
-              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 animate-[fadeIn_0.15s_ease-out]">
+              <span className="hidden md:group-hover:flex items-center fixed left-[84px] px-2.5 py-1 bg-mono-900 text-white text-xs font-bold rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50 origin-left animate-[popoverIn_0.15s_cubic-bezier(0.16,1,0.3,1)]">
                 Keluar
               </span>
             </button>

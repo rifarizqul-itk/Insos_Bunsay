@@ -13,9 +13,10 @@ class StafManagementController extends Controller
     /**
      * Get list of all admin staff accounts.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $stafList = User::where('Id_roles', 1)->get()->map(function ($u) {
+        $currentUserId = $request->user()?->Id_user;
+        $stafList = User::where('Id_roles', 1)->with('tokens')->get()->map(function ($u) use ($currentUserId) {
             $rawPerms = $u->permissions;
             $permsArray = [];
             if ($rawPerms) {
@@ -24,14 +25,25 @@ class StafManagementController extends Controller
                 $permsArray = ['verifikasi_pembayaran', 'input_setoran', 'ekspor_laporan', 'kelola_kios', 'kelola_admin', 'lihat_audit_log'];
             }
 
+            // Calculate presence / online status based on personal_access_tokens
+            $latestToken = $u->tokens->sortByDesc('last_used_at')->first();
+            $lastUsedAt = $latestToken?->last_used_at ?? $latestToken?->created_at;
+
+            $isCurrentUser = ($currentUserId !== null && (int)$u->Id_user === (int)$currentUserId);
+            $isActiveRecently = $lastUsedAt && $lastUsedAt->diffInMinutes(now()) <= 5;
+            $isOnline = $isCurrentUser || ($isActiveRecently && (int)($u->status_aktif ?? 1) === 1);
+
             return [
-                'id'           => $u->Id_user,
-                'username'     => $u->Username,
-                'nama_lengkap' => $u->nama_lengkap ?? $u->Username,
-                'email'        => $u->email ?? '-',
-                'sub_role'     => $u->sub_role ?? 'admin',
-                'permissions'  => $permsArray,
-                'status_aktif' => (int)($u->status_aktif ?? 1) === 1,
+                'id'              => $u->Id_user,
+                'username'        => $u->Username,
+                'nama_lengkap'    => $u->nama_lengkap ?? $u->Username,
+                'email'           => $u->email ?? '-',
+                'sub_role'        => $u->sub_role ?? 'admin',
+                'permissions'     => $permsArray,
+                'status_aktif'    => (int)($u->status_aktif ?? 1) === 1,
+                'is_online'       => (bool)$isOnline,
+                'presence_status' => $isOnline ? 'Online' : 'Offline',
+                'last_seen_at'    => $lastUsedAt?->toISOString(),
             ];
         });
 
@@ -184,7 +196,12 @@ class StafManagementController extends Controller
         $staf->status_aktif = $newStatus;
         $staf->save();
 
-        $statusStr = $newStatus === 1 ? 'Diaktifkan' : 'Dinonaktifkan';
+        // If deactivated, revoke all existing tokens immediately to force logout
+        if ($newStatus === 0) {
+            $staf->tokens()->delete();
+        }
+
+        $statusStr = $newStatus === 1 ? 'Diaktifkan (Reactivated)' : 'Dinonaktifkan (Deactivated)';
 
         ActivityLog::record(
             $request,

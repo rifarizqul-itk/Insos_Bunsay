@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Icon, Table, Card, Badge, Button, Modal, EmptyState, SkeletonTable, Pagination } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Badge, Button, Modal, EmptyState, SkeletonTable, Pagination, formatDateTimeLocal } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function AuditLogPage() {
@@ -155,9 +155,9 @@ function AuditLogPage() {
       {/* Main Audit Log Table (Seamless Edge-to-Edge Surface) */}
       <div className="w-full bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden flex flex-col">
         <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border/80 bg-white">
-          <h3 className="text-sm sm:text-base font-bold text-text">
+          <h2 className="text-sm sm:text-base font-bold text-text">
             Riwayat Aktivitas ({filteredLogs.length})
-          </h3>
+          </h2>
 
           <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
             <input
@@ -215,6 +215,8 @@ function AuditLogPage() {
               icon="heroicons:document-magnifying-glass-20-solid"
               title="Belum ada aktivitas"
               description="Tidak ada aktivitas yang sesuai dengan filter atau kata kunci pencarian."
+              actionLabel={searchQuery || filterModul !== 'Semua' || filterRole !== 'Semua' ? "Reset Semua Filter" : undefined}
+              onAction={searchQuery || filterModul !== 'Semua' || filterRole !== 'Semua' ? () => { setSearchQuery(''); setFilterModul('Semua'); setFilterRole('Semua'); setCurrentPage(1); } : undefined}
             />
           </div>
         ) : (
@@ -238,11 +240,18 @@ function AuditLogPage() {
             >
               {paginatedLogs.map((log) => (
                 <tr key={log.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                  <td className="p-3 font-extrabold text-text font-tabular-nums text-xs">
+                  <th scope="row" className="p-3 font-mono font-bold text-text text-start text-xs">
                     #{log.id}
-                  </td>
-                  <td className="p-3 text-xs text-text-2 font-medium">
-                    <div>{log.created_at}</div>
+                  </th>
+                  <td className="p-3 text-xs text-text-2 font-medium text-start">
+                    {(() => {
+                      const formattedWaktu = formatDateTimeLocal(log.created_at);
+                      return (
+                        <div className="font-tabular-nums text-text font-semibold" title={formattedWaktu.fullTitle}>
+                          {formattedWaktu.formatted}
+                        </div>
+                      );
+                    })()}
                     <div className="text-2.5 text-text-3 font-mono">{log.ip_address || '127.0.0.1'}</div>
                   </td>
                   <td className="p-3 font-bold text-text text-sm">
@@ -284,7 +293,7 @@ function AuditLogPage() {
         isOpen={!!selectedLog}
         onClose={() => setSelectedLog(null)}
         title={`Detail Audit Log #${selectedLog?.id}`}
-        subtitle={`Waktu: ${selectedLog?.created_at || '-'}`}
+        subtitle={selectedLog?.created_at ? `Waktu: ${formatDateTimeLocal(selectedLog.created_at).formatted}` : '-'}
         size="md"
       >
         {selectedLog && (

@@ -44,6 +44,11 @@ function AkunAdmin() {
   const [confirmToggleStaf, setConfirmToggleStaf] = useState(null);
   const [isDeletingStaf, setIsDeletingStaf] = useState(false);
   const [isTogglingStaf, setIsTogglingStaf] = useState(false);
+  const [expandedPerms, setExpandedPerms] = useState({});
+
+  const toggleExpandPerms = useCallback((id) => {
+    setExpandedPerms(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const [stafForm, setStafForm] = useState({
     username: '',
@@ -67,12 +72,12 @@ function AkunAdmin() {
   const isSuperadmin = user?.sub_role === 'superadmin' || user?.role === 'superadmin' || user?.username === 'admin' || user?.username === 'superadmin';
 
   const ALL_PERMISSIONS = [
-    { key: 'verifikasi_pembayaran', label: 'Verifikasi Bukti Transfer', desc: 'Akses terima & tolak bukti pembayaran transfer bank' },
-    { key: 'input_setoran', label: 'Setoran Tunai (Loket Kasir)', desc: 'Akses loket pencatatan setoran tunai & cicilan' },
-    { key: 'ekspor_laporan', label: 'Ekspor Rekap Data (Excel)', desc: 'Unduh laporan rekapitulasi transaksi Excel' },
-    { key: 'kelola_kios', label: 'Kelola Kios & Pendaftaran Sewa', desc: 'Kelola okupansi kios, sewa baru & akhiri sewa' },
-    { key: 'kelola_admin', label: 'Kelola Akun Staf Pengelola', desc: 'Akses buat/edit staf & atur permission RBAC' },
-    { key: 'lihat_audit_log', label: 'Lihat Audit Trail (Activity Log)', desc: 'Melacak seluruh rekam aktivitas staf pengelola' }
+    { key: 'verifikasi_pembayaran', label: 'Verifikasi Bukti Transfer', shortLabel: 'Verifikasi', desc: 'Akses terima & tolak bukti pembayaran transfer bank' },
+    { key: 'input_setoran', label: 'Setoran Tunai (Loket Kasir)', shortLabel: 'Setoran Tunai', desc: 'Akses loket pencatatan setoran tunai & cicilan' },
+    { key: 'ekspor_laporan', label: 'Ekspor Rekap Data (Excel)', shortLabel: 'Ekspor Excel', desc: 'Unduh laporan rekapitulasi transaksi Excel' },
+    { key: 'kelola_kios', label: 'Kelola Kios & Pendaftaran Sewa', shortLabel: 'Kelola Kios', desc: 'Kelola okupansi kios, sewa baru & akhiri sewa' },
+    { key: 'kelola_admin', label: 'Kelola Akun Staf Pengelola', shortLabel: 'Kelola Staf', desc: 'Akses buat/edit staf & atur permission RBAC' },
+    { key: 'lihat_audit_log', label: 'Lihat Audit Trail (Activity Log)', shortLabel: 'Audit Log', desc: 'Melacak seluruh rekam aktivitas staf pengelola' }
   ];
 
   const ROLE_PRESETS = [
@@ -236,7 +241,7 @@ function AkunAdmin() {
     try {
       const res = await httpClient.put(`/api/v1/admin/staf/${target.id}/toggle-status`);
       const newStatus = res?.data?.status_aktif ?? !target.status_aktif;
-      addToast(`Status akun staf @${target.username} berhasil diubah menjadi ${newStatus ? 'Aktif' : 'Nonaktif'}!`, 'success');
+      addToast(`Status akun @${target.username} diubah menjadi ${newStatus ? 'Active' : 'Deactivated'}!`, 'success');
       setConfirmToggleStaf(null);
       if (editingStaf && editingStaf.id === target.id) {
         setEditingStaf(prev => ({ ...prev, status_aktif: newStatus }));
@@ -251,7 +256,7 @@ function AkunAdmin() {
         if (editingStaf && editingStaf.id === target.id) {
           setEditingStaf(prev => ({ ...prev, status_aktif: !prev.status_aktif }));
         }
-        addToast(`Status akun staf @${target.username} berhasil diubah`, 'success');
+        addToast(`Status akun @${target.username} berhasil diubah`, 'success');
       }
       setConfirmToggleStaf(null);
     } finally {
@@ -379,7 +384,7 @@ function AkunAdmin() {
         <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
           <div className="flex items-center gap-2.5 border-b border-border/80 pb-3">
             <Icon icon="heroicons:user-circle-20-solid" className="size-5.5 text-red" />
-            <h3 className="text-base sm:text-lg font-bold text-text text-balance">Data Profil Pengelola</h3>
+            <h2 className="text-base sm:text-lg font-bold text-text text-balance">Data Profil Pengelola</h2>
           </div>
 
           <form onSubmit={handleSimpanProfil} className="flex flex-col gap-3.5">
@@ -443,7 +448,7 @@ function AkunAdmin() {
         <Card variant="elevated" className="p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
           <div className="flex items-center gap-2.5 border-b border-border/80 pb-3">
             <Icon icon="heroicons:lock-closed-20-solid" className="size-5.5 text-amber-700" />
-            <h3 className="text-base sm:text-lg font-bold text-text text-balance">Ubah Kata Sandi</h3>
+            <h2 className="text-base sm:text-lg font-bold text-text text-balance">Ubah Kata Sandi</h2>
           </div>
 
           <form onSubmit={handleUbahSandi} className="flex flex-col gap-3.5">
@@ -542,9 +547,9 @@ function AkunAdmin() {
           <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 bg-white">
             <div className="flex items-center gap-2">
               <Icon icon="heroicons:key-20-solid" className="size-5 text-red" />
-              <h3 className="text-base sm:text-lg font-bold text-text">
+              <h2 className="text-base sm:text-lg font-bold text-text">
                 Hak Akses & Staf Pengelola
-              </h3>
+              </h2>
             </div>
 
             <Button
@@ -571,10 +576,11 @@ function AkunAdmin() {
                   { label: 'Username' },
                   { label: 'Peran' },
                   { label: 'Cakupan Izin' },
-                  { label: 'Status Akun' },
+                  { label: 'Kehadiran', align: 'center' },
+                  { label: 'Status Akun', align: 'center' },
                   { label: 'Aksi', align: 'center' }
                 ]}
-                colSpan={6}
+                colSpan={7}
                 footer={
                   <Pagination
                     currentPage={currentPageStaf}
@@ -589,9 +595,10 @@ function AkunAdmin() {
               >
                 {paginatedStaf.map((staf) => {
                   const isSelf = isSelfUser(staf);
+                  const isOnline = staf.is_online ?? false;
                   return (
                     <tr key={staf.id} className={cn("border-b border-border/80 last:border-b-0 transition-colors", isSelf ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-red-50/20")}>
-                      <td className="py-2.5 px-3 font-semibold text-text text-xs sm:text-sm">
+                      <th scope="row" className="py-2.5 px-3 font-semibold text-text text-xs sm:text-sm text-start">
                         <div className="flex items-center gap-1.5">
                           <span>{staf.nama_lengkap}</span>
                           {isSelf && (
@@ -601,7 +608,7 @@ function AkunAdmin() {
                           )}
                         </div>
                         <div className="text-xs text-text-3 font-normal">{staf.email}</div>
-                      </td>
+                      </th>
                       <td className="py-3 px-4 font-bold font-mono text-xs text-red">
                         @{staf.username}
                       </td>
@@ -610,33 +617,165 @@ function AkunAdmin() {
                           {staf.sub_role || 'admin'}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {(staf.permissions || []).map((permKey) => {
-                            const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                      <td className="py-3 px-4 min-w-[230px]">
+                        {(() => {
+                          const perms = staf.permissions || [];
+                          const isExpanded = Boolean(expandedPerms[staf.id]);
+                          const isFullAccess = perms.length >= ALL_PERMISSIONS.length || staf.sub_role === 'superadmin';
+                          
+                          if (perms.length === 0) {
                             return (
-                              <span key={permKey} className="text-2.5 font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                                {match?.label || permKey}
+                              <span className="text-xs text-text-3 italic">
+                                Tanpa Izin Khusus
                               </span>
                             );
-                          })}
-                        </div>
+                          }
+
+                          if (isFullAccess) {
+                            return (
+                              <div className="flex flex-col items-start gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleExpandPerms(staf.id)}
+                                  className={cn(
+                                    "inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-2xs transition-all duration-150 ease-out active:scale-[0.98] cursor-pointer whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-amber-500/50",
+                                    isExpanded 
+                                      ? "bg-amber-200 text-amber-950 border-amber-400" 
+                                      : "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200/80 hover:border-amber-400"
+                                  )}
+                                  title={isExpanded ? "Klik untuk menyembunyikan rincian izin" : "Klik untuk melihat rincian 6 modul izin"}
+                                >
+                                  <span>Akses Penuh ({perms.length || 6} Izin)</span>
+                                  <Icon 
+                                    icon="heroicons:chevron-down-20-solid" 
+                                    className={cn("size-3.5 text-amber-700 shrink-0 ml-0.5 transition-transform duration-200 ease-out", isExpanded ? "rotate-180" : "rotate-0")} 
+                                  />
+                                </button>
+
+                                {isExpanded && (
+                                  <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-amber-50/90 border border-amber-200 mt-1 max-w-sm transition-all duration-200 ease-out origin-top motion-reduce:transition-none animate-in fade-in-50 zoom-in-95">
+                                    {perms.map((permKey) => {
+                                      const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                                      return (
+                                        <span key={permKey} className="text-xs font-semibold px-2 py-0.5 rounded bg-white text-slate-800 border border-amber-300 shadow-2xs whitespace-nowrap transition-transform duration-100 hover:scale-[1.02]">
+                                          {match?.shortLabel || match?.label || permKey}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          const displayLimit = 2;
+                          const hasMore = perms.length > displayLimit;
+                          const remainingCount = perms.length - displayLimit;
+
+                          return (
+                            <div className="flex flex-col items-start gap-1">
+                              <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
+                                {perms.slice(0, displayLimit).map((permKey) => {
+                                  const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                                  return (
+                                    <span key={permKey} className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs whitespace-nowrap">
+                                      {match?.shortLabel || match?.label || permKey}
+                                    </span>
+                                  );
+                                })}
+
+                                {hasMore && (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleExpandPerms(staf.id)}
+                                    className={cn(
+                                      "inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md border shadow-2xs transition-all duration-150 ease-out active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-amber-500/50 whitespace-nowrap cursor-pointer",
+                                      isExpanded
+                                        ? "bg-amber-200 text-amber-950 border-amber-400"
+                                        : "bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300"
+                                    )}
+                                    title={isExpanded ? "Sembunyikan rincian izin" : `Klik untuk melihat ${remainingCount} izin lainnya`}
+                                  >
+                                    <span>{isExpanded ? 'Tutup' : `+${remainingCount} lagi`}</span>
+                                    <Icon 
+                                      icon="heroicons:chevron-down-20-solid" 
+                                      className={cn("size-3.5 text-amber-800 transition-transform duration-200 ease-out", isExpanded ? "rotate-180" : "rotate-0")} 
+                                    />
+                                  </button>
+                                )}
+                              </div>
+
+                              {isExpanded && hasMore && (
+                                <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-amber-50/90 border border-amber-200 mt-1 max-w-sm transition-all duration-200 ease-out origin-top motion-reduce:transition-none animate-in fade-in-50 zoom-in-95">
+                                  {perms.map((permKey) => {
+                                    const match = ALL_PERMISSIONS.find(p => p.key === permKey);
+                                    return (
+                                      <span key={permKey} className="text-xs font-semibold px-2 py-0.5 rounded bg-white text-slate-800 border border-amber-300 shadow-2xs whitespace-nowrap transition-transform duration-100 hover:scale-[1.02]">
+                                        {match?.shortLabel || match?.label || permKey}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
-                      <td className="py-3 px-4">
-                        <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md", staf.status_aktif !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
-                          <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-500' : 'bg-rose-500')} />
-                          {staf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {isOnline ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="relative flex size-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
+                            </span>
+                            Online
+                          </span>
+                        ) : (
+                          <span 
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200"
+                            title={staf.last_seen_at ? `Terakhir aktif: ${new Date(staf.last_seen_at).toLocaleString('id-ID')}` : 'Belum pernah login'}
+                          >
+                            <span className="size-2 rounded-full bg-slate-400" />
+                            Offline
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border",
+                          staf.status_aktif !== false 
+                            ? 'bg-emerald-100/70 text-emerald-900 border-emerald-300' 
+                            : 'bg-rose-100 text-rose-900 border-rose-300'
+                        )}>
+                          <span className={cn("size-2 rounded-full", staf.status_aktif !== false ? 'bg-emerald-600' : 'bg-rose-600')} />
+                          {staf.status_aktif !== false ? 'Active' : 'Deactivated'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5">
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => handleOpenStafModal(staf)}
-                            className="h-8 px-2.5 text-xs font-bold shadow-2xs"
+                            className="h-8 px-2.5 text-xs font-bold gap-1 shadow-2xs"
+                            title="Edit Data & Izin Staf"
                           >
-                            Edit Izin
+                            <Icon icon="heroicons:pencil-square-20-solid" className="size-3.5 text-text-3" />
+                            <span>Edit Izin</span>
+                          </Button>
+                          <Button
+                            variant={isSelf ? "secondary" : (staf.status_aktif !== false ? "secondary" : "primary")}
+                            size="sm"
+                            disabled={isSelf}
+                            onClick={() => !isSelf && setConfirmToggleStaf(staf)}
+                            className={cn(
+                              "h-8 px-2.5 text-xs font-bold gap-1 shadow-2xs transition-colors",
+                              isSelf ? "opacity-35 cursor-not-allowed" : (staf.status_aktif !== false ? "text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300" : "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent")
+                            )}
+                            title={isSelf ? "Anda tidak dapat menonaktifkan akun Anda sendiri" : (staf.status_aktif !== false ? 'Nonaktifkan Akun (Deactivate)' : 'Aktifkan Kembali Akun (Reactivate)')}
+                          >
+                            <Icon icon={staf.status_aktif !== false ? "heroicons:no-symbol-20-solid" : "heroicons:arrow-path-20-solid"} className="size-3.5" />
+                            <span>{staf.status_aktif !== false ? 'Deactivate' : 'Reactivate'}</span>
                           </Button>
                           <Button
                             variant={isSelf ? "secondary" : "danger"}
@@ -644,13 +783,12 @@ function AkunAdmin() {
                             disabled={isSelf}
                             onClick={() => !isSelf && setConfirmDeleteStaf(staf)}
                             className={cn(
-                              "h-8 px-2.5 text-xs font-bold gap-1 shadow-2xs",
+                              "h-8 px-2 text-xs font-bold shadow-2xs",
                               isSelf ? "opacity-35 cursor-not-allowed" : ""
                             )}
                             title={isSelf ? "Anda tidak dapat menghapus akun Anda sendiri" : "Hapus Akun Staf"}
                           >
                             <Icon icon="heroicons:trash-20-solid" className="size-3.5" />
-                            <span>Hapus</span>
                           </Button>
                         </div>
                       </td>
@@ -717,43 +855,6 @@ function AkunAdmin() {
               />
             </FormField>
           </div>
-
-          {/* Status Akun Section (Khusus Mode Edit) */}
-          {editingStaf && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border bg-slate-50 border-slate-200">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                    Status Akun:
-                  </span>
-                  <span className={cn("text-xs font-extrabold px-2 py-0.5 rounded", editingStaf.status_aktif !== false ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800")}>
-                    {editingStaf.status_aktif !== false ? 'Aktif' : 'Nonaktif'}
-                  </span>
-                </div>
-                <p className="text-2xs text-text-3 font-medium mt-0.5">
-                  {editingStaf.status_aktif !== false 
-                    ? 'Akun aktif dan dapat masuk ke portal pengelola.' 
-                    : 'Akun dinonaktifkan sementara dan tidak dapat masuk ke sistem.'}
-                </p>
-              </div>
-
-              <Button
-                type="button"
-                variant={isSelfUser(editingStaf) ? 'secondary' : (editingStaf.status_aktif !== false ? 'danger' : 'secondary')}
-                size="sm"
-                disabled={isSelfUser(editingStaf)}
-                onClick={() => !isSelfUser(editingStaf) && setConfirmToggleStaf(editingStaf)}
-                className={cn(
-                  "h-8 px-3 text-xs font-bold shadow-2xs whitespace-nowrap shrink-0 self-start sm:self-auto gap-1",
-                  isSelfUser(editingStaf) ? "opacity-35 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-100" : ""
-                )}
-                title={isSelfUser(editingStaf) ? "Anda tidak dapat menonaktifkan akun Anda sendiri" : (editingStaf.status_aktif !== false ? 'Nonaktifkan Akun' : 'Aktifkan Akun')}
-              >
-                <Icon icon={editingStaf.status_aktif !== false ? "heroicons:no-symbol-20-solid" : "heroicons:check-circle-20-solid"} className="size-3.5" />
-                <span>{editingStaf.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan'}</span>
-              </Button>
-            </div>
-          )}
 
           {/* Role Presets Section */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-2.5">
@@ -835,11 +936,11 @@ function AkunAdmin() {
         </form>
       </Modal>
 
-      {/* MODAL KONFIRMASI NONAKTIF / AKTIFKAN STAF */}
+      {/* MODAL KONFIRMASI DEACTIVATE / REACTIVATE STAF */}
       <Modal
         isOpen={Boolean(confirmToggleStaf)}
         onClose={() => !isTogglingStaf && setConfirmToggleStaf(null)}
-        title={confirmToggleStaf?.status_aktif !== false ? "Nonaktifkan Akun Staf?" : "Aktifkan Akun Staf?"}
+        title={confirmToggleStaf?.status_aktif !== false ? "Deactivate Akun Staf?" : "Reactivate Akun Staf?"}
         size="sm"
         footer={
           <div className="flex gap-2 w-full">
@@ -861,7 +962,7 @@ function AkunAdmin() {
             >
               {isTogglingStaf 
                 ? 'Memproses...' 
-                : (confirmToggleStaf?.status_aktif !== false ? 'Nonaktifkan' : 'Aktifkan')}
+                : (confirmToggleStaf?.status_aktif !== false ? 'Deactivate' : 'Reactivate')}
             </Button>
           </div>
         }
@@ -869,9 +970,9 @@ function AkunAdmin() {
         <div className="flex flex-col gap-2.5 text-xs text-text-2">
           <p>
             {confirmToggleStaf?.status_aktif !== false ? (
-              <span>Nonaktifkan akun <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})? Staf tidak dapat masuk ke sistem sampai diaktifkan kembali.</span>
+              <span>Nonaktifkan (Deactivate) akun <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})? Seluruh sesi login staf ini akan langsung dicabut dan tidak dapat masuk ke sistem.</span>
             ) : (
-              <span>Aktifkan kembali akses akun staf <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})?</span>
+              <span>Aktifkan kembali (Reactivate) akun staf <strong>@{confirmToggleStaf?.username}</strong> ({confirmToggleStaf?.nama_lengkap})? Staf akan dapat masuk kembali ke portal pengelola.</span>
             )}
           </p>
         </div>

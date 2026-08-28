@@ -113,7 +113,7 @@ html {
     --radius-2xl: 24px;
     --text: #1A0D0D;
     --text-2: #6A4B4B;
-    --text-3: #997E7E;
+    --text-3: #735656;
     --disabled-bg: #D8CACA;
     --green: #14592F;
     --green-bg: #EAF5EF;
@@ -297,7 +297,7 @@ html {
   }
 
   .topbar-dropdown {
-    @apply absolute top-[60px] right-0 w-[min(90vw,380px)] bg-white border border-border/90 rounded-2xl shadow-modal p-0 flex flex-col z-30 animate-[fadeIn_0.18s_cubic-bezier(0.16,1,0.3,1)];
+    @apply absolute top-[60px] right-0 w-[min(90vw,380px)] bg-white border border-border/90 rounded-2xl shadow-modal p-0 flex flex-col z-30 origin-top-right animate-[popoverIn_0.18s_cubic-bezier(0.16,1,0.3,1)];
   }
 
   .sidebar-tenant-container,
@@ -364,6 +364,16 @@ html {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes popoverIn {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 @keyframes slideInRight {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -380,6 +390,10 @@ html {
 
 .animate-slide-in-bottom {
   animation: slideInBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-modal-in {
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -57,4 +57,11 @@ scratch/
 *.tmp
 *.bak
 
-SKEMA DATABASE.md
+*SKEMA DATABASE.md
+*README_SEEDER.md
+
+# AI Agent Skills & Configs
+.agents/
+.claude/
+agent/
+skills-lock.json

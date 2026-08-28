@@ -40,9 +40,9 @@ function EksporData() {
 
       <div className="ekspor-layout-grid mobile-stack grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
         <Card variant="elevated" className="lg:col-span-8 p-4 sm:p-6 flex flex-col gap-4 shadow-xs">
-          <h3 className="text-base sm:text-lg font-bold text-text border-b border-border pb-2.5 text-balance">
+          <h2 className="text-base sm:text-lg font-bold text-text border-b border-border pb-2.5 text-balance">
             Pilih Periode Laporan
-          </h3>
+          </h2>
           
           <form onSubmit={handleDownloadExcel} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
@@ -96,7 +96,7 @@ function EksporData() {
         <Card variant="elevated" className="lg:col-span-4 p-4 sm:p-5 flex flex-col gap-3 shadow-xs">
           <div className="flex items-center gap-2 border-b border-border pb-2.5">
             <Icon icon="heroicons:table-cells-20-solid" className="size-5 text-red" />
-            <h3 className="text-sm sm:text-base font-bold text-text text-balance">Format Laporan (.xlsx)</h3>
+            <h2 className="text-sm sm:text-base font-bold text-text text-balance">Format Laporan (.xlsx)</h2>
           </div>
           
           <ul className="text-xs sm:text-sm text-text-2 space-y-2 leading-relaxed">

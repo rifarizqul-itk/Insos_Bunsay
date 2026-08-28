@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast, cn } from '@bunsay/shared-ui';
+import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 function HistoriPembayaran() {
@@ -34,7 +34,9 @@ function HistoriPembayaran() {
         const mapped = res.data.map(item => ({
           id: `TRX-${item.Id_Pembayaran}`,
           idReal: item.Id_Pembayaran,
+          periode: item.tagihan?.Periode ? `Sewa Kios ${item.tagihan.Periode}` : (item.Periode ? `Sewa Kios ${item.Periode}` : 'Sewa Kios'),
           tanggal: item.Tanggal_Bayar || '-',
+          waktu: item.created_at || item.Tanggal_Bayar || '-',
           nominalAngka: Number(item.Total_Bayar || 0),
           metode: item.Metode_Bayar || 'Transfer',
           status: item.Verifikasi_Pembayaran || 'Menunggu',
@@ -108,17 +110,25 @@ function HistoriPembayaran() {
     setSanggahanError('');
   };
 
-  const handleSubmitSanggahan = async () => {
+  const handleKirimSanggahan = async (e) => {
+    e.preventDefault();
     if (!teksSanggahan.trim()) {
-      setSanggahanError('Alasan sanggahan wajib diisi.');
+      setSanggahanError('Penjelasan sanggahan wajib diisi.');
       return;
     }
 
     setIsSubmittingSanggahan(true);
+    setSanggahanError('');
+
     try {
-      await httpClient.post(`/api/v1/tenant/pembayaran/${sanggahanModalItem.idReal}/sanggah`, {
-        teks_sanggahan: teksSanggahan.trim(),
-        bukti_sanggahan: previewBuktiSanggahan || null
+      const formData = new FormData();
+      formData.append('teks_sanggahan', teksSanggahan);
+      if (buktiSanggahanFile) {
+        formData.append('bukti_sanggahan', buktiSanggahanFile);
+      }
+
+      await httpClient.post(`/api/v1/tenant/pembayaran/${sanggahanModalItem.idReal}/sanggahan`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       setSanggahanModalItem(null);
@@ -133,11 +143,11 @@ function HistoriPembayaran() {
 
   const tableHeaders = [
     { label: 'ID Transaksi', sortKey: 'idReal', className: 'hidden sm:table-cell' },
-    { label: 'Tanggal', sortKey: 'tanggal' },
+    { label: 'Periode & Tanggal', sortKey: 'tanggal' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Metode', sortKey: 'metode', className: 'hidden md:table-cell' },
-    { label: 'Resi & Bukti', align: 'center', sortable: false },
-    { label: 'Status & Keterangan', sortKey: 'status' }
+    { label: 'Status', align: 'center', sortKey: 'status' },
+    { label: 'Resi & Bukti', align: 'center', sortable: false }
   ];
 
   const paginatedHistory = useMemo(() => {
@@ -199,8 +209,10 @@ function HistoriPembayaran() {
           <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-6">
             <EmptyState
               icon="heroicons:receipt-refund-20-solid"
-              title="Belum ada transaksi"
-              description="Pembayaran sewa kios Anda akan otomatis tercatat di sini."
+              title={selectedMetode !== 'Semua' ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi"}
+              description={selectedMetode !== 'Semua' ? `Tidak ditemukan transaksi dengan metode "${selectedMetode}".` : "Pembayaran sewa kios Anda akan otomatis tercatat di sini."}
+              actionLabel={selectedMetode !== 'Semua' ? "Reset Filter Metode" : undefined}
+              onAction={selectedMetode !== 'Semua' ? () => { setSelectedMetode('Semua'); setCurrentPage(1); } : undefined}
             />
           </div>
         ) : (
@@ -225,86 +237,80 @@ function HistoriPembayaran() {
                   />
                 }
               >
-                {paginatedHistory.map((row, idx) => (
-                  <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
-                    <th scope="row" className="font-tabular-nums font-bold p-3 text-text text-start">
-                      {row.id}
-                    </th>
-                    <td className="p-3 text-text-2 font-medium text-xs font-tabular-nums">
-                      {row.tanggal}
-                    </td>
-                    <td className="font-tabular-nums font-extrabold p-3 text-text whitespace-nowrap">
-                      Rp {row.nominalAngka.toLocaleString('id-ID')}
-                    </td>
-                    <td className="p-3 text-text font-bold">
-                      {row.metode === 'Midtrans' ? 'Midtrans Gateway' : row.metode === 'Transfer' ? 'Transfer Bank' : row.metode === 'Tunai' ? 'Tunai Loket' : row.metode}
-                    </td>
-                    <td className="p-3 text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedReceipt(row)}
-                        aria-label={`Lihat bukti atau resi transaksi ${row.id}`}
-                        className="min-h-8 h-8 text-xs font-bold gap-1.5 px-3 border-border hover:border-red hover:text-red transition-all"
-                      >
-                        {row.metode === 'Midtrans' ? (
-                          <>
-                            <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-orange" />
-                            <span>Resi Digital</span>
-                          </>
-                        ) : row.metode === 'Tunai' ? (
-                          <>
-                            <Icon icon="heroicons:document-text-20-solid" className="size-3.5 text-amber-700" />
-                            <span>Kuitansi</span>
-                          </>
-                        ) : (
-                          <>
-                            <Icon icon="heroicons:photo-20-solid" className="size-3.5 text-green" />
-                            <span>Foto Bukti</span>
-                          </>
-                        )}
-                      </Button>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-col gap-2 items-start">
-                        <div className="flex items-center gap-2 flex-wrap">
+                {paginatedHistory.map((row, idx) => {
+                  const formattedWaktu = formatDateTimeLocal(row.waktu || row.tanggal);
+                  return (
+                    <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
+                      <th scope="row" className="font-mono font-black text-xs sm:text-sm p-3 text-text text-start">
+                        {row.id}
+                      </th>
+                      <td className="p-3 text-start">
+                        <div className="font-semibold text-text text-xs sm:text-sm">{row.periode || 'Sewa Kios'}</div>
+                        <div className="text-text-2 font-medium text-xs font-tabular-nums" title={formattedWaktu.fullTitle}>
+                          {formattedWaktu.formatted}
+                        </div>
+                      </td>
+                      <td className="font-tabular-nums font-black p-3 text-text whitespace-nowrap text-xs sm:text-sm">
+                        Rp {row.nominalAngka.toLocaleString('id-ID')}
+                      </td>
+                      <td className="p-3 text-text font-bold text-xs sm:text-sm">
+                        {row.metode === 'Midtrans' ? 'Midtrans Gateway' : row.metode === 'Transfer' ? 'Transfer Bank' : row.metode === 'Tunai' ? 'Tunai Loket' : row.metode}
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex flex-col gap-1 items-center justify-center">
                           <Badge status={row.status} />
                           {row.status === 'Ditolak' && (
                             <Button
                               variant="warning"
-                              size="sm"
+                              size="xs"
                               onClick={() => handleOpenSanggahanModal(row)}
-                              className="min-h-8 h-8 text-xs font-extrabold gap-1.5 px-2.5 shadow-2xs"
+                              className="text-2xs font-extrabold gap-1 px-2 py-1 shadow-2xs mt-1"
                             >
-                              <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5" />
-                              <span>Ajukan Sanggahan</span>
+                              <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3" />
+                              <span>Sanggah</span>
                             </Button>
                           )}
                         </div>
                         {row.status === 'Ditolak' && row.catatanAdmin && (
-                          <div className="p-2 bg-red-50 border border-red/20 rounded-md text-xs text-red font-bold flex items-center gap-1.5 w-full">
-                            <Icon icon="heroicons:exclamation-circle-20-solid" className="size-4 shrink-0 text-red" />
-                            <span>Alasan Tolak: "{row.catatanAdmin}"</span>
+                          <div className="mt-1 p-1.5 bg-red-50 border border-red/20 rounded-md text-2xs text-red font-medium text-start">
+                            Alasan: "{row.catatanAdmin}"
                           </div>
                         )}
                         {row.teksSanggahan && (
-                          <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 font-semibold flex flex-col gap-1 w-full">
-                            <div className="flex items-start gap-1.5">
-                              <Icon icon="heroicons:chat-bubble-bottom-center-text-20-solid" className="size-4 text-amber-700 shrink-0 mt-0.5" />
-                              <span>Sanggahan Anda: "{row.teksSanggahan}"</span>
-                            </div>
-                            {row.buktiSanggahan && (
-                              <span className="ps-5.5 text-[11px] font-bold text-amber-800 flex items-center gap-1">
-                                <Icon icon="heroicons:paper-clip-20-solid" className="size-3.5" />
-                                <span>Lampiran foto sanggahan disertakan (terlampir di berkas resi)</span>
-                              </span>
-                            )}
+                          <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded-md text-2xs text-amber-900 font-semibold flex flex-col gap-0.5 text-start">
+                            <span>Sanggahan: "{row.teksSanggahan}"</span>
                           </div>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-3 text-center whitespace-nowrap">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setSelectedReceipt(row)}
+                          aria-label={`Lihat bukti atau resi transaksi ${row.id}`}
+                          className="font-bold text-xs gap-1.5 px-3 py-1.5"
+                        >
+                          {row.metode === 'Midtrans' ? (
+                            <>
+                              <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-orange" />
+                              <span>Resi Digital</span>
+                            </>
+                          ) : row.metode === 'Tunai' ? (
+                            <>
+                              <Icon icon="heroicons:document-text-20-solid" className="size-3.5 text-amber-700" />
+                              <span>Kuitansi</span>
+                            </>
+                          ) : (
+                            <>
+                              <Icon icon="heroicons:photo-20-solid" className="size-3.5 text-green" />
+                              <span>Foto Bukti</span>
+                            </>
+                          )}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </Table>
             </div>
 
@@ -313,6 +319,7 @@ function HistoriPembayaran() {
               {paginatedHistory.map((row, idx) => {
                 const isMidtrans = row.metode === 'Midtrans';
                 const isTunai = row.metode === 'Tunai';
+                const formattedWaktu = formatDateTimeLocal(row.waktu || row.tanggal);
                 
                 const methodLabel = isMidtrans ? 'Midtrans Gateway' : isTunai ? 'Setoran Tunai' : 'Transfer Bank';
                 const iconName = isMidtrans ? 'heroicons:qr-code-20-solid' : isTunai ? 'heroicons:banknotes-20-solid' : 'heroicons:building-library-20-solid';
@@ -357,9 +364,9 @@ function HistoriPembayaran() {
 
                     {/* Bottom Row: Date on Left + Amount & Resi Button on Right */}
                     <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-text-3 font-tabular-nums">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-text-3 font-tabular-nums" title={formattedWaktu.fullTitle}>
                         <Icon icon="heroicons:calendar-20-solid" className="size-3.5 text-mono-400 shrink-0" />
-                        <span>{row.tanggal}</span>
+                        <span>{formattedWaktu.formatted}</span>
                       </div>
 
                       <div className="flex items-center gap-2.5">

@@ -10,7 +10,7 @@ class Pembayaran extends Model
     use HasFactory;
     protected $table = 'pembayaran';
     protected $primaryKey = 'Id_Pembayaran';
-    public $timestamps = false;
+    public $timestamps = true;
     protected $guarded = [];
 
     public function tagihan()

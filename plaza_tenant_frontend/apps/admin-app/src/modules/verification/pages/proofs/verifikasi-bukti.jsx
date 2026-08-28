@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { resolveStorageUrl } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -51,7 +51,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             nominalRaw: Number(item.Total_Bayar || 0),
             nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
             labelMetode: item.Metode_Bayar || 'Transfer Bank Manual',
-            waktu: item.Tanggal_Bayar || '-',
+            waktu: item.created_at || item.Tanggal_Bayar || '-',
             status: 'Menunggu',
             catatan: item.catatan_admin || '',
             teksSanggahan: item.teks_sanggahan || '',
@@ -70,7 +70,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             nominalRaw: Number(item.Total_Bayar || 0),
             nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
             labelMetode: item.Metode_Bayar || 'Transfer Bank Manual',
-            waktu: item.Tanggal_Bayar || '-',
+            waktu: item.created_at || item.Tanggal_Bayar || '-',
             status: item.Verifikasi_Pembayaran,
             catatan: item.catatan_admin || '',
             teksSanggahan: item.teks_sanggahan || '',
@@ -183,7 +183,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
   const antreanHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
-    { label: 'Waktu/Tanggal', sortKey: 'waktu' },
+    { label: 'Waktu & Tanggal', sortKey: 'waktu' },
     { label: 'Periode', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
     { label: 'Aksi', align: 'center', sortable: false }
@@ -191,9 +191,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
   const riwayatHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
-    { label: 'Tagihan', sortKey: 'tagihan' },
-    { label: 'Nominal', sortKey: 'nominal' },
-    { label: 'Keputusan Verifikasi', sortKey: 'status' },
+    { label: 'Periode', sortKey: 'tagihan' },
+    { label: 'Nominal Bayar', sortKey: 'nominal' },
+    { label: 'Status', align: 'center', sortKey: 'status' },
     { label: 'Catatan Admin', sortKey: 'catatan' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
@@ -328,6 +328,8 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                 icon="heroicons:document-check-20-solid"
                 title="Belum ada antrean verifikasi"
                 description={selectedTenant ? `Tidak ada antrean bukti transfer untuk ${selectedTenant}.` : 'Tidak ada pembayaran yang menunggu verifikasi saat ini.'}
+                actionLabel="Segarkan Antrean"
+                onAction={fetchVerifikasiQueue}
               />
             </div>
           ) : (
@@ -364,8 +366,15 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                     </div>
                     <div className="font-tabular-nums font-extrabold text-xs text-red mt-0.5">Kios {item.kios}</div>
                   </th>
-                  <td data-label="Waktu/Tanggal" className="py-3 px-4 text-text-2 font-medium text-xs font-tabular-nums">
-                    {item.waktu}
+                  <td data-label="Waktu/Tanggal" className="py-3 px-4 text-text-2 font-medium text-xs font-tabular-nums text-start">
+                    {(() => {
+                      const formattedWaktu = formatDateTimeLocal(item.waktu);
+                      return (
+                        <div title={formattedWaktu.fullTitle}>
+                          {formattedWaktu.formatted}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td data-label="Periode" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {item.tagihan}
@@ -399,6 +408,8 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                 icon="heroicons:clock-20-solid"
                 title="Belum Ada Riwayat Terproses"
                 description="Belum ada verifikasi pembayaran yang disetujui atau ditolak."
+                actionLabel="Segarkan Data"
+                onAction={fetchVerifikasiQueue}
               />
             </div>
           ) : (
@@ -427,13 +438,13 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                     <div className="font-extrabold text-text text-sm sm:text-base">{item.nama}</div>
                     <div className="font-tabular-nums font-extrabold text-xs text-red mt-0.5">Kios {item.kios}</div>
                   </th>
-                  <td data-label="Tagihan" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
+                  <td data-label="Periode" className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {item.tagihan}
                   </td>
-                  <td data-label="Nominal" className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
+                  <td data-label="Nominal Bayar" className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
                     {item.nominal}
                   </td>
-                  <td data-label="Keputusan Verifikasi" className="py-3 px-4">
+                  <td data-label="Status" className="py-3 px-4 text-center">
                     <Badge status={item.status} />
                   </td>
                   <td data-label="Catatan Admin" className="py-3 px-4 text-xs text-text-2">
@@ -629,7 +640,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             </div>
 
             <div className="flex flex-col gap-3">
-              <h4 className="label-micro text-text-3">Informasi Transaksi</h4>
+              <h2 className="label-micro text-text-3">Informasi Transaksi</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 bg-white p-4 rounded-lg text-xs border border-border/80">
                 <div>
                   <span className="text-text-3 font-medium block mb-0.5">Nama Tenant</span>
@@ -645,7 +656,9 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                 </div>
                 <div>
                   <span className="text-text-3 font-medium block mb-0.5">Waktu Kirim</span>
-                  <strong className="text-text font-bold font-tabular-nums text-xs block">{previewItem.waktu}</strong>
+                  <strong className="text-text font-bold font-tabular-nums text-xs block" title={formatDateTimeLocal(previewItem.waktu).fullTitle}>
+                    {formatDateTimeLocal(previewItem.waktu).formatted}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -673,7 +686,55 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
             {/* Receipt Image Preview */}
             <div className="flex flex-col gap-2">
-              <label className="label-micro text-text-3">Lampiran Bukti Transfer</label>
+              <div className="flex items-center justify-between">
+                <label className="label-micro text-text-3">Lampiran Bukti Transfer</label>
+                {previewItem.buktiUrl && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => window.open(resolveStorageUrl(previewItem.buktiUrl), '_blank')}
+                      className="text-xs font-bold text-text-2 hover:text-red flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Buka foto di tab baru"
+                    >
+                      <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3.5" />
+                      <span>Tab Baru</span>
+                    </button>
+                    <span className="text-border text-xs">|</span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const fullUrl = resolveStorageUrl(previewItem.buktiUrl);
+                        const fileName = `Bukti_Transfer_${previewItem.trxCode || previewItem.id || 'TRX'}.jpg`;
+                        try {
+                          const res = await fetch(fullUrl);
+                          const blob = await res.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          a.download = fileName;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(blobUrl);
+                        } catch {
+                          const a = document.createElement('a');
+                          a.href = fullUrl;
+                          a.download = fileName;
+                          a.target = '_blank';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }
+                      }}
+                      className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Unduh foto bukti transfer"
+                    >
+                      <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
+                      <span>Unduh</span>
+                    </button>
+                  </div>
+                )}
+              </div>
               {previewItem.buktiUrl ? (
                 <div className="w-full max-h-64 bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2">
                   <button

@@ -980,6 +980,7 @@ class RealTenantSeeder extends Seeder
                     'Status_Tagihan'   => $isLast ? 'Belum Bayar' : 'Lunas',
                 ]);
                 if (!$isLast) {
+                    $realPayDate = \Carbon\Carbon::create($tDate->year, $tDate->month, 10, rand(9, 15), rand(10, 50), 0, 'Asia/Makassar')->setTimezone('UTC');
                     \App\Models\Pembayaran::create([
                         'Id_Tagihan'            => $tagihan->Id_Tagihan,
                         'Tanggal_Bayar'         => $tDate->copy()->day(10)->toDateString(),
@@ -987,6 +988,8 @@ class RealTenantSeeder extends Seeder
                         'Metode_Bayar'          => 'Transfer',
                         'Bukti_Pembayaran'      => 'storage/bukti/real_'.$tagihan->Id_Tagihan.'.png',
                         'Verifikasi_Pembayaran' => 'Diterima',
+                        'created_at'            => $realPayDate->toDateTimeString(),
+                        'updated_at'            => $realPayDate->toDateTimeString(),
                     ]);
                 }
             }

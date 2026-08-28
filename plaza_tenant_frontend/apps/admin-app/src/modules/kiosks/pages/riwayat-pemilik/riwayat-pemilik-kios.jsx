@@ -24,7 +24,7 @@ function RiwayatPemilikKios() {
     { label: 'Nama Pemilik (Ex-Tenant)', sortKey: 'nama' },
     { label: 'Unit Kios Terakhir', sortKey: 'kios' },
     { label: 'Jenis Usaha', sortKey: 'usaha' },
-    { label: 'Status Keanggotaan', sortKey: 'statusPemilik' },
+    { label: 'Status Keanggotaan', align: 'center', sortKey: 'statusPemilik' },
     { label: 'Keterangan', sortKey: 'rincianTunggakan' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
@@ -76,6 +76,7 @@ function RiwayatPemilikKios() {
 
         <input
           type="text"
+          aria-label="Cari mantan penyewa atau nomor kios"
           placeholder="Cari mantan penyewa..."
           value={searchQuery}
           onChange={(e) => {
@@ -126,7 +127,7 @@ function RiwayatPemilikKios() {
                   <td className="py-3 px-4 text-text-2 font-medium text-xs sm:text-sm">
                     {tenant.usaha || '—'}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 text-center">
                     <Badge status="Belum Bayar" customText="Nonaktif" />
                   </td>
                   <td className="py-3 px-4 text-xs text-text-2 font-medium">

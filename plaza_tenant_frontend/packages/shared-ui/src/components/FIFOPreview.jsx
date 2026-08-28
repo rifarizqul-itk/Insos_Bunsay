@@ -31,7 +31,7 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
         color: 'var(--text-3)',
         textAlign: 'center'
       }}>
-        Masukkan nominal pembayaran di atas untuk melihat rincian alokasi.
+        Masukkan nominal pembayaran untuk melihat rincian alokasi.
       </div>
     );
   }
@@ -52,7 +52,7 @@ const FIFOPreview = React.memo(function FIFOPreview({ allocations = [], nominal 
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text)' }}>
-          Rincian Tagihan
+          Alokasi Pelunasan
         </span>
         <span className="font-tabular-nums" style={{ fontSize: '13px', fontWeight: '700', color: 'var(--red)' }}>
           {formatRupiah(nominal)}

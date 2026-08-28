@@ -241,9 +241,9 @@ function AkunTenant() {
               <div className="size-9 rounded-xl bg-red-50 text-red border border-red/20 flex items-center justify-center font-bold shrink-0 shadow-2xs">
                 <Icon icon="heroicons:user-circle-20-solid" className="size-5" />
               </div>
-              <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
+              <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight text-balance">
                 Detail Profil Pemilik Kios
-              </h3>
+              </h2>
             </div>
             
             <form onSubmit={handleSave} className="flex flex-col gap-5">

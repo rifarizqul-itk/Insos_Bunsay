@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Badge, Button, Table, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination } from '@bunsay/shared-ui';
+import { Card, Badge, Button, Table, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, formatDateTimeLocal } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function RiwayatTransaksiAdmin() {
@@ -53,7 +53,7 @@ function RiwayatTransaksiAdmin() {
                 : item.Metode_Bayar === 'Tunai' 
                   ? 'Tunai Loket' 
                   : item.Metode_Bayar || 'Transfer Bank',
-            waktu: item.Tanggal_Bayar || item.created_at || '-',
+            waktu: item.created_at || item.Tanggal_Bayar || '-',
             status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : (item.Verifikasi_Pembayaran || 'Lunas')),
             buktiUrl: item.Bukti_Pembayaran || '',
             alasan: item.Catatan_Admin || '',
@@ -141,7 +141,7 @@ function RiwayatTransaksiAdmin() {
           >
             <option value="Semua">Semua Metode</option>
             <option value="Transfer">Transfer Bank</option>
-            <option value="Tunai">Tunai (Kasir)</option>
+            <option value="Tunai">Tunai (Loket)</option>
             <option value="Midtrans">Midtrans Gateway</option>
           </select>
         </div>
@@ -157,8 +157,10 @@ function RiwayatTransaksiAdmin() {
           <div className="p-8">
             <EmptyState
               icon="heroicons:receipt-percent-20-solid"
-              title="Belum ada transaksi"
-              description="Belum ada riwayat transaksi pembayaran untuk filter metode ini."
+              title={filterMetode !== 'Semua' ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi"}
+              description={filterMetode !== 'Semua' ? `Tidak ditemukan transaksi dengan metode "${filterMetode}".` : "Belum ada riwayat transaksi pembayaran saat ini."}
+              actionLabel={filterMetode !== 'Semua' ? "Reset Filter Metode" : undefined}
+              onAction={filterMetode !== 'Semua' ? () => { setFilterMetode('Semua'); setCurrentPage(1); } : undefined}
             />
           </div>
         ) : (
@@ -183,7 +185,7 @@ function RiwayatTransaksiAdmin() {
             >
               {paginatedRiwayat.map((item, index) => (
                 <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                  <th scope="row" data-label="ID Transaksi" className="py-3 px-4 font-mono font-black text-text text-xs sm:text-sm">
+                  <th scope="row" data-label="ID Transaksi" className="py-3 px-4 font-mono font-black text-text text-xs sm:text-sm text-start">
                     {item.id}
                   </th>
                   <td data-label="Tenant & Kios" className="py-3 px-4 text-start">
@@ -202,11 +204,18 @@ function RiwayatTransaksiAdmin() {
                   <td data-label="Nominal Bayar" className="py-3 px-4 font-tabular-nums font-black text-xs sm:text-sm text-text">
                     {item.nominal}
                   </td>
-                  <td data-label="Metode & Waktu" className="py-3 px-4 text-text-2 text-xs">
+                  <td data-label="Metode & Waktu" className="py-3 px-4 text-text-2 text-xs text-start">
                     <div className="font-bold text-text text-xs sm:text-sm">
                       {item.labelMetode || (item.metode === 'Midtrans' ? 'Midtrans Gateway' : item.metode === 'Transfer' ? 'Transfer Bank' : item.metode)}
                     </div>
-                    <div className="text-text-3 font-medium font-tabular-nums">{item.waktu}</div>
+                    {(() => {
+                      const formattedWaktu = formatDateTimeLocal(item.waktu);
+                      return (
+                        <div className="text-text-3 font-medium font-tabular-nums mt-0.5" title={formattedWaktu.fullTitle}>
+                          {formattedWaktu.formatted}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td data-label="Status" className="py-3 px-4 text-center">
                     <Badge status={item.status} />

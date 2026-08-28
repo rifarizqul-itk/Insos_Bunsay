@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
+import { formatDateTimeLocal } from '../utils/dateFormat';
 import { Modal } from './Modal';
 import { Badge } from './Badge';
 import { Button } from './Button';
@@ -183,6 +184,31 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadBukti = async () => {
+    if (!activeImageSrc) return;
+    const fileName = isFilePath ? (buktiUrl.split('/').pop() || `Bukti_Transfer_${trxLabel}.jpg`) : `Bukti_Transfer_${trxLabel}.jpg`;
+    try {
+      const res = await fetch(activeImageSrc);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      const link = document.createElement('a');
+      link.href = activeImageSrc;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   // Isolated Professional Iframe Print
@@ -374,9 +400,9 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
               <td class="lbl">Nama Penyewa</td>
               <td class="col">:</td>
               <td class="val">${item.nama || 'Tenant'}</td>
-              <td class="lbl">Tanggal Bayar</td>
+              <td class="lbl">Waktu Bayar</td>
               <td class="col">:</td>
-              <td class="val">${item.tanggal || item.waktu || '-'}</td>
+              <td class="val">${formatDateTimeLocal(item.waktu || item.tanggal).formatted}</td>
             </tr>
             <tr>
               <td class="lbl">Unit / Lokasi Kios</td>
@@ -510,15 +536,15 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
             <span className="text-3xl font-extrabold text-red font-tabular-nums tracking-tight">
               {nominalFormatted}
             </span>
-            <span className="text-xs font-bold text-text-3 font-tabular-nums">
-              {item.tanggal || item.waktu || '-'}
+            <span className="text-xs font-bold text-text-3 font-tabular-nums" title={formatDateTimeLocal(item.waktu || item.tanggal).fullTitle}>
+              {formatDateTimeLocal(item.waktu || item.tanggal).formatted}
             </span>
           </div>
         </div>
 
         {/* 2. TRANSACTION METADATA (Structured Key-Value Grid) */}
         <div className="flex flex-col gap-3">
-          <h4 className="label-micro text-text-3">Informasi Transaksi</h4>
+          <h2 className="label-micro text-text-3">Informasi Transaksi</h2>
           
           <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 text-xs bg-white p-4 rounded-lg border border-border/80">
             <div>
@@ -614,7 +640,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         {/* A. DETAIL RESMI MIDTRANS PAYMENT GATEWAY */}
         {isMidtrans && (
           <div className="flex flex-col gap-3">
-            <h4 className="label-micro text-text-3">Rincian Transaksi</h4>
+            <h2 className="label-micro text-text-3">Rincian Transaksi</h2>
             
             <div className="bg-mono-50 border border-border/80 rounded-xl p-4 flex flex-col gap-3 text-xs">
               <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
@@ -663,7 +689,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         {/* B. DETAIL RESMI KUITANSI KASIR LOKET TUNAI */}
         {isTunai && (
           <div className="flex flex-col gap-3">
-            <h4 className="label-micro text-text-3">Bukti Kuitansi Kasir Loket</h4>
+            <h2 className="label-micro text-text-3">Bukti Kuitansi Kasir Loket</h2>
 
             {/* Stamped Cash Counter Voucher Card */}
             <div className="bg-mono-50 border border-border/80 rounded-xl p-4 flex flex-col gap-3 text-xs">
@@ -709,7 +735,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         {/* C. DETAIL TRANSFER BANK MANUAL DENGAN SLIP */}
         {isTransfer && (
           <div className="flex flex-col gap-3">
-            <h4 className="label-micro text-text-3">Lampiran Bukti Slip Transfer</h4>
+            <h2 className="label-micro text-text-3">Lampiran Bukti Slip Transfer</h2>
 
             {activeImageSrc && !imageError ? (
               <div className="flex flex-col gap-2">
@@ -717,30 +743,49 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                   <span className="text-xs font-semibold text-text-3">
                     Pratinjau Foto Slip:
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsZoomed(!isZoomed)}
-                    className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} className="size-3.5" />
-                    <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsZoomed(!isZoomed)}
+                      className="text-xs font-bold text-text-2 hover:text-red flex items-center gap-1 cursor-pointer transition-colors"
+                      aria-label={isZoomed ? "Kecilkan tampilan foto bukti transfer" : "Perbesar tampilan foto bukti transfer"}
+                    >
+                      <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} className="size-3.5" />
+                      <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
+                    </button>
+                    <span className="text-border text-xs">|</span>
+                    <button
+                      type="button"
+                      onClick={handleDownloadBukti}
+                      className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                      aria-label="Unduh foto bukti transfer"
+                    >
+                      <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
+                      <span>Unduh</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className={cn(
                   "w-full bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2 transition-all",
                   isZoomed ? "max-h-[30rem]" : "max-h-72"
                 )}>
-                  <img
-                    src={activeImageSrc}
-                    alt={`Bukti Transfer ${trxLabel}`}
-                    loading="lazy"
-                    onError={() => {
-                      setImageError(true);
-                    }}
-                    className="max-h-full max-w-full object-contain rounded-md cursor-pointer"
+                  <button
+                    type="button"
                     onClick={() => setIsZoomed(!isZoomed)}
-                  />
+                    aria-label={isZoomed ? "Kecilkan tampilan foto bukti transfer" : "Perbesar tampilan foto bukti transfer"}
+                    className="flex items-center justify-center max-h-full max-w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
+                  >
+                    <img
+                      src={activeImageSrc}
+                      alt={`Bukti Transfer ${trxLabel}`}
+                      loading="lazy"
+                      onError={() => {
+                        setImageError(true);
+                      }}
+                      className="max-h-full max-w-full object-contain rounded-md"
+                    />
+                  </button>
                 </div>
               </div>
             ) : (
@@ -765,7 +810,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
 
         {/* 5. DIGITAL AUTHENTICITY QR CODE & SEAL SECTION */}
         <div className="pt-3 border-t border-border/60 flex flex-col gap-3">
-          <h4 className="label-micro text-text-3">Verifikasi &amp; Keabsahan Digital</h4>
+          <h2 className="label-micro text-text-3">Verifikasi &amp; Keabsahan Digital</h2>
           
           <div className="flex items-center gap-4 p-3.5 rounded-xl bg-mono-50 border border-border/80">
             <div id="bunsay-qr-svg-wrapper" className="shrink-0">

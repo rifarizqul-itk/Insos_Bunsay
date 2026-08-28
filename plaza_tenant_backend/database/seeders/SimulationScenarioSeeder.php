@@ -232,6 +232,7 @@ class SimulationScenarioSeeder extends Seeder
             $tagihanObj = Tagihan::where('Id_Sewa', $sewa4AObj->Id_Sewa)->where('Periode', $periode)->first();
 
             $method = ($m % 3 === 0) ? 'Midtrans' : (($m % 2 === 0) ? 'Transfer' : 'Tunai');
+            $payDateTime = Carbon::create($mDate->year, $mDate->month, 8, 10, 15, 0, 'Asia/Makassar')->setTimezone('UTC');
             Pembayaran::updateOrInsert(
                 ['Id_Tagihan' => $tagihanObj->Id_Tagihan],
                 [
@@ -241,6 +242,8 @@ class SimulationScenarioSeeder extends Seeder
                     'Bukti_Pembayaran'      => ($method === 'Midtrans') ? 'MIDTRANS-SETTLEMENT-TX401' . $m : 'storage/bukti/sim_ideal_' . $m . '.png',
                     'Verifikasi_Pembayaran' => 'Diterima',
                     'catatan_admin'         => ($method === 'Midtrans') ? 'Auto-settled by Midtrans Gateway' : 'Lunas tepat waktu sebelum jatuh tempo.',
+                    'created_at'            => $payDateTime->toDateTimeString(),
+                    'updated_at'            => $payDateTime->toDateTimeString(),
                 ]
             );
         }
@@ -371,6 +374,7 @@ class SimulationScenarioSeeder extends Seeder
                 ]
             );
             $tObj = Tagihan::where('Id_Sewa', $sewa5Obj->Id_Sewa)->where('Periode', $periode)->first();
+            $payDateTime5 = Carbon::create($mDate->year, $mDate->month, 10, 14, 20, 0, 'Asia/Makassar')->setTimezone('UTC');
             Pembayaran::updateOrInsert(
                 ['Id_Tagihan' => $tObj->Id_Tagihan],
                 [
@@ -379,6 +383,8 @@ class SimulationScenarioSeeder extends Seeder
                     'Metode_Bayar'          => 'Transfer',
                     'Bukti_Pembayaran'      => 'storage/bukti/sim_tunggak1_paid_' . $m . '.png',
                     'Verifikasi_Pembayaran' => 'Diterima',
+                    'created_at'            => $payDateTime5->toDateTimeString(),
+                    'updated_at'            => $payDateTime5->toDateTimeString(),
                 ]
             );
         }
@@ -429,7 +435,7 @@ class SimulationScenarioSeeder extends Seeder
         $kios6 = $getOrCreateKiosk('C1-12', 1, '4x5 m²', 'Terisi');
         $kios6->update(['Status' => 'Terisi']);
 
-        $startDate6 = Carbon::now()->subMonths(5)->startOfMonth();
+        $startDate6 = Carbon::now()->subMonths(4)->startOfMonth();
         $sewa6 = Sewa::updateOrInsert(
             ['Id_Pemilik' => $pemilik6Obj->Id_Pemilik, 'Id_Kios' => $kios6->Id_Kios],
             [
@@ -458,6 +464,7 @@ class SimulationScenarioSeeder extends Seeder
                 ]
             );
             $tObj = Tagihan::where('Id_Sewa', $sewa6Obj->Id_Sewa)->where('Periode', $mDate->format('Y-m'))->first();
+            $payDateTime6 = Carbon::create($mDate->year, $mDate->month, 11, 11, 35, 0, 'Asia/Makassar')->setTimezone('UTC');
             Pembayaran::updateOrInsert(
                 ['Id_Tagihan' => $tObj->Id_Tagihan],
                 [
@@ -466,6 +473,8 @@ class SimulationScenarioSeeder extends Seeder
                     'Metode_Bayar'          => 'Tunai',
                     'Bukti_Pembayaran'      => 'storage/bukti/kritis_paid_' . $m . '.png',
                     'Verifikasi_Pembayaran' => 'Diterima',
+                    'created_at'            => $payDateTime6->toDateTimeString(),
+                    'updated_at'            => $payDateTime6->toDateTimeString(),
                 ]
             );
         }
@@ -587,15 +596,19 @@ class SimulationScenarioSeeder extends Seeder
         $t7_2Obj = Tagihan::where('Id_Sewa', $sewa7Obj->Id_Sewa)->where('Periode', $t7_2Date->format('Y-m'))->first();
 
         // Record FIFO partial payment
+        $payDate7 = Carbon::now('Asia/Makassar')->subDays(4)->setTime(15, 45, 0);
+        $payDateTime7 = $payDate7->copy()->setTimezone('UTC');
         Pembayaran::updateOrInsert(
             ['Id_Tagihan' => $t7_2Obj->Id_Tagihan],
             [
-                'Tanggal_Bayar'         => now()->subDays(4)->toDateString(),
+                'Tanggal_Bayar'         => $payDate7->toDateString(),
                 'Total_Bayar'           => 750000.00,
                 'Metode_Bayar'          => 'Transfer',
                 'Bukti_Pembayaran'      => 'storage/bukti/sim_fifo_750k.png',
                 'Verifikasi_Pembayaran' => 'Diterima',
                 'catatan_admin'         => 'Setoran cicilan Rp 750.000: Rp 500.000 melunasi tagihan tertua, Rp 250.000 menyicil tagihan bulan kemarin (Sisa Rp 250.000).',
+                'created_at'            => $payDateTime7->toDateTimeString(),
+                'updated_at'            => $payDateTime7->toDateTimeString(),
             ]
         );
 
@@ -698,10 +711,12 @@ class SimulationScenarioSeeder extends Seeder
         $t8Obj = Tagihan::where('Id_Sewa', $sewa8Obj->Id_Sewa)->where('Periode', $t8Date->format('Y-m'))->first();
 
         // Payment with Rejected Note + Tenant Sanggahan Rebuttal attached
+        $payDate8 = Carbon::now('Asia/Makassar')->subDays(2)->setTime(16, 10, 0);
+        $payDateTime8 = $payDate8->copy()->setTimezone('UTC');
         Pembayaran::updateOrInsert(
             ['Id_Tagihan' => $t8Obj->Id_Tagihan],
             [
-                'Tanggal_Bayar'         => now()->subDays(2)->toDateString(),
+                'Tanggal_Bayar'         => $payDate8->toDateString(),
                 'Total_Bayar'           => 600000.00,
                 'Metode_Bayar'          => 'Transfer',
                 'Bukti_Pembayaran'      => 'storage/bukti/sim_bukti_buram_rejected.png',
@@ -709,6 +724,8 @@ class SimulationScenarioSeeder extends Seeder
                 'catatan_admin'         => 'Bukti pembayaran sebelumnya ditolak: foto struk ATM terpotong dan nomor referensi tidak terbaca.',
                 'teks_sanggahan'        => 'Mohon maaf, berikut saya lampirkan bukti mutasi mobile banking yang jelas dan berstempel lunas. Mohon verifikasi ulang.',
                 'bukti_sanggahan'       => 'storage/bukti/sim_sanggahan_clear_mbanking.png',
+                'created_at'            => $payDateTime8->toDateTimeString(),
+                'updated_at'            => $payDateTime8->toDateTimeString(),
             ]
         );
 
@@ -779,15 +796,19 @@ class SimulationScenarioSeeder extends Seeder
             );
             $t9Obj = Tagihan::where('Id_Sewa', $sewa9Obj->Id_Sewa)->where('Periode', Carbon::now()->format('Y-m'))->first();
 
+            $payDate9 = Carbon::now('Asia/Makassar')->subDays(5)->setTime(13, 25, 0);
+            $payDateTime9 = $payDate9->copy()->setTimezone('UTC');
             Pembayaran::updateOrInsert(
                 ['Id_Tagihan' => $t9Obj->Id_Tagihan],
                 [
-                    'Tanggal_Bayar'         => now()->subDays(5)->toDateString(),
+                    'Tanggal_Bayar'         => $payDate9->toDateString(),
                     'Total_Bayar'           => $mk['tarif'],
                     'Metode_Bayar'          => 'Transfer',
                     'Bukti_Pembayaran'      => "storage/bukti/sim_multikios_{$mk['no']}.png",
                     'Verifikasi_Pembayaran' => 'Diterima',
                     'catatan_admin'         => "Pembayaran lunas unit {$mk['no']}.",
+                    'created_at'            => $payDateTime9->toDateTimeString(),
+                    'updated_at'            => $payDateTime9->toDateTimeString(),
                 ]
             );
         }
@@ -853,6 +874,7 @@ class SimulationScenarioSeeder extends Seeder
                 ]
             );
             $tObj = Tagihan::where('Id_Sewa', $sewa10AObj->Id_Sewa)->where('Periode', $mDate->format('Y-m'))->first();
+            $payDateTime10A = Carbon::create($mDate->year, $mDate->month, 10, 9, 15, 0, 'Asia/Makassar')->setTimezone('UTC');
             Pembayaran::updateOrInsert(
                 ['Id_Tagihan' => $tObj->Id_Tagihan],
                 [
@@ -861,6 +883,8 @@ class SimulationScenarioSeeder extends Seeder
                     'Metode_Bayar'          => 'Tunai',
                     'Bukti_Pembayaran'      => 'storage/bukti/sim_selesai_archived_' . $m . '.png',
                     'Verifikasi_Pembayaran' => 'Diterima',
+                    'created_at'            => $payDateTime10A->toDateTimeString(),
+                    'updated_at'            => $payDateTime10A->toDateTimeString(),
                 ]
             );
         }
@@ -927,6 +951,7 @@ class SimulationScenarioSeeder extends Seeder
 
             if (!$isCurrent) {
                 $payMethod = ($i % 3 === 0) ? 'Midtrans' : (($i % 2 === 0) ? 'Transfer' : 'Tunai');
+                $payDateTime10B = Carbon::create($dt->year, $dt->month, 7, rand(9, 16), rand(10, 50), 0, 'Asia/Makassar')->setTimezone('UTC');
                 Pembayaran::updateOrInsert(
                     ['Id_Tagihan' => $tObj->Id_Tagihan],
                     [
@@ -936,6 +961,8 @@ class SimulationScenarioSeeder extends Seeder
                         'Bukti_Pembayaran'      => "storage/bukti/stress50_receipt_{$i}.png",
                         'Verifikasi_Pembayaran' => 'Diterima',
                         'catatan_admin'         => 'Settled automatically',
+                        'created_at'            => $payDateTime10B->toDateTimeString(),
+                        'updated_at'            => $payDateTime10B->toDateTimeString(),
                     ]
                 );
             }
@@ -986,12 +1013,16 @@ class SimulationScenarioSeeder extends Seeder
         );
 
         // Activity Logs
+        $admPatra = User::where('Username', 'sim_superadmin')->first();
+        $admArman = User::where('Username', 'sim_admin_kasir')->first();
+        $admRifa  = User::where('Username', 'sim_admin_petugas')->first();
+
         $actions = [
-            ['id_user' => 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'User', 'aksi' => 'Tambah Staf', 'deskripsi' => 'Superadmin Patra mendaftarkan akun sim_admin_kasir (Arman) dengan hak akses loket verifikasi.'],
-            ['id_user' => 2, 'username' => 'sim_admin_kasir', 'role' => 'kasir', 'modul' => 'Pembayaran', 'aksi' => 'Input Setoran Tunai', 'deskripsi' => 'Kasir Arman menerima setoran tunai sebesar Rp 750.000 untuk Kios C1-12 (Dhia).'],
-            ['id_user' => 3, 'username' => 'sim_admin_petugas', 'role' => 'petugas_kios', 'modul' => 'Kios', 'aksi' => 'Update Status Kios', 'deskripsi' => 'Petugas Rifa memperbarui status Kios A1-01 menjadi Terisi.'],
-            ['id_user' => 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'Sewa', 'aksi' => 'Akhiri Sewa', 'deskripsi' => 'Superadmin Patra mengakhiri kontrak sewa Kios H1-20 (Clara).'],
-            ['id_user' => 3, 'username' => 'sim_admin_petugas', 'role' => 'auditor', 'modul' => 'Laporan', 'aksi' => 'Ekspor Rekapitulasi', 'deskripsi' => 'Auditor Rifa mengunduh laporan rekapitulasi pembayaran semester pertama.'],
+            ['id_user' => $admPatra?->Id_user ?? 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'User', 'aksi' => 'Tambah Staf', 'deskripsi' => 'Superadmin Patra mendaftarkan akun sim_admin_kasir (Arman) dengan hak akses loket verifikasi.'],
+            ['id_user' => $admArman?->Id_user ?? 2, 'username' => 'sim_admin_kasir', 'role' => 'kasir', 'modul' => 'Pembayaran', 'aksi' => 'Input Setoran Tunai', 'deskripsi' => 'Kasir Arman menerima setoran tunai sebesar Rp 750.000 untuk Kios C1-12 (Dhia).'],
+            ['id_user' => $admRifa?->Id_user ?? 3,  'username' => 'sim_admin_petugas', 'role' => 'petugas_kios', 'modul' => 'Kios', 'aksi' => 'Update Status Kios', 'deskripsi' => 'Petugas Rifa memperbarui status Kios A1-01 menjadi Terisi.'],
+            ['id_user' => $admPatra?->Id_user ?? 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'Sewa', 'aksi' => 'Akhiri Sewa', 'deskripsi' => 'Superadmin Patra mengakhiri kontrak sewa Kios H1-20 (Clara).'],
+            ['id_user' => $admRifa?->Id_user ?? 3,  'username' => 'sim_admin_petugas', 'role' => 'petugas_kios', 'modul' => 'Laporan', 'aksi' => 'Ekspor Rekapitulasi', 'deskripsi' => 'Petugas Rifa mengunduh laporan rekapitulasi pembayaran semester pertama.'],
         ];
 
         foreach ($actions as $act) {

@@ -49,7 +49,7 @@ const Button = React.memo(function Button({
       type={type}
       data-slot="button"
       className={cn(
-        'inline-flex items-center justify-center font-bold transition-all duration-200 ease-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
+        'inline-flex items-center justify-center font-bold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth && 'w-full',

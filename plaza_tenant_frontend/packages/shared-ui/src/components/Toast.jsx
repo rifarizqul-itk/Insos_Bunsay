@@ -54,8 +54,7 @@ const Toast = ({ toasts = [], removeToast }) => {
           key={toast.id}
           role={toast.type === 'error' ? 'alert' : 'status'}
           aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-          className="bg-white border border-border rounded-lg p-3.5 px-4 shadow-card-elevated flex justify-between items-center animate-fadeIn"
-          style={{ animation: 'fadeIn 0.2s ease' }}
+          className="bg-white border border-border rounded-xl p-3.5 px-4 shadow-card-elevated flex justify-between items-center animate-[popoverIn_0.2s_cubic-bezier(0.16,1,0.3,1)]"
         >
           <span 
             className="text-sm font-semibold break-words flex-1 pe-2 text-pretty"

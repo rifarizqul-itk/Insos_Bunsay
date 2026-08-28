@@ -59,7 +59,7 @@ const AlokasiBreakdown = React.memo(function AlokasiBreakdown({ alokasiList = []
       }}
     >
       <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-2)', textTransform: 'uppercase' }}>
-        Rincian Tagihan
+        Alokasi Pelunasan
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {alokasiList.map((item, idx) => (

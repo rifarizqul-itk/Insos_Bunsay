@@ -64,6 +64,14 @@ class AuthController extends Controller
 
         RateLimiter::clear($throttleKey);
 
+        // Enforce active account status (status_aktif = 1)
+        if ((int) ($user->status_aktif ?? 1) === 0) {
+            return response()->json([
+                'message' => 'Akun Anda telah dinonaktifkan (Deactivated) oleh administrator. Silakan hubungi Superadmin.',
+                'isDeactivated' => true,
+            ], 403);
+        }
+
         // Determine portal scope from request path or input
         $routeIsAdmin = $request->is('api/v1/admin/*') || $request->is('v1/admin/*');
         $routeIsTenant = $request->is('api/v1/tenant/*') || $request->is('v1/tenant/*');

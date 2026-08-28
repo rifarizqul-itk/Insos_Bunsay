@@ -15,6 +15,7 @@ function Table({
   sortConfig = null, // { key: string, direction: 'asc' | 'desc' }
   onSort = null, // function(key)
   footer = null,
+  gridlines = true,
 }) {
   return (
     <div data-slot="table" className={cn('w-full overflow-hidden rounded-2xl border border-border/80 bg-white shadow-xs', className)}>
@@ -27,12 +28,12 @@ function Table({
       </div>
       <div className="w-full overflow-x-auto custom-scrollbar touch-pan-x">
         <table 
-          className="w-full text-start border-collapse min-w-full divide-y divide-border/60" 
+          className="w-full text-start border-collapse min-w-full divide-y divide-border/80" 
           aria-label={ariaLabel}
         >
           {caption && <caption className="sr-only">{caption}</caption>}
           <thead>
-            <tr className={headerClassName}>
+            <tr className={cn(headerClassName, gridlines && '[&>th]:border-r [&>th]:border-white/20 [&>th:last-child]:border-r-0')}>
               {headers.map((head, idx) => {
                 const key = head.key || head.sortKey || head.label;
                 const isSortable = head.sortable !== false && Boolean(onSort);
@@ -93,10 +94,13 @@ function Table({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/80 bg-white">
+          <tbody className={cn(
+            "divide-y divide-border/80 bg-white",
+            gridlines && "[&_tr>td]:border-r [&_tr>td]:border-border/60 [&_tr>th]:border-r [&_tr>th]:border-border/60 [&_tr>*:last-child]:border-r-0"
+          )}>
             {isEmpty ? (
               <tr>
-                <td colSpan={colSpan || headers.length} className="py-12 px-4 text-center text-text-3 font-semibold text-sm">
+                <td colSpan={colSpan || headers.length} className="py-12 px-4 text-center text-text-3 font-semibold text-sm !border-r-0">
                   {emptyMessage}
                 </td>
               </tr>

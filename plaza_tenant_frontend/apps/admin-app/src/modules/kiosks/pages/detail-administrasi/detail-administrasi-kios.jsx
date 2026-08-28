@@ -38,6 +38,8 @@ function DetailAdministrasiKios() {
   const [pemilikId, setPemilikId] = useState(null);
   const [izinkanCicilanAdmin, setIzinkanCicilanAdmin] = useState(false);
   const [isTogglingCicilan, setIsTogglingCicilan] = useState(false);
+  const [isCopiedUsername, setIsCopiedUsername] = useState(false);
+  const [isCopiedWa, setIsCopiedWa] = useState(false);
 
   const fetchKioskDetail = useCallback(async () => {
     if (!id) {
@@ -211,7 +213,13 @@ function DetailAdministrasiKios() {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => navigate('/admin/kios')}
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/admin/kios');
+            }
+          }}
           className="mb-4 gap-2 font-bold"
         >
           <Icon icon="heroicons:arrow-left-20-solid" className="size-4.5" />
@@ -224,14 +232,38 @@ function DetailAdministrasiKios() {
             </h1>
           </div>
 
-          <Button
-            variant="primary"
-            onClick={() => setShowEditDrawer(true)}
-            className="gap-2 self-start sm:self-auto shadow-md"
-          >
-            <Icon icon="heroicons:pencil-square-20-solid" className="size-4.5" />
-            <span>Edit Data</span>
-          </Button>
+          <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+            {editData.statusKios === 'Terisi' && (
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => navigate('/admin/detail-keuangan', {
+                  state: {
+                    tenant: {
+                      kios: displayKiosNo,
+                      nama: editData.tenant,
+                      usaha: editData.usaha,
+                      tunggakan: 0,
+                      statusPembayaran: 'Lunas'
+                    }
+                  }
+                })}
+                className="gap-2 shadow-xs hover:text-red hover:border-red"
+              >
+                <Icon icon="heroicons:banknotes-20-solid" className="size-4.5 text-emerald-700" />
+                <span>Rincian Keuangan</span>
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              onClick={() => setShowEditDrawer(true)}
+              className="gap-2 shadow-md"
+            >
+              <Icon icon="heroicons:pencil-square-20-solid" className="size-4.5" />
+              <span>Edit Data</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -363,24 +395,30 @@ function DetailAdministrasiKios() {
                           onClick={() => {
                             if (editData.username && editData.username !== '—' && editData.username !== 'Belum Dibuat') {
                               navigator.clipboard.writeText(editData.username);
+                              setIsCopiedUsername(true);
                               addToast('Username berhasil disalin ke clipboard!', 'success');
+                              setTimeout(() => setIsCopiedUsername(false), 2000);
                             }
                           }}
                           className={cn(
                             "inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-sm font-mono font-extrabold tracking-tight border transition-all text-start",
                             editData.username === 'Belum Dibuat' 
                               ? "bg-amber-50 border-amber-200 text-amber-900 cursor-default" 
+                              : isCopiedUsername
+                              ? "bg-green-50 border-green text-green shadow-2xs"
                               : "bg-white border-border text-text hover:border-text-3 hover:bg-mono-50 active:scale-98 cursor-pointer shadow-2xs group"
                           )}
                           title={editData.username !== '—' && editData.username !== 'Belum Dibuat' ? "Klik untuk menyalin username" : undefined}
+                          aria-label="Salin username login portal"
                         >
                           <span>{editData.username}</span>
                           {editData.username !== '—' && editData.username !== 'Belum Dibuat' && (
                             <Icon 
-                              icon="heroicons:document-duplicate-20-solid" 
-                              className="size-3.5 text-text-3 group-hover:text-text shrink-0 transition-colors" 
+                              icon={isCopiedUsername ? "heroicons:check-20-solid" : "heroicons:document-duplicate-20-solid"} 
+                              className={cn("size-3.5 shrink-0 transition-colors", isCopiedUsername ? "text-green font-bold" : "text-text-3 group-hover:text-text")} 
                             />
                           )}
+                          {isCopiedUsername && <span className="text-xs font-bold text-green font-sans">Tersalin!</span>}
                         </button>
                       </div>
                     </div>
@@ -628,12 +666,18 @@ function DetailAdministrasiKios() {
                 variant="secondary"
                 onClick={() => {
                   navigator.clipboard.writeText(resetResult.waMessage);
+                  setIsCopiedWa(true);
                   addToast('Pesan notifikasi WA berhasil disalin!', 'success');
+                  setTimeout(() => setIsCopiedWa(false), 2000);
                 }}
-                className="w-full h-10 text-xs font-bold gap-1.5"
+                className={cn(
+                  "w-full h-10 text-xs font-bold gap-1.5 transition-all",
+                  isCopiedWa ? "border-green bg-green-50 text-green" : ""
+                )}
+                aria-label="Salin pesan notifikasi WhatsApp"
               >
-                <Icon icon="heroicons:document-duplicate-20-solid" className="size-4" />
-                <span>Salin Pesan WA</span>
+                <Icon icon={isCopiedWa ? "heroicons:check-20-solid" : "heroicons:document-duplicate-20-solid"} className={cn("size-4", isCopiedWa ? "text-green font-bold" : "")} />
+                <span>{isCopiedWa ? 'Pesan WA Tersalin!' : 'Salin Pesan WA'}</span>
               </Button>
 
               {resetResult.telepon && resetResult.telepon !== '—' && (

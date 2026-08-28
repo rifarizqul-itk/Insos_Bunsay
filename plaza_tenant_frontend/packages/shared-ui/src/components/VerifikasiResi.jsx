@@ -236,6 +236,7 @@ export function VerifikasiResi() {
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
+                    aria-label="Nomor kuitansi atau kode transaksi untuk verifikasi"
                     placeholder="Nomor kuitansi / kode transaksi (mis: TRX-1)"
                     value={inputCode}
                     onChange={(e) => {

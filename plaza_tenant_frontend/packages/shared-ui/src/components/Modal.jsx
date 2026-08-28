@@ -101,7 +101,7 @@ function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92dvh] sm:max-h-[88dvh] flex flex-col overflow-hidden my-auto transform-gpu',
+          'bg-white rounded-2xl shadow-modal border border-border/80 w-full max-h-[92dvh] sm:max-h-[88dvh] flex flex-col overflow-hidden my-auto transform-gpu animate-modal-in',
           sizeClasses[size] || sizeClasses.md,
           className
         )}

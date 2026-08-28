@@ -25,6 +25,14 @@ class EnsureAdminRole
             ], 403);
         }
 
+        if ((int) ($user->status_aktif ?? 1) === 0) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Akun Anda dinonaktifkan (Deactivated). Sesi Anda telah dihentikan.',
+                'isDeactivated' => true,
+            ], 403);
+        }
+
         return $next($request);
     }
 }

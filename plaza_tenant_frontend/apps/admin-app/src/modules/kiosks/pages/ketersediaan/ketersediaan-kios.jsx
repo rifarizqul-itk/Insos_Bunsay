@@ -71,6 +71,7 @@ function KetersediaanKios() {
   const [fieldError, setFieldError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmExitOpen, setIsConfirmExitOpen] = useState(false);
+  const [isCopiedCreds, setIsCopiedCreds] = useState(false);
 
   const isFormDirty = () => {
     if (modePendaftaran === 'baru') {
@@ -268,7 +269,7 @@ function KetersediaanKios() {
     { label: 'Lokasi Lantai', sortKey: 'lantai' },
     { label: 'Nama Tenant / Penyewa', sortKey: 'penyewa' },
     { label: 'Jenis Usaha', sortKey: 'usaha', className: 'hidden md:table-cell' },
-    { label: 'Status', sortKey: 'status' },
+    { label: 'Status', align: 'center', sortKey: 'status' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
 
@@ -618,11 +619,11 @@ function KetersediaanKios() {
             >
               {paginatedKios.map((kios) => (
                 <tr key={kios.id} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                  <td className="p-3 font-extrabold text-text font-tabular-nums">{kios.noKios}</td>
+                  <th scope="row" className="p-3 font-extrabold text-text font-tabular-nums text-start">{kios.noKios}</th>
                   <td className="p-3 text-text-2 font-medium">{kios.lantai}</td>
                   <td className="p-3 font-semibold text-text">{kios.penyewa}</td>
                   <td className="hidden md:table-cell p-3 text-text-2 font-medium">{kios.usaha}</td>
-                  <td className="p-3">
+                  <td className="p-3 text-center">
                     <Badge status={kios.status === 'Terisi' ? 'Terisi' : 'Kosong'} customText={kios.status} />
                   </td>
                   <td className="p-3 text-center whitespace-nowrap">
@@ -1610,12 +1611,18 @@ function KetersediaanKios() {
               onClick={() => {
                 const textToCopy = `Kredensial Tenant ${createdCredential.nama}:\nUsername: ${createdCredential.username}\nPassword: ${createdCredential.tempPassword}`;
                 navigator.clipboard.writeText(textToCopy);
+                setIsCopiedCreds(true);
                 addToast('Kredensial tenant berhasil disalin!', 'success');
+                setTimeout(() => setIsCopiedCreds(false), 2000);
               }}
-              className="w-full h-10 text-xs font-bold gap-1.5"
+              className={cn(
+                "w-full h-10 text-xs font-bold gap-1.5 transition-all",
+                isCopiedCreds ? "border-green bg-green-50 text-green" : ""
+              )}
+              aria-label="Salin kredensial akun tenant baru"
             >
-              <Icon icon="heroicons:document-duplicate-20-solid" width="16" height="16" />
-              <span>Salin Kredensial</span>
+              <Icon icon={isCopiedCreds ? "heroicons:check-20-solid" : "heroicons:document-duplicate-20-solid"} className={cn("size-4", isCopiedCreds ? "text-green font-bold" : "")} width="16" height="16" />
+              <span>{isCopiedCreds ? 'Kredensial Tersalin!' : 'Salin Kredensial'}</span>
             </Button>
           </div>
         )}

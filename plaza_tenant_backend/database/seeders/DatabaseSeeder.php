@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
-            AdminSeeder::class,
             KiosSeeder::class,               // Master ~300 Unit Kios Fisik Blok A-H (Status awal: Kosong)
             SimulationScenarioSeeder::class, // Skenario Simulasi 10 Orang Tim (100% State Coverage)
         ]);

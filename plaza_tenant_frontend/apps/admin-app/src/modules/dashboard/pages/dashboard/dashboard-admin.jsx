@@ -150,7 +150,7 @@ function DashboardAdmin() {
     { label: 'No. Kios', sortKey: 'kios' },
     { label: 'Jenis Usaha', sortKey: 'usaha', className: 'hidden sm:table-cell' },
     { label: 'Tunggakan', sortKey: 'tunggakan' },
-    { label: 'Status Bulan Ini', sortKey: 'statusPembayaran' },
+    { label: 'Status Bulan Ini', align: 'center', sortKey: 'statusPembayaran' },
     { label: 'Aksi', align: 'center', sortable: false }
   ];
 
@@ -340,9 +340,15 @@ function DashboardAdmin() {
                     {tenant.nama}
                   </th>
                   <td data-label="No. Kios" className="font-tabular-nums font-extrabold py-3 px-3 sm:px-4 text-text text-xs sm:text-sm">
-                    <span className="bg-mono-100/90 text-red px-2.5 py-0.5 rounded-lg border border-border/70 font-extrabold font-tabular-nums">
-                      {tenant.kios}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
+                      title={`Buka detail administrasi kios ${tenant.kios}`}
+                      className="bg-mono-100/90 hover:bg-red-50 text-red hover:text-red-rich px-2.5 py-1 rounded-lg border border-border/70 font-extrabold font-tabular-nums text-xs transition-colors cursor-pointer inline-flex items-center gap-1 group shadow-2xs"
+                    >
+                      <span>{tenant.kios}</span>
+                      <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3 opacity-60 group-hover:opacity-100" />
+                    </button>
                   </td>
                   <td data-label="Jenis Usaha" className="hidden sm:table-cell py-3 px-3 sm:px-4 text-text-2 font-semibold text-xs sm:text-sm">
                     {tenant.usaha}
@@ -350,33 +356,46 @@ function DashboardAdmin() {
                   <td data-label="Tunggakan" className={cn("font-tabular-nums py-3 px-3 sm:px-4 font-black text-xs sm:text-sm", tenant.tunggakan > 0 ? "text-orange" : "text-text")}>
                     Rp {tenant.tunggakan.toLocaleString('id-ID')}
                   </td>
-                  <td data-label="Status Tagihan" className="py-3 px-3 sm:px-4">
+                  <td data-label="Status Tagihan" className="py-3 px-3 sm:px-4 text-center">
                     <Badge status={tenant.statusPembayaran} />
                   </td>
                   <td data-label="Aksi" className="py-3 px-3 sm:px-4 text-center">
-                    {isVerifikasiPending ? (
-                      <Button
-                        variant="primary"
-                        size="xs"
-                        className="gap-1 bg-amber-500 hover:bg-amber-600 border-amber-600 text-white font-extrabold shadow-2xs"
-                        onClick={() => handleOpenVerifikasi(tenant)}
-                        aria-label={`Verifikasi bukti bayar ${tenant.nama} kios ${tenant.kios}`}
-                      >
-                        <Icon icon="heroicons:check-badge-20-solid" className="size-3.5" />
-                        <span>Verifikasi Bukti</span>
-                      </Button>
-                    ) : (
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      {isVerifikasiPending && (
+                        <Button
+                          variant="primary"
+                          size="xs"
+                          className="gap-1 bg-amber-500 hover:bg-amber-600 border-amber-600 text-white font-extrabold shadow-2xs"
+                          onClick={() => handleOpenVerifikasi(tenant)}
+                          aria-label={`Verifikasi bukti bayar ${tenant.nama} kios ${tenant.kios}`}
+                        >
+                          <Icon icon="heroicons:check-badge-20-solid" className="size-3.5" />
+                          <span>Verifikasi</span>
+                        </Button>
+                      )}
                       <Button
                         variant="secondary"
                         size="xs"
                         className="gap-1 text-text-2 font-bold hover:text-red hover:border-red shadow-2xs"
                         onClick={() => navigate('/admin/detail-keuangan', { state: { tenant } })}
-                        aria-label={`Lihat detail informasi kios ${tenant.kios}`}
+                        aria-label={`Lihat rincian keuangan tenant ${tenant.nama} kios ${tenant.kios}`}
+                        title="Lihat rincian keuangan & riwayat pembayaran"
                       >
-                        <Icon icon="heroicons:eye-20-solid" className="size-3.5" />
-                        <span>Detail Kios</span>
+                        <Icon icon="heroicons:banknotes-20-solid" className="size-3.5 text-emerald-700" />
+                        <span>Keuangan</span>
                       </Button>
-                    )}
+                      <Button
+                        variant="secondary"
+                        size="xs"
+                        className="gap-1 text-text-2 font-bold hover:text-red hover:border-red shadow-2xs"
+                        onClick={() => navigate(`/admin/kios/${tenant.kios}`)}
+                        aria-label={`Lihat detail administrasi kios ${tenant.kios}`}
+                        title="Lihat berkas administrasi, dokumen legal, dan akun kios"
+                      >
+                        <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-red" />
+                        <span>Info Kios</span>
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );

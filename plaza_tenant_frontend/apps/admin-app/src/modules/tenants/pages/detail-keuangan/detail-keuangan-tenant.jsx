@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Badge, Table, EmptyState, SkeletonTable, SkeletonCard, Pagination, cn } from '@bunsay/shared-ui';
+import { Icon, Card, Button, Badge, Table, EmptyState, SkeletonTable, SkeletonCard, Pagination, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function DetailKeuanganTenant() {
@@ -68,18 +68,18 @@ function DetailKeuanganTenant() {
       const matchedPayments = allPembayaran.filter(p => {
         const pIdKios = p.tagihan?.sewa?.kios?.Id_Kios || p.tagihan?.sewa?.Id_Kios;
         const pIdPemilik = p.tagihan?.sewa?.pemilik?.Id_Pemilik || p.tagihan?.sewa?.Id_Pemilik;
-        const pKios = (p.tagihan?.sewa?.kios?.No_Kios || '').toLowerCase().trim();
-        const pNama = (p.tagihan?.sewa?.pemilik?.Nama || '').toLowerCase().trim();
+        const pKios = (p.tagihan?.sewa?.kios?.No_Kios || p.tagihan?.sewa?.kios?.Kode_Kios || '').toLowerCase().trim();
+        const pNama = (p.tagihan?.sewa?.pemilik?.Nama || p.tagihan?.sewa?.pemilik?.Nama_Pemilik || '').toLowerCase().trim();
 
-        if (targetKios && pKios && pKios === targetKios) return true;
-        if (targetIdKios && pIdKios && String(targetIdKios) === String(pIdKios)) return true;
-        if (targetIdPemilik && pIdPemilik && String(targetIdPemilik) === String(pIdPemilik)) return true;
-        if (targetNama && pNama && (pNama === targetNama || pNama.includes(targetNama) || targetNama.includes(pNama))) return true;
+        if (targetKios && pKios) return pKios === targetKios;
+        if (targetIdKios && pIdKios) return String(targetIdKios) === String(pIdKios);
+        if (targetIdPemilik && pIdPemilik) return String(targetIdPemilik) === String(pIdPemilik);
+        if (targetNama && pNama) return pNama === targetNama;
 
         return false;
       }).map(p => ({
         id: `TRX-${p.Id_Pembayaran}`,
-        tanggal: p.Tanggal_Bayar || '-',
+        tanggal: p.created_at || p.Tanggal_Bayar || '-',
         tipe: `Sewa Kios ${p.tagihan?.Periode || ''}`,
         nominal: Number(p.Total_Bayar || 0),
         metode: p.Metode_Bayar || 'Transfer Bank',
@@ -90,13 +90,13 @@ function DetailKeuanganTenant() {
       const matchedBills = allTagihan.filter(t => {
         const tIdKios = t.sewa?.kios?.Id_Kios || t.sewa?.Id_Kios;
         const tIdPemilik = t.sewa?.pemilik?.Id_Pemilik || t.sewa?.Id_Pemilik;
-        const tKios = (t.sewa?.kios?.No_Kios || '').toLowerCase().trim();
-        const tNama = (t.sewa?.pemilik?.Nama || '').toLowerCase().trim();
+        const tKios = (t.sewa?.kios?.No_Kios || t.sewa?.kios?.Kode_Kios || '').toLowerCase().trim();
+        const tNama = (t.sewa?.pemilik?.Nama || t.sewa?.pemilik?.Nama_Pemilik || '').toLowerCase().trim();
 
-        if (targetKios && tKios && tKios === targetKios) return true;
-        if (targetIdKios && tIdKios && String(targetIdKios) === String(tIdKios)) return true;
-        if (targetIdPemilik && tIdPemilik && String(targetIdPemilik) === String(tIdPemilik)) return true;
-        if (targetNama && tNama && (tNama === targetNama || tNama.includes(targetNama) || targetNama.includes(tNama))) return true;
+        if (targetKios && tKios) return tKios === targetKios;
+        if (targetIdKios && tIdKios) return String(targetIdKios) === String(tIdKios);
+        if (targetIdPemilik && tIdPemilik) return String(targetIdPemilik) === String(tIdPemilik);
+        if (targetNama && tNama) return tNama === targetNama;
 
         return false;
       });
@@ -141,7 +141,7 @@ function DetailKeuanganTenant() {
     { label: 'Jenis / Periode' },
     { label: 'Nominal Bayar' },
     { label: 'Metode Pembayaran' },
-    { label: 'Status Verifikasi' }
+    { label: 'Status Verifikasi', align: 'center' }
   ];
 
   const paginatedRiwayat = useMemo(() => {
@@ -155,7 +155,13 @@ function DetailKeuanganTenant() {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/admin/dashboard');
+            }
+          }}
           className="mb-2 gap-1.5 font-bold h-8 text-xs px-2.5"
         >
           <Icon icon="heroicons:arrow-left-20-solid" className="size-4" />
@@ -171,6 +177,18 @@ function DetailKeuanganTenant() {
               Nomor Kios: <strong className="font-tabular-nums text-red">{tenantInfo.kios}</strong> — {tenantInfo.usaha}
             </p>
           </div>
+
+          {tenantInfo.kios && tenantInfo.kios !== '—' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate(`/admin/kios/${tenantInfo.kios}`)}
+              className="gap-1.5 font-bold h-9 text-xs sm:text-sm shadow-2xs self-start sm:self-auto shrink-0 hover:text-red hover:border-red"
+            >
+              <Icon icon="heroicons:building-storefront-20-solid" className="size-4 text-red" />
+              <span>Detail Administrasi Kios</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -201,9 +219,9 @@ function DetailKeuanganTenant() {
         {/* Main Tenant Financial History Table (Seamless Edge-to-Edge Surface) */}
         <div className="w-full bg-white rounded-3xl border border-border/80 shadow-card overflow-hidden flex flex-col">
           <div className="p-4 sm:p-6 border-b border-border/80 bg-white">
-            <h3 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
+            <h2 className="text-base sm:text-lg font-extrabold text-text tracking-tight">
               Riwayat Transaksi
-            </h3>
+            </h2>
           </div>
 
           {isLoading ? (
@@ -235,28 +253,31 @@ function DetailKeuanganTenant() {
                 />
               }
             >
-              {paginatedRiwayat.map((row, idx) => (
-                <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                  <th scope="row" className="font-mono font-black py-3 px-4 text-text text-start text-xs sm:text-sm">
-                    {row.id}
-                  </th>
-                  <td className="py-3 px-4 text-text-2 font-medium font-tabular-nums text-xs">
-                    {row.tanggal}
-                  </td>
-                  <td className="py-3 px-4 text-text font-bold text-xs sm:text-sm">
-                    {row.tipe}
-                  </td>
+              {paginatedRiwayat.map((row, idx) => {
+                const formattedWaktu = formatDateTimeLocal(row.tanggal);
+                return (
+                  <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
+                    <th scope="row" className="font-mono font-black py-3 px-4 text-text text-start text-xs sm:text-sm">
+                      {row.id}
+                    </th>
+                    <td className="py-3 px-4 text-text-2 font-medium font-tabular-nums text-xs text-start" title={formattedWaktu.fullTitle}>
+                      {formattedWaktu.formatted}
+                    </td>
+                    <td className="py-3 px-4 text-text font-bold text-xs sm:text-sm">
+                      {row.tipe}
+                    </td>
                   <td className="font-tabular-nums font-black py-3 px-4 text-text text-xs sm:text-sm">
                     Rp {row.nominal.toLocaleString('id-ID')}
                   </td>
                   <td className="py-3 px-4 text-text-3 font-semibold text-xs">
                     {row.metode}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 text-center">
                     <Badge status={row.status} />
                   </td>
                 </tr>
-              ))}
+              );
+            })}
             </Table>
           )}
         </div>

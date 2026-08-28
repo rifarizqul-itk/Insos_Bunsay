@@ -65,6 +65,31 @@ export function ImageGallerySlider({
     }
   };
 
+  const handleDownload = async () => {
+    if (!currentUrl) return;
+    const fileName = currentUrl.split('/').pop()?.split('?')[0] || `Lampiran_${currentIndex + 1}.jpg`;
+    try {
+      const res = await fetch(currentUrl);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      const link = document.createElement('a');
+      link.href = currentUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   if (parsedList.length === 0) return null;
 
   const currentUrl = parsedList[currentIndex];
@@ -93,12 +118,23 @@ export function ImageGallerySlider({
           <button
             type="button"
             onClick={() => setIsZoomed(!isZoomed)}
-            className="text-[11px] font-bold text-red hover:underline flex items-center gap-1 cursor-pointer me-1"
+            className="text-[11px] font-bold text-text-2 hover:text-red flex items-center gap-1 cursor-pointer transition-colors"
             title={isZoomed ? 'Kecilkan' : 'Perbesar'}
             aria-label={isZoomed ? 'Kecilkan tampilan gambar' : 'Perbesar tampilan gambar'}
           >
             <Icon icon={isZoomed ? 'heroicons:magnifying-glass-minus-20-solid' : 'heroicons:magnifying-glass-plus-20-solid'} className="size-3.5" />
             <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
+          </button>
+          <span className="text-border text-xs">|</span>
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="text-[11px] font-bold text-red hover:underline flex items-center gap-1 cursor-pointer me-1 transition-colors"
+            title="Unduh foto lampiran"
+            aria-label="Unduh foto lampiran"
+          >
+            <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
+            <span>Unduh</span>
           </button>
 
           {isMultiple && (

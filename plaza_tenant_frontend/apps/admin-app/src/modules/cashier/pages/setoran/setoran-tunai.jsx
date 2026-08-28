@@ -337,9 +337,9 @@ function SetoranTunai() {
                       {selectedTenantObj.kios}
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-text text-sm sm:text-base leading-tight">
+                      <strong className="block font-extrabold text-text text-sm sm:text-base leading-tight">
                         {selectedTenantObj.nama}
-                      </h4>
+                      </strong>
                       <p className="text-xs text-text-2 font-medium mt-0.5">
                         Lantai {selectedTenantObj.lantai} • {selectedTenantObj.usaha}
                       </p>

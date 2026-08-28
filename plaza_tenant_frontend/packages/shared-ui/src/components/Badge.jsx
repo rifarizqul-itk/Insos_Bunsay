@@ -59,7 +59,7 @@ const Badge = React.memo(function Badge({
       data-slot="badge"
       onClick={isClickable ? onClick : undefined}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap leading-relaxed w-fit self-start shrink-0 select-none',
+        'inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-xs border whitespace-nowrap leading-relaxed w-fit shrink-0 select-none',
         resolvedConfig.bg,
         resolvedConfig.text,
         isClickable && 'cursor-pointer hover:opacity-90 active:scale-[0.98]',

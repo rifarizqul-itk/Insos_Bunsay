@@ -77,6 +77,8 @@ function BayarSekarang() {
   const [izinkanCicilan, setIzinkanCicilan] = useState(false);
   const [processError, setProcessError] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isCopiedRekening, setIsCopiedRekening] = useState(false);
+  const [isLockedClickAnim, setIsLockedClickAnim] = useState(false);
 
   useEffect(() => {
     const fetchUnpaidBills = async () => {
@@ -490,14 +492,23 @@ function BayarSekarang() {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="gap-1 px-2.5 py-1 text-xs font-semibold shadow-xs border-border hover:border-red hover:text-red shrink-0"
+                      className={cn(
+                        "gap-1 px-2.5 py-1 text-xs font-semibold shadow-xs border-border shrink-0 transition-all",
+                        isCopiedRekening ? "border-green bg-green-50 text-green" : "hover:border-red hover:text-red"
+                      )}
                       onClick={() => {
                         navigator.clipboard.writeText('08115901119');
-                        addToast('Nomor rekening disalin', 'success');
+                        setIsCopiedRekening(true);
+                        addToast('Nomor rekening berhasil disalin', 'success');
+                        setTimeout(() => setIsCopiedRekening(false), 2000);
                       }}
+                      aria-label="Salin nomor rekening Bankaltimtara"
                     >
-                      <Icon icon="heroicons:document-duplicate-20-solid" className="size-3.5 text-red" />
-                      <span>Salin</span>
+                      <Icon
+                        icon={isCopiedRekening ? "heroicons:check-20-solid" : "heroicons:document-duplicate-20-solid"}
+                        className={cn("size-3.5", isCopiedRekening ? "text-green font-bold" : "text-red")}
+                      />
+                      <span>{isCopiedRekening ? 'Tersalin!' : 'Salin'}</span>
                     </Button>
                   </div>
 
@@ -513,7 +524,7 @@ function BayarSekarang() {
                         onDragLeave={() => setIsDragOver(false)}
                         onDrop={handleDrop}
                         className={cn(
-                          "border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer group",
+                          "border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer group focus-within:ring-2 focus-within:ring-red focus-within:border-red",
                           isDragOver ? "border-red bg-red-50/50" : "border-border/80 hover:border-red/60 bg-mono-50/40"
                         )}
                         onClick={() => document.getElementById('file-upload-input')?.click()}
@@ -522,6 +533,7 @@ function BayarSekarang() {
                           id="file-upload-input"
                           type="file"
                           accept="image/*"
+                          aria-label="Unggah foto bukti transfer bank"
                           onChange={handleFileChange}
                           className="sr-only"
                         />
@@ -616,6 +628,13 @@ function BayarSekarang() {
                       placeholder="750.000" 
                       value={formatRibuanDot(nominal)} 
                       readOnly={!izinkanCicilan}
+                      onClick={() => {
+                        if (!izinkanCicilan) {
+                          setIsLockedClickAnim(true);
+                          addToast('Nominal terkunci sesuai tagihan penuh. Izin cicilan belum aktif.', 'info');
+                          setTimeout(() => setIsLockedClickAnim(false), 1200);
+                        }
+                      }}
                       onChange={(e) => { 
                         if (izinkanCicilan) {
                           const cleanDigits = e.target.value.replace(/\D/g, '');
@@ -624,11 +643,24 @@ function BayarSekarang() {
                         }
                       }} 
                       className={cn(
-                        'w-full h-10.5 rounded-xl border border-border pl-10 pr-4 text-base font-extrabold font-tabular-nums transition-colors',
-                        !izinkanCicilan ? 'bg-mono-100/70 text-text cursor-default' : 'bg-white text-text focus:border-red'
+                        'w-full h-10.5 rounded-xl border pl-10 text-base font-extrabold font-tabular-nums transition-[border-color,box-shadow,background-color] duration-150 ease-out',
+                        !izinkanCicilan 
+                          ? 'bg-mono-100/70 text-text pr-10 cursor-not-allowed select-none' 
+                          : 'bg-white text-text pr-4 focus:border-red',
+                        isLockedClickAnim ? 'border-amber-400 ring-2 ring-amber-200/60 bg-amber-50/40' : 'border-border'
                       )}
                     />
+                    {!izinkanCicilan && (
+                      <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-mono-400" title="Nominal terkunci (Wajib lunas penuh)">
+                        <Icon icon="heroicons:lock-closed-20-solid" className="size-4.5" />
+                      </div>
+                    )}
                   </div>
+                  {!izinkanCicilan && (
+                    <p className="text-[11.5px] text-text-3 font-medium flex items-center gap-1 mt-1">
+                      <span>Nominal terkunci otomatis sesuai total kewajiban</span>
+                    </p>
+                  )}
                 </FormField>
               </div>
 
@@ -666,29 +698,29 @@ function BayarSekarang() {
           {/* KOLOM KANAN: SATU KARTU RINGKASAN TUNGGAL (RESPONSIVE & UN-SQUEEZED) */}
           <div className="lg:col-span-5 flex flex-col gap-3 order-first lg:order-last lg:sticky lg:top-24">
             
-            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-2.5">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                <h3 className="text-xs sm:text-sm font-bold text-text text-balance">
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                <h2 className="text-sm sm:text-base font-bold text-text text-balance">
                   Ringkasan Pembayaran
-                </h3>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                </h2>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
                   {displayedUnpaidBills.length} Bulan
                 </span>
               </div>
 
               {/* Rincian Item Tagihan */}
-              <div className="flex flex-col gap-2 text-xs">
+              <div className="flex flex-col gap-2.5">
                 {displayedUnpaidBills.map((bill, idx) => (
                   <div key={bill.idTagihan || idx} className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="font-bold text-text block leading-snug">
+                      <span className="font-bold text-xs sm:text-sm text-text block leading-snug">
                         Sewa {formatPeriodeIndo(bill.periode)}
                       </span>
-                      <span className="text-[11px] text-text-3 block mt-0.5">
+                      <span className="text-xs text-text-3 block mt-0.5">
                         Kios {bill.noKios} • {bill.lantai}
                       </span>
                     </div>
-                    <span className="font-semibold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap">
+                    <span className="font-bold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap text-xs sm:text-sm">
                       Rp {(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -696,22 +728,22 @@ function BayarSekarang() {
               </div>
 
               {/* Total & Rincian Transaksi */}
-              <div className="border-t border-dashed border-border/80 pt-2 flex justify-between items-baseline gap-2">
-                <span className="text-xs font-bold text-text shrink-0">Total yang Dibayar</span>
-                <span className="text-base sm:text-lg font-bold font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
+              <div className="border-t border-dashed border-border/80 pt-2.5 flex justify-between items-baseline gap-2">
+                <span className="text-xs sm:text-sm font-bold text-text shrink-0">Total yang Dibayar</span>
+                <span className="text-lg sm:text-xl font-extrabold font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
                   Rp {Number(nominal || 0).toLocaleString('id-ID')}
                 </span>
               </div>
 
               {/* Live Status Pelunasan (Jika bayar multi-bulan) */}
               {displayedUnpaidBills.length > 1 && fifoAllocations.length > 0 && (
-                <div className="p-2.5 bg-mono-50 rounded-xl border border-border/60 text-[11px] flex flex-col gap-1 mt-0.5">
-                  <span className="font-bold text-text-2">Rencana Pelunasan:</span>
+                <div className="p-3 bg-mono-50 rounded-xl border border-border/60 text-xs flex flex-col gap-1.5 mt-0.5">
+                  <span className="font-bold text-xs text-text-2">Rencana Pelunasan:</span>
                   {fifoAllocations.map((alloc) => {
                     const status = alloc.statusAkhir || alloc.status || 'Belum Lunas';
                     const amount = Number(alloc.nominalTeralokasi ?? alloc.allocated ?? 0);
                     return (
-                      <div key={alloc.idTagihan || alloc.periode} className="flex justify-between items-center text-text-2 gap-2">
+                      <div key={alloc.idTagihan || alloc.periode} className="flex justify-between items-center text-xs text-text-2 gap-2">
                         <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
                         <span className={cn(
                           "font-semibold shrink-0 whitespace-nowrap",
@@ -726,8 +758,8 @@ function BayarSekarang() {
               )}
 
               {/* Bantuan / Izin Cicilan via WhatsApp (Responsive Micro Footer) */}
-              <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px]">
-                <span className="text-text-3 font-normal">
+              <div className="pt-2.5 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
+                <span className="text-text-3 font-medium">
                   Izin cicilan sewa?
                 </span>
                 <a
@@ -736,7 +768,7 @@ function BayarSekarang() {
                   rel="noopener noreferrer"
                   className="font-semibold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
                 >
-                  <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-3.5 shrink-0" />
+                  <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4 shrink-0" />
                   <span>Hubungi Pengelola (WA)</span>
                 </a>
               </div>

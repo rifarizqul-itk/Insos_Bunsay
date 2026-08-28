@@ -9,6 +9,7 @@ function EmptyState({
   description = 'Belum ada data untuk ditampilkan saat ini.',
   actionLabel,
   onAction,
+  action,
   className = '',
 }) {
   return (
@@ -26,14 +27,19 @@ function EmptyState({
         {title}
       </h4>
       {description && (
-        <p className={cn("text-sm text-text-2 font-medium max-w-md leading-relaxed text-pretty", actionLabel && onAction ? "mb-6" : "mb-0")}>
+        <p className={cn("text-sm text-text-2 font-medium max-w-md leading-relaxed text-pretty", (action || (actionLabel && onAction)) ? "mb-5" : "mb-0")}>
           {description}
         </p>
       )}
-      {actionLabel && onAction && (
-        <Button variant="primary" size="sm" onClick={onAction}>
-          {actionLabel}
-        </Button>
+      {action ? (
+        action
+      ) : (
+        actionLabel && onAction && (
+          <Button variant="secondary" size="sm" onClick={onAction} className="gap-1.5 font-bold shadow-xs">
+            <Icon icon="heroicons:arrow-path-20-solid" className="size-3.5" />
+            <span>{actionLabel}</span>
+          </Button>
+        )
       )}
     </div>
   );
