@@ -23,13 +23,16 @@ use App\Http\Controllers\PembayaranController;
 */
 
 // ============================================================
-// 0. HEALTH CHECK ENDPOINT
+// 0. HEALTH CHECK & PUBLIC VERIFICATION ENDPOINTS
 // ============================================================
 Route::get('/health', fn () => response()->json([
     'status' => 'OK',
     'service' => 'Insos Bunsay API Backend',
     'timestamp' => now()->toIso8601String(),
 ]));
+
+Route::middleware('throttle:60,1')->get('/v1/public/verifikasi-resi', [PembayaranController::class, 'verifikasiResiPublic']);
+
 
 // ============================================================
 // 1. TENANT DOMAIN AUTH ROUTES (bunsayhub.id)

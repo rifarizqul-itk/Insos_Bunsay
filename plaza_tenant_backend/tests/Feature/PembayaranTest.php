@@ -185,4 +185,40 @@ class PembayaranTest extends TestCase
                 'message' => 'Akun staf tidak ditemukan.',
             ]);
     }
+
+    /**
+     * Test public receipt verification returns 404 for non-existent random code.
+     */
+    public function test_public_verifikasi_resi_rejects_random_code(): void
+    {
+        $response = $this->getJson('/api/v1/public/verifikasi-resi?code=RANDOM-123456');
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'valid' => false,
+            ]);
+    }
+
+    /**
+     * Test public receipt verification validates legitimate paid transaction.
+     */
+    public function test_public_verifikasi_resi_validates_legitimate_payment(): void
+    {
+        $this->pembayaran1->update([
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'Bukti_Pembayaran' => 'BUNSAY-TAG-1024',
+        ]);
+
+        $response = $this->getJson('/api/v1/public/verifikasi-resi?code=TRX-' . $this->pembayaran1->Id_Pembayaran);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'valid' => true,
+                'status' => 'LUNAS',
+                'data' => [
+                    'no_kuitansi' => 'TRX-' . $this->pembayaran1->Id_Pembayaran,
+                    'total_bayar' => 1500000,
+                ],
+            ]);
+    }
 }

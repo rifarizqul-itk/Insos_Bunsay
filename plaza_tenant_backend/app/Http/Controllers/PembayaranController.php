@@ -511,4 +511,85 @@ class PembayaranController extends Controller
             'message' => "Berkas rekapitulasi {$bulan} {$tahun} berhasil diekspor dari database SQL."
         ]);
     }
+
+    /**
+     * Public QR Code / Receipt Verification endpoint.
+     * Checks whether the transaction exists in the database and is officially 'Diterima' (LUNAS).
+     */
+    public function verifikasiResiPublic(Request $request)
+    {
+        $code = trim((string) $request->query('code', ''));
+
+        if ($code === '' || strtoupper($code) === 'TRX-PAYMENT') {
+            return response()->json([
+                'valid'   => false,
+                'message' => 'Silakan masukkan nomor kuitansi atau kode transaksi yang valid.',
+            ], 422);
+        }
+
+        // Try parsing numeric ID from "TRX-123" or "123"
+        $numericId = null;
+        if (preg_match('/^(?:TRX-)?(\d+)$/i', $code, $matches)) {
+            $numericId = (int) $matches[1];
+        }
+
+        // Query payment record
+        $query = Pembayaran::with(['tagihan.sewa.kios', 'tagihan.sewa.pemilik']);
+
+        if ($numericId !== null) {
+            $query->where(function ($q) use ($numericId, $code) {
+                $q->where('Id_Pembayaran', $numericId)
+                  ->orWhere('Bukti_Pembayaran', $code);
+            });
+        } else {
+            $query->where('Bukti_Pembayaran', $code);
+        }
+
+        $pembayaran = $query->first();
+
+        if (!$pembayaran) {
+            return response()->json([
+                'valid'   => false,
+                'message' => 'Dokumen bukti pembayaran dengan kode "' . $code . '" tidak ditemukan dalam database resmi.',
+            ], 404);
+        }
+
+        $status = $pembayaran->Verifikasi_Pembayaran;
+
+        if ($status === 'Diterima') {
+            $kios = $pembayaran->tagihan?->sewa?->kios;
+            $kiosLabel = $kios ? 'Kios ' . $kios->No_Kios : '-';
+
+            return response()->json([
+                'valid'   => true,
+                'status'  => 'LUNAS',
+                'data'    => [
+                    'no_kuitansi'      => 'TRX-' . $pembayaran->Id_Pembayaran,
+                    'referensi'        => ($pembayaran->Bukti_Pembayaran && str_starts_with($pembayaran->Bukti_Pembayaran, 'BUNSAY-'))
+                                            ? $pembayaran->Bukti_Pembayaran
+                                            : ('TRX-' . $pembayaran->Id_Pembayaran),
+                    'tanggal_bayar'    => $pembayaran->Tanggal_Bayar,
+                    'metode_bayar'     => $pembayaran->Metode_Bayar,
+                    'total_bayar'      => (float) $pembayaran->Total_Bayar,
+                    'jenis_retribusi'  => 'Retribusi Pemakaian Kekayaan Daerah (Sewa Kios)',
+                    'unit_kios'        => $kiosLabel,
+                    'periode'          => $pembayaran->tagihan?->Periode ?? '-',
+                ],
+            ]);
+        }
+
+        if ($status === 'Menunggu') {
+            return response()->json([
+                'valid'   => false,
+                'status'  => 'Menunggu Verifikasi',
+                'message' => 'Transaksi ditemukan, namun statusnya masih dalam proses verifikasi oleh petugas/gateway dan belum sah sebagai kuitansi lunas.',
+            ], 200);
+        }
+
+        return response()->json([
+            'valid'   => false,
+            'status'  => 'Ditolak',
+            'message' => 'Transaksi ditemukan tetapi berstatus DITOLAK, sehingga tidak berlaku sebagai bukti pembayaran yang sah.',
+        ], 200);
+    }
 }
