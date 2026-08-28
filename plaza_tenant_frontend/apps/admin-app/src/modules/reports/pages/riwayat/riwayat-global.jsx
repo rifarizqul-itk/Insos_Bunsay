@@ -109,7 +109,7 @@ function RiwayatTransaksiAdmin() {
   }, [filteredRiwayat, currentPage, pageSize]);
 
   const tableHeaders = [
-    { label: 'ID TRX', sortKey: 'idRaw' },
+    { label: 'ID Transaksi', sortKey: 'idRaw' },
     { label: 'Tenant & Kios', sortKey: 'nama' },
     { label: 'Periode', sortKey: 'tagihan' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
@@ -183,7 +183,7 @@ function RiwayatTransaksiAdmin() {
             >
               {paginatedRiwayat.map((item, index) => (
                 <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 hover:bg-red-50/20 transition-colors">
-                  <th scope="row" data-label="ID TRX" className="py-3 px-4 font-mono font-black text-text text-xs sm:text-sm">
+                  <th scope="row" data-label="ID Transaksi" className="py-3 px-4 font-mono font-black text-text text-xs sm:text-sm">
                     {item.id}
                   </th>
                   <td data-label="Tenant & Kios" className="py-3 px-4 text-start">
