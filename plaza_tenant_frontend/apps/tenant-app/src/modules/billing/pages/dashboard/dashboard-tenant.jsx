@@ -347,14 +347,11 @@ function DashboardTenant() {
         {/* Card 1: Periode Sewa Aktif */}
         <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
-            <span className="text-xs font-bold text-text-3 uppercase block tracking-wider">
-              {hasActiveKiosks ? 'Periode Sewa Aktif' : 'Status Kontrak Sewa'}
+            <span className="text-xs font-bold text-text-3 uppercase block tracking-wider pt-1">
+              {hasActiveKiosks ? 'Periode Sewa Aktif' : 'Status Sewa'}
             </span>
-            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 mb-0.5 leading-tight">
-              {hasActiveKiosks ? formatMonthYearText(tagihanBerjalan?.periode) : 'Selesai / Nonaktif'}
-            </div>
-            <div className="text-xs sm:text-sm text-text-2 font-medium font-tabular-nums">
-              {hasActiveKiosks ? getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa) : 'Tidak ada unit kios yang sedang disewa'}
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 leading-snug pt-1">
+              {hasActiveKiosks ? getMonthlyRangeText(tagihanBerjalan?.periode, siklusSewa) : 'Selesai / Nonaktif'}
             </div>
           </div>
 
@@ -375,20 +372,17 @@ function DashboardTenant() {
           </div>
         </Card>
 
-        {/* Card 2: Total Kewajiban Sewa */}
+        {/* Card 2: Total Tagihan */}
         <Card variant="default" className="p-4 sm:p-5 rounded-2xl bg-white border border-border/80 shadow-xs flex flex-col justify-between gap-3">
           <div>
             <div className="flex justify-between items-center mb-1.5 gap-2">
               <span className="text-xs font-bold text-text-3 uppercase block tracking-wider">
-                Total Kewajiban Sewa
+                Total Tagihan
               </span>
               <Badge status={!hasActiveKiosks ? 'Lunas' : statusTagihan} />
             </div>
-            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 mb-0.5 leading-tight">
+            <div className="font-tabular-nums text-xl sm:text-2xl font-bold text-text mt-1.5 leading-snug">
               Rp {hasActiveKiosks ? totalTagihanVal.toLocaleString('id-ID') : '0'}
-            </div>
-            <div className="text-xs sm:text-sm text-text-2 font-medium">
-              {hasActiveKiosks ? (kios ? `Sewa Unit Kios ${kios}` : 'Sewa Unit Kios') : 'Tidak ada tagihan aktif'}
             </div>
           </div>
 

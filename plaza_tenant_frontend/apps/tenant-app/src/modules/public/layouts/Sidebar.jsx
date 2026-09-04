@@ -19,7 +19,7 @@ function Sidebar({ isOpen, onClose, onLogout, isCollapsed = false, onToggleColla
     {
       title: 'TAGIHAN & RIWAYAT',
       items: [
-        { id: 'tagihan', label: 'Tagihan', path: '/tenant/tagihan', icon: 'heroicons:document-duplicate-20-solid' },
+        { id: 'tagihan', label: 'Tunggakan', path: '/tenant/tagihan', icon: 'heroicons:document-duplicate-20-solid' },
         { id: 'histori', label: 'Riwayat Transaksi', path: '/tenant/histori', icon: 'heroicons:clock-20-solid' },
       ]
     },

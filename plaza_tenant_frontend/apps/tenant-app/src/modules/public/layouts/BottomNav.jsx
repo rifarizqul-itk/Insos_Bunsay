@@ -8,7 +8,7 @@ function BottomNav({ role = 'tenant' }) {
   const tenantItems = [
     { label: 'Beranda', path: '/tenant/dashboard', icon: 'heroicons:squares-2x2-20-solid', iconOutline: 'heroicons:squares-2x2' },
     { label: 'Bayar', path: '/tenant/pembayaran', icon: 'heroicons:credit-card-20-solid', iconOutline: 'heroicons:credit-card' },
-    { label: 'Tagihan', path: '/tenant/tagihan', icon: 'heroicons:document-text-20-solid', iconOutline: 'heroicons:document-text' },
+    { label: 'Tunggakan', path: '/tenant/tagihan', icon: 'heroicons:document-text-20-solid', iconOutline: 'heroicons:document-text' },
     { label: 'Histori', path: '/tenant/histori', icon: 'heroicons:clock-20-solid', iconOutline: 'heroicons:clock' },
     { label: 'Akun', path: '/tenant/akun', icon: 'heroicons:user-circle-20-solid', iconOutline: 'heroicons:user-circle' }
   ];

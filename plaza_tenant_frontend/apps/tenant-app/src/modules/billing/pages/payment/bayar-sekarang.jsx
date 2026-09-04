@@ -343,7 +343,7 @@ function BayarSekarang() {
   return (
     <div data-slot="bayar-sekarang" className="page-fade-in flex flex-col gap-6 font-sans max-w-6xl mx-auto w-full">
       {/* Header Halaman */}
-      <div className="flex flex-col gap-1 border-b border-border/70 pb-4">
+      <div className="flex flex-col gap-1 border-b border-border/80 pb-4">
         <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
           Pembayaran Sewa Kios
         </h1>
@@ -394,7 +394,7 @@ function BayarSekarang() {
               
               {/* Multi-Kiosk Filter (Jika punya > 1 kios) */}
               {availableKiosks.length > 1 && (
-                <div className="flex flex-col gap-1.5 pb-2.5 border-b border-border/70">
+                <div className="flex flex-col gap-1.5 pb-2.5 border-b border-border/80">
                   <span className="text-[11px] font-bold text-text-3 uppercase">
                     Pilih Unit Kios:
                   </span>
@@ -438,7 +438,7 @@ function BayarSekarang() {
                   Metode Pembayaran
                 </span>
 
-                <div className="grid grid-cols-2 p-0.5 bg-mono-100 rounded-xl border border-border/60 gap-1" role="tablist">
+                <div className="grid grid-cols-2 p-0.5 bg-mono-100 rounded-xl border border-border/80 gap-1" role="tablist">
                   <button
                     type="button"
                     role="tab"
@@ -447,7 +447,7 @@ function BayarSekarang() {
                     className={cn(
                       "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'transfer_manual'
-                        ? "bg-white text-red shadow-xs border border-border/40"
+                        ? "bg-white text-red shadow-xs border border-border/80"
                         : "text-text-2 hover:text-text"
                     )}
                   >
@@ -463,7 +463,7 @@ function BayarSekarang() {
                     className={cn(
                       "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'midtrans_gateway'
-                        ? "bg-white text-red shadow-xs border border-border/40"
+                        ? "bg-white text-red shadow-xs border border-border/80"
                         : "text-text-2 hover:text-text"
                     )}
                   >
@@ -695,70 +695,106 @@ function BayarSekarang() {
             </div>
           </div>
 
-          {/* KOLOM KANAN: SATU KARTU RINGKASAN TUNGGAL (RESPONSIVE & UN-SQUEEZED) */}
+          {/* KOLOM KANAN: KARTU ALOKASI PEMBAYARAN */}
           <div className="lg:col-span-5 flex flex-col gap-3 order-first lg:order-last lg:sticky lg:top-24">
             
-            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-3">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
-                <h2 className="text-sm sm:text-base font-bold text-text text-balance">
-                  Ringkasan Pembayaran
-                </h2>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
-                  {displayedUnpaidBills.length} Bulan
-                </span>
+            <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-2">
+              <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-text text-balance">
+                    Rencana Pelunasan
+                  </h2>
+                  <span className="text-xs text-text-3">
+                    Total Tagihan: <strong className="text-text font-tabular-nums">Rp {totalKewajiban.toLocaleString('id-ID')}</strong>
+                  </span>
+                </div>
+                {displayedUnpaidBills.length > 0 && (
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                    {displayedUnpaidBills.length} Periode
+                  </span>
+                )}
               </div>
 
-              {/* Rincian Item Tagihan */}
-              <div className="flex flex-col gap-2.5">
-                {displayedUnpaidBills.map((bill, idx) => (
-                  <div key={bill.idTagihan || idx} className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm text-text block leading-snug">
-                        Sewa {formatPeriodeIndo(bill.periode)}
-                      </span>
-                      <span className="text-xs text-text-3 block mt-0.5">
-                        Kios {bill.noKios} • {bill.lantai}
-                      </span>
-                    </div>
-                    <span className="font-bold font-tabular-nums text-text shrink-0 text-right whitespace-nowrap text-xs sm:text-sm">
-                      Rp {(bill.sisaTagihan ?? bill.totalTagihan).toLocaleString('id-ID')}
+              {/* Total yang Sedang Diinput (Nominal di Bawah Teks) */}
+              <div className="flex flex-col gap-1 pb-3 border-b border-border/80">
+                <span className="text-xs sm:text-sm font-semibold text-text-2">
+                  Nominal Disetor:
+                </span>
+                <div className="text-2xl sm:text-3xl font-extrabold font-tabular-nums text-red">
+                  Rp {Number(nominal || 0).toLocaleString('id-ID')}
+                </div>
+              </div>
+
+              {/* Rincian Alokasi Live (List dengan Divider Rapi, Tanpa Kotak-Kotak Bertumpuk) */}
+              {fifoAllocations.length > 0 ? (
+                <div className="flex flex-col gap-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-text-3">
+                      Alokasi Pembayaran:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/tenant/tagihan')}
+                      className="text-xs font-bold text-red hover:underline inline-flex items-center gap-1 cursor-pointer min-h-0 h-auto py-0"
+                    >
+                      <span>Lihat Rincian</span>
+                      <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="divide-y divide-border/80">
+                    {fifoAllocations.map((alloc) => {
+                      const status = alloc.statusAkhir || alloc.status || 'Belum Lunas';
+                      const amount = Number(alloc.nominalTeralokasi ?? alloc.allocated ?? 0);
+                      const isLunas = status === 'Lunas';
+                      const sisaBulan = Number(alloc.sisaTagihan ?? 0);
+                      return (
+                        <div 
+                          key={alloc.idTagihan || alloc.periode} 
+                          className="py-2.5 first:pt-1 last:pb-1 flex items-center justify-between text-xs gap-2"
+                        >
+                          <div className="min-w-0">
+                            <span className="font-bold text-text block truncate">
+                              Sewa {formatPeriodeIndo(alloc.periode)}
+                            </span>
+                            <div className="text-[11.5px] text-text-3 flex items-center gap-1.5 flex-wrap mt-0.5">
+                              <span>Alokasi: <strong className="text-text font-tabular-nums">Rp {amount.toLocaleString('id-ID')}</strong></span>
+                              {sisaBulan > 0 && (
+                                <>
+                                  <span className="text-mono-300">•</span>
+                                  <span>Sisa: <strong className="text-red font-tabular-nums">Rp {sisaBulan.toLocaleString('id-ID')}</strong></span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <span className={cn(
+                            "font-bold text-xs px-2.5 py-0.5 rounded-full border whitespace-nowrap shrink-0",
+                            isLunas ? 'bg-green-bg/85 border-green/25 text-green' : 'bg-orange-bg/85 border-orange/25 text-orange'
+                          )}>
+                            {isLunas ? 'Lunas' : 'Dicicil'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Sisa Kewajiban Setelah Bayar */}
+                  <div className="pt-2.5 border-t border-dashed border-border/80 flex justify-between items-center text-xs">
+                    <span className="text-text-3 font-medium">Sisa utang setelah pembayaran:</span>
+                    <span className="font-extrabold font-tabular-nums text-text text-sm">
+                      Rp {Math.max(0, totalKewajiban - (Number(nominal) || 0)).toLocaleString('id-ID')}
                     </span>
                   </div>
-                ))}
-              </div>
-
-              {/* Total & Rincian Transaksi */}
-              <div className="border-t border-dashed border-border/80 pt-2.5 flex justify-between items-baseline gap-2">
-                <span className="text-xs sm:text-sm font-bold text-text shrink-0">Total yang Dibayar</span>
-                <span className="text-lg sm:text-xl font-extrabold font-tabular-nums text-red shrink-0 whitespace-nowrap text-right">
-                  Rp {Number(nominal || 0).toLocaleString('id-ID')}
-                </span>
-              </div>
-
-              {/* Live Status Pelunasan (Jika bayar multi-bulan) */}
-              {displayedUnpaidBills.length > 1 && fifoAllocations.length > 0 && (
-                <div className="p-3 bg-mono-50 rounded-xl border border-border/60 text-xs flex flex-col gap-1.5 mt-0.5">
-                  <span className="font-bold text-xs text-text-2">Rencana Pelunasan:</span>
-                  {fifoAllocations.map((alloc) => {
-                    const status = alloc.statusAkhir || alloc.status || 'Belum Lunas';
-                    const amount = Number(alloc.nominalTeralokasi ?? alloc.allocated ?? 0);
-                    return (
-                      <div key={alloc.idTagihan || alloc.periode} className="flex justify-between items-center text-xs text-text-2 gap-2">
-                        <span className="truncate">{formatPeriodeIndo(alloc.periode)}</span>
-                        <span className={cn(
-                          "font-semibold shrink-0 whitespace-nowrap",
-                          status === 'Lunas' ? 'text-emerald-700' : 'text-amber-700'
-                        )}>
-                          {status} (Rp {amount.toLocaleString('id-ID')})
-                        </span>
-                      </div>
-                    );
-                  })}
+                </div>
+              ) : (
+                <div className="py-4 px-3 text-center flex flex-col items-center gap-2 text-xs text-text-3">
+                  <Icon icon="heroicons:calculator-20-solid" className="size-5 text-mono-400" />
+                  <span>Ketik nominal pembayaran di samping untuk melihat simulasi pelunasan bulan sewa.</span>
                 </div>
               )}
 
               {/* Bantuan / Izin Cicilan via WhatsApp (Responsive Micro Footer) */}
-              <div className="pt-2.5 border-t border-border/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
+              <div className="pt-2.5 border-t border-border/80 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
                 <span className="text-text-3 font-medium">
                   Izin cicilan sewa?
                 </span>

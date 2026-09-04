@@ -202,11 +202,11 @@ function HistoriPembayaran() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 md:bg-white md:border md:border-border/80 md:rounded-2xl md:p-4 sm:md:p-5 md:shadow-xs">
+      <div className="flex flex-col gap-4">
         {loading ? (
           <SkeletonTable rows={5} />
         ) : filteredHistory.length === 0 ? (
-          <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-6">
+          <div className="bg-white border border-border/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <EmptyState
               icon="heroicons:receipt-refund-20-solid"
               title={selectedMetode !== 'Semua' ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi"}
