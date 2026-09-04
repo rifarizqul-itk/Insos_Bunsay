@@ -34,13 +34,17 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
 
     const echo = getEcho();
     if (echo) {
+      const userId = user?.id || user?.Id_user || user?.sub;
+
       const genChannel = echo.channel('tenant-notifications');
       genChannel.listen('.notification.created', (e) => {
-        setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
-        setUnreadCount(prev => prev + 1);
+        // Guard: only accept global announcements or notifications meant for this tenant
+        if (!e.id_user || (userId && String(e.id_user) === String(userId))) {
+          setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
+          setUnreadCount(prev => prev + 1);
+        }
       });
 
-      const userId = user?.id || user?.Id_user || user?.sub;
       let userChannel = null;
       if (userId) {
         userChannel = echo.channel(`tenant-notifications.${userId}`);

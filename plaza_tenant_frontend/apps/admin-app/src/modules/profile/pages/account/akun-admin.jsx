@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FormField, Button, Card, Icon, Table, Modal, Badge, useToast, Pagination, cn } from '@bunsay/shared-ui';
+import { FormField, Button, Card, Icon, Table, Modal, Badge, EmptyState, useToast, Pagination, cn } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function AkunAdmin() {
@@ -552,15 +552,29 @@ function AkunAdmin() {
               </h2>
             </div>
 
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleOpenStafModal()}
-              className="gap-1.5 font-bold self-start sm:self-auto h-8.5 px-3 text-xs sm:text-sm shadow-xs"
-            >
-              <Icon icon="heroicons:user-plus-20-solid" className="size-4" />
-              <span>Tambah Staf</span>
-            </Button>
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchStafList}
+                disabled={isLoadingStaf}
+                className="text-xs font-semibold gap-1 h-8.5 px-2.5 shadow-xs transition-all duration-150 active:scale-[0.98]"
+                title="Muat ulang data staf dan status kehadiran terbaru"
+              >
+                <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-3.5", isLoadingStaf && "animate-spin text-red")} />
+                <span className="hidden sm:inline">Segarkan</span>
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleOpenStafModal()}
+                className="gap-1.5 font-bold h-8.5 px-3 text-xs sm:text-sm shadow-xs transition-all duration-150 active:scale-[0.98]"
+              >
+                <Icon icon="heroicons:user-plus-20-solid" className="size-4" />
+                <span>Tambah Staf</span>
+              </Button>
+            </div>
           </div>
 
           {(() => {
@@ -582,22 +596,37 @@ function AkunAdmin() {
                 ]}
                 colSpan={7}
                 footer={
-                  <Pagination
-                    currentPage={currentPageStaf}
-                    totalItems={stafList.length}
-                    pageSize={pageSizeStaf}
-                    pageSizeOptions={[10, 25, 50]}
-                    onPageChange={setCurrentPageStaf}
-                    onPageSizeChange={setPageSizeStaf}
-                    itemName="staf"
-                  />
+                  stafList.length > 0 ? (
+                    <Pagination
+                      currentPage={currentPageStaf}
+                      totalItems={stafList.length}
+                      pageSize={pageSizeStaf}
+                      pageSizeOptions={[10, 25, 50]}
+                      onPageChange={setCurrentPageStaf}
+                      onPageSizeChange={setPageSizeStaf}
+                      itemName="staf"
+                    />
+                  ) : null
                 }
               >
-                {paginatedStaf.map((staf) => {
-                  const isSelf = isSelfUser(staf);
-                  const isOnline = staf.is_online ?? false;
-                  return (
-                    <tr key={staf.id} className={cn("border-b border-border/80 last:border-b-0 transition-colors", isSelf ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-red-50/20")}>
+                {paginatedStaf.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-0">
+                      <EmptyState
+                        icon="heroicons:user-group-20-solid"
+                        title="Belum Ada Staf Pengelola"
+                        description="Belum ada data staf yang terdaftar atau koneksi sedang memuat data terbaru."
+                        actionLabel="Segarkan Data"
+                        onAction={fetchStafList}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedStaf.map((staf) => {
+                    const isSelf = isSelfUser(staf);
+                    const isOnline = staf.is_online ?? false;
+                    return (
+                      <tr key={staf.id} className={cn("border-b border-border/80 last:border-b-0 transition-colors", isSelf ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-red-50/20")}>
                       <th scope="row" className="py-2.5 px-3 font-semibold text-text text-xs sm:text-sm text-start">
                         <div className="flex items-center gap-1.5">
                           <span>{staf.nama_lengkap}</span>
@@ -794,7 +823,7 @@ function AkunAdmin() {
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </Table>
             );
           })()}

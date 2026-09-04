@@ -29,8 +29,10 @@ class NotificationSent implements ShouldBroadcastNow
         } else {
             if ($this->notification->id_user) {
                 $channels[] = new Channel('tenant-notifications.' . $this->notification->id_user);
+            } else {
+                // Only broadcast to generic channel if notification is a global announcement for all tenants
+                $channels[] = new Channel('tenant-notifications');
             }
-            $channels[] = new Channel('tenant-notifications');
         }
 
         return $channels;
