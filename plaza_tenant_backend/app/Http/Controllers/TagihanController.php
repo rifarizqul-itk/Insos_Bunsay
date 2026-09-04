@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tagihan;
+use App\Services\BillingService;
 use Illuminate\Http\Request;
 
 class TagihanController extends Controller
 {
     public function index(Request $request)
     {
+        BillingService::ensureCurrentMonthBillsExist();
+
         $query = Tagihan::with(['sewa.pemilik', 'sewa.kios']);
         if ($request->has('Id_Pemilik')) {
             $query->whereHas('sewa', function($q) use ($request) {
@@ -34,6 +37,8 @@ class TagihanController extends Controller
      */
     public function tenantTagihan(Request $request)
     {
+        BillingService::ensureCurrentMonthBillsExist();
+
         $user = $request->user();
         if (!$user) {
             return response()->json([], 401);

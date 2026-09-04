@@ -7,6 +7,7 @@ use App\Models\Pemilik;
 use App\Models\Sewa;
 use App\Models\Tagihan;
 use App\Models\Pembayaran;
+use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,6 +15,8 @@ class DashboardController extends Controller
 {
     public function adminDashboard(Request $request)
     {
+        BillingService::ensureCurrentMonthBillsExist();
+
         $kiosStats = DB::table('kios')
             ->selectRaw('COUNT(*) as total, SUM(CASE WHEN Status = "Terisi" THEN 1 ELSE 0 END) as terisi, SUM(CASE WHEN Status = "Kosong" THEN 1 ELSE 0 END) as kosong')
             ->first();
@@ -38,6 +41,8 @@ class DashboardController extends Controller
 
     public function tenantDashboard(Request $request)
     {
+        BillingService::ensureCurrentMonthBillsExist();
+
         $user = $request->user();
 
         $pemilik = Pemilik::where('Id_User', $user->Id_user)->with('sewa.tagihan', 'sewa.kios')->first();
