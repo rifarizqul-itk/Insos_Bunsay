@@ -94,7 +94,7 @@ export function resolveStorageUrl(path) {
   }
 
   if (path.startsWith('http://') || path.startsWith('https://')) {
-    if (path.includes('ngrok-free.app') && !path.includes('ngrok-skip-browser-warning')) {
+    if (/ngrok/i.test(path) && !path.includes('ngrok-skip-browser-warning')) {
       const sep = path.includes('?') ? '&' : '?';
       return `${path}${sep}ngrok-skip-browser-warning=true`;
     }
@@ -111,7 +111,7 @@ export function resolveStorageUrl(path) {
 
   if (apiBase) {
     const fullUrl = `${apiBase}${cleanPath}`;
-    if (fullUrl.includes('ngrok-free.app') && !fullUrl.includes('ngrok-skip-browser-warning')) {
+    if (/ngrok/i.test(fullUrl) && !fullUrl.includes('ngrok-skip-browser-warning')) {
       const sep = fullUrl.includes('?') ? '&' : '?';
       return `${fullUrl}${sep}ngrok-skip-browser-warning=true`;
     }

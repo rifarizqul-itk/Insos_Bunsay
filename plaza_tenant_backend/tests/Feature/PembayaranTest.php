@@ -32,8 +32,10 @@ class PembayaranTest extends TestCase
     {
         parent::setUp();
 
-        // Isolate filesystem artifacts between tests
-        File::deleteDirectory(public_path('storage/bukti'));
+        // Clean up test-created sanggahan artifacts between tests without wiping seeded demo files
+        foreach (File::glob(public_path('storage/bukti/sanggahan_*')) ?: [] as $testFile) {
+            @unlink($testFile);
+        }
 
         Role::create(['Id_roles' => 1, 'Nama_role' => 'Admin']);
         Role::create(['Id_roles' => 2, 'Nama_role' => 'Tenant']);
@@ -200,7 +202,8 @@ class PembayaranTest extends TestCase
             'Id_Pembayaran' => $this->pembayaran1->Id_Pembayaran,
             'teks_sanggahan' => 'Mencoba melampirkan PDF.',
         ]);
-        $this->assertDirectoryDoesNotExist(public_path('storage/bukti'));
+        $pdfFiles = File::glob(public_path('storage/bukti/*.pdf')) ?: [];
+        $this->assertEmpty($pdfFiles);
     }
 
     /**
@@ -247,7 +250,8 @@ class PembayaranTest extends TestCase
             'Id_Pembayaran' => $this->pembayaran1->Id_Pembayaran,
             'teks_sanggahan' => 'Saya bukan pemilik transaksi ini.',
         ]);
-        $this->assertDirectoryDoesNotExist(public_path('storage/bukti'));
+        $sanggahanFiles = File::glob(public_path('storage/bukti/sanggahan_*')) ?: [];
+        $this->assertEmpty($sanggahanFiles);
     }
 
     /**
