@@ -2,215 +2,164 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\KonfirmasiPembayaranRequest;
+use App\Http\Requests\SanggahRequest;
+use App\Http\Requests\StorePembayaranRequest;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
+use App\Services\BuktiImageException;
+use App\Services\BuktiImageStore;
+use App\Services\PaymentStatusPolicy;
+use App\Services\TagihanAllocationService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class PembayaranController extends Controller
 {
+    private const DEFAULT_PAGE_SIZE = 10;
+
+    private const MAX_PAGE_SIZE = 100;
+
+    /** Kolom yang boleh dipakai untuk sort (whitelist — input user tidak pernah dipakai mentah). */
+    private const SORTABLE_COLUMNS = [
+        'tanggal' => 'Tanggal_Bayar',
+        'nominal' => 'Total_Bayar',
+        'id'      => 'Id_Pembayaran',
+        'status'  => 'Verifikasi_Pembayaran',
+    ];
+    public function __construct(
+        private BuktiImageStore $buktiImageStore = new BuktiImageStore(),
+        private TagihanAllocationService $allocationService = new TagihanAllocationService(),
+        private PaymentStatusPolicy $statusPolicy = new PaymentStatusPolicy(),
+    ) {
+    }
+
+    /**
+     * Daftar pembayaran. Tanpa parameter ?page → bentuk legacy (array penuh,
+     * dipakai enam halaman admin yang sudah berjalan). Dengan ?page → bentuk
+     * terpaginasi + filter server-side:
+     *
+     *   GET /pembayaran?page=1&page_size=15&status=Ditolak&metode=Transfer&q=TRX-12
+     */
     public function index(Request $request)
     {
         $user = $request->user();
+        $paginated = $request->filled('page');
 
-        // Jika tidak ada user login atau rolenya Admin (Id_roles = 1)
-        // Maka tampilkan semua pembayaran
-        if (!$user || $user->Id_roles == 1) {
-            $pembayaran = Pembayaran::with(['tagihan.sewa.pemilik', 'tagihan.sewa.kios'])->orderBy('Tanggal_Bayar', 'desc')->get();
-            return response()->json($pembayaran);
-        }
+        $query = Pembayaran::query()->with(['tagihan.sewa.pemilik', 'tagihan.sewa.kios']);
 
-        // Jika yang login adalah Tenant (Id_roles = 2)
-        // Cari Id_Pemilik miliknya
-        $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
-
-        if (!$pemilik) {
-            return response()->json([]); // Kosong jika belum punya profil pemilik
-        }
-
-        // Filter pembayaran yang tagihannya berelasi ke sewa milik tenant ini
-        $pembayaran = Pembayaran::whereHas('tagihan.sewa', function ($query) use ($pemilik) {
-            $query->where('Id_Pemilik', $pemilik->Id_Pemilik);
-        })->with(['tagihan.sewa.pemilik', 'tagihan.sewa.kios'])->orderBy('Tanggal_Bayar', 'desc')->get();
-
-        return response()->json($pembayaran);
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'Id_Tagihan'           => 'required|exists:tagihan,Id_Tagihan',
-            'Tanggal_Bayar'        => 'required|date',
-            'Total_Bayar'          => 'required|numeric|min:1',
-            'Metode_Bayar'         => 'required|in:Transfer,Tunai,Midtrans',
-            'Bukti_Pembayaran'     => 'nullable|string',
-            'Verifikasi_Pembayaran'=> 'nullable|in:Menunggu,Diterima,Ditolak,Belum Bayar',
-        ]);
-
-        // ============================================================
-        // Isu I4 dari schema audit (2026-08-12):
-        // Isolasi tenant — verifikasi bahwa tagihan yang dibayar benar-benar
-        // milik tenant yang sedang login. Tanpa ini, tenant A bisa membayar
-        // (atau mengekspos data) tagihan milik tenant B hanya dengan menebak Id_Tagihan.
-        //
-        // Admin (Id_roles = 1) dikecualikan — admin boleh input untuk siapapun.
-        // ============================================================
-        $user = $request->user();
+        // Tenant hanya melihat pembayaran miliknya (admin melihat semuanya).
         if ($user && $user->Id_roles != 1) {
             $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
 
             if (!$pemilik) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Profil pemilik tidak ditemukan. Hubungi admin.',
-                ], 403);
+                return $paginated
+                    ? response()->json($this->emptyPage((int) $request->query('page_size', self::DEFAULT_PAGE_SIZE)))
+                    : response()->json([]); // Kosong jika belum punya profil pemilik
             }
 
-            $isOwner = Tagihan::where('Id_Tagihan', $request->Id_Tagihan)
-                ->whereHas('sewa', fn($q) => $q->where('Id_Pemilik', $pemilik->Id_Pemilik))
-                ->exists();
+            $query->whereHas('tagihan.sewa', fn ($q) => $q->where('Id_Pemilik', $pemilik->Id_Pemilik));
+        }
 
-            if (!$isOwner) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses ke tagihan ini.',
-                ], 403);
+        // Filter server-side (hanya relevan untuk bentuk terpaginasi).
+        if ($paginated) {
+            if ($status = $request->query('status')) {
+                // Dukung multi-status: ?status=Diterima,Ditolak
+                $statuses = array_values(array_filter(array_map('trim', explode(',', $status))));
+                $query->whereIn('Verifikasi_Pembayaran', $statuses ?: ['Menunggu']);
+            }
+            if ($metode = $request->query('metode')) {
+                $query->where('Metode_Bayar', $metode);
+            }
+            if ($search = trim((string) $request->query('q', ''))) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('Id_Pembayaran', is_numeric($search) ? (int) $search : -1)
+                        ->orWhere('Bukti_Pembayaran', 'like', "%{$search}%");
+                });
             }
         }
 
-        // ============================================================
-        // Keputusan bisnis (dikonfirmasi 2026-08-13):
-        // - Midtrans: auto Diterima (Gateway otomatis).
-        // - Tunai: auto Diterima (karena diinput langsung oleh admin/kasir di loket).
-        // - Transfer: Menunggu verifikasi manual bukti foto.
-        // ============================================================
-        if (in_array($request->Metode_Bayar, ['Midtrans', 'Tunai'])) {
-            $statusVerifikasi = 'Diterima';
-        } else {
-            $statusVerifikasi = $request->Verifikasi_Pembayaran ?? 'Menunggu';
+        // Sort server-side: hanya kolom dalam whitelist, arah hanya asc/desc.
+        $sortKey = $request->query('sort_by', 'tanggal');
+        $sortColumn = self::SORTABLE_COLUMNS[$sortKey] ?? self::SORTABLE_COLUMNS['tanggal'];
+        $sortDir = strtolower((string) $request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sortColumn, $sortDir)->orderBy('Id_Pembayaran', 'desc');
+
+        if (!$paginated) {
+            return response()->json($query->get());
         }
 
-        $idTagihanTarget = $request->Id_Tagihan;
-        $tagihanTarget   = Tagihan::find($idTagihanTarget);
+        $pageSize = min(max(1, (int) $request->query('page_size', self::DEFAULT_PAGE_SIZE)), self::MAX_PAGE_SIZE);
+        $page = $query->paginate($pageSize);
 
-        // Proses upload bukti pembayaran (Base64 → file) dengan whitelist ekstensi & validasi ukuran
-        $buktiPath = $request->Bukti_Pembayaran;
-        if (is_string($request->Bukti_Pembayaran) && str_starts_with($request->Bukti_Pembayaran, 'data:image/')) {
-            try {
-                preg_match('/data:image\/(?<type>[a-zA-Z0-9_-]+);base64,(?<data>.+)/', $request->Bukti_Pembayaran, $matches);
-                if (isset($matches['data'])) {
-                    $rawType = strtolower($matches['type'] ?? 'png');
-                    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-                    $imageType = in_array($rawType, $allowedExts, true) ? ($rawType === 'jpeg' ? 'jpg' : $rawType) : 'png';
-                    
-                    $imageData = base64_decode($matches['data'], true);
-                    if ($imageData !== false && strlen($imageData) > 0 && strlen($imageData) <= (5 * 1024 * 1024)) {
-                        $filename  = 'bukti_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
-                        $destinationPath = public_path('storage/bukti');
-                        if (!file_exists($destinationPath)) {
-                            mkdir($destinationPath, 0777, true);
-                        }
-                        file_put_contents($destinationPath . '/' . $filename, $imageData);
-                        $buktiPath = 'storage/bukti/' . $filename;
-                    }
-                }
-            } catch (\Throwable $e) {}
+        return response()->json([
+            'data'         => $page->items(),
+            'current_page' => $page->currentPage(),
+            'last_page'    => $page->lastPage(),
+            'per_page'     => $page->perPage(),
+            'total'        => $page->total(),
+        ]);
+    }
+
+    private function emptyPage(int $pageSize): array
+    {
+        return [
+            'data'         => [],
+            'current_page' => 1,
+            'last_page'    => 1,
+            'per_page'     => $pageSize,
+            'total'        => 0,
+        ];
+    }
+
+    public function store(StorePembayaranRequest $request)
+    {
+        // Isolasi tenant (isu I4, 2026-08-12): tagihan harus milik pemilik
+        // yang sedang login. Admin (Id_roles = 1) dikecualikan.
+        $request->ensureTagihanOwnership();
+
+        // Kebijakan status verifikasi (dikonfirmasi 2026-08-13):
+        // - Midtrans/Tunai: auto Diterima (gateway / kasir di loket).
+        // - Transfer: selalu Menunggu verifikasi manual bukti foto oleh admin.
+        //   Status Diterima hanya boleh ditetapkan lewat konfirmasi admin.
+        $statusVerifikasi = $this->statusPolicy->initialStatus($request->Metode_Bayar);
+
+        // Bukti pembayaran: multipart, base64 data URI, atau string referensi.
+        // Bukti tidak valid ditolak eksplisit (422) — tidak pernah dibuang diam-diam.
+        try {
+            $buktiPath = $this->buktiImageStore->store($request->Bukti_Pembayaran);
+        } catch (BuktiImageException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         }
 
-        // ============================================================
-        // Keputusan bisnis #1 (dikonfirmasi 2026-08-12):
-        // Partial Payment dengan algoritma FIFO.
-        // Jika Total_Bayar < Sisa_Tagihan tagihan target:
-        //   → Alokasikan ke tagihan tertua yang belum lunas (urutan Id_Tagihan ASC).
-        //   → Update Sisa_Tagihan di setiap tagihan yang tersentuh.
-        //   → Status 'Dicicil' jika belum lunas sepenuhnya, 'Lunas' jika lunas.
-        // Jika Total_Bayar >= Total_Tagihan: proses normal (full payment).
-        // ============================================================
-        $nominalTersisa = (float) $request->Total_Bayar;
-        $isPartialPayment = false;
+        $tagihanTarget = Tagihan::find($request->Id_Tagihan);
 
         $pembayaran = DB::transaction(function () use (
             $request,
             $tagihanTarget,
             $statusVerifikasi,
-            $buktiPath,
-            &$idTagihanTarget,
-            &$nominalTersisa,
-            &$isPartialPayment
+            $buktiPath
         ) {
+            $idTagihanTarget = $tagihanTarget->Id_Tagihan;
+            $isPartialPayment = false;
+
             if ($tagihanTarget && $statusVerifikasi === 'Diterima') {
-                // Ambil semua tagihan belum lunas dari sewa yang sama, urutan tertua dulu (FIFO)
-                $sewaId = $tagihanTarget->Id_Sewa;
-                $tagihanBelumLunas = Tagihan::where('Id_Sewa', $sewaId)
-                    ->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi'])
-                    ->orderBy('Id_Tagihan', 'asc')
-                    ->lockForUpdate()
-                    ->get();
+                $openTagihan = $this->allocationService->openTagihan($tagihanTarget->Id_Sewa);
 
-                $sisaTagihanTarget = (float) ($tagihanTarget->Sisa_Tagihan ?? $tagihanTarget->Total_Tagihan ?? 0);
+                $sisaTagihanTarget = max(0.0, (float) ($tagihanTarget->Sisa_Tagihan ?? $tagihanTarget->Total_Tagihan ?? 0));
 
-                // Cek apakah ini partial payment
-                if ($nominalTersisa < $sisaTagihanTarget && $tagihanBelumLunas->count() > 0) {
+                if ($openTagihan->isNotEmpty() && (float) $request->Total_Bayar < $sisaTagihanTarget) {
+                    // Partial payment: FIFO ke tagihan tertua pada sewa yang sama.
                     $isPartialPayment = true;
-                }
-
-                if ($isPartialPayment) {
-                    // Distribusikan nominal ke tagihan-tagihan tertua (FIFO)
-                    foreach ($tagihanBelumLunas as $tagihan) {
-                        if ($nominalTersisa <= 0) break;
-
-                        $sisaTagihan = (float) ($tagihan->Sisa_Tagihan ?? $tagihan->Total_Tagihan ?? 0);
-
-                        if ($nominalTersisa >= $sisaTagihan) {
-                            // Tagihan ini bisa dilunasi sepenuhnya
-                            $nominalTersisa -= $sisaTagihan;
-                            $tagihan->update([
-                                'Sisa_Tagihan'   => 0,
-                                'Status_Tagihan' => 'Lunas',
-                            ]);
-                        } else {
-                            // Tagihan ini hanya terbayar sebagian
-                            $tagihan->update([
-                                'Sisa_Tagihan'   => $sisaTagihan - $nominalTersisa,
-                                'Status_Tagihan' => 'Dicicil',
-                            ]);
-                            $nominalTersisa = 0;
-                        }
-                    }
-
-                    // Gunakan tagihan target sebagai anchor record pembayaran
+                    $this->allocationService->allocate($openTagihan, (float) $request->Total_Bayar);
                     $idTagihanTarget = $tagihanTarget->Id_Tagihan;
-
-                } else {
-                    // Full payment: cek apakah tagihan target sudah lunas (advance payment)
-                    if ($tagihanTarget->Status_Tagihan === 'Lunas') {
-                        $latestTagihan = Tagihan::where('Id_Sewa', $tagihanTarget->Id_Sewa)
-                            ->orderBy('Id_Tagihan', 'desc')
-                            ->first();
-
-                        $nextPeriode = '2025-05';
-                        if ($latestTagihan && $latestTagihan->Periode) {
-                            try {
-                                $nextPeriode = Carbon::createFromFormat('Y-m', $latestTagihan->Periode)->addMonth()->format('Y-m');
-                            } catch (\Throwable $th) {
-                                $nextPeriode = date('Y-m');
-                            }
-                        }
-
-                        $newTagihan = Tagihan::create([
-                            'Id_Sewa'          => $tagihanTarget->Id_Sewa,
-                            'Periode'          => $nextPeriode,
-                            'Jatuh_Tempo'      => Carbon::now()->addMonth()->format('Y-m-d'),
-                            'Tarif_Sewa'       => $tagihanTarget->Tarif_Sewa ?: $request->Total_Bayar,
-                            'Hutang_Tunggakan' => 0,
-                            'Total_Tagihan'    => $request->Total_Bayar ?: $tagihanTarget->Tarif_Sewa,
-                            'Sisa_Tagihan'     => $statusVerifikasi === 'Diterima' ? 0 : ($request->Total_Bayar ?: $tagihanTarget->Tarif_Sewa),
-                            'Status_Tagihan'   => $statusVerifikasi === 'Diterima' ? 'Lunas' : 'Belum Bayar',
-                        ]);
-
-                        $idTagihanTarget = $newTagihan->Id_Tagihan;
-                    }
+                } elseif ($tagihanTarget->Status_Tagihan === 'Lunas') {
+                    // Advance payment: buat tagihan periode berikutnya untuk menampung dana.
+                    $idTagihanTarget = $this->createAdvanceTagihan($tagihanTarget, $request, $statusVerifikasi);
                 }
             }
 
@@ -226,20 +175,65 @@ class PembayaranController extends Controller
 
             // Untuk full payment yang diterima (non-FIFO): update tagihan target ke Lunas
             if ($statusVerifikasi === 'Diterima' && !$isPartialPayment) {
-                Tagihan::where('Id_Tagihan', $idTagihanTarget)
-                    ->update([
-                        'Status_Tagihan' => 'Lunas',
-                        'Sisa_Tagihan'   => 0,
-                    ]);
+                Tagihan::where('Id_Tagihan', $idTagihanTarget)->update([
+                    'Status_Tagihan' => 'Lunas',
+                    'Sisa_Tagihan'   => 0,
+                ]);
             }
 
             return $pembayaranRecord;
         });
 
         // 6. Kirim dynamic event notification ke panel Admin
-        $nomFormatted = number_format((float)($request->Total_Bayar ?? 0), 0, ',', '.');
+        $this->notifyAdminOfIncomingPayment($pembayaran, $tagihanTarget);
+
+        return response()->json($pembayaran, 201);
+    }
+
+    /**
+     * Advance payment: tagihan target sudah Lunas, jadi dana dialokasikan ke
+     * tagihan periode berikutnya (dibuat bila belum ada).
+     */
+    private function createAdvanceTagihan(Tagihan $tagihanTarget, Request $request, string $statusVerifikasi): int
+    {
+        $latestTagihan = Tagihan::where('Id_Sewa', $tagihanTarget->Id_Sewa)
+            ->orderBy('Id_Tagihan', 'desc')
+            ->first();
+
+        $nextPeriode = now()->format('Y-m');
+        if ($latestTagihan && $latestTagihan->Periode) {
+            try {
+                $nextPeriode = Carbon::createFromFormat('Y-m', $latestTagihan->Periode)->addMonth()->format('Y-m');
+            } catch (\Throwable) {
+                $nextPeriode = now()->format('Y-m');
+            }
+        }
+
+        $tarif = $tagihanTarget->Tarif_Sewa ?: $request->Total_Bayar;
+
+        $newTagihan = Tagihan::create([
+            'Id_Sewa'          => $tagihanTarget->Id_Sewa,
+            'Periode'          => $nextPeriode,
+            'Jatuh_Tempo'      => now()->addMonth()->format('Y-m-d'),
+            'Tarif_Sewa'       => $tarif,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan'    => $tarif,
+            'Sisa_Tagihan'     => $statusVerifikasi === 'Diterima' ? 0 : $tarif,
+            'Status_Tagihan'   => $statusVerifikasi === 'Diterima' ? 'Lunas' : 'Belum Bayar',
+        ]);
+
+        return $newTagihan->Id_Tagihan;
+    }
+
+    /**
+     * Dynamic event notification ke panel Admin untuk pembayaran masuk.
+     */
+    private function notifyAdminOfIncomingPayment(Pembayaran $pembayaran, ?Tagihan $tagihanTarget): void
+    {
+        $nomFormatted = number_format((float) ($pembayaran->Total_Bayar ?? 0), 0, ',', '.');
         $namaTenant = $tagihanTarget?->sewa?->pemilik?->Nama ?? 'Tenant';
-        if ($request->Metode_Bayar === 'Transfer') {
+
+        if ($pembayaran->Metode_Bayar === 'Transfer') {
             \App\Models\Notification::send(
                 'admin',
                 null,
@@ -248,7 +242,7 @@ class PembayaranController extends Controller
                 'info',
                 '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
             );
-        } else if ($request->Metode_Bayar === 'Midtrans') {
+        } elseif ($pembayaran->Metode_Bayar === 'Midtrans') {
             \App\Models\Notification::send(
                 'admin',
                 null,
@@ -258,8 +252,6 @@ class PembayaranController extends Controller
                 '/admin/riwayat'
             );
         }
-
-        return response()->json($pembayaran, 201);
     }
 
     public function show(string $id)
@@ -290,78 +282,30 @@ class PembayaranController extends Controller
         return response()->json($pembayaran);
     }
 
-    public function konfirmasi(Request $request, string $id)
+    public function konfirmasi(KonfirmasiPembayaranRequest $request, string $id)
     {
-        $request->validate([
-            'status' => 'required|in:Diterima,Ditolak',
-            'catatan_admin' => 'nullable|string',
-        ]);
 
         // Bersihkan prefix string seperti 'TRX-' jika dikirim dari frontend
         $cleanId = preg_replace('/[^0-9]/', '', $id);
-        
+
         $pembayaran = Pembayaran::with('tagihan.sewa.pemilik')->find($cleanId ?: $id);
 
         if (!$pembayaran) {
             return response()->json(['message' => 'Data pembayaran tidak ditemukan.'], 404);
         }
 
-        $updatePayload = [
-            'Verifikasi_Pembayaran' => $request->status,
-        ];
-
-        if ($request->has('catatan_admin')) {
-            $updatePayload['catatan_admin'] = $request->catatan_admin;
-        }
-
-        DB::transaction(function () use ($pembayaran, $updatePayload, $request) {
-            $pembayaran->update($updatePayload);
+        DB::transaction(function () use ($pembayaran, $request) {
+            $pembayaran->update([
+                'Verifikasi_Pembayaran' => $request->status,
+                'catatan_admin'         => $request->catatan_admin,
+            ]);
 
             if ($request->status === 'Diterima') {
-                $tagihanAnchor = Tagihan::find($pembayaran->Id_Tagihan);
-                if ($tagihanAnchor) {
-                    $sewaId = $tagihanAnchor->Id_Sewa;
-                    $nominalTersisa = (float) $pembayaran->Total_Bayar;
-
-                    $tagihanBelumLunas = Tagihan::where('Id_Sewa', $sewaId)
-                        ->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi'])
-                        ->orderBy('Id_Tagihan', 'asc')
-                        ->lockForUpdate()
-                        ->get();
-
-                    if ($tagihanBelumLunas->count() > 0) {
-                        foreach ($tagihanBelumLunas as $tagihan) {
-                            if ($nominalTersisa <= 0) break;
-
-                            $sisa = (float) ($tagihan->Sisa_Tagihan ?? $tagihan->Total_Tagihan ?? 0);
-
-                            if ($nominalTersisa >= $sisa) {
-                                $nominalTersisa -= $sisa;
-                                $tagihan->update([
-                                    'Sisa_Tagihan'   => 0,
-                                    'Status_Tagihan' => 'Lunas',
-                                ]);
-                            } else {
-                                $tagihan->update([
-                                    'Sisa_Tagihan'   => max(0, $sisa - $nominalTersisa),
-                                    'Status_Tagihan' => 'Dicicil',
-                                ]);
-                                $nominalTersisa = 0;
-                            }
-                        }
-                    } else {
-                        $tagihanAnchor->update([
-                            'Status_Tagihan' => 'Lunas',
-                            'Sisa_Tagihan'   => 0,
-                        ]);
-                    }
-                }
+                $this->applyVerifiedAllocation($pembayaran);
             } else {
-                // Tolak: kembalikan tagihan ke Belum Bayar
+                // Tolak: kembalikan tagihan anchor ke Belum Bayar
                 Tagihan::where('Id_Tagihan', $pembayaran->Id_Tagihan)
-                    ->update([
-                        'Status_Tagihan' => 'Belum Bayar',
-                    ]);
+                    ->update(['Status_Tagihan' => 'Belum Bayar']);
             }
         });
 
@@ -372,7 +316,42 @@ class PembayaranController extends Controller
             "Admin memverifikasi status pembayaran TRX-{$pembayaran->Id_Pembayaran} menjadi {$request->status}." . ($request->filled('catatan_admin') ? " Alasan/Catatan: {$request->catatan_admin}" : "")
         );
 
-        // Send Dynamic Event Notification to Tenant
+        $this->notifyTenantOfVerification($pembayaran, $request);
+
+        return response()->json([
+            'message' => 'Konfirmasi pembayaran berhasil.',
+            'data' => $pembayaran->fresh(),
+        ]);
+    }
+
+    /**
+     * FIFO allocation saat admin menerima pembayaran.
+     */
+    private function applyVerifiedAllocation(Pembayaran $pembayaran): void
+    {
+        $tagihanAnchor = Tagihan::find($pembayaran->Id_Tagihan);
+        if (!$tagihanAnchor) {
+            return;
+        }
+
+        $openTagihan = $this->allocationService->openTagihan($tagihanAnchor->Id_Sewa);
+
+        if ($openTagihan->isNotEmpty()) {
+            $this->allocationService->allocate($openTagihan, (float) $pembayaran->Total_Bayar);
+        } else {
+            // Tidak ada tagihan terbuka: lunasi tagihan anchor secara langsung.
+            $tagihanAnchor->update([
+                'Status_Tagihan' => 'Lunas',
+                'Sisa_Tagihan'   => 0,
+            ]);
+        }
+    }
+
+    /**
+     * Dynamic event notification ke tenant setelah verifikasi admin.
+     */
+    private function notifyTenantOfVerification(Pembayaran $pembayaran, Request $request): void
+    {
         $tenantUserId = $pembayaran->tagihan?->sewa?->pemilik?->Id_User;
         if (!$tenantUserId && $pembayaran->Id_Tagihan) {
             $tagihanObj = Tagihan::with('sewa.pemilik')->find($pembayaran->Id_Tagihan);
@@ -384,11 +363,11 @@ class PembayaranController extends Controller
                 'tenant',
                 $tenantUserId,
                 'Pembayaran Sewa Diterima',
-                "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} sebesar Rp " . number_format((float)($pembayaran->Total_Bayar ?? 0), 0, ',', '.') . " telah diverifikasi dan DITERIMA oleh pengelola.",
+                "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} sebesar Rp " . number_format((float) ($pembayaran->Total_Bayar ?? 0), 0, ',', '.') . " telah diverifikasi dan DITERIMA oleh pengelola.",
                 'success',
                 '/tenant/histori'
             );
-        } else if ($request->status === 'Ditolak') {
+        } elseif ($request->status === 'Ditolak') {
             \App\Models\Notification::send(
                 'tenant',
                 $tenantUserId,
@@ -398,90 +377,43 @@ class PembayaranController extends Controller
                 '/tenant/histori'
             );
         }
-
-        return response()->json([
-            'message' => 'Konfirmasi pembayaran berhasil.',
-            'data' => $pembayaran->fresh(),
-        ]);
     }
 
-    public function sanggah(Request $request, string $id)
+    public function sanggah(SanggahRequest $request)
     {
-        $request->validate([
-            'teks_sanggahan' => 'required|string',
-            'bukti_sanggahan' => 'nullable|string',
-        ]);
-
-        $cleanId = preg_replace('/[^0-9]/', '', $id);
-        $pembayaran = Pembayaran::with('tagihan.sewa.pemilik')->find($cleanId ?: $id);
+        // Pembayaran sudah di-resolve & diverifikasi kepemilikannya oleh
+        // SanggahRequest (satu query, sebelum sentuh berkas apa pun).
+        $pembayaran = $request->getPembayaran();
 
         if (!$pembayaran) {
             return response()->json(['message' => 'Data pembayaran tidak ditemukan.'], 404);
         }
 
-        // Isolasi Tenant (IDOR Protection): pastikan transaksi adalah milik tenant yang sedang login
-        $user = $request->user();
-        if ($user && (int) $user->Id_roles !== 1) {
-            $pemilik = \App\Models\Pemilik::where('Id_User', $user->Id_user)->first();
-            $pembayaranPemilikId = $pembayaran->tagihan?->sewa?->Id_Pemilik;
-
-            if (!$pemilik || $pembayaranPemilikId !== $pemilik->Id_Pemilik) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki hak akses untuk menyanggah transaksi ini.',
-                ], 403);
-            }
+        try {
+            $buktiPath = $this->buktiImageStore->store($request->bukti_sanggahan, 'sanggahan');
+        } catch (BuktiImageException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         }
 
-        $buktiPath = $request->bukti_sanggahan;
-        if (is_string($request->bukti_sanggahan) && str_starts_with($request->bukti_sanggahan, 'data:image/')) {
-            try {
-                preg_match('/data:image\/(?<type>[a-zA-Z0-9_-]+);base64,(?<data>.+)/', $request->bukti_sanggahan, $matches);
-                if (isset($matches['data'])) {
-                    $rawType = strtolower($matches['type'] ?? 'png');
-                    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-                    $imageType = in_array($rawType, $allowedExts, true) ? ($rawType === 'jpeg' ? 'jpg' : $rawType) : 'png';
-
-                    $imageData = base64_decode($matches['data'], true);
-                    if ($imageData !== false && strlen($imageData) > 0 && strlen($imageData) <= (5 * 1024 * 1024)) {
-                        $filename = 'sanggahan_' . time() . '_' . rand(1000, 9999) . '.' . $imageType;
-                        $destinationPath = public_path('storage/bukti');
-                        if (!file_exists($destinationPath)) {
-                            mkdir($destinationPath, 0777, true);
-                        }
-                        file_put_contents($destinationPath . '/' . $filename, $imageData);
-                        $buktiPath = 'storage/bukti/' . $filename;
-                    }
-                }
-            } catch (\Throwable $e) {}
-        }
-
-        $existingBukti = $pembayaran->bukti_sanggahan;
-        $buktiArray = [];
-        if ($existingBukti) {
-            $decoded = json_decode($existingBukti, true);
-            if (is_array($decoded)) {
-                $buktiArray = $decoded;
-            } else if (is_string($existingBukti)) {
-                $buktiArray = array_values(array_filter(explode(',', $existingBukti)));
-                if (empty($buktiArray) && trim($existingBukti) !== '') {
-                    $buktiArray = [$existingBukti];
-                }
-            }
-        }
-
+        // Akumulasi riwayat lampiran sanggahan (JSON array, atau string lama).
+        $buktiArray = $this->decodeExistingBuktiSanggahan($pembayaran->bukti_sanggahan);
         if ($buktiPath && !in_array($buktiPath, $buktiArray)) {
             $buktiArray[] = $buktiPath;
         }
 
-        $finalBuktiSanggahan = !empty($buktiArray)
-            ? (count($buktiArray) === 1 ? $buktiArray[0] : json_encode(array_values(array_unique($buktiArray))))
-            : $buktiPath;
+        $finalBuktiSanggahan = match (true) {
+            empty($buktiArray)   => $pembayaran->bukti_sanggahan,
+            count($buktiArray) === 1 => $buktiArray[0],
+            default              => json_encode(array_values(array_unique($buktiArray))),
+        };
 
         $pembayaran->update([
             'teks_sanggahan'        => $request->teks_sanggahan,
             'bukti_sanggahan'       => $finalBuktiSanggahan,
-            'Verifikasi_Pembayaran' => 'Menunggu',
+            'Verifikasi_Pembayaran' => $this->statusPolicy->statusAfterSanggah(),
         ]);
 
         // Send Dynamic Event Notification to Admin Staff
@@ -500,11 +432,34 @@ class PembayaranController extends Controller
         ]);
     }
 
+    /**
+     * bukti_sanggahan bisa berisi JSON array, comma-separated path, atau
+     * satu path — normalkan menjadi array string.
+     */
+    private function decodeExistingBuktiSanggahan(?string $existing): array
+    {
+        if (!$existing) {
+            return [];
+        }
+
+        $decoded = json_decode($existing, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter($decoded));
+        }
+
+        $parts = array_values(array_filter(explode(',', $existing)));
+        if (!empty($parts)) {
+            return $parts;
+        }
+
+        return [$existing];
+    }
+
     public function ekspor(Request $request)
     {
         $bulan = $request->query('bulan', 'Mei');
         $tahun = $request->query('tahun', '2026');
-        
+
         return response()->json([
             'success' => true,
             'url' => "/downloads/rekap-{$bulan}-{$tahun}.xlsx",

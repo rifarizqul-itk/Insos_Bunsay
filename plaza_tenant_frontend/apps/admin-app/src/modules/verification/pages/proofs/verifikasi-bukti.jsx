@@ -14,17 +14,21 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const [riwayatProses, setRiwayatProses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   // Active tab state: 'antrean' or 'riwayat'
   const [activeTab, setActiveTab] = useState('antrean');
 
-  // Pagination state
+  // Pagination state (server-side, per tab)
   const [currentPageAntrean, setCurrentPageAntrean] = useState(1);
   const [pageSizeAntrean, setPageSizeAntrean] = useState(10);
+  const [totalAntrean, setTotalAntrean] = useState(0);
   const [currentPageRiwayat, setCurrentPageRiwayat] = useState(1);
   const [pageSizeRiwayat, setPageSizeRiwayat] = useState(10);
+  const [totalRiwayat, setTotalRiwayat] = useState(0);
 
-  // Sorting state
+  // Sorting state (server-side)
   const [sortConfigAntrean, setSortConfigAntrean] = useState({ key: 'id', direction: 'desc' });
   const [sortConfigRiwayat, setSortConfigRiwayat] = useState({ key: 'id', direction: 'desc' });
 
@@ -34,53 +38,75 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const [rejectionError, setRejectionError] = useState('');
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 
-  const fetchVerifikasiQueue = async () => {
+  const mapVerifikasiRow = (item, defaultStatus) => ({
+    id: item.Id_Pembayaran,
+    trxCode: `TRX-${item.Id_Pembayaran}`,
+    nama: item.tagihan?.sewa?.pemilik?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 'Tenant',
+    kios: item.tagihan?.sewa?.kios?.No_Kios || item.tagihan?.sewa?.kios?.Kode_Kios || 'Kios',
+    tagihan: `Sewa Kios ${item.tagihan?.Periode || 'Periode Aktif'}`,
+    nominalRaw: Number(item.Total_Bayar || 0),
+    nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
+    labelMetode: item.Metode_Bayar || 'Transfer Bank Manual',
+    waktu: item.created_at || item.Tanggal_Bayar || '-',
+    status: item.Verifikasi_Pembayaran || defaultStatus,
+    catatan: item.catatan_admin || '',
+    teksSanggahan: item.teks_sanggahan || '',
+    buktiSanggahan: item.bukti_sanggahan || '',
+    buktiUrl: item.Bukti_Pembayaran || ''
+  });
+
+  /**
+   * Ambil kedua tab secara server-side (pagination + filter + search).
+   * Override per-tab memungkinkan deep-link ?trx= langsung mencari satu TRX.
+   */
+  const fetchVerifikasiQueue = async (overrides = {}) => {
+    const o = {
+      antreanPage: currentPageAntrean,
+      antreanSize: pageSizeAntrean,
+      antreanSort: sortConfigAntrean,
+      riwayatPage: currentPageRiwayat,
+      riwayatSize: pageSizeRiwayat,
+      riwayatSort: sortConfigRiwayat,
+      search: debouncedQuery,
+      ...overrides,
+    };
+
     setIsLoading(true);
     try {
-      const response = await httpClient.get('/api/v1/admin/pembayaran');
-      if (response?.data && Array.isArray(response.data)) {
-        const raw = response.data;
-        const waiting = raw
-          .filter(item => item.Verifikasi_Pembayaran === 'Menunggu' || !item.Verifikasi_Pembayaran)
-          .map(item => ({
-            id: item.Id_Pembayaran,
-            trxCode: `TRX-${item.Id_Pembayaran}`,
-            nama: item.tagihan?.sewa?.pemilik?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 'Tenant',
-            kios: item.tagihan?.sewa?.kios?.No_Kios || item.tagihan?.sewa?.kios?.Kode_Kios || 'Kios',
-            tagihan: `Sewa Kios ${item.tagihan?.Periode || 'Periode Aktif'}`,
-            nominalRaw: Number(item.Total_Bayar || 0),
-            nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
-            labelMetode: item.Metode_Bayar || 'Transfer Bank Manual',
-            waktu: item.created_at || item.Tanggal_Bayar || '-',
+      const common = {};
+      if (o.search) common.q = o.search;
+      if (selectedTenant) common.q = selectedTenant;
+r
+      const [antreanRes, riwayatRes] = await Promise.all([
+        httpClient.get('/api/v1/admin/pembayaran', {
+          params: {
+            page: o.antreanPage,
+            page_size: o.antreanSize,
+            sort_by: o.antreanSort.key === 'id' ? 'id' : (o.antreanSort.key === 'nominal' ? 'nominal' : 'tanggal'),
+            sort_dir: o.antreanSort.direction,
             status: 'Menunggu',
-            catatan: item.catatan_admin || '',
-            teksSanggahan: item.teks_sanggahan || '',
-            buktiSanggahan: item.bukti_sanggahan || '',
-            buktiUrl: item.Bukti_Pembayaran || ''
-          }));
+            ...common,
+          },
+        }),
+        httpClient.get('/api/v1/admin/pembayaran', {
+          params: {
+            page: o.riwayatPage,
+            page_size: o.riwayatSize,
+            sort_by: o.riwayatSort.key === 'id' ? 'id' : (o.riwayatSort.key === 'nominal' ? 'nominal' : 'status'),
+            sort_dir: o.riwayatSort.direction,
+            status: 'Diterima,Ditolak',
+            ...common,
+          },
+        }),
+      ]);
 
-        const processed = raw
-          .filter(item => item.Verifikasi_Pembayaran === 'Diterima' || item.Verifikasi_Pembayaran === 'Ditolak')
-          .map(item => ({
-            id: item.Id_Pembayaran,
-            trxCode: `TRX-${item.Id_Pembayaran}`,
-            nama: item.tagihan?.sewa?.pemilik?.Nama || item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 'Tenant',
-            kios: item.tagihan?.sewa?.kios?.No_Kios || item.tagihan?.sewa?.kios?.Kode_Kios || 'Kios',
-            tagihan: `Sewa Kios ${item.tagihan?.Periode || 'Periode Aktif'}`,
-            nominalRaw: Number(item.Total_Bayar || 0),
-            nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
-            labelMetode: item.Metode_Bayar || 'Transfer Bank Manual',
-            waktu: item.created_at || item.Tanggal_Bayar || '-',
-            status: item.Verifikasi_Pembayaran,
-            catatan: item.catatan_admin || '',
-            teksSanggahan: item.teks_sanggahan || '',
-            buktiSanggahan: item.bukti_sanggahan || '',
-            buktiUrl: item.Bukti_Pembayaran || ''
-          }));
+      const antreanRows = Array.isArray(antreanRes?.data) ? antreanRes.data : (antreanRes?.data?.data ?? []);
+      const riwayatRows = Array.isArray(riwayatRes?.data) ? riwayatRes.data : (riwayatRes?.data?.data ?? []);
 
-        setAntrean(waiting);
-        setRiwayatProses(processed);
-      }
+      setAntrean(antreanRows.map(item => mapVerifikasiRow(item, 'Menunggu')));
+      setTotalAntrean(antreanRes?.data?.total ?? antreanRows.length);
+      setRiwayatProses(riwayatRows.map(item => mapVerifikasiRow(item, 'Diterima')));
+      setTotalRiwayat(riwayatRes?.data?.total ?? riwayatRows.length);
     } catch (err) {
       console.warn('Backend fetch queue error:', err);
     } finally {
@@ -90,7 +116,14 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
   useEffect(() => {
     fetchVerifikasiQueue();
-  }, [httpClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [httpClient, debouncedQuery]);
+
+  // Debounce search input → server query
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   // Auto-open modal pop-up when navigated from notifications (?trx=...) or cashier setoran tunai
   useEffect(() => {
@@ -125,61 +158,48 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     }
   }, [antrean, riwayatProses, location.state, searchParams]);
 
+  // Server-side sorting: klik header memicu fetch ulang dengan parameter sort.
   const handleSortAntrean = (key) => {
-    setSortConfigAntrean(prev => ({
+    const next = {
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+      direction: sortConfigAntrean.key === key && sortConfigAntrean.direction === 'asc' ? 'desc' : 'asc'
+    };
+    setSortConfigAntrean(next);
+    setCurrentPageAntrean(1);
+    fetchVerifikasiQueue({ antreanPage: 1, antreanSort: next });
   };
 
   const handleSortRiwayat = (key) => {
-    setSortConfigRiwayat(prev => ({
+    const next = {
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+      direction: sortConfigRiwayat.key === key && sortConfigRiwayat.direction === 'asc' ? 'desc' : 'asc'
+    };
+    setSortConfigRiwayat(next);
+    setCurrentPageRiwayat(1);
+    fetchVerifikasiQueue({ riwayatPage: 1, riwayatSort: next });
   };
 
-  const sortedAntrean = useMemo(() => {
-    let list = selectedTenant ? antrean.filter(item => item.nama === selectedTenant) : [...antrean];
-    const { key, direction } = sortConfigAntrean;
-    return list.sort((a, b) => {
-      let valA = a[key] ?? '';
-      let valB = b[key] ?? '';
-      if (key === 'nominal') {
-        valA = a.nominalRaw;
-        valB = b.nominalRaw;
-      }
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [antrean, selectedTenant, sortConfigAntrean]);
+  const handlePageAntrean = (page) => {
+    setCurrentPageAntrean(page);
+    fetchVerifikasiQueue({ antreanPage: page });
+  };
 
-  const sortedRiwayat = useMemo(() => {
-    let list = selectedTenant ? riwayatProses.filter(item => item.nama === selectedTenant) : [...riwayatProses];
-    const { key, direction } = sortConfigRiwayat;
-    return list.sort((a, b) => {
-      let valA = a[key] ?? '';
-      let valB = b[key] ?? '';
-      if (key === 'nominal') {
-        valA = a.nominalRaw;
-        valB = b.nominalRaw;
-      }
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [riwayatProses, selectedTenant, sortConfigRiwayat]);
+  const handlePageSizeAntrean = (size) => {
+    setPageSizeAntrean(size);
+    setCurrentPageAntrean(1);
+    fetchVerifikasiQueue({ antreanPage: 1, antreanSize: size });
+  };
 
-  const paginatedAntrean = useMemo(() => {
-    const startIndex = (currentPageAntrean - 1) * pageSizeAntrean;
-    return sortedAntrean.slice(startIndex, startIndex + pageSizeAntrean);
-  }, [sortedAntrean, currentPageAntrean, pageSizeAntrean]);
+  const handlePageRiwayat = (page) => {
+    setCurrentPageRiwayat(page);
+    fetchVerifikasiQueue({ riwayatPage: page });
+  };
 
-  const paginatedRiwayat = useMemo(() => {
-    const startIndex = (currentPageRiwayat - 1) * pageSizeRiwayat;
-    return sortedRiwayat.slice(startIndex, startIndex + pageSizeRiwayat);
-  }, [sortedRiwayat, currentPageRiwayat, pageSizeRiwayat]);
+  const handlePageSizeRiwayat = (size) => {
+    setPageSizeRiwayat(size);
+    setCurrentPageRiwayat(1);
+    fetchVerifikasiQueue({ riwayatPage: 1, riwayatSize: size });
+  };
 
   const antreanHeaders = [
     { label: 'Tenant & Kios', sortKey: 'nama' },
@@ -261,12 +281,26 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
           )}
         </div>
 
-        {/* Tab Switcher & Refresh Button */}
+        {/* Search + Tab Switcher + Refresh */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <div className="relative">
+            <Icon
+              icon="heroicons:magnifying-glass-20-solid"
+              className="size-4 text-text-3 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari TRX…"
+              aria-label="Cari transaksi berdasarkan nomor"
+              className="h-8.5 w-40 sm:w-48 rounded-lg border border-border bg-white ps-9 pe-3 text-xs font-semibold text-text placeholder:text-text-3 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
+            />
+          </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchVerifikasiQueue}
+            onClick={() => fetchVerifikasiQueue()}
             disabled={isLoading}
             className="text-xs font-semibold gap-1 h-8.5 px-2.5 shadow-xs"
             title="Muat ulang data terbaru"
@@ -289,7 +323,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   : 'text-text-2 hover:text-text'
               }`}
             >
-              <span>Antrean ({antrean.length})</span>
+              <span>Antrean ({totalAntrean})</span>
             </button>
             <button
               id="tab-riwayat"
@@ -304,7 +338,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   : 'text-text-2 hover:text-text'
               }`}
             >
-              <span>Terproses ({riwayatProses.length})</span>
+              <span>Terproses ({totalRiwayat})</span>
             </button>
           </div>
         </div>
@@ -322,7 +356,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             <div className="p-6">
               <SkeletonTable rows={5} cols={5} />
             </div>
-          ) : sortedAntrean.length === 0 ? (
+          ) : antrean.length === 0 ? (
             <div className="p-8">
               <EmptyState
                 icon="heroicons:document-check-20-solid"
@@ -344,15 +378,15 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               footer={
                 <Pagination
                   currentPage={currentPageAntrean}
-                  totalItems={sortedAntrean.length}
+                  totalItems={totalAntrean}
                   pageSize={pageSizeAntrean}
-                  onPageChange={setCurrentPageAntrean}
-                  onPageSizeChange={setPageSizeAntrean}
+                  onPageChange={handlePageAntrean}
+                  onPageSizeChange={handlePageSizeAntrean}
                   itemName="antrean"
                 />
               }
             >
-              {paginatedAntrean.map((item, index) => (
+              {antrean.map((item, index) => (
                 <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-red-50/20 transition-colors">
                   <th scope="row" data-label="Tenant & Kios" className="py-3 px-4 text-start">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -402,7 +436,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
             <div className="p-6">
               <SkeletonTable rows={5} cols={6} />
             </div>
-          ) : sortedRiwayat.length === 0 ? (
+          ) : riwayatProses.length === 0 ? (
             <div className="p-8">
               <EmptyState
                 icon="heroicons:clock-20-solid"
@@ -424,15 +458,15 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               footer={
                 <Pagination
                   currentPage={currentPageRiwayat}
-                  totalItems={sortedRiwayat.length}
+                  totalItems={totalRiwayat}
                   pageSize={pageSizeRiwayat}
-                  onPageChange={setCurrentPageRiwayat}
-                  onPageSizeChange={setPageSizeRiwayat}
+                  onPageChange={handlePageRiwayat}
+                  onPageSizeChange={handlePageSizeRiwayat}
                   itemName="riwayat"
                 />
               }
             >
-              {paginatedRiwayat.map((item, index) => (
+              {riwayatProses.map((item, index) => (
                 <tr key={item.id || index} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-red-50/20 transition-colors">
                   <th scope="row" data-label="Tenant & Kios" className="py-3 px-4 text-start">
                     <div className="font-extrabold text-text text-sm sm:text-base">{item.nama}</div>

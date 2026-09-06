@@ -63,5 +63,6 @@ scratch/
 # AI Agent Skills & Configs
 .agents/
 .claude/
+.freebuff/
 agent/
 skills-lock.json

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTagihanRequest;
 use App\Models\Tagihan;
 use App\Services\BillingService;
 use Illuminate\Http\Request;
@@ -56,24 +57,12 @@ class TagihanController extends Controller
         return response()->json($tagihan);
     }
 
-
-    public function store(Request $request)
+    public function store(StoreTagihanRequest $request)
     {
-        $request->validate([
-            'Id_Sewa'          => 'required|exists:sewa,Id_Sewa',
-            'Periode'          => 'required|string|max:7',
-            'Jatuh_Tempo'      => 'required|date',
-            'Tarif_Sewa'       => 'required|numeric|min:0',
-            'Hutang_Tunggakan' => 'nullable|numeric|min:0',
-            'Total_Tagihan'    => 'required|numeric|min:0',
-            'Status_Tagihan'   => 'required|in:Lunas,Belum Bayar,Menunggu Verifikasi,Dicicil',
-            'Sisa_Tagihan'     => 'nullable|numeric|min:0',
-        ]);
-
         // Keputusan bisnis #6 (dikonfirmasi 2026-08-12):
         // Total_Tagihan = Tarif_Sewa + Hutang_Tunggakan (minimal >= Tarif_Sewa).
-        $tarif       = (float) $request->Tarif_Sewa;
-        $hutang      = (float) ($request->Hutang_Tunggakan ?? 0);
+        $tarif        = (float) $request->Tarif_Sewa;
+        $hutang       = (float) ($request->Hutang_Tunggakan ?? 0);
         $totalTagihan = (float) $request->Total_Tagihan;
 
         if ($totalTagihan < $tarif) {
@@ -83,12 +72,11 @@ class TagihanController extends Controller
             ], 422);
         }
 
-        // Sisa_Tagihan default = Total_Tagihan (belum ada pembayaran)
-        $sisaTagihan = $request->Sisa_Tagihan ?? $totalTagihan;
-        // Jika tagihan langsung Lunas saat dibuat, sisa = 0
-        if ($request->Status_Tagihan === 'Lunas') {
-            $sisaTagihan = 0;
-        }
+        // Sisa_Tagihan default = Total_Tagihan (belum ada pembayaran).
+        // Jika tagihan langsung Lunas saat dibuat, sisa = 0.
+        $sisaTagihan = $request->Status_Tagihan === 'Lunas'
+            ? 0
+            : ($request->Sisa_Tagihan ?? $totalTagihan);
 
         $tagihan = Tagihan::create([
             'Id_Sewa'          => $request->Id_Sewa,

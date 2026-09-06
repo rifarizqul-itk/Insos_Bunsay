@@ -1,6 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Card, Badge, Button, Icon, Modal, FormField, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
+import React, { useState, useEffect } from 'react';
+import { Table, Badge, Button, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
+import SanggahanModal from './SanggahanModal';
+
+/**
+ * Normalisasi satu baris API pembayaran menjadi bentuk tampilan.
+ */
+function mapPaymentRow(item) {
+  return {
+    id: `TRX-${item.Id_Pembayaran}`,
+    idReal: item.Id_Pembayaran,
+    periode: item.tagihan?.Periode ? `Sewa Kios ${item.tagihan.Periode}` : (item.Periode ? `Sewa Kios ${item.Periode}` : 'Sewa Kios'),
+    tanggal: item.Tanggal_Bayar || '-',
+    waktu: item.created_at || item.Tanggal_Bayar || '-',
+    nominalAngka: Number(item.Total_Bayar || 0),
+    metode: item.Metode_Bayar || 'Transfer',
+    status: item.Verifikasi_Pembayaran || 'Menunggu',
+    buktiUrl: item.Bukti_Pembayaran || '',
+    nama: item.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
+    kios: item.tagihan?.sewa?.kios?.No_Kios || '',
+    catatanAdmin: item.catatan_admin || '',
+    teksSanggahan: item.teks_sanggahan || '',
+    buktiSanggahan: item.bukti_sanggahan || '',
+  };
+}
 
 function HistoriPembayaran() {
   const { httpClient } = useTenantAuth();
@@ -8,48 +31,38 @@ function HistoriPembayaran() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetode, setSelectedMetode] = useState('Semua');
-  const [toastMsg, setToastMsg] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
-  // Pagination State
+  // Pagination (server-side)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
 
-  // Table Sort State
-  const [sortConfig, setSortConfig] = useState({ key: 'idReal', direction: 'desc' });
+  // Sort (server-side)
+  const [sortConfig, setSortConfig] = useState({ key: 'tanggal', direction: 'desc' });
 
-  // Rebuttal Modal State
-  const [sanggahanModalItem, setSanggahanModalItem] = useState(null);
-  const [teksSanggahan, setTeksSanggahan] = useState('');
-  const [buktiSanggahanFile, setBuktiSanggahanFile] = useState(null);
-  const [previewBuktiSanggahan, setPreviewBuktiSanggahan] = useState(null);
-  const [isSubmittingSanggahan, setIsSubmittingSanggahan] = useState(false);
-  const [sanggahanError, setSanggahanError] = useState('');
+  // Debounce search input → server query
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  const fetchHistory = async () => {
+  const fetchHistory = async (page = currentPage, size = pageSize, metode = selectedMetode, search = debouncedQuery, sort = sortConfig) => {
     setLoading(true);
     try {
-      const res = await httpClient.get('/api/v1/tenant/pembayaran');
-      if (res?.data && Array.isArray(res.data)) {
-        const mapped = res.data.map(item => ({
-          id: `TRX-${item.Id_Pembayaran}`,
-          idReal: item.Id_Pembayaran,
-          periode: item.tagihan?.Periode ? `Sewa Kios ${item.tagihan.Periode}` : (item.Periode ? `Sewa Kios ${item.Periode}` : 'Sewa Kios'),
-          tanggal: item.Tanggal_Bayar || '-',
-          waktu: item.created_at || item.Tanggal_Bayar || '-',
-          nominalAngka: Number(item.Total_Bayar || 0),
-          metode: item.Metode_Bayar || 'Transfer',
-          status: item.Verifikasi_Pembayaran || 'Menunggu',
-          buktiUrl: item.Bukti_Pembayaran || '',
-          nama: item.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
-          kios: item.tagihan?.sewa?.kios?.No_Kios || '',
-          catatanAdmin: item.catatan_admin || '',
-          teksSanggahan: item.teks_sanggahan || '',
-          buktiSanggahan: item.bukti_sanggahan || '',
-          alokasi: []
-        }));
-        setHistory(mapped);
-      }
+      const params = { page, page_size: size, sort_by: sort.key, sort_dir: sort.direction };
+      if (metode !== 'Semua') params.metode = metode;
+      if (search) params.q = search;
+
+      const res = await httpClient.get('/api/v1/tenant/pembayaran', { params });
+      const rows = Array.isArray(res?.data) ? res.data : (res?.data?.data ?? []);
+      const mapped = rows.map(mapPaymentRow);
+      setHistory(mapped);
+      setTotalItems(res?.data?.total ?? mapped.length);
+      setLastPage(res?.data?.last_page ?? 1);
     } catch (err) {
       console.warn('Error fetching tenant history:', err);
     } finally {
@@ -57,10 +70,28 @@ function HistoriPembayaran() {
     }
   };
 
-
   useEffect(() => {
-    fetchHistory();
-  }, [httpClient]);
+    fetchHistory(1, pageSize, selectedMetode, debouncedQuery, sortConfig);
+    setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [httpClient, debouncedQuery, sortConfig]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchHistory(page);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    fetchHistory(1, size);
+  };
+
+  const handleMetodeChange = (metode) => {
+    setSelectedMetode(metode);
+    setCurrentPage(1);
+    fetchHistory(1, pageSize, metode);
+  };
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
@@ -69,111 +100,26 @@ function HistoriPembayaran() {
     }));
   };
 
-  const filteredHistory = useMemo(() => {
-    let list = history.filter(item => {
-      if (selectedMetode === 'Semua') return true;
-      return item.metode === selectedMetode;
-    });
-
-    const { key, direction } = sortConfig;
-    return [...list].sort((a, b) => {
-      let valA = a[key] ?? '';
-      let valB = b[key] ?? '';
-      if (key === 'nominal') {
-        valA = a.nominalAngka || 0;
-        valB = b.nominalAngka || 0;
-      }
-      if (typeof valA === 'number' && typeof valB === 'number') {
-        return direction === 'asc' ? valA - valB : valB - valA;
-      }
-      return direction === 'asc'
-        ? String(valA).localeCompare(String(valB), undefined, { numeric: true })
-        : String(valB).localeCompare(String(valA), undefined, { numeric: true });
-    });
-  }, [history, selectedMetode, sortConfig]);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setBuktiSanggahanFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewBuktiSanggahan(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleOpenSanggahanModal = (item) => {
     setSanggahanModalItem(item);
-    setTeksSanggahan('');
-    setBuktiSanggahanFile(null);
-    setPreviewBuktiSanggahan(null);
-    setSanggahanError('');
   };
 
-  const handleKirimSanggahan = async (e) => {
-    e.preventDefault();
-    if (!teksSanggahan.trim()) {
-      setSanggahanError('Penjelasan sanggahan wajib diisi.');
-      return;
-    }
-
-    setIsSubmittingSanggahan(true);
-    setSanggahanError('');
-
-    try {
-      const formData = new FormData();
-      formData.append('teks_sanggahan', teksSanggahan);
-      if (buktiSanggahanFile) {
-        formData.append('bukti_sanggahan', buktiSanggahanFile);
-      }
-
-      await httpClient.post(`/api/v1/tenant/pembayaran/${sanggahanModalItem.idReal}/sanggahan`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setSanggahanModalItem(null);
-      addToast('Sanggahan berhasil dikirim', 'success');
-      await fetchHistory();
-    } catch (err) {
-      addToast(err?.response?.data?.message || 'Gagal mengirim sanggahan. Coba lagi.', 'error');
-    } finally {
-      setIsSubmittingSanggahan(false);
-    }
+  const handleSanggahanSubmitted = async () => {
+    addToast('Sanggahan berhasil dikirim', 'success');
+    await fetchHistory();
   };
 
   const tableHeaders = [
-    { label: 'ID Transaksi', sortKey: 'idReal', className: 'hidden sm:table-cell' },
+    { label: 'ID Transaksi', sortKey: 'id', className: 'hidden sm:table-cell' },
     { label: 'Periode & Tanggal', sortKey: 'tanggal' },
     { label: 'Nominal Bayar', sortKey: 'nominal' },
-    { label: 'Metode', sortKey: 'metode', className: 'hidden md:table-cell' },
+    { label: 'Metode', className: 'hidden md:table-cell' },
     { label: 'Status', align: 'center', sortKey: 'status' },
     { label: 'Resi & Bukti', align: 'center', sortable: false }
   ];
 
-  const paginatedHistory = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredHistory.slice(startIndex, startIndex + pageSize);
-  }, [filteredHistory, currentPage, pageSize]);
-
   return (
     <div data-slot="histori-pembayaran" className="page-fade-in flex flex-col gap-4 sm:gap-6 font-sans">
-      {toastMsg && (
-        <div className="bg-red text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-xs flex items-center justify-between animate-fade-in border border-red-rich">
-          <div className="flex items-center gap-2">
-            <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4.5 shrink-0" />
-            <span>{toastMsg}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMsg(null)}
-            aria-label="Tutup notifikasi error"
-            className="text-white hover:opacity-80 p-1 cursor-pointer"
-          >
-            <Icon icon="heroicons:x-mark-20-solid" className="size-4" />
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-text text-balance">
@@ -181,17 +127,28 @@ function HistoriPembayaran() {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="filter-metode" className="text-xs font-semibold text-text-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="relative">
+            <Icon
+              icon="heroicons:magnifying-glass-20-solid"
+              className="size-4 text-text-3 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari TRX / kode bukti…"
+              aria-label="Cari transaksi berdasarkan nomor atau kode bukti"
+              className="h-9 w-full sm:w-56 rounded-lg border border-border bg-white ps-9 pe-3 text-xs sm:text-sm font-semibold text-text placeholder:text-text-3 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
+            />
+          </div>
+          <label htmlFor="filter-metode" className="text-xs font-semibold text-text-2 shrink-0 hidden sm:block">
             Metode:
           </label>
           <select
             id="filter-metode"
             value={selectedMetode}
-            onChange={(e) => {
-              setSelectedMetode(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => handleMetodeChange(e.target.value)}
             className="h-9 rounded-lg border border-border bg-white pl-3 pr-8 text-xs sm:text-sm font-semibold text-text focus:outline-none focus:ring-2 focus:ring-red cursor-pointer shadow-xs"
           >
             <option value="Semua">Semua Metode</option>
@@ -205,14 +162,14 @@ function HistoriPembayaran() {
       <div className="flex flex-col gap-4">
         {loading ? (
           <SkeletonTable rows={5} />
-        ) : filteredHistory.length === 0 ? (
+        ) : history.length === 0 ? (
           <div className="bg-white border border-border/80 rounded-2xl p-6 sm:p-10 shadow-xs">
             <EmptyState
               icon="heroicons:receipt-refund-20-solid"
               title={selectedMetode !== 'Semua' ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi"}
               description={selectedMetode !== 'Semua' ? `Tidak ditemukan transaksi dengan metode "${selectedMetode}".` : "Pembayaran sewa kios Anda akan otomatis tercatat di sini."}
               actionLabel={selectedMetode !== 'Semua' ? "Reset Filter Metode" : undefined}
-              onAction={selectedMetode !== 'Semua' ? () => { setSelectedMetode('Semua'); setCurrentPage(1); } : undefined}
+              onAction={selectedMetode !== 'Semua' ? () => handleMetodeChange('Semua') : undefined}
             />
           </div>
         ) : (
@@ -229,15 +186,15 @@ function HistoriPembayaran() {
                 footer={
                   <Pagination
                     currentPage={currentPage}
-                    totalItems={filteredHistory.length}
+                    totalItems={totalItems}
                     pageSize={pageSize}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                     itemName="transaksi"
                   />
                 }
               >
-                {paginatedHistory.map((row, idx) => {
+                {history.map((row, idx) => {
                   const formattedWaktu = formatDateTimeLocal(row.waktu || row.tanggal);
                   return (
                     <tr key={row.id || idx} className="border-b border-border/80 last:border-b-0 bg-white hover:bg-warm-gray/20 transition-colors">
@@ -316,7 +273,7 @@ function HistoriPembayaran() {
 
             {/* Tampilan Mobile: Modern Spacious Transaction Feed (Design 1 Reference) */}
             <div className="block md:hidden flex flex-col gap-3">
-              {paginatedHistory.map((row, idx) => {
+              {history.map((row, idx) => {
                 const isMidtrans = row.metode === 'Midtrans';
                 const isTunai = row.metode === 'Tunai';
                 const formattedWaktu = formatDateTimeLocal(row.waktu || row.tanggal);
@@ -417,10 +374,10 @@ function HistoriPembayaran() {
               <div className="p-4 bg-white border border-border/80 rounded-2xl shadow-2xs mt-1">
                 <Pagination
                   currentPage={currentPage}
-                  totalItems={filteredHistory.length}
+                  totalItems={totalItems}
                   pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
                   itemName="transaksi"
                 />
               </div>
@@ -438,85 +395,12 @@ function HistoriPembayaran() {
 
 
       {/* Modal Form Sanggahan */}
-      {sanggahanModalItem && (
-        <Modal
-          isOpen={Boolean(sanggahanModalItem)}
-          onClose={() => setSanggahanModalItem(null)}
-          disableBackdropClick={true}
-          title="Ajukan Sanggahan Pembayaran"
-          size="md"
-          footer={
-            <div className="flex gap-3 w-full">
-              <Button
-                variant="secondary"
-                size="md"
-                fullWidth
-                onClick={() => setSanggahanModalItem(null)}
-              >
-                Batal
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                fullWidth
-                disabled={isSubmittingSanggahan}
-                onClick={handleSubmitSanggahan}
-                className="bg-amber-500 hover:bg-amber-600 border-none font-extrabold text-white"
-              >
-                {isSubmittingSanggahan ? 'Mengirim...' : 'Kirim Sanggahan'}
-              </Button>
-            </div>
-          }
-        >
-          <div className="flex flex-col gap-4 font-sans">
-            <div className="bg-red-50 border border-red/30 rounded-xl p-3.5 text-xs text-red leading-relaxed flex gap-2 items-start">
-              <Icon icon="heroicons:exclamation-triangle-20-solid" width="20" height="20" className="flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-bold block mb-0.5 text-red">Catatan Penolakan dari Admin:</strong>
-                "{sanggahanModalItem.catatanAdmin || 'Bukti transfer tidak terbaca / nominal kurang.'}"
-              </div>
-            </div>
-
-            <FormField label="Alasan Sanggahan" id="teks-sanggahan-field" required error={sanggahanError}>
-              <textarea
-                rows={3}
-                value={teksSanggahan}
-                onChange={(e) => {
-                  setTeksSanggahan(e.target.value);
-                  setSanggahanError('');
-                }}
-                placeholder="Jelaskan alasan sanggahan (Contoh: Pembayaran sudah sesuai resi / sudah transfer ulang selisih Rp 50.000)."
-                className="w-full text-sm p-3 border border-border rounded-xl focus:border-amber-500 focus:outline-none bg-warm-gray/10 font-medium"
-              />
-            </FormField>
-
-            <FormField label="Foto Bukti Perbaikan (Opsional)" id="bukti-sanggahan-field">
-              <input
-                id="bukti-sanggahan-input"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="sr-only"
-              />
-              <label
-                htmlFor="bukti-sanggahan-input"
-                className="flex flex-col items-center justify-center gap-1.5 bg-warm-gray/50 border-2 border-dashed border-border rounded-xl p-4 cursor-pointer text-center hover:border-amber-500 transition-all"
-              >
-                <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-6 text-amber-600" />
-                <span className="text-xs font-bold text-text">
-                  {buktiSanggahanFile ? buktiSanggahanFile.name : 'Upload Foto Bukti Baru'}
-                </span>
-                <span className="text-xs text-text-3">Format JPG, PNG, atau WEBP</span>
-              </label>
-              {previewBuktiSanggahan && (
-                <div className="mt-2 border border-border rounded-lg p-2 bg-warm-gray/30 flex justify-center">
-                  <img src={previewBuktiSanggahan} alt="Preview Bukti Sanggahan" loading="lazy" className="max-h-36 rounded object-contain" />
-                </div>
-              )}
-            </FormField>
-          </div>
-        </Modal>
-      )}
+      <SanggahanModal
+        item={sanggahanModalItem}
+        onClose={() => setSanggahanModalItem(null)}
+        onSubmit={handleSanggahanSubmitted}
+        httpClient={httpClient}
+      />
     </div>
   );
 }

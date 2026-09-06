@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePemilikRequest;
 use App\Models\Pemilik;
-use Illuminate\Http\Request;
-
-class PemilikController extends Controller
+use App\Services\SewaProvisioningService;
+use Illuminate\Http\Request;class PemilikController extends Controller
 {
+    public function __construct(
+        private SewaProvisioningService $provisioning = new SewaProvisioningService(),
+    ) {
+    }
     /**
      * Display a listing of the resource.
      * GET /api/pemilik
@@ -34,27 +38,11 @@ class PemilikController extends Controller
      * Store a newly created resource in storage.
      * POST /api/pemilik
      */
-    public function store(Request $request)
+    public function store(StorePemilikRequest $request)
     {
-        // Merge field aliases before validation
-        $request->merge([
-            'No_Telepon' => $request->No_Telepon ?: ($request->Telepon ?: null),
-            'No_KTP'     => $request->No_KTP ?: ($request->nik ?: null),
-            'Alamat'     => $request->Alamat ?: ($request->alamat ?: null),
-        ]);
-
-        // 1. Validasi Input
-        $validatedData = $request->validate([
-            'Id_User'    => 'nullable',
-            'Nama'       => 'required|string|max:255',
-            'No_Telepon' => 'required|string|max:20',
-            'No_KTP'     => 'required|string|max:20',
-            'Alamat'     => 'required|string',
-            'Jenis_Usaha'=> 'nullable|string|max:255',
-        ]);
+        $validatedData = $request->only(['Id_User', 'Nama', 'No_Telepon', 'No_KTP', 'Alamat']);
 
         $jenisUsaha = $request->Jenis_Usaha ?: 'Perdagangan Umum';
-        unset($validatedData['Jenis_Usaha']);
 
         try {
             // Otomatis buatkan akun User jika Id_User belum ada
@@ -90,64 +78,42 @@ class PemilikController extends Controller
             $pemilik = Pemilik::create($validatedData);
             $pemilik->load('user');
 
-            // 3. Link ke Kios jika No_Kios atau kios_list disertakan
-            $kiosListRaw = $request->kios_list ?? $request->No_Kios ?? [];
-            $kiosList = is_array($kiosListRaw)
-                ? $kiosListRaw
-                : (is_string($kiosListRaw) ? array_filter(array_map('trim', explode(',', $kiosListRaw))) : []);
+            // 3. Link ke Kios jika kios_list atau No_Kios disertakan:
+            // buat sewa + tandai Terisi + tagihan perdana (logika di SewaProvisioningService).
+            $kiosList = $this->provisioning->parseKiosList($request->kios_list ?? $request->No_Kios ?? []);
 
             $assignedKiosNames = [];
-            $tanggalMulaiInput = $request->Tanggal_Mulai ?? $request->tanggal_mulai ?? $request->tanggalMulai ?? date('Y-m-d');
+            $tanggalMulaiInput = $request->Tanggal_Mulai ?? $request->tanggal_mulai ?? $request->tanggalMulai ?? now()->toDateString();
             $periodeSewa = date('Y-m', strtotime($tanggalMulaiInput));
             $defaultJatuhTempo = date('Y-m-12', strtotime($tanggalMulaiInput));
             $jatuhTempoInput = $request->Jatuh_Tempo ?? $request->jatuh_tempo ?? $request->jatuhTempo ?? $defaultJatuhTempo;
-            
-            $tarifKiosMap = $request->tarif_kios_map ?? $request->tarifKiosMap ?? [];
-            if (is_string($tarifKiosMap)) {
-                $tarifKiosMap = json_decode($tarifKiosMap, true) ?: [];
-            }
 
-            $usahaKiosMap = $request->usaha_kios_map ?? $request->usahaKiosMap ?? [];
-            if (is_string($usahaKiosMap)) {
-                $usahaKiosMap = json_decode($usahaKiosMap, true) ?: [];
-            }
+            $tarifKiosMap = $this->provisioning->decodeMap($request->tarif_kios_map ?? $request->tarifKiosMap);
+            $usahaKiosMap = $this->provisioning->decodeMap($request->usaha_kios_map ?? $request->usahaKiosMap);
 
             foreach ($kiosList as $noKiosItem) {
-                if (empty($noKiosItem)) continue;
                 $kiosTarget = \App\Models\Kios::where('No_Kios', $noKiosItem)->first();
-                if ($kiosTarget) {
-                    if (isset($tarifKiosMap[$noKiosItem]) && $tarifKiosMap[$noKiosItem] !== '') {
-                        $tarifCustom = (float) $tarifKiosMap[$noKiosItem];
-                    } else {
-                        $tarifCustom = (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 0);
-                    }
-
-                    $jenisUsahaPerKios = !empty($usahaKiosMap[$noKiosItem]) ? $usahaKiosMap[$noKiosItem] : $jenisUsaha;
-
-                    $newSewa = \App\Models\Sewa::create([
-                        'Id_Kios'        => $kiosTarget->Id_Kios,
-                        'Id_Pemilik'     => $pemilik->Id_Pemilik,
-                        'Tanggal_Mulai'  => $tanggalMulaiInput,
-                        'Tanggal_Selesai'=> $request->Tanggal_Selesai ?? null,
-                        'Jenis_Usaha'    => $jenisUsahaPerKios,
-                        'Tarif_Bulanan'  => $tarifCustom,
-                        'Status'         => 'Aktif',
-                    ]);
-                    $kiosTarget->update(['Status' => 'Terisi']);
-                    $assignedKiosNames[] = $kiosTarget->No_Kios;
-
-                    // Automatically generate first month's invoice with customizable due date (default: 12th)
-                    \App\Models\Tagihan::create([
-                        'Id_Sewa'          => $newSewa->Id_Sewa,
-                        'Periode'          => $periodeSewa,
-                        'Jatuh_Tempo'      => $jatuhTempoInput,
-                        'Tarif_Sewa'       => $tarifCustom,
-                        'Hutang_Tunggakan' => 0,
-                        'Total_Tagihan'    => $tarifCustom,
-                        'Sisa_Tagihan'     => $tarifCustom,
-                        'Status_Tagihan'   => 'Belum Bayar',
-                    ]);
+                if (!$kiosTarget) {
+                    continue;
                 }
+
+                $tarifCustom = $this->provisioning->resolveTarif(
+                    $tarifKiosMap,
+                    $noKiosItem,
+                    (float) ($request->Tarif_Bulanan ?? $request->tarifBulanan ?? $request->Tarif_Sewa ?? 0)
+                );
+
+                $this->provisioning->provisionKios($kiosTarget, [
+                    'Id_Pemilik'      => $pemilik->Id_Pemilik,
+                    'Tanggal_Mulai'   => $tanggalMulaiInput,
+                    'Tanggal_Selesai' => $request->Tanggal_Selesai ?? null,
+                    'Jenis_Usaha'     => $usahaKiosMap[$noKiosItem] ?? $jenisUsaha,
+                    'Tarif_Bulanan'   => $tarifCustom,
+                    'Periode'         => $periodeSewa,
+                    'Jatuh_Tempo'     => $jatuhTempoInput,
+                ]);
+
+                $assignedKiosNames[] = $kiosTarget->No_Kios;
             }
 
             if (!empty($assignedKiosNames) && !empty($pemilik->Id_User)) {
