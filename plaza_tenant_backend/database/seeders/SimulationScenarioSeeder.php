@@ -2,31 +2,41 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Pemilik;
+use App\Models\ActivityLog;
+use App\Models\Dokumen;
 use App\Models\Kios;
+use App\Models\Notification;
+use App\Models\Pembayaran;
+use App\Models\Pemilik;
+use App\Models\Role;
 use App\Models\Sewa;
 use App\Models\Tagihan;
-use App\Models\Pembayaran;
-use App\Models\Dokumen;
-use App\Models\ActivityLog;
-use App\Models\Notification;
-use App\Models\Role;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * SimulationScenarioSeeder
- * 
- * Comprehensive Combinatorial Interactive Simulation Seeder for Insos Bunsay.
- * Specifically structured for a 10-Person Team E2E Verification & Interactive Simulation.
- * Covers 100% of system states:
- * - 3 Admin Roles (Superadmin, Cashier/Verifikator, Kiosk Officer/Auditor)
- * - 7 Tenant Personas (Ideal on-time, 1-mo overdue, 3-mo critical, FIFO partial payment,
- *   Dispute/Rebuttal sanggahan, Multi-kiosk cross-floor, Soft-deleted archive + 50-month stress test,
- *   plus 0-kiosk prospective onboarding and no-installment permission guards).
+ *
+ * Seeder interaktif untuk 10 anggota tim Inovasi Sosial Plaza Kebun Sayur Balikpapan
+ * berdasarkan dokumen PROPOSAL INOVASI SOSIAL.docx.md:
+ *
+ * 3 Admin:
+ *  1. Patra Ananda (10241061) - Superadmin Utama
+ *  2. Armansyah (10241013) - Admin Kasir & Loket
+ *  3. Muhammad Rifa Al Rizqul Aulia (10241050) - Admin Petugas Kios & Verifikator
+ *
+ * 7 Tenant (SEMUA memiliki kewajiban belum lunas dengan variasi skenario riil per 7 Sep 2026):
+ *  4. Clara Uenike Meylan Langi (10241018) - Multi-Kios (A1-01 & A1-02, tagihan berjalan & tunggakan)
+ *  5. Dawwas Eryansyah Pratama (10241019)  - Lancar Berjalan (Belum Jatuh Tempo 12 Sep 2026)
+ *  6. Indriani Anwar (10241036)           - Tagihan Dicicil (FIFO Cicilan, sisa Rp 900.000)
+ *  7. Tika Mila Wahyuni (10241070)        - Menunggak 1 Bulan (Agustus belum bayar, SP-1)
+ *  8. Dhia Salsabila Raihan (17241018)    - Menunggak Kritis 2-3 Bulan (Juli, Ags, Sep belum bayar, SP-2)
+ *  9. Yael Crisyella Harahap (17241044)   - Menunggu Verifikasi Admin (Struk BNI baru diupload)
+ * 10. Elsya Nur Aulia Handayani (10241026)- Dispute Sanggahan (Struk ATM BCA baru diajukan)
  */
 class SimulationScenarioSeeder extends Seeder
 {
@@ -41,13 +51,19 @@ class SimulationScenarioSeeder extends Seeder
 
     public function run(): void
     {
-        $this->command->info('🚀 [SIMULATION SEEDER] Initializing Insos Bunsay 10-Person Team Scenarios...');
+        $this->command->info('🚀 [SIMULATION SEEDER] Memulai inisialisasi akun 10 orang tim dan data skenario...');
 
-        // 1. Ensure Roles exist
+        // Bersihkan direktori bukti gambar agar tidak ada artefak lama
+        $buktiDir = public_path('storage/bukti');
+        if (!is_dir($buktiDir)) {
+            mkdir($buktiDir, 0777, true);
+        }
+
+        // 1. Pastikan Role Master tersedia
         Role::updateOrInsert(['Id_roles' => 1], ['Nama_role' => 'Admin']);
         Role::updateOrInsert(['Id_roles' => 2], ['Nama_role' => 'Tenant']);
 
-        // 2. Helper to fetch or create standard physical kiosk
+        // Helper untuk fetch/create kios fisik
         $getOrCreateKiosk = function (string $noKios, int $lantai, string $ukuran = '4x4 m²', string $status = 'Kosong'): Kios {
             return Kios::firstOrCreate(
                 ['No_Kios' => $noKios],
@@ -60,9 +76,9 @@ class SimulationScenarioSeeder extends Seeder
         };
 
         // =========================================================================
-        // SECTION 1: THE 3 ADMIN PARTICIPANTS (PERSON 1 - 3)
+        // BAGIAN 1: 3 AKUN ADMIN / PENGELOLA (ANGGOTA 1 - 3)
         // =========================================================================
-        $this->command->info('👑 Seeding 3 Admin Simulation Accounts...');
+        $this->command->info('👑 Seeding 3 Akun Admin Tim Inovasi Sosial...');
 
         $allPermissions = json_encode([
             'verifikasi_pembayaran',
@@ -73,7 +89,6 @@ class SimulationScenarioSeeder extends Seeder
             'lihat_audit_log'
         ]);
 
-        // Permissions: Both non-superadmin admins have full payment access (verifikasi_pembayaran + input_setoran)
         $kasirPermissions = json_encode([
             'verifikasi_pembayaran',
             'input_setoran',
@@ -89,897 +104,727 @@ class SimulationScenarioSeeder extends Seeder
             'lihat_audit_log'
         ]);
 
-        // Person 1: Patra - Superadmin Utama (Full master access)
+        // Anggota 1: Patra Ananda (10241061) - Superadmin Utama
         User::updateOrInsert(
             ['Username' => 'sim_superadmin'],
             [
                 'Id_roles'     => 1,
                 'Password'     => $this->adminPasswordHash,
-                'nama_lengkap' => 'Patra (Superadmin Utama)',
-                'email'        => 'patra.admin@bunsay.id',
+                'nama_lengkap' => 'Patra Ananda (10241061) - Superadmin Utama',
+                'email'        => '10241061@student.itk.ac.id',
                 'sub_role'     => 'superadmin',
                 'permissions'  => $allPermissions,
                 'status_aktif' => 1,
             ]
         );
 
-        // Person 2: Arman - Admin Kasir & Loket (Payment focus: Kasir + Verifikator)
+        // Anggota 2: Armansyah (10241013) - Admin Kasir & Loket
         User::updateOrInsert(
             ['Username' => 'sim_admin_kasir'],
             [
                 'Id_roles'     => 1,
                 'Password'     => $this->adminPasswordHash,
-                'nama_lengkap' => 'Arman (Admin Kasir & Loket)',
-                'email'        => 'arman.kasir@bunsay.id',
+                'nama_lengkap' => 'Armansyah (10241013) - Admin Kasir & Loket',
+                'email'        => '10241013@student.itk.ac.id',
                 'sub_role'     => 'kasir',
                 'permissions'  => $kasirPermissions,
                 'status_aktif' => 1,
             ]
         );
 
-        // Person 3: Rifa - Admin Petugas Kios & Pembayaran (Kiosk & Payment access)
+        // Anggota 3: Muhammad Rifa Al Rizqul Aulia (10241050) - Admin Petugas Kios & Verifikator
         User::updateOrInsert(
-            ['Username' => 'sim_admin_petugas'],
+            ['Username' => 'sim_admin_kios'],
             [
                 'Id_roles'     => 1,
                 'Password'     => $this->adminPasswordHash,
-                'nama_lengkap' => 'Rifa (Petugas Kios & Pembayaran)',
-                'email'        => 'rifa.petugas@bunsay.id',
+                'nama_lengkap' => 'Muhammad Rifa Al Rizqul Aulia (10241050) - Admin Petugas Kios',
+                'email'        => '10241050@student.itk.ac.id',
                 'sub_role'     => 'petugas_kios',
                 'permissions'  => $petugasKiosPermissions,
                 'status_aktif' => 1,
             ]
         );
 
-        // Deactivated Admin Account (Negative Testing)
-        User::updateOrInsert(
-            ['Username' => 'sim_admin_nonaktif'],
-            [
-                'Id_roles'     => 1,
-                'Password'     => $this->adminPasswordHash,
-                'nama_lengkap' => 'Eks Staf Non-Aktif (Negative Test)',
-                'email'        => 'nonaktif.sim@bunsay.id',
-                'sub_role'     => 'kasir',
-                'permissions'  => $kasirPermissions,
-                'status_aktif' => 0,
-            ]
-        );
-
         // =========================================================================
-        // SECTION 2: THE 7 TENANT PARTICIPANTS & COMBINATORIAL PERSONAS (PERSON 4 - 10)
+        // BAGIAN 2: 7 AKUN TENANT DENGAN SKENARIO TAGIHAN BELUM LUNAS (ANGGOTA 4 - 10)
         // =========================================================================
-        $this->command->info('🏪 Seeding 7 Tenant Participants & Combinatorial State Personas...');
+        $this->command->info('🏪 Seeding 7 Akun Tenant dengan Berbagai Skenario Tagihan Aktif...');
 
         // -------------------------------------------------------------------------
-        // PERSON 4: DAWWAS - TENANT A "THE IDEAL ON-TIME MERCHANT" + PROSPECT EDGE
+        // ANGGOTA 4: CLARA UENIKE MEYLAN LANGI (10241018) - KETUA TIM
+        // Skenario: MULTI-KIOS (Kios A1-01 & A1-02, Lantai 1)
+        // Kios A1-01: Lancar berjalan Sep 2026 (Belum Bayar)
+        // Kios A1-02: Nunggak Ags 2026 + Sep 2026 (Belum Bayar)
         // -------------------------------------------------------------------------
-        // Account 4A: Ideal Tenant (On-time, multi-method paid, clean ledger)
-        $user4A = User::updateOrInsert(
-            ['Username' => 'sim_tenant_ideal'],
+        $userClara = User::updateOrInsert(
+            ['Username' => 'tenant_clara'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Dawwas (Toko Pakaian Barokah)',
-                'email'        => 'dawwas.ideal@bunsay.id',
+                'nama_lengkap' => 'Clara Uenike Meylan Langi (Ketua Tim)',
+                'email'        => '10241018@student.itk.ac.id',
             ]
         );
-        $user4AObj = User::where('Username', 'sim_tenant_ideal')->first();
+        $userClaraObj = User::where('Username', 'tenant_clara')->first();
 
-        $pemilik4A = Pemilik::updateOrInsert(
-            ['Id_User' => $user4AObj->Id_user],
+        $pemilikClara = Pemilik::updateOrInsert(
+            ['Id_User' => $userClaraObj->Id_user],
             [
-                'Nama'            => 'Dawwas',
-                'No_Telepon'      => '081255001122',
-                'No_KTP'          => '6471011508800001',
+                'Nama'            => 'Clara Uenike Meylan Langi',
+                'No_Telepon'      => '081256520229',
+                'No_KTP'          => '6471011802040001',
+                'Alamat'          => 'Jln. Letjen Suprapto, Baru Ilir, Balikpapan Barat',
+                'izinkan_cicilan' => true,
+            ]
+        );
+        $pemilikClaraObj = Pemilik::where('Id_User', $userClaraObj->Id_user)->first();
+
+        // Kios 1: A1-01 (Boutique Tenun Dayak)
+        $kiosClara1 = $getOrCreateKiosk('A1-01', 1, '4x5 m²', 'Terisi');
+        $kiosClara1->update(['Status' => 'Terisi']);
+
+        $sewaClara1 = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikClaraObj->Id_Pemilik, 'Id_Kios' => $kiosClara1->Id_Kios],
+            [
+                'Jenis_Usaha'     => 'Boutique Kain Tenun & Busana Khas Dayak',
+                'Tanggal_Mulai'   => '2026-07-01',
+                'Tanggal_Selesai' => '2028-06-30',
+                'Tarif_Bulanan'   => 1500000.00,
+                'Keterangan'      => 'Sewa kios primer lantai 1 depan lobby.',
+                'Status'          => 'Aktif',
+            ]
+        );
+        $sewaClara1Obj = Sewa::where('Id_Pemilik', $pemilikClaraObj->Id_Pemilik)->where('Id_Kios', $kiosClara1->Id_Kios)->first();
+
+        // Tagihan Juli & Agustus LUNAS (dengan bukti transfer BCA)
+        $strukClaraJul = ReceiptGeneratorHelper::make('struk_bca_clara_jul.png', 'BCA', 'Clara Uenike Meylan Langi', 1500000, '08 Jul 2026 11:20 WITA', 'BCA-TX20260708-0112', 'Sewa Kios A1-01 Juli 2026');
+        $strukClaraAgs = ReceiptGeneratorHelper::make('struk_bca_clara_ags.png', 'BCA', 'Clara Uenike Meylan Langi', 1500000, '09 Ags 2026 14:10 WITA', 'BCA-TX20260809-0219', 'Sewa Kios A1-01 Agustus 2026');
+
+        $tClaraJul = Tagihan::create([
+            'Id_Sewa' => $sewaClara1Obj->Id_Sewa,
+            'Periode' => '2026-07',
+            'Jatuh_Tempo' => '2026-07-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1500000,
+            'Sisa_Tagihan' => 0,
+            'Status_Tagihan' => 'Lunas',
+        ]);
+        Pembayaran::create([
+            'Id_Tagihan' => $tClaraJul->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-07-08',
+            'Total_Bayar' => 1500000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukClaraJul,
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'catatan_admin' => 'Verifikasi pembayaran lunas tepat waktu.',
+            'created_at' => Carbon::parse('2026-07-08 11:25:00'),
+        ]);
+
+        $tClaraAgs = Tagihan::create([
+            'Id_Sewa' => $sewaClara1Obj->Id_Sewa,
+            'Periode' => '2026-08',
+            'Jatuh_Tempo' => '2026-08-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1500000,
+            'Sisa_Tagihan' => 0,
+            'Status_Tagihan' => 'Lunas',
+        ]);
+        Pembayaran::create([
+            'Id_Tagihan' => $tClaraAgs->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-08-09',
+            'Total_Bayar' => 1500000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukClaraAgs,
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'catatan_admin' => 'Verifikasi bukti transfer diterima.',
+            'created_at' => Carbon::parse('2026-08-09 14:15:00'),
+        ]);
+
+        // Tagihan September 2026 Kios A1-01: BELUM BAYAR (Lancar berjalan, jatuh tempo 12 Sep)
+        Tagihan::create([
+            'Id_Sewa' => $sewaClara1Obj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1500000,
+            'Sisa_Tagihan' => 1500000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
+
+        // Kios 2: A1-02 (Cinderamata & Kerajinan)
+        $kiosClara2 = $getOrCreateKiosk('A1-02', 1, '3x4 m²', 'Terisi');
+        $kiosClara2->update(['Status' => 'Terisi']);
+
+        $sewaClara2 = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikClaraObj->Id_Pemilik, 'Id_Kios' => $kiosClara2->Id_Kios],
+            [
+                'Jenis_Usaha'     => 'Pusat Cinderamata & Aksesoris Borneo',
+                'Tanggal_Mulai'   => '2026-07-01',
+                'Tanggal_Selesai' => '2027-06-30',
+                'Tarif_Bulanan'   => 1200000.00,
+                'Keterangan'      => 'Kios kedua berdampingan unit A1-01.',
+                'Status'          => 'Aktif',
+            ]
+        );
+        $sewaClara2Obj = Sewa::where('Id_Pemilik', $pemilikClaraObj->Id_Pemilik)->where('Id_Kios', $kiosClara2->Id_Kios)->first();
+
+        // Juli Lunas
+        $tClara2Jul = Tagihan::create([
+            'Id_Sewa' => $sewaClara2Obj->Id_Sewa,
+            'Periode' => '2026-07',
+            'Jatuh_Tempo' => '2026-07-12',
+            'Tarif_Sewa' => 1200000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1200000,
+            'Sisa_Tagihan' => 0,
+            'Status_Tagihan' => 'Lunas',
+        ]);
+        Pembayaran::create([
+            'Id_Tagihan' => $tClara2Jul->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-07-10',
+            'Total_Bayar' => 1200000,
+            'Metode_Bayar' => 'Tunai',
+            'Bukti_Pembayaran' => 'SETORAN-KASIR-LOKET-702',
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'catatan_admin' => 'Setoran tunai di loket pengelola.',
+            'created_at' => Carbon::parse('2026-07-10 10:00:00'),
+        ]);
+
+        // Agustus 2026: BELUM BAYAR (Nunggak 1 bulan)
+        Tagihan::create([
+            'Id_Sewa' => $sewaClara2Obj->Id_Sewa,
+            'Periode' => '2026-08',
+            'Jatuh_Tempo' => '2026-08-12',
+            'Tarif_Sewa' => 1200000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1200000,
+            'Sisa_Tagihan' => 1200000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
+
+        // September 2026: BELUM BAYAR (Terakumulasi tunggakan Ags)
+        Tagihan::create([
+            'Id_Sewa' => $sewaClara2Obj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1200000,
+            'Hutang_Tunggakan' => 1200000,
+            'Total_Tagihan' => 2400000,
+            'Sisa_Tagihan' => 2400000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
+
+        // -------------------------------------------------------------------------
+        // ANGGOTA 5: DAWWAS ERYANSYAH PRATAMA (10241019)
+        // Skenario: TAGIHAN LANCAR BERJALAN (Belum Jatuh Tempo, sisa 5 hari per 7 Sep)
+        // Kios B1-05 (Lantai 1)
+        // -------------------------------------------------------------------------
+        $userDawwas = User::updateOrInsert(
+            ['Username' => 'tenant_dawwas'],
+            [
+                'Id_roles'     => 2,
+                'Password'     => $this->tenantPasswordHash,
+                'sub_role'     => 'tenant',
+                'status_aktif' => 1,
+                'nama_lengkap' => 'Dawwas Eryansyah Pratama',
+                'email'        => '10241019@student.itk.ac.id',
+            ]
+        );
+        $userDawwasObj = User::where('Username', 'tenant_dawwas')->first();
+
+        $pemilikDawwas = Pemilik::updateOrInsert(
+            ['Id_User' => $userDawwasObj->Id_user],
+            [
+                'Nama'            => 'Dawwas Eryansyah Pratama',
+                'No_Telepon'      => '081255101019',
+                'No_KTP'          => '6471011905040002',
                 'Alamat'          => 'Jl. Pandan Sari No. 14, Balikpapan Barat',
                 'izinkan_cicilan' => false,
             ]
         );
-        $pemilik4AObj = Pemilik::where('Id_User', $user4AObj->Id_user)->first();
+        $pemilikDawwasObj = Pemilik::where('Id_User', $userDawwasObj->Id_user)->first();
 
-        $kios4A = $getOrCreateKiosk('A1-01', 1, '4x4 m²', 'Terisi');
-        $kios4A->update(['Status' => 'Terisi']);
+        $kiosDawwas = $getOrCreateKiosk('B1-05', 1, '4x4 m²', 'Terisi');
+        $kiosDawwas->update(['Status' => 'Terisi']);
 
-        $startDate4A = Carbon::now()->subMonths(5)->startOfMonth();
-        $sewa4A = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4AObj->Id_Pemilik, 'Id_Kios' => $kios4A->Id_Kios],
+        $sewaDawwas = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikDawwasObj->Id_Pemilik, 'Id_Kios' => $kiosDawwas->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Toko Pakaian Muslim & Batik Modern',
-                'Tanggal_Mulai'   => $startDate4A->toDateString(),
-                'Tanggal_Selesai' => $startDate4A->copy()->addYears(2)->toDateString(),
-                'Tarif_Bulanan'   => 750000.00,
-                'Keterangan'      => 'Sewa aktif jangka panjang - Pembayaran lancar tanpa tunggakan.',
+                'Jenis_Usaha'     => 'Toko Souvenir & Kerajinan Manik Borneo',
+                'Tanggal_Mulai'   => '2026-06-01',
+                'Tanggal_Selesai' => '2028-05-31',
+                'Tarif_Bulanan'   => 1400000.00,
+                'Keterangan'      => 'Sewa kios suvenir khas Kalimantan.',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa4AObj = Sewa::where('Id_Pemilik', $pemilik4AObj->Id_Pemilik)->where('Id_Kios', $kios4A->Id_Kios)->first();
+        $sewaDawwasObj = Sewa::where('Id_Pemilik', $pemilikDawwasObj->Id_Pemilik)->where('Id_Kios', $kiosDawwas->Id_Kios)->first();
 
-        // Complete Legal Documents
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4AObj->Id_Pemilik, 'Id_Kios' => $kios4A->Id_Kios, 'Jenis_Dokumen' => 'SP'],
-            ['Nomor_Dokumen' => 'SP/BUNSAY/2026/0401', 'Tanggal' => $startDate4A->toDateString()]
-        );
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4AObj->Id_Pemilik, 'Id_Kios' => $kios4A->Id_Kios, 'Jenis_Dokumen' => 'PPJB'],
-            ['Nomor_Dokumen' => 'PPJB/BUNSAY/2026/0401', 'Tanggal' => $startDate4A->copy()->addDays(3)->toDateString()]
-        );
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4AObj->Id_Pemilik, 'Id_Kios' => $kios4A->Id_Kios, 'Jenis_Dokumen' => 'AJB'],
-            ['Nomor_Dokumen' => 'AJB/NOTARIS-BPN/2026/088', 'Tanggal' => $startDate4A->copy()->addDays(10)->toDateString()]
-        );
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4AObj->Id_Pemilik, 'Id_Kios' => $kios4A->Id_Kios, 'Jenis_Dokumen' => 'Sertifikat'],
-            ['Nomor_Dokumen' => 'SERT-HGB-BUNSAY-0401', 'Tanggal' => $startDate4A->copy()->addDays(20)->toDateString()]
-        );
+        // Bulan lalu (Agustus) Lunas via Mandiri Livin'
+        $strukDawwasAgs = ReceiptGeneratorHelper::make('struk_mandiri_dawwas_ags.png', 'Mandiri', 'Dawwas Eryansyah Pratama', 1400000, '08 Ags 2026 13:45 WITA', 'MDR-TX20260808-8812', 'Sewa Kios B1-05 Agustus 2026');
 
-        // 6 Months Invoices (All Paid: mix of Midtrans, Transfer, Tunai)
-        for ($m = 0; $m < 6; $m++) {
-            $mDate = $startDate4A->copy()->addMonths($m);
-            $periode = $mDate->format('Y-m');
-            $tagihan = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa4AObj->Id_Sewa, 'Periode' => $periode],
-                [
-                    'Jatuh_Tempo'      => $mDate->copy()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => 750000.00,
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => 750000.00,
-                    'Sisa_Tagihan'     => 0.00,
-                    'Status_Tagihan'   => 'Lunas',
-                ]
-            );
-            $tagihanObj = Tagihan::where('Id_Sewa', $sewa4AObj->Id_Sewa)->where('Periode', $periode)->first();
+        $tDawwasAgs = Tagihan::create([
+            'Id_Sewa' => $sewaDawwasObj->Id_Sewa,
+            'Periode' => '2026-08',
+            'Jatuh_Tempo' => '2026-08-12',
+            'Tarif_Sewa' => 1400000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1400000,
+            'Sisa_Tagihan' => 0,
+            'Status_Tagihan' => 'Lunas',
+        ]);
+        Pembayaran::create([
+            'Id_Tagihan' => $tDawwasAgs->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-08-08',
+            'Total_Bayar' => 1400000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukDawwasAgs,
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'catatan_admin' => 'Pembayaran Mandiri terverifikasi.',
+            'created_at' => Carbon::parse('2026-08-08 13:50:00'),
+        ]);
 
-            $method = ($m % 3 === 0) ? 'Midtrans' : (($m % 2 === 0) ? 'Transfer' : 'Tunai');
-            $payDateTime = Carbon::create($mDate->year, $mDate->month, 8, 10, 15, 0, 'Asia/Makassar')->setTimezone('UTC');
-            Pembayaran::updateOrInsert(
-                ['Id_Tagihan' => $tagihanObj->Id_Tagihan],
-                [
-                    'Tanggal_Bayar'         => $mDate->copy()->day(8)->toDateString(),
-                    'Total_Bayar'           => 750000.00,
-                    'Metode_Bayar'          => $method,
-                    'Bukti_Pembayaran'      => ($method === 'Midtrans') ? 'MIDTRANS-SETTLEMENT-TX401' . $m : 'storage/bukti/sim_ideal_' . $m . '.png',
-                    'Verifikasi_Pembayaran' => 'Diterima',
-                    'catatan_admin'         => ($method === 'Midtrans') ? 'Auto-settled by Midtrans Gateway' : 'Lunas tepat waktu sebelum jatuh tempo.',
-                    'created_at'            => $payDateTime->toDateTimeString(),
-                    'updated_at'            => $payDateTime->toDateTimeString(),
-                ]
-            );
-        }
+        // Tagihan September 2026: BELUM BAYAR (Lancar, jatuh tempo 12 Sep 2026)
+        Tagihan::create([
+            'Id_Sewa' => $sewaDawwasObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1400000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1400000,
+            'Sisa_Tagihan' => 1400000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
-        // Account 4B: Dawwas Edge - Calon Tenant Baru Onboarding
-        $user4B = User::updateOrInsert(
-            ['Username' => 'sim_tenant_baru'],
+        // -------------------------------------------------------------------------
+        // ANGGOTA 6: INDRIANI ANWAR (10241036)
+        // Skenario: TAGIHAN DICICIL (FIFO Cicilan)
+        // Kios C1-12 (Lantai 1)
+        // Tagihan Rp 1.600.000, sudah dibayar Rp 700.000 via BRImo, sisa Rp 900.000 (Dicicil)
+        // -------------------------------------------------------------------------
+        $userIndriani = User::updateOrInsert(
+            ['Username' => 'tenant_indriani'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Dawwas (Calon Tenant Baru)',
-                'email'        => 'dawwas.prospek@bunsay.id',
+                'nama_lengkap' => 'Indriani Anwar',
+                'email'        => '10241036@student.itk.ac.id',
             ]
         );
-        $user4BObj = User::where('Username', 'sim_tenant_baru')->first();
-        $pemilik4B = Pemilik::updateOrInsert(
-            ['Id_User' => $user4BObj->Id_user],
+        $userIndrianiObj = User::where('Username', 'tenant_indriani')->first();
+
+        $pemilikIndriani = Pemilik::updateOrInsert(
+            ['Id_User' => $userIndrianiObj->Id_user],
             [
-                'Nama'            => 'Dawwas (Calon Baru)',
-                'No_Telepon'      => '082199887766',
-                'No_KTP'          => '6471022001950002', // 16 Digit NIK Wajib
-                'Alamat'          => 'Jl. MT Haryono No. 89, Balikpapan',
-                'izinkan_cicilan' => false,
+                'Nama'            => 'Indriani Anwar',
+                'No_Telepon'      => '081255101036',
+                'No_KTP'          => '6471013608040003',
+                'Alamat'          => 'Jl. Baru Ulu No. 88, Balikpapan Barat',
+                'izinkan_cicilan' => true,
             ]
         );
-        $pemilik4BObj = Pemilik::where('Id_User', $user4BObj->Id_user)->first();
+        $pemilikIndrianiObj = Pemilik::where('Id_User', $userIndrianiObj->Id_user)->first();
 
-        $kios4B = $getOrCreateKiosk('D2-01', 2, '3x4 m²', 'Terisi');
-        $kios4B->update(['Status' => 'Terisi']);
+        $kiosIndriani = $getOrCreateKiosk('C1-12', 1, '4x4 m²', 'Terisi');
+        $kiosIndriani->update(['Status' => 'Terisi']);
 
-        $startDate4B = Carbon::now()->startOfMonth();
-        $sewa4B = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik4BObj->Id_Pemilik, 'Id_Kios' => $kios4B->Id_Kios],
+        $sewaIndriani = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikIndrianiObj->Id_Pemilik, 'Id_Kios' => $kiosIndriani->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Toko Busana & Aksesoris Pria (Pendaftaran Baru)',
-                'Tanggal_Mulai'   => $startDate4B->toDateString(),
-                'Tanggal_Selesai' => $startDate4B->copy()->addYear()->toDateString(),
-                'Tarif_Bulanan'   => 750000.00,
-                'Keterangan'      => 'Pendaftaran tenant baru oleh admin loket.',
+                'Jenis_Usaha'     => 'Kios Herbal & Obat Tradisional Pasak Bumi',
+                'Tanggal_Mulai'   => '2026-07-01',
+                'Tanggal_Selesai' => '2027-06-30',
+                'Tarif_Bulanan'   => 1600000.00,
+                'Keterangan'      => 'Tenant memiliki fasilitas pembayaran bertahap (cicilan).',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa4BObj = Sewa::where('Id_Pemilik', $pemilik4BObj->Id_Pemilik)->where('Id_Kios', $kios4B->Id_Kios)->first();
+        $sewaIndrianiObj = Sewa::where('Id_Pemilik', $pemilikIndrianiObj->Id_Pemilik)->where('Id_Kios', $kiosIndriani->Id_Kios)->first();
 
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa4BObj->Id_Sewa, 'Periode' => $startDate4B->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $startDate4B->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 750000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 750000.00,
-                'Sisa_Tagihan'     => 750000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
+        // Tagihan September 2026: Total Rp 1.600.000
+        $tIndrianiSep = Tagihan::create([
+            'Id_Sewa' => $sewaIndrianiObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1600000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1600000,
+            'Sisa_Tagihan' => 900000, // sisa 900rb
+            'Status_Tagihan' => 'Dicicil',
+        ]);
 
+        // Pembayaran Cicilan Pertama Rp 700.000 via BRImo pada 3 Sep 2026
+        $strukIndrianiCicil = ReceiptGeneratorHelper::make('struk_bri_indriani_cicil.png', 'BRI', 'Indriani Anwar', 700000, '03 Sep 2026 10:15 WITA', 'BRI-TX20260903-7182', 'Cicilan 1 Sewa Kios C1-12 Sep 2026');
+
+        Pembayaran::create([
+            'Id_Tagihan' => $tIndrianiSep->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-09-03',
+            'Total_Bayar' => 700000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukIndrianiCicil,
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'catatan_admin' => 'Cicilan tahap 1 Rp 700.000 diterima, sisa Rp 900.000 sebelum 12 September.',
+            'created_at' => Carbon::parse('2026-09-03 10:20:00'),
+        ]);
 
         // -------------------------------------------------------------------------
-        // PERSON 5: TIKA - TENANT B "1-MONTH OVERDUE (LISTRIK PERINGATAN)"
+        // ANGGOTA 7: TIKA MILA WAHYUNI (10241070)
+        // Skenario: NUNGGAK 1 BULAN (Peringatan SP-1)
+        // Kios D2-08 (Lantai 2)
+        // Tagihan Agustus 2026 lewat tempo (Belum Bayar) + September 2026 (Belum Bayar)
         // -------------------------------------------------------------------------
-        $user5 = User::updateOrInsert(
-            ['Username' => 'sim_tenant_tunggak1'],
+        $userTika = User::updateOrInsert(
+            ['Username' => 'tenant_tika'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Tika (Warung Sembako Berkah)',
-                'email'        => 'tika.sembako@bunsay.id',
+                'nama_lengkap' => 'Tika Mila Wahyuni',
+                'email'        => '10241070@student.itk.ac.id',
             ]
         );
-        $user5Obj = User::where('Username', 'sim_tenant_tunggak1')->first();
+        $userTikaObj = User::where('Username', 'tenant_tika')->first();
 
-        $pemilik5 = Pemilik::updateOrInsert(
-            ['Id_User' => $user5Obj->Id_user],
+        $pemilikTika = Pemilik::updateOrInsert(
+            ['Id_User' => $userTikaObj->Id_user],
             [
-                'Nama'            => 'Tika',
-                'No_Telepon'      => '081347890123',
-                'No_KTP'          => '6471016503750003',
-                'Alamat'          => 'Jl. Baru Kebun Sayur Gang 5 No. 3',
+                'Nama'            => 'Tika Mila Wahyuni',
+                'No_Telepon'      => '081255101070',
+                'No_KTP'          => '6471017011040004',
+                'Alamat'          => 'Jl. Semoi No. 23, Kampung Baru Tengah, Balikpapan Barat',
                 'izinkan_cicilan' => false,
             ]
         );
-        $pemilik5Obj = Pemilik::where('Id_User', $user5Obj->Id_user)->first();
+        $pemilikTikaObj = Pemilik::where('Id_User', $userTikaObj->Id_user)->first();
 
-        $kios5 = $getOrCreateKiosk('B1-05', 1, '4x4 m²', 'Terisi');
-        $kios5->update(['Status' => 'Terisi']);
+        $kiosTika = $getOrCreateKiosk('D2-08', 2, '3x4 m²', 'Terisi');
+        $kiosTika->update(['Status' => 'Terisi']);
 
-        $startDate5 = Carbon::now()->subMonths(3)->startOfMonth();
-        $sewa5 = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik5Obj->Id_Pemilik, 'Id_Kios' => $kios5->Id_Kios],
+        $sewaTika = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikTikaObj->Id_Pemilik, 'Id_Kios' => $kiosTika->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Warung Sembako & Kebutuhan Pokok',
-                'Tanggal_Mulai'   => $startDate5->toDateString(),
-                'Tanggal_Selesai' => $startDate5->copy()->addYear()->toDateString(),
-                'Tarif_Bulanan'   => 800000.00,
-                'Keterangan'      => 'Sewa aktif unit toko lantai 1 blok B',
+                'Jenis_Usaha'     => 'Aksesoris & Batu Akik Permata Martapura',
+                'Tanggal_Mulai'   => '2026-06-01',
+                'Tanggal_Selesai' => '2027-05-31',
+                'Tarif_Bulanan'   => 1300000.00,
+                'Keterangan'      => 'Kios aksesoris lantai 2.',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa5Obj = Sewa::where('Id_Pemilik', $pemilik5Obj->Id_Pemilik)->where('Id_Kios', $kios5->Id_Kios)->first();
+        $sewaTikaObj = Sewa::where('Id_Pemilik', $pemilikTikaObj->Id_Pemilik)->where('Id_Kios', $kiosTika->Id_Kios)->first();
 
-        // Legal Docs: SP & PPJB
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik5Obj->Id_Pemilik, 'Id_Kios' => $kios5->Id_Kios, 'Jenis_Dokumen' => 'SP'],
-            ['Nomor_Dokumen' => 'SP/BUNSAY/2026/0505', 'Tanggal' => $startDate5->toDateString()]
-        );
-        Dokumen::updateOrInsert(
-            ['Id_Pemilik' => $pemilik5Obj->Id_Pemilik, 'Id_Kios' => $kios5->Id_Kios, 'Jenis_Dokumen' => 'PPJB'],
-            ['Nomor_Dokumen' => 'PPJB/BUNSAY/2026/0505', 'Tanggal' => $startDate5->copy()->addDays(5)->toDateString()]
-        );
+        // Tagihan Agustus 2026: Lewat jatuh tempo (Nunggak 1 bulan)
+        Tagihan::create([
+            'Id_Sewa' => $sewaTikaObj->Id_Sewa,
+            'Periode' => '2026-08',
+            'Jatuh_Tempo' => '2026-08-12',
+            'Tarif_Sewa' => 1300000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1300000,
+            'Sisa_Tagihan' => 1300000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
-        // Previous 3 months paid
-        for ($m = 0; $m < 3; $m++) {
-            $mDate = $startDate5->copy()->addMonths($m);
-            $periode = $mDate->format('Y-m');
-            $t = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa5Obj->Id_Sewa, 'Periode' => $periode],
-                [
-                    'Jatuh_Tempo'      => $mDate->copy()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => 800000.00,
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => 800000.00,
-                    'Sisa_Tagihan'     => 0.00,
-                    'Status_Tagihan'   => 'Lunas',
-                ]
-            );
-            $tObj = Tagihan::where('Id_Sewa', $sewa5Obj->Id_Sewa)->where('Periode', $periode)->first();
-            $payDateTime5 = Carbon::create($mDate->year, $mDate->month, 10, 14, 20, 0, 'Asia/Makassar')->setTimezone('UTC');
-            Pembayaran::updateOrInsert(
-                ['Id_Tagihan' => $tObj->Id_Tagihan],
-                [
-                    'Tanggal_Bayar'         => $mDate->copy()->day(10)->toDateString(),
-                    'Total_Bayar'           => 800000.00,
-                    'Metode_Bayar'          => 'Transfer',
-                    'Bukti_Pembayaran'      => 'storage/bukti/sim_tunggak1_paid_' . $m . '.png',
-                    'Verifikasi_Pembayaran' => 'Diterima',
-                    'created_at'            => $payDateTime5->toDateTimeString(),
-                    'updated_at'            => $payDateTime5->toDateTimeString(),
-                ]
-            );
-        }
-
-        // Current Month: Overdue (Belum Bayar > 12th)
-        $curMonthDate5 = Carbon::now()->startOfMonth();
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa5Obj->Id_Sewa, 'Periode' => $curMonthDate5->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $curMonthDate5->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 800000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 800000.00,
-                'Sisa_Tagihan'     => 800000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
-
+        // Tagihan September 2026: Terakumulasi tunggakan
+        Tagihan::create([
+            'Id_Sewa' => $sewaTikaObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1300000,
+            'Hutang_Tunggakan' => 1300000,
+            'Total_Tagihan' => 2600000,
+            'Sisa_Tagihan' => 2600000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
         // -------------------------------------------------------------------------
-        // PERSON 6: DHIA - TENANT C "3-MONTH CRITICAL ARREARS (SEGEL / SP-3)"
+        // ANGGOTA 8: DHIA SALSABILA RAIHAN (17241018)
+        // Skenario: NUNGGAK KRITIS 2-3 BULAN (Peringatan SP-2 / Segel)
+        // Kios E2-03 (Lantai 2)
+        // Tagihan Juli & Agustus nunggak + September berjalan (Total 4.5jt Belum Bayar)
         // -------------------------------------------------------------------------
-        $user6 = User::updateOrInsert(
-            ['Username' => 'sim_tenant_kritis'],
+        $userDhia = User::updateOrInsert(
+            ['Username' => 'tenant_dhia'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Dhia (Servis HP & Elektronik)',
-                'email'        => 'dhia.kritis@bunsay.id',
+                'nama_lengkap' => 'Dhia Salsabila Raihan',
+                'email'        => '17241018@student.itk.ac.id',
             ]
         );
-        $user6Obj = User::where('Username', 'sim_tenant_kritis')->first();
+        $userDhiaObj = User::where('Username', 'tenant_dhia')->first();
 
-        $pemilik6 = Pemilik::updateOrInsert(
-            ['Id_User' => $user6Obj->Id_user],
+        $pemilikDhia = Pemilik::updateOrInsert(
+            ['Id_User' => $userDhiaObj->Id_user],
             [
-                'Nama'            => 'Dhia',
-                'No_Telepon'      => '085233445566',
-                'No_KTP'          => '6471011006880004',
-                'Alamat'          => 'Jl. Letjen Suprapto No. 55, Balikpapan',
+                'Nama'            => 'Dhia Salsabila Raihan',
+                'No_Telepon'      => '081255101718',
+                'No_KTP'          => '6471021812040005',
+                'Alamat'          => 'Jl. Letjen Soeprapto No. 45, Balikpapan Barat',
                 'izinkan_cicilan' => false,
             ]
         );
-        $pemilik6Obj = Pemilik::where('Id_User', $user6Obj->Id_user)->first();
+        $pemilikDhiaObj = Pemilik::where('Id_User', $userDhiaObj->Id_user)->first();
 
-        $kios6 = $getOrCreateKiosk('C1-12', 1, '4x5 m²', 'Terisi');
-        $kios6->update(['Status' => 'Terisi']);
+        $kiosDhia = $getOrCreateKiosk('E2-03', 2, '4x4 m²', 'Terisi');
+        $kiosDhia->update(['Status' => 'Terisi']);
 
-        $startDate6 = Carbon::now()->subMonths(4)->startOfMonth();
-        $sewa6 = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik6Obj->Id_Pemilik, 'Id_Kios' => $kios6->Id_Kios],
+        $sewaDhia = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikDhiaObj->Id_Pemilik, 'Id_Kios' => $kiosDhia->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Servis HP & Toko Aksesoris Elektronik',
-                'Tanggal_Mulai'   => $startDate6->toDateString(),
-                'Tanggal_Selesai' => $startDate6->copy()->addYear()->toDateString(),
-                'Tarif_Bulanan'   => 750000.00,
-                'Keterangan'      => 'Sewa aktif - Menunggak 3 bulan berturut-turut. Status SP-3 Peringatan Penyegelan.',
+                'Jenis_Usaha'     => 'Sentra Amplang & Kerupuk Khas Balikpapan',
+                'Tanggal_Mulai'   => '2026-05-01',
+                'Tanggal_Selesai' => '2027-04-30',
+                'Tarif_Bulanan'   => 1500000.00,
+                'Keterangan'      => 'Kios oleh-oleh khas amplang ikan pipih.',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa6Obj = Sewa::where('Id_Pemilik', $pemilik6Obj->Id_Pemilik)->where('Id_Kios', $kios6->Id_Kios)->first();
+        $sewaDhiaObj = Sewa::where('Id_Pemilik', $pemilikDhiaObj->Id_Pemilik)->where('Id_Kios', $kiosDhia->Id_Kios)->first();
 
-        // Month 1 & 2 Paid
-        for ($m = 0; $m < 2; $m++) {
-            $mDate = $startDate6->copy()->addMonths($m);
-            $t = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa6Obj->Id_Sewa, 'Periode' => $mDate->format('Y-m')],
-                [
-                    'Jatuh_Tempo'      => $mDate->copy()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => 750000.00,
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => 750000.00,
-                    'Sisa_Tagihan'     => 0.00,
-                    'Status_Tagihan'   => 'Lunas',
-                ]
-            );
-            $tObj = Tagihan::where('Id_Sewa', $sewa6Obj->Id_Sewa)->where('Periode', $mDate->format('Y-m'))->first();
-            $payDateTime6 = Carbon::create($mDate->year, $mDate->month, 11, 11, 35, 0, 'Asia/Makassar')->setTimezone('UTC');
-            Pembayaran::updateOrInsert(
-                ['Id_Tagihan' => $tObj->Id_Tagihan],
-                [
-                    'Tanggal_Bayar'         => $mDate->copy()->day(11)->toDateString(),
-                    'Total_Bayar'           => 750000.00,
-                    'Metode_Bayar'          => 'Tunai',
-                    'Bukti_Pembayaran'      => 'storage/bukti/kritis_paid_' . $m . '.png',
-                    'Verifikasi_Pembayaran' => 'Diterima',
-                    'created_at'            => $payDateTime6->toDateTimeString(),
-                    'updated_at'            => $payDateTime6->toDateTimeString(),
-                ]
-            );
-        }
+        // Tagihan Juli 2026: NUNGGAK (Sisa 1.5jt)
+        Tagihan::create([
+            'Id_Sewa' => $sewaDhiaObj->Id_Sewa,
+            'Periode' => '2026-07',
+            'Jatuh_Tempo' => '2026-07-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1500000,
+            'Sisa_Tagihan' => 1500000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
-        // Month 3 (2 months ago): Belum Bayar (Tunggakan 1)
-        $m3Date = $startDate6->copy()->addMonths(2);
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa6Obj->Id_Sewa, 'Periode' => $m3Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $m3Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 750000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 750000.00,
-                'Sisa_Tagihan'     => 750000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
+        // Tagihan Agustus 2026: NUNGGAK (Sisa 1.5jt)
+        Tagihan::create([
+            'Id_Sewa' => $sewaDhiaObj->Id_Sewa,
+            'Periode' => '2026-08',
+            'Jatuh_Tempo' => '2026-08-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 1500000,
+            'Total_Tagihan' => 3000000,
+            'Sisa_Tagihan' => 1500000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
-        // Month 4 (1 month ago): Belum Bayar (Tunggakan 2)
-        $m4Date = $startDate6->copy()->addMonths(3);
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa6Obj->Id_Sewa, 'Periode' => $m4Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $m4Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 750000.00,
-                'Hutang_Tunggakan' => 750000.00,
-                'Total_Tagihan'    => 1500000.00,
-                'Sisa_Tagihan'     => 750000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
-
-        // Month 5 (Current month): Belum Bayar (Tunggakan 3 - Kritis)
-        $m5Date = $startDate6->copy()->addMonths(4);
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa6Obj->Id_Sewa, 'Periode' => $m5Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $m5Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 750000.00,
-                'Hutang_Tunggakan' => 1500000.00,
-                'Total_Tagihan'    => 2250000.00,
-                'Sisa_Tagihan'     => 750000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
-
+        // Tagihan September 2026: NUNGGAK KRITIS (Total hutang 4.5jt)
+        Tagihan::create([
+            'Id_Sewa' => $sewaDhiaObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 3000000,
+            'Total_Tagihan' => 4500000,
+            'Sisa_Tagihan' => 4500000,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
 
         // -------------------------------------------------------------------------
-        // PERSON 7: INDRIANI - TENANT D "PARTIAL PAYMENT (FIFO CICILAN)" + NO-CICIL EDGE
+        // ANGGOTA 9: YAEL CRISYELLA HARAHAP (17241044)
+        // Skenario: MENUNGGU VERIFIKASI ADMIN (Bukti Baru Diunggah via BNI Mobile)
+        // Kios F2-15 (Lantai 2)
+        // Pembayaran transfer Rp 1.500.000 menunggu verifikasi manual admin di panel
         // -------------------------------------------------------------------------
-        $user7 = User::updateOrInsert(
-            ['Username' => 'sim_tenant_cicil'],
+        $userYael = User::updateOrInsert(
+            ['Username' => 'tenant_yael'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Indriani (Kedai Kopi & Kuliner Nusantara)',
-                'email'        => 'indriani.cicil@bunsay.id',
+                'nama_lengkap' => 'Yael Crisyella Harahap',
+                'email'        => '17241044@student.itk.ac.id',
             ]
         );
-        $user7Obj = User::where('Username', 'sim_tenant_cicil')->first();
+        $userYaelObj = User::where('Username', 'tenant_yael')->first();
 
-        $pemilik7 = Pemilik::updateOrInsert(
-            ['Id_User' => $user7Obj->Id_user],
+        $pemilikYael = Pemilik::updateOrInsert(
+            ['Id_User' => $userYaelObj->Id_user],
             [
-                'Nama'            => 'Indriani',
-                'No_Telepon'      => '081399112233',
-                'No_KTP'          => '6471015011780005',
-                'Alamat'          => 'Pujasera Plaza Kebun Sayur',
-                'izinkan_cicilan' => true, // ENABLED CICILAN PERMISSION
+                'Nama'            => 'Yael Crisyella Harahap',
+                'No_Telepon'      => '081255101744',
+                'No_KTP'          => '6471024403040006',
+                'Alamat'          => 'Jl. Sidodadi No. 12, Balikpapan Barat',
+                'izinkan_cicilan' => false,
             ]
         );
-        $pemilik7Obj = Pemilik::where('Id_User', $user7Obj->Id_user)->first();
+        $pemilikYaelObj = Pemilik::where('Id_User', $userYaelObj->Id_user)->first();
 
-        $kios7 = $getOrCreateKiosk('D1-08', 1, '3x3 m²', 'Terisi');
-        $kios7->update(['Status' => 'Terisi']);
+        $kiosYael = $getOrCreateKiosk('F2-15', 2, '4x4 m²', 'Terisi');
+        $kiosYael->update(['Status' => 'Terisi']);
 
-        $startDate7 = Carbon::now()->subMonths(2)->startOfMonth();
-        $sewa7 = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik7Obj->Id_Pemilik, 'Id_Kios' => $kios7->Id_Kios],
+        $sewaYael = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikYaelObj->Id_Pemilik, 'Id_Kios' => $kiosYael->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Kedai Minuman Kopi & Teh Tradisional',
-                'Tanggal_Mulai'   => $startDate7->toDateString(),
-                'Tanggal_Selesai' => $startDate7->copy()->addYear()->toDateString(),
-                'Tarif_Bulanan'   => 500000.00,
-                'Keterangan'      => 'Sewa Aktif - Akun resmi uji coba Pembayaran Cicilan Parsial FIFO.',
+                'Jenis_Usaha'     => 'Fashion Muslim & Busana Sasirangan',
+                'Tanggal_Mulai'   => '2026-07-01',
+                'Tanggal_Selesai' => '2027-06-30',
+                'Tarif_Bulanan'   => 1500000.00,
+                'Keterangan'      => 'Kios busana sasirangan dan bordir.',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa7Obj = Sewa::where('Id_Pemilik', $pemilik7Obj->Id_Pemilik)->where('Id_Kios', $kios7->Id_Kios)->first();
+        $sewaYaelObj = Sewa::where('Id_Pemilik', $pemilikYaelObj->Id_Pemilik)->where('Id_Kios', $kiosYael->Id_Kios)->first();
 
-        // Invoice 1: 2 months ago (Lunas via FIFO)
-        $t7_1 = Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa7Obj->Id_Sewa, 'Periode' => $startDate7->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $startDate7->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 500000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 500000.00,
-                'Sisa_Tagihan'     => 0.00,
-                'Status_Tagihan'   => 'Lunas',
-            ]
-        );
+        // Tagihan September 2026: Status Menunggu Verifikasi
+        $tYaelSep = Tagihan::create([
+            'Id_Sewa' => $sewaYaelObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1500000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1500000,
+            'Sisa_Tagihan' => 1500000,
+            'Status_Tagihan' => 'Menunggu Verifikasi',
+        ]);
 
-        // Invoice 2: 1 month ago (Dicicil, sisa 250k)
-        $t7_2Date = $startDate7->copy()->addMonth();
-        $t7_2 = Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa7Obj->Id_Sewa, 'Periode' => $t7_2Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $t7_2Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 500000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 500000.00,
-                'Sisa_Tagihan'     => 250000.00,
-                'Status_Tagihan'   => 'Dicicil',
-            ]
-        );
-        $t7_2Obj = Tagihan::where('Id_Sewa', $sewa7Obj->Id_Sewa)->where('Periode', $t7_2Date->format('Y-m'))->first();
+        // Struk BNI asli diunggah 6 Sep 2026
+        $strukYaelSep = ReceiptGeneratorHelper::make('struk_bni_yael_sep.png', 'BNI', 'Yael Crisyella Harahap', 1500000, '06 Sep 2026 15:30 WITA', 'BNI-TX20260906-9921', 'Sewa Kios F2-15 September 2026');
 
-        // Record FIFO partial payment
-        $payDate7 = Carbon::now('Asia/Makassar')->subDays(4)->setTime(15, 45, 0);
-        $payDateTime7 = $payDate7->copy()->setTimezone('UTC');
-        Pembayaran::updateOrInsert(
-            ['Id_Tagihan' => $t7_2Obj->Id_Tagihan],
-            [
-                'Tanggal_Bayar'         => $payDate7->toDateString(),
-                'Total_Bayar'           => 750000.00,
-                'Metode_Bayar'          => 'Transfer',
-                'Bukti_Pembayaran'      => 'storage/bukti/sim_fifo_750k.png',
-                'Verifikasi_Pembayaran' => 'Diterima',
-                'catatan_admin'         => 'Setoran cicilan Rp 750.000: Rp 500.000 melunasi tagihan tertua, Rp 250.000 menyicil tagihan bulan kemarin (Sisa Rp 250.000).',
-                'created_at'            => $payDateTime7->toDateTimeString(),
-                'updated_at'            => $payDateTime7->toDateTimeString(),
-            ]
-        );
+        Pembayaran::create([
+            'Id_Tagihan' => $tYaelSep->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-09-06',
+            'Total_Bayar' => 1500000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukYaelSep,
+            'Verifikasi_Pembayaran' => 'Menunggu',
+            'catatan_admin' => null,
+            'created_at' => Carbon::parse('2026-09-06 15:35:00'),
+        ]);
 
-        // Invoice 3: Current Month (Belum Bayar, sisa 500k)
-        $t7_3Date = Carbon::now()->startOfMonth();
-        Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa7Obj->Id_Sewa, 'Periode' => $t7_3Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $t7_3Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 500000.00,
-                'Hutang_Tunggakan' => 250000.00,
-                'Total_Tagihan'    => 750000.00,
-                'Sisa_Tagihan'     => 500000.00,
-                'Status_Tagihan'   => 'Belum Bayar',
-            ]
-        );
-
-        // Account 7B: Indriani Edge (Disallowed Cicilan Permission)
-        $user7B = User::updateOrInsert(
-            ['Username' => 'sim_tenant_nocicil'],
+        // -------------------------------------------------------------------------
+        // ANGGOTA 10: ELSYA NUR AULIA HANDAYANI (10241026)
+        // Skenario: DISPUTE & REBUTTAL (SANGGAHAN AKTIF DENGAN STRUK ATM BARU)
+        // Kios G2-04 (Lantai 2)
+        // Struk pertama buram -> Ditolak -> Ajukan sanggahan dengan Struk Fisik ATM BCA jelas
+        // -------------------------------------------------------------------------
+        $userElsya = User::updateOrInsert(
+            ['Username' => 'tenant_elsya'],
             [
                 'Id_roles'     => 2,
                 'Password'     => $this->tenantPasswordHash,
                 'sub_role'     => 'tenant',
                 'status_aktif' => 1,
-                'nama_lengkap' => 'Indriani (Edge - Tanpa Izin Cicil)',
-                'email'        => 'indriani.nocicil@bunsay.id',
+                'nama_lengkap' => 'Elsya Nur Aulia Handayani',
+                'email'        => '10241026@student.itk.ac.id',
             ]
         );
-        $user7BObj = User::where('Username', 'sim_tenant_nocicil')->first();
-        Pemilik::updateOrInsert(
-            ['Id_User' => $user7BObj->Id_user],
-            [
-                'Nama'            => 'Indriani (Non-Cicil)',
-                'No_Telepon'      => '081288776655',
-                'No_KTP'          => '6471011202820006',
-                'Alamat'          => 'Jl. Soekarno Hatta Km 2',
-                'izinkan_cicilan' => false, // DISALLOWED
-            ]
-        );
+        $userElsyaObj = User::where('Username', 'tenant_elsya')->first();
 
-
-        // -------------------------------------------------------------------------
-        // PERSON 8: ELSYA - TENANT E "DISPUTE & REBUTTAL (SANGGAHAN) CHALLENGER"
-        // -------------------------------------------------------------------------
-        $user8 = User::updateOrInsert(
-            ['Username' => 'sim_tenant_dispute'],
+        $pemilikElsya = Pemilik::updateOrInsert(
+            ['Id_User' => $userElsyaObj->Id_user],
             [
-                'Id_roles'     => 2,
-                'Password'     => $this->tenantPasswordHash,
-                'sub_role'     => 'tenant',
-                'status_aktif' => 1,
-                'nama_lengkap' => 'Elsya (Toko Busana & Penjahit)',
-                'email'        => 'elsya.dispute@bunsay.id',
-            ]
-        );
-        $user8Obj = User::where('Username', 'sim_tenant_dispute')->first();
-
-        $pemilik8 = Pemilik::updateOrInsert(
-            ['Id_User' => $user8Obj->Id_user],
-            [
-                'Nama'            => 'Elsya',
-                'No_Telepon'      => '081344556677',
-                'No_KTP'          => '6471011809760007',
-                'Alamat'          => 'Plaza Kebun Sayur Lantai 2 Blok E',
+                'Nama'            => 'Elsya Nur Aulia Handayani',
+                'No_Telepon'      => '081255101026',
+                'No_KTP'          => '6471012607040007',
+                'Alamat'          => 'Jl. Manggar Sari No. 5, Balikpapan Barat',
                 'izinkan_cicilan' => false,
             ]
         );
-        $pemilik8Obj = Pemilik::where('Id_User', $user8Obj->Id_user)->first();
+        $pemilikElsyaObj = Pemilik::where('Id_User', $userElsyaObj->Id_user)->first();
 
-        $kios8 = $getOrCreateKiosk('E2-03', 2, '4x4 m²', 'Terisi');
-        $kios8->update(['Status' => 'Terisi']);
+        $kiosElsya = $getOrCreateKiosk('G2-04', 2, '3x4 m²', 'Terisi');
+        $kiosElsya->update(['Status' => 'Terisi']);
 
-        $startDate8 = Carbon::now()->subMonth()->startOfMonth();
-        $sewa8 = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik8Obj->Id_Pemilik, 'Id_Kios' => $kios8->Id_Kios],
+        $sewaElsya = Sewa::updateOrInsert(
+            ['Id_Pemilik' => $pemilikElsyaObj->Id_Pemilik, 'Id_Kios' => $kiosElsya->Id_Kios],
             [
-                'Jenis_Usaha'     => 'Penjahit & Permak Pakaian Tradisional',
-                'Tanggal_Mulai'   => $startDate8->toDateString(),
-                'Tanggal_Selesai' => $startDate8->copy()->addYear()->toDateString(),
-                'Tarif_Bulanan'   => 600000.00,
-                'Keterangan'      => 'Sewa Aktif - Simulasi Siklus Sanggahan & Dispute Pembayaran.',
+                'Jenis_Usaha'     => 'Kios Kuliner & Minuman Tradisional Saraba',
+                'Tanggal_Mulai'   => '2026-07-01',
+                'Tanggal_Selesai' => '2027-06-30',
+                'Tarif_Bulanan'   => 1250000.00,
+                'Keterangan'      => 'Kios minuman rempah khas Kalimantan.',
                 'Status'          => 'Aktif',
             ]
         );
-        $sewa8Obj = Sewa::where('Id_Pemilik', $pemilik8Obj->Id_Pemilik)->where('Id_Kios', $kios8->Id_Kios)->first();
+        $sewaElsyaObj = Sewa::where('Id_Pemilik', $pemilikElsyaObj->Id_Pemilik)->where('Id_Kios', $kiosElsya->Id_Kios)->first();
 
-        $t8Date = Carbon::now()->startOfMonth();
-        $t8 = Tagihan::updateOrInsert(
-            ['Id_Sewa' => $sewa8Obj->Id_Sewa, 'Periode' => $t8Date->format('Y-m')],
-            [
-                'Jatuh_Tempo'      => $t8Date->copy()->day(12)->toDateString(),
-                'Tarif_Sewa'       => 600000.00,
-                'Hutang_Tunggakan' => 0.00,
-                'Total_Tagihan'    => 600000.00,
-                'Sisa_Tagihan'     => 600000.00,
-                'Status_Tagihan'   => 'Menunggu Verifikasi',
-            ]
-        );
-        $t8Obj = Tagihan::where('Id_Sewa', $sewa8Obj->Id_Sewa)->where('Periode', $t8Date->format('Y-m'))->first();
+        // Tagihan September 2026
+        $tElsyaSep = Tagihan::create([
+            'Id_Sewa' => $sewaElsyaObj->Id_Sewa,
+            'Periode' => '2026-09',
+            'Jatuh_Tempo' => '2026-09-12',
+            'Tarif_Sewa' => 1250000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan' => 1250000,
+            'Sisa_Tagihan' => 1250000,
+            'Status_Tagihan' => 'Menunggu Verifikasi',
+        ]);
 
-        // Payment with Rejected Note + Tenant Sanggahan Rebuttal attached
-        $payDate8 = Carbon::now('Asia/Makassar')->subDays(2)->setTime(16, 10, 0);
-        $payDateTime8 = $payDate8->copy()->setTimezone('UTC');
-        Pembayaran::updateOrInsert(
-            ['Id_Tagihan' => $t8Obj->Id_Tagihan],
-            [
-                'Tanggal_Bayar'         => $payDate8->toDateString(),
-                'Total_Bayar'           => 600000.00,
-                'Metode_Bayar'          => 'Transfer',
-                'Bukti_Pembayaran'      => 'storage/bukti/sim_bukti_buram_rejected.png',
-                'Verifikasi_Pembayaran' => 'Menunggu',
-                'catatan_admin'         => 'Bukti pembayaran sebelumnya ditolak: foto struk ATM terpotong dan nomor referensi tidak terbaca.',
-                'teks_sanggahan'        => 'Mohon maaf, berikut saya lampirkan bukti mutasi mobile banking yang jelas dan berstempel lunas. Mohon verifikasi ulang.',
-                'bukti_sanggahan'       => 'storage/bukti/sim_sanggahan_clear_mbanking.png',
-                'created_at'            => $payDateTime8->toDateTimeString(),
-                'updated_at'            => $payDateTime8->toDateTimeString(),
-            ]
-        );
+        // Struk lama yang buram (dibuat dengan mode blurry)
+        $strukElsyaBuram = ReceiptGeneratorHelper::make('struk_bca_elsya_buram.png', 'BCA', 'Elsya Nur Aulia H', 1250000, '04 Sep 2026 14:10 WITA', 'BCA-TX20260904-4412', 'Sewa Kios G2-04', true);
 
+        // Struk baru lampiran sanggahan: Struk Fisik Mesin ATM BCA yang tajam
+        $strukAtmElsyaJelas = ReceiptGeneratorHelper::make('struk_atm_elsya_jelas.png', 'ATM', 'Elsya Nur Aulia Handayani', 1250000, '05/09/2026 09:42', 'ATM-BCA-5519283', 'Sewa Kios G2-04');
 
-        // -------------------------------------------------------------------------
-        // PERSON 9: YAEL - TENANT F "CONGLOMERATE MULTI-KIOSK TENANT (CROSS-FLOOR)"
-        // -------------------------------------------------------------------------
-        $user9 = User::updateOrInsert(
-            ['Username' => 'sim_tenant_multikios'],
-            [
-                'Id_roles'     => 2,
-                'Password'     => $this->tenantPasswordHash,
-                'sub_role'     => 'tenant',
-                'status_aktif' => 1,
-                'nama_lengkap' => 'Yael (Grosir Tekstil & Fashion)',
-                'email'        => 'yael.multikios@bunsay.id',
-            ]
-        );
-        $user9Obj = User::where('Username', 'sim_tenant_multikios')->first();
+        Pembayaran::create([
+            'Id_Tagihan' => $tElsyaSep->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-09-04',
+            'Total_Bayar' => 1250000,
+            'Metode_Bayar' => 'Transfer',
+            'Bukti_Pembayaran' => $strukElsyaBuram,
+            'Verifikasi_Pembayaran' => 'Menunggu',
+            'catatan_admin' => 'Foto bukti sebelumnya buram dan nominal terpotong.',
+            'teks_sanggahan' => 'Mohon maaf bukti sebelumnya buram karena kamera hp. Ini saya lampirkan foto struk fisik ATM BCA di lobi plaza yang sangat jelas.',
+            'bukti_sanggahan' => $strukAtmElsyaJelas,
+            'created_at' => Carbon::parse('2026-09-04 14:15:00'),
+            'updated_at' => Carbon::parse('2026-09-05 10:00:00'),
+        ]);
 
-        $pemilik9 = Pemilik::updateOrInsert(
-            ['Id_User' => $user9Obj->Id_user],
-            [
-                'Nama'            => 'Yael',
-                'No_Telepon'      => '081277889900',
-                'No_KTP'          => '6471012504790008',
-                'Alamat'          => 'Kompleks Ruko Sentra Timur Balikpapan',
-                'izinkan_cicilan' => false,
-            ]
-        );
-        $pemilik9Obj = Pemilik::where('Id_User', $user9Obj->Id_user)->first();
-
-        $multiKiosks = [
-            ['no' => 'F1-15', 'lantai' => 1, 'ukuran' => '5x6 m²', 'tarif' => 1000000.00, 'nama' => 'Grosir Tekstil Utama (Lantai 1)'],
-            ['no' => 'F2-08', 'lantai' => 2, 'ukuran' => '4x4 m²', 'tarif' => 800000.00,  'nama' => 'Showroom Pakaian Wanita (Lantai 2)'],
-            ['no' => 'G2-11', 'lantai' => 2, 'ukuran' => '3x4 m²', 'tarif' => 600000.00,  'nama' => 'Gudang & Aksesoris Busana (Lantai 2)'],
-        ];
-
-        foreach ($multiKiosks as $mk) {
-            $kObj = $getOrCreateKiosk($mk['no'], $mk['lantai'], $mk['ukuran'], 'Terisi');
-            $kObj->update(['Status' => 'Terisi']);
-
-            $startDate9 = Carbon::now()->subMonths(2)->startOfMonth();
-            $sewa9 = Sewa::updateOrInsert(
-                ['Id_Pemilik' => $pemilik9Obj->Id_Pemilik, 'Id_Kios' => $kObj->Id_Kios],
-                [
-                    'Jenis_Usaha'     => $mk['nama'],
-                    'Tanggal_Mulai'   => $startDate9->toDateString(),
-                    'Tanggal_Selesai' => $startDate9->copy()->addYears(2)->toDateString(),
-                    'Tarif_Bulanan'   => $mk['tarif'],
-                    'Keterangan'      => "Unit multi-kios pemilik Yael ({$mk['no']}).",
-                    'Status'          => 'Aktif',
-                ]
-            );
-            $sewa9Obj = Sewa::where('Id_Pemilik', $pemilik9Obj->Id_Pemilik)->where('Id_Kios', $kObj->Id_Kios)->first();
-
-            // Create current month invoice
-            $t9 = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa9Obj->Id_Sewa, 'Periode' => Carbon::now()->format('Y-m')],
-                [
-                    'Jatuh_Tempo'      => Carbon::now()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => $mk['tarif'],
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => $mk['tarif'],
-                    'Sisa_Tagihan'     => 0.00,
-                    'Status_Tagihan'   => 'Lunas',
-                ]
-            );
-            $t9Obj = Tagihan::where('Id_Sewa', $sewa9Obj->Id_Sewa)->where('Periode', Carbon::now()->format('Y-m'))->first();
-
-            $payDate9 = Carbon::now('Asia/Makassar')->subDays(5)->setTime(13, 25, 0);
-            $payDateTime9 = $payDate9->copy()->setTimezone('UTC');
-            Pembayaran::updateOrInsert(
-                ['Id_Tagihan' => $t9Obj->Id_Tagihan],
-                [
-                    'Tanggal_Bayar'         => $payDate9->toDateString(),
-                    'Total_Bayar'           => $mk['tarif'],
-                    'Metode_Bayar'          => 'Transfer',
-                    'Bukti_Pembayaran'      => "storage/bukti/sim_multikios_{$mk['no']}.png",
-                    'Verifikasi_Pembayaran' => 'Diterima',
-                    'catatan_admin'         => "Pembayaran lunas unit {$mk['no']}.",
-                    'created_at'            => $payDateTime9->toDateTimeString(),
-                    'updated_at'            => $payDateTime9->toDateTimeString(),
-                ]
-            );
-        }
-
-
-        // -------------------------------------------------------------------------
-        // PERSON 10: CLARA - TENANT G "ARCHIVED LEASE (SOFT-DELETE) & STRESS 50 INVOICES"
-        // -------------------------------------------------------------------------
-        // Account 10A: Soft-deleted / Completed Lease Tenant
-        $user10A = User::updateOrInsert(
-            ['Username' => 'sim_tenant_selesai'],
-            [
-                'Id_roles'     => 2,
-                'Password'     => $this->tenantPasswordHash,
-                'sub_role'     => 'tenant',
-                'status_aktif' => 1,
-                'nama_lengkap' => 'Clara (Eks Tenant Aksesoris)',
-                'email'        => 'clara.selesai@bunsay.id',
-            ]
-        );
-        $user10AObj = User::where('Username', 'sim_tenant_selesai')->first();
-
-        $pemilik10A = Pemilik::updateOrInsert(
-            ['Id_User' => $user10AObj->Id_user],
-            [
-                'Nama'            => 'Clara',
-                'No_Telepon'      => '081366778899',
-                'No_KTP'          => '6471010307770009',
-                'Alamat'          => 'Balikpapan Barat (Eks Tenant Bunsay)',
-                'izinkan_cicilan' => false,
-            ]
-        );
-        $pemilik10AObj = Pemilik::where('Id_User', $user10AObj->Id_user)->first();
-
-        $kios10A = $getOrCreateKiosk('H1-20', 1, '3x4 m²', 'Kosong');
-        $kios10A->update(['Status' => 'Kosong']); // Business rule: Sewa Selesai => Kios Kosong!
-
-        $sewa10A = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik10AObj->Id_Pemilik, 'Id_Kios' => $kios10A->Id_Kios],
-            [
-                'Jenis_Usaha'     => 'Aksesoris & Souvenir Tradisional (Masa Sewa Berakhir)',
-                'Tanggal_Mulai'   => Carbon::now()->subYear()->toDateString(),
-                'Tanggal_Selesai' => Carbon::now()->subMonths(1)->toDateString(),
-                'Tarif_Bulanan'   => 500000.00,
-                'Keterangan'      => 'Masa sewa telah selesai dan diarsipkan (Soft-deleted). Kios kembali Kosong.',
-                'Status'          => 'Selesai',
-            ]
-        );
-        $sewa10AObj = Sewa::where('Id_Pemilik', $pemilik10AObj->Id_Pemilik)->where('Id_Kios', $kios10A->Id_Kios)->first();
-
-        // Archived historical bills remain intact
-        for ($m = 1; $m <= 3; $m++) {
-            $mDate = Carbon::now()->subMonths($m + 1);
-            $t = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa10AObj->Id_Sewa, 'Periode' => $mDate->format('Y-m')],
-                [
-                    'Jatuh_Tempo'      => $mDate->copy()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => 500000.00,
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => 500000.00,
-                    'Sisa_Tagihan'     => 0.00,
-                    'Status_Tagihan'   => 'Lunas',
-                ]
-            );
-            $tObj = Tagihan::where('Id_Sewa', $sewa10AObj->Id_Sewa)->where('Periode', $mDate->format('Y-m'))->first();
-            $payDateTime10A = Carbon::create($mDate->year, $mDate->month, 10, 9, 15, 0, 'Asia/Makassar')->setTimezone('UTC');
-            Pembayaran::updateOrInsert(
-                ['Id_Tagihan' => $tObj->Id_Tagihan],
-                [
-                    'Tanggal_Bayar'         => $mDate->copy()->day(10)->toDateString(),
-                    'Total_Bayar'           => 500000.00,
-                    'Metode_Bayar'          => 'Tunai',
-                    'Bukti_Pembayaran'      => 'storage/bukti/sim_selesai_archived_' . $m . '.png',
-                    'Verifikasi_Pembayaran' => 'Diterima',
-                    'created_at'            => $payDateTime10A->toDateTimeString(),
-                    'updated_at'            => $payDateTime10A->toDateTimeString(),
-                ]
-            );
-        }
-
-        // Account 10B: Clara Stress Test 50 Invoices
-        $user10B = User::updateOrInsert(
-            ['Username' => 'sim_tenant_stress50'],
-            [
-                'Id_roles'     => 2,
-                'Password'     => $this->tenantPasswordHash,
-                'sub_role'     => 'tenant',
-                'status_aktif' => 1,
-                'nama_lengkap' => 'Clara (CV Megah 50 Invoices)',
-                'email'        => 'clara.stress@bunsay.id',
-            ]
-        );
-        $user10BObj = User::where('Username', 'sim_tenant_stress50')->first();
-
-        $pemilik10B = Pemilik::updateOrInsert(
-            ['Id_User' => $user10BObj->Id_user],
-            [
-                'Nama'            => 'Clara (CV Megah)',
-                'No_Telepon'      => '081211223344',
-                'No_KTP'          => '6471019908700010',
-                'Alamat'          => 'Kavling Utama Lantai 1 Blok G',
-                'izinkan_cicilan' => false,
-            ]
-        );
-        $pemilik10BObj = Pemilik::where('Id_User', $user10BObj->Id_user)->first();
-
-        $kios10B = $getOrCreateKiosk('G1-01', 1, '5x6 m²', 'Terisi');
-        $kios10B->update(['Status' => 'Terisi']);
-
-        $startDate10B = Carbon::now()->subMonths(49)->startOfMonth();
-        $sewa10B = Sewa::updateOrInsert(
-            ['Id_Pemilik' => $pemilik10BObj->Id_Pemilik, 'Id_Kios' => $kios10B->Id_Kios],
-            [
-                'Jenis_Usaha'     => 'Sentra Kerajinan & Cenderamata Legendaris Kaltim (Stress Test 50 Invoices)',
-                'Tanggal_Mulai'   => $startDate10B->toDateString(),
-                'Tanggal_Selesai' => Carbon::now()->addYears(3)->toDateString(),
-                'Tarif_Bulanan'   => 1200000.00,
-                'Keterangan'      => 'Sewa aktif jangka panjang untuk stress testing pagination dan agregasi keuangan.',
-                'Status'          => 'Aktif',
-            ]
-        );
-        $sewa10BObj = Sewa::where('Id_Pemilik', $pemilik10BObj->Id_Pemilik)->where('Id_Kios', $kios10B->Id_Kios)->first();
-
-        for ($i = 0; $i < 50; $i++) {
-            $dt = $startDate10B->copy()->addMonths($i);
-            $isCurrent = ($i === 49);
-
-            $t = Tagihan::updateOrInsert(
-                ['Id_Sewa' => $sewa10BObj->Id_Sewa, 'Periode' => $dt->format('Y-m')],
-                [
-                    'Jatuh_Tempo'      => $dt->copy()->day(12)->toDateString(),
-                    'Tarif_Sewa'       => 1200000.00,
-                    'Hutang_Tunggakan' => 0.00,
-                    'Total_Tagihan'    => 1200000.00,
-                    'Sisa_Tagihan'     => $isCurrent ? 1200000.00 : 0.00,
-                    'Status_Tagihan'   => $isCurrent ? 'Belum Bayar' : 'Lunas',
-                ]
-            );
-            $tObj = Tagihan::where('Id_Sewa', $sewa10BObj->Id_Sewa)->where('Periode', $dt->format('Y-m'))->first();
-
-            if (!$isCurrent) {
-                $payMethod = ($i % 3 === 0) ? 'Midtrans' : (($i % 2 === 0) ? 'Transfer' : 'Tunai');
-                $payDateTime10B = Carbon::create($dt->year, $dt->month, 7, rand(9, 16), rand(10, 50), 0, 'Asia/Makassar')->setTimezone('UTC');
-                Pembayaran::updateOrInsert(
-                    ['Id_Tagihan' => $tObj->Id_Tagihan],
-                    [
-                        'Tanggal_Bayar'         => $dt->copy()->day(7)->toDateString(),
-                        'Total_Bayar'           => 1200000.00,
-                        'Metode_Bayar'          => $payMethod,
-                        'Bukti_Pembayaran'      => "storage/bukti/stress50_receipt_{$i}.png",
-                        'Verifikasi_Pembayaran' => 'Diterima',
-                        'catatan_admin'         => 'Settled automatically',
-                        'created_at'            => $payDateTime10B->toDateTimeString(),
-                        'updated_at'            => $payDateTime10B->toDateTimeString(),
-                    ]
-                );
+        // =========================================================================
+        // BAGIAN 3: DOKUMEN HUKUM SEWA KIOS
+        // =========================================================================
+        $this->command->info('📄 Menghasilkan Surat Perjanjian Sewa (SP & PPJB) untuk seluruh tenant...');
+        foreach ([$pemilikClaraObj, $pemilikDawwasObj, $pemilikIndrianiObj, $pemilikTikaObj, $pemilikDhiaObj, $pemilikYaelObj, $pemilikElsyaObj] as $idx => $pem) {
+            $sewa = Sewa::where('Id_Pemilik', $pem->Id_Pemilik)->first();
+            if ($sewa) {
+                Dokumen::create([
+                    'Id_Pemilik'     => $pem->Id_Pemilik,
+                    'Id_Kios'        => $sewa->Id_Kios,
+                    'Jenis_Dokumen'  => 'SP',
+                    'Nomor_Dokumen'  => sprintf('SP/PLAZA-BUNSAY/2026/%04d', $idx + 1),
+                    'Tanggal'        => $sewa->Tanggal_Mulai,
+                ]);
+                Dokumen::create([
+                    'Id_Pemilik'     => $pem->Id_Pemilik,
+                    'Id_Kios'        => $sewa->Id_Kios,
+                    'Jenis_Dokumen'  => 'PPJB',
+                    'Nomor_Dokumen'  => sprintf('PPJB/PLAZA-BUNSAY/2026/%04d', $idx + 1),
+                    'Tanggal'        => Carbon::parse($sewa->Tanggal_Mulai)->addDays(3)->toDateString(),
+                ]);
             }
         }
 
-
         // =========================================================================
-        // SECTION 3: REAL-TIME NOTIFICATIONS & SYSTEM AUDIT ACTIVITY LOGS
+        // BAGIAN 4: NOTIFIKASI DINAMIS & LOG AKTIVITAS AUDIT
         // =========================================================================
-        $this->command->info('🔔 Seeding Notifications & Audit Trail Logs...');
+        $this->command->info('🔔 Mengirimkan notifikasi sistem dan mencatat activity log...');
 
-        // Admin Notifications
+        // Notifikasi Admin
         Notification::send(
             'admin',
             null,
             'Antrean Bukti Transfer Menunggu Verifikasi',
-            'Terdapat bukti transfer dari tenant Elsya yang mengajukan sanggahan dan menunggu verifikasi loket.',
+            'Terdapat bukti transfer dari Yael Crisyella Harahap (Kios F2-15) sebesar Rp 1.500.000 menunggu verifikasi loket.',
+            'info',
+            '/admin/verifikasi-bukti'
+        );
+
+        Notification::send(
+            'admin',
+            null,
+            'Sanggahan Pembayaran Masuk',
+            'Tenant Elsya Nur Aulia (Kios G2-04) mengajukan sanggahan dengan melampirkan foto struk fisik ATM BCA baru.',
             'warning',
             '/admin/verifikasi-bukti'
         );
@@ -987,57 +832,65 @@ class SimulationScenarioSeeder extends Seeder
         Notification::send(
             'admin',
             null,
-            'Laporan Retribusi Bulanan Siap Ekspor',
-            'Rekapitulasi keuangan seluruh blok kios telah dihitung dan siap diunduh dalam format Excel (.xlsx).',
+            'Laporan Keuangan September 2026 Tersedia',
+            'Rekapitulasi tagihan gedung dan setoran tenant bulan September 2026 siap diekspor ke format Excel.',
             'success',
             '/admin/ekspor'
         );
 
-        // Tenant Notifications
+        // Notifikasi Tenant
         Notification::send(
             'tenant',
-            $user5Obj->Id_user,
-            'Peringatan Jatuh Tempo Pembayaran Kios B1-05',
-            'Yth. Tika, tagihan sewa Kios B1-05 telah melewati tanggal 12. Harap segera lakukan pembayaran sebelum pemutusan listrik.',
+            $userTikaObj->Id_user,
+            'Surat Peringatan 1 (SP-1) Keterlambatan Sewa',
+            'Yth. Tika Mila Wahyuni, tagihan sewa Kios D2-08 bulan Agustus 2026 telah melewati jatuh tempo. Harap segera melunasi kewajiban.',
             'danger',
             '/tenant/pembayaran'
         );
 
         Notification::send(
             'tenant',
-            $user4AObj->Id_user,
-            'Pembayaran Sewa Terverifikasi Lunas',
-            'Terima kasih! Pembayaran sewa Kios A1-01 bulan berjalan telah berhasil diverifikasi.',
-            'success',
+            $userDhiaObj->Id_user,
+            'Peringatan Kritis Keterlambatan Sewa (SP-2)',
+            'Yth. Dhia Salsabila Raihan, terdapat tunggakan sewa Kios E2-03 selama 2 bulan berturut-turut. Mohon segera hubungi kantor pengelola.',
+            'danger',
+            '/tenant/pembayaran'
+        );
+
+        Notification::send(
+            'tenant',
+            $userIndrianiObj->Id_user,
+            'Pembayaran Cicilan Berhasil Dicatat',
+            'Pembayaran cicilan Rp 700.000 untuk Kios C1-12 telah diverifikasi. Sisa tagihan Anda adalah Rp 900.000.',
+            'info',
             '/tenant/histori'
         );
 
         // Activity Logs
         $admPatra = User::where('Username', 'sim_superadmin')->first();
         $admArman = User::where('Username', 'sim_admin_kasir')->first();
-        $admRifa  = User::where('Username', 'sim_admin_petugas')->first();
+        $admRifa  = User::where('Username', 'sim_admin_kios')->first();
 
-        $actions = [
-            ['id_user' => $admPatra?->Id_user ?? 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'User', 'aksi' => 'Tambah Staf', 'deskripsi' => 'Superadmin Patra mendaftarkan akun sim_admin_kasir (Arman) dengan hak akses loket verifikasi.'],
-            ['id_user' => $admArman?->Id_user ?? 2, 'username' => 'sim_admin_kasir', 'role' => 'kasir', 'modul' => 'Pembayaran', 'aksi' => 'Input Setoran Tunai', 'deskripsi' => 'Kasir Arman menerima setoran tunai sebesar Rp 750.000 untuk Kios C1-12 (Dhia).'],
-            ['id_user' => $admRifa?->Id_user ?? 3,  'username' => 'sim_admin_petugas', 'role' => 'petugas_kios', 'modul' => 'Kios', 'aksi' => 'Update Status Kios', 'deskripsi' => 'Petugas Rifa memperbarui status Kios A1-01 menjadi Terisi.'],
-            ['id_user' => $admPatra?->Id_user ?? 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'Sewa', 'aksi' => 'Akhiri Sewa', 'deskripsi' => 'Superadmin Patra mengakhiri kontrak sewa Kios H1-20 (Clara).'],
-            ['id_user' => $admRifa?->Id_user ?? 3,  'username' => 'sim_admin_petugas', 'role' => 'petugas_kios', 'modul' => 'Laporan', 'aksi' => 'Ekspor Rekapitulasi', 'deskripsi' => 'Petugas Rifa mengunduh laporan rekapitulasi pembayaran semester pertama.'],
+        $logs = [
+            ['id_user' => $admPatra?->Id_user ?? 1, 'username' => 'sim_superadmin', 'role' => 'superadmin', 'modul' => 'User', 'aksi' => 'Inisialisasi Sistem', 'deskripsi' => 'Superadmin Patra Ananda melakukan inisialisasi master data tenant dan kiosk Plaza Kebun Sayur.'],
+            ['id_user' => $admArman?->Id_user ?? 2, 'username' => 'sim_admin_kasir', 'role' => 'kasir', 'modul' => 'Pembayaran', 'aksi' => 'Verifikasi Cicilan', 'deskripsi' => 'Kasir Armansyah memverifikasi cicilan Rp 700.000 untuk Kios C1-12 (Indriani Anwar).'],
+            ['id_user' => $admRifa?->Id_user ?? 3,  'username' => 'sim_admin_kios', 'role' => 'petugas_kios', 'modul' => 'Kios', 'aksi' => 'Update Status Kios', 'deskripsi' => 'Petugas Rifa memperbarui status Kios A1-01 dan A1-02 (Clara Uenike) menjadi Terisi.'],
+            ['id_user' => $admArman?->Id_user ?? 2, 'username' => 'sim_admin_kasir', 'role' => 'kasir', 'modul' => 'Pembayaran', 'aksi' => 'Penolakan Bukti Transfer', 'deskripsi' => 'Kasir Armansyah menolak bukti transfer Kios G2-04 (Elsya Nur Aulia) dikarenakan foto buram.'],
         ];
 
-        foreach ($actions as $act) {
+        foreach ($logs as $lg) {
             ActivityLog::create([
-                'id_user'    => $act['id_user'],
-                'username'   => $act['username'],
-                'role'       => $act['role'],
-                'modul'      => $act['modul'],
-                'aksi'       => $act['aksi'],
-                'deskripsi'  => $act['deskripsi'],
+                'id_user'    => $lg['id_user'],
+                'username'   => $lg['username'],
+                'role'       => $lg['role'],
+                'modul'      => $lg['modul'],
+                'aksi'       => $lg['aksi'],
+                'deskripsi'  => $lg['deskripsi'],
                 'ip_address' => '127.0.0.1',
-                'created_at' => now()->subHours(rand(1, 48)),
+                'created_at' => now()->subHours(rand(2, 48)),
             ]);
         }
 
-        $this->command->info('✅ [SIMULATION SEEDER] Finished successfully! All 10 simulation participants and edge scenarios are ready for testing.');
+        $this->command->info('✅ [SIMULATION SEEDER] Selesai! Seluruh 10 akun anggota tim, data kios, foto struk bank asli, dan skenario tagihan aktif siap digunakan.');
     }
 }

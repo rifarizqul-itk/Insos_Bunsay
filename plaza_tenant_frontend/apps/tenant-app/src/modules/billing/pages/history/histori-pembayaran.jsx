@@ -32,6 +32,7 @@ function HistoriPembayaran() {
   const [loading, setLoading] = useState(true);
   const [selectedMetode, setSelectedMetode] = useState('Semua');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [sanggahanModalItem, setSanggahanModalItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
