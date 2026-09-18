@@ -10,5 +10,6 @@
   },
   "files.associations": {
     "*.css": "tailwindcss"
-  }
+  },
+  "php.validate.executablePath": "/usr/bin/php"
 }

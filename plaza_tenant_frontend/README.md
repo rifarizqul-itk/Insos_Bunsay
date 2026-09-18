@@ -30,10 +30,7 @@ plaza_tenant_frontend/
 │   └── shared-core/           # ⚡ Shared Business Logic & Utilities
 │       └── src/               # HTTP Client, Auth Hydration, JWT & Cookie Handler, FIFO Allocator, Excel Export
 │
-├── database/
-│   └── bunsay_erd.dbml.md     # 📊 Database Diagram (ERD v6 - 11 Tabel SQL)
-├── CONTEXT/                   # 📁 Data survei kios legalitas, proposal inovasi sosial, & notulensi rapat
-└── GEMINI.md                  # 📜 Dokumen Spesifikasi Handover Resmi (Single Source of Truth)
+└── package.json               # 📦 Monorepo Workspaces Configuration
 ```
 
 ---
@@ -98,6 +95,7 @@ Seluruh antarmuka mengacu pada filosofi estetika **Modern Civic Precision**:
 
 ## 📎 Sumber Referensi & Dokumentasi Lengkap
 
-- 📜 **[GEMINI.md](GEMINI.md)** — **Single Source of Truth Utama** berisi arsitektur lengkap, 11 tabel SQL, dan aturan bisnis.
+- 📖 **[Master README](../README.md)** — Dokumentasi utama proyek dan ringkasan arsitektur.
 - 🌾 **[README_SEEDER.md](../plaza_tenant_backend/README_SEEDER.md)** — Panduan akun login testing (Admin & Tenant).
-- 📊 **[bunsay_erd.dbml.md](database/bunsay_erd.dbml.md)** — Kode DBML skema database 11 tabel untuk diimpor ke *dbdiagram.io*.
+- 📊 **[bunsay_erd.dbml.md](../docs/database/bunsay_erd.dbml.md)** — Kode DBML skema database 11 tabel untuk diimpor ke *dbdiagram.io*.
+- 🔄 **[ALUR_KERJA_BACKEND.md](../ALUR_KERJA_BACKEND.md)** — Alur komunikasi REST API dan integrasi frontend.

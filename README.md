@@ -30,7 +30,12 @@ Sistem dibangun menggunakan arsitektur **Frontend Monorepo (npm workspaces)** de
 ```
 Insos_Bunsay/
 ├── README.md                      # 📖 Master Documentation (File ini)
-├── README_SEEDER.md               # 📋 Panduan Kredensial Login (Admin & 886 Tenant Riil)
+├── ALUR_KERJA_BACKEND.md          # 🔄 Diagram Alur MVC REST API & Integrasi Frontend
+├── SIMULATION_TEAM_GUIDE_AND_SCENARIOS.md # 🧪 Panduan Skenario Simulasi 10 Orang
+├── SKEMA DATABASE.md              # 📑 Panduan Mapping Kolom Excel ke Database
+├── docs/                          # 📁 Dokumentasi & Konteks Tambahan
+│   ├── database/                  # 📊 Skema ERD (DBML) & SQL Dump
+│   └── context/                   # 📜 Proposal Inovasi Sosial, Notulensi & Data Kios
 ├── .github/workflows/deploy.yml   # ⚙️ CI/CD Deployment Workflow (GitHub Actions)
 │
 ├── plaza_tenant_frontend/         # 🎨 Frontend Monorepo (React 18 + Vite 8 + Tailwind v4)
@@ -40,12 +45,10 @@ Insos_Bunsay/
 │   ├── packages/
 │   │   ├── shared-ui/             # 🧩 Shared Civic Design System (WCAG 2.2 AA compliant)
 │   │   └── shared-core/           # ⚡ Shared Business Logic (FIFO Allocator, HTTP Client, ExcelJS)
-│   ├── database/
-│   │   └── bunsay_erd.dbml.md     # 📊 Database Diagram Markup Language (ERD v6 - 11 Tabel)
-│   ├── GEMINI.md                  # 📜 Spesifikasi Teknis & Single Source of Truth Utama
 │   └── package.json               # 📦 Monorepo Workspaces Configuration
 │
 └── plaza_tenant_backend/          # ⚙️ Backend RESTful API (Laravel 11 + PHP 8.3 + MySQL 8.0)
+    ├── README_SEEDER.md           # 📋 Panduan Kredensial Login (Admin & 886 Tenant Riil)
     ├── app/
     │   ├── Http/Controllers/      # 🎯 12 API Controllers (Auth, Tagihan, Pembayaran, Kios, Staf, dll.)
     │   ├── Http/Middleware/       # 🛡️ EnsureAdminRole & Sanctum Authentication
@@ -128,7 +131,7 @@ npm run dev:admin
 
 ## 🔑 Kredensial Login Pengujian (*Test Credentials*)
 
-> 📖 **Daftar lengkap 886 akun tenant riil:** Lihat [README_SEEDER.md](README_SEEDER.md).
+> 📖 **Daftar lengkap 886 akun tenant riil:** Lihat [README_SEEDER.md](plaza_tenant_backend/README_SEEDER.md).
 
 ### 1. Akun Pengelola (*Admin Portal* — `http://localhost:5174`)
 Seluruh akun pengelola menggunakan kata sandi: **`admin123`**
@@ -201,11 +204,13 @@ npm run build
 
 ## 📚 Tautan Dokumentasi Terkait
 
-* 📜 **[GEMINI.md](plaza_tenant_frontend/GEMINI.md)** — Spesifikasi Teknis Handover & Single Source of Truth Utama
-* 📋 **[README_SEEDER.md](README_SEEDER.md)** — Panduan Kredensial Database Seeder & 886 Tenant Riil
+* 📋 **[README_SEEDER.md](plaza_tenant_backend/README_SEEDER.md)** — Panduan Kredensial Database Seeder & 886 Tenant Riil
 * ⚙️ **[README Backend](plaza_tenant_backend/README.md)** — Panduan Khusus Pengembang Backend & Rute API
 * 🎨 **[README Frontend](plaza_tenant_frontend/README.md)** — Panduan Khusus Pengembang Frontend & Arsitektur Komponen
-* 📊 **[bunsay_erd.dbml.md](plaza_tenant_frontend/database/bunsay_erd.dbml.md)** — Diagram Skema Database ERD (11 Tabel)
+* 🔄 **[ALUR_KERJA_BACKEND.md](ALUR_KERJA_BACKEND.md)** — Diagram Alur REST API MVC & Integrasi Frontend
+* 🧪 **[SIMULATION_TEAM_GUIDE_AND_SCENARIOS.md](SIMULATION_TEAM_GUIDE_AND_SCENARIOS.md)** — Matriks Pengujian Skenario Tim 10 Orang
+* 📑 **[SKEMA DATABASE.md](SKEMA DATABASE.md)** — Panduan Input Mapping Excel ke Database
+* 📊 **[bunsay_erd.dbml.md](docs/database/bunsay_erd.dbml.md)** — Diagram Skema Database ERD (11 Tabel)
 
 ---
 

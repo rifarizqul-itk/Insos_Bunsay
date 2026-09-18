@@ -18,9 +18,17 @@ use Laravel\Sanctum\PersonalAccessToken;
 class AuthController extends Controller
 {
     /**
-     * Duration of the HttpOnly Refresh Cookie in minutes (7 days = 10080 minutes).
+     * Duration of the HttpOnly Refresh Cookie in days.
+     * Configurable via environment variables with long-lived rolling defaults:
+     * - Tenants: 180 days rolling (effectively forever for active kiosk tenants)
+     * - Admins: 90 days rolling (convenient long-lived sessions for internal operations)
      */
-    private const REFRESH_COOKIE_MINUTES = 43200; // 30 days
+    private function getRefreshDays(bool $isAdmin): int
+    {
+        return $isAdmin
+            ? (int) env('AUTH_ADMIN_REFRESH_DAYS', 90)
+            : (int) env('AUTH_TENANT_REFRESH_DAYS', 180);
+    }
 
     /**
      * Login handler for Tenant Portal & Admin Console.
@@ -104,8 +112,10 @@ class AuthController extends Controller
         // 1. Create Access Token for In-Memory storage (24 hours TTL for active testing stability)
         $accessToken = $user->createToken('access_token', ['*'], now()->addHours(24))->plainTextToken;
 
-        // 2. Create Refresh Token instance in DB (30 days TTL)
-        $refreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30));
+        // 2. Create Refresh Token instance in DB with rolling TTL
+        $cookieDays = $this->getRefreshDays($portalScope === 'admin');
+        $cookieMinutes = $cookieDays * 24 * 60;
+        $refreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays($cookieDays));
 
         // 3. Construct HttpOnly Host-Only Secure Cookie
         $cookieName = ($portalScope === 'admin') ? 'bunsay_admin_rt' : 'bunsay_tenant_rt';
@@ -115,7 +125,7 @@ class AuthController extends Controller
         $refreshCookie = cookie(
             $cookieName,
             $refreshTokenObj->plainTextToken,
-            self::REFRESH_COOKIE_MINUTES,
+            $cookieMinutes,
             '/',
             null,
             $isSecure,
@@ -150,7 +160,6 @@ class AuthController extends Controller
 
         return response()->json([
             'accessToken' => $accessToken,
-            'refreshToken' => $refreshTokenObj->plainTextToken,
             'user' => [
                 'Id_user'      => $user->Id_user,
                 'Username'     => $user->Username,
@@ -214,14 +223,16 @@ class AuthController extends Controller
         // Rotate: invalidate the used refresh token to prevent replay attacks
         $tokenInstance->delete();
 
-        // Issue new Refresh Token (7 days) and send as rotated HttpOnly Cookie
+        // Issue new Refresh Token with rolling TTL and send as rotated HttpOnly Cookie
+        $cookieDays = $this->getRefreshDays($isAdminScope);
+        $cookieMinutes = $cookieDays * 24 * 60;
         $isSecure = true; // Always secure for HTTPS ngrok cross-site cookies
         $sameSite = 'none';
-        $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30));
+        $newRefreshTokenObj = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays($cookieDays));
         $newRefreshCookie = cookie(
             $cookieName,
             $newRefreshTokenObj->plainTextToken,
-            self::REFRESH_COOKIE_MINUTES,
+            $cookieMinutes,
             '/',
             null,
             $isSecure,
@@ -245,7 +256,6 @@ class AuthController extends Controller
 
         return response()->json([
             'accessToken' => $newAccessToken,
-            'refreshToken' => $newRefreshTokenObj->plainTextToken,
             'user' => [
                 'Id_user'      => $user->Id_user,
                 'Username'     => $user->Username,

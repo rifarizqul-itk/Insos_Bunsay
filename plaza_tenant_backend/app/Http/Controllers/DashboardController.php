@@ -21,8 +21,16 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as total, SUM(CASE WHEN Status = "Terisi" THEN 1 ELSE 0 END) as terisi, SUM(CASE WHEN Status = "Kosong" THEN 1 ELSE 0 END) as kosong')
             ->first();
 
+        $currentPeriod = now()->format('Y-m');
+
         $tagihanStats = DB::table('tagihan')
-            ->selectRaw('SUM(CASE WHEN Status_Tagihan = "Belum Bayar" THEN 1 ELSE 0 END) as pending, SUM(CASE WHEN Status_Tagihan = "Menunggu Verifikasi" THEN 1 ELSE 0 END) as menunggu')
+            ->join('sewa', 'tagihan.Id_Sewa', '=', 'sewa.Id_Sewa')
+            ->where('sewa.Status', 'Aktif')
+            ->where('tagihan.Periode', $currentPeriod)
+            ->selectRaw('
+                COUNT(DISTINCT CASE WHEN tagihan.Status_Tagihan = "Belum Bayar" THEN tagihan.Id_Sewa END) as pending,
+                COUNT(DISTINCT CASE WHEN tagihan.Status_Tagihan = "Menunggu Verifikasi" THEN tagihan.Id_Sewa END) as menunggu
+            ')
             ->first();
 
         $pembayaranToday = DB::table('pembayaran')
@@ -77,13 +85,51 @@ class DashboardController extends Controller
         
         $totalTunggakanLalu = max(0.0, $totalKewajibanSemua - $tarifBulanIni);
 
+        // Aturan Bisnis Mitra (Revisi 5 September 2026):
+        // - Tenant yang menunggak (ada tagihan lewat jatuh tempo atau tunggakan lalu > 0) -> boleh mencicil.
+        // - Tenant yang belum menunggak (hanya tagihan berjalan belum lewat jatuh tempo) -> tidak boleh mencicil (harus bayar penuh).
+        // - Admin toggle 'izinkan_cicilan' tetap berlaku sebagai override izin khusus.
+        $todayStr = now()->toDateString();
+        $hasOverdue = $totalTunggakanLalu > 0;
+        if (!$hasOverdue) {
+            foreach ($unpaidTagihanAll as $t) {
+                if ($t->Jatuh_Tempo && $t->Jatuh_Tempo < $todayStr) {
+                    $hasOverdue = true;
+                    break;
+                }
+            }
+        }
+        $canCicil = $hasOverdue || (bool) ($pemilik->izinkan_cicilan ?? false);
+
+        // Hitung denda keterlambatan jika fitur aktif
+        $penaltyConfig = \App\Models\AppSetting::getPenaltyConfig();
+        $totalDenda = 0.0;
+        if ($penaltyConfig['is_active']) {
+            foreach ($unpaidTagihanAll as $t) {
+                if ($t->Jatuh_Tempo && $t->Jatuh_Tempo < $todayStr) {
+                    $sisaBill = (float) ($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0);
+                    $totalDenda += \App\Models\AppSetting::calculatePenalty($sisaBill);
+                }
+            }
+        }
+
         // Kumpulkan breakdown tagihan HANYA untuk unit kios aktif
-        $kiosBreakdown = $sewaAktif->map(function ($sewaItem) {
+        $kiosBreakdown = $sewaAktif->map(function ($sewaItem) use ($penaltyConfig, $todayStr) {
             $unpaidKiosBills = $sewaItem->tagihan->whereIn('Status_Tagihan', ['Belum Bayar', 'Dicicil', 'Menunggu Verifikasi']);
             $totalUnpaidKios = (float) $unpaidKiosBills->sum(fn($t) => (float)($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0));
 
             $latestTagihan = $sewaItem->tagihan->sortByDesc('Periode')->first()
                 ?? $sewaItem->tagihan->sortByDesc('Id_Tagihan')->first();
+
+            $kiosDenda = 0.0;
+            if ($penaltyConfig['is_active']) {
+                foreach ($unpaidKiosBills as $t) {
+                    if ($t->Jatuh_Tempo && $t->Jatuh_Tempo < $todayStr) {
+                        $sisaBill = (float) ($t->Sisa_Tagihan ?? $t->Total_Tagihan ?? 0);
+                        $kiosDenda += \App\Models\AppSetting::calculatePenalty($sisaBill);
+                    }
+                }
+            }
 
             return [
                 'idSewa'         => $sewaItem->Id_Sewa,
@@ -93,6 +139,7 @@ class DashboardController extends Controller
                 'jenisUsaha'     => $sewaItem->Jenis_Usaha ?? '—',
                 'tarifBulanan'   => (float) ($sewaItem->Tarif_Bulanan ?? 750000),
                 'totalKewajiban' => $totalUnpaidKios,
+                'totalDenda'     => $kiosDenda,
                 'unpaidCount'    => $unpaidKiosBills->count(),
                 'tanggalMulai'   => $sewaItem->Tanggal_Mulai,
                 'tanggalSelesai' => $sewaItem->Tanggal_Selesai,
@@ -105,6 +152,7 @@ class DashboardController extends Controller
                     'sisaTagihan'     => (float) ($latestTagihan->Sisa_Tagihan ?? $latestTagihan->Total_Tagihan),
                     'statusTagihan'   => $unpaidKiosBills->count() > 0 ? ($latestTagihan->Status_Tagihan === 'Lunas' ? 'Menunggak' : $latestTagihan->Status_Tagihan) : 'Lunas',
                     'jatuhTempo'      => $latestTagihan->Jatuh_Tempo,
+                    'isOverdue'       => $latestTagihan->Jatuh_Tempo && $latestTagihan->Jatuh_Tempo < $todayStr && $latestTagihan->Status_Tagihan !== 'Lunas',
                 ] : null,
             ];
         })->values();
@@ -126,8 +174,12 @@ class DashboardController extends Controller
             'totalTagihanSemuaKios'  => (float) $totalKewajibanSemua,
             'totalTunggakanLalu'     => (float) $totalTunggakanLalu,
             'tarifBulanIni'          => (float) $tarifBulanIni,
+            'totalDenda'             => (float) $totalDenda,
+            'totalKewajibanDenganDenda' => (float) ($totalKewajibanSemua + $totalDenda),
+            'hasTunggakan'           => $hasOverdue,
+            'penaltyConfig'          => $penaltyConfig,
             'statusPemilik'          => $pemilik->Status_Pemilik,
-            'izinkanCicilan'         => (bool) ($pemilik->izinkan_cicilan ?? false),
+            'izinkanCicilan'         => $canCicil,
             'detailAdministrasi'     => [
                 'lantai'     => is_numeric($sewaTerbaru?->kios?->Lantai) ? "Lantai " . $sewaTerbaru->kios->Lantai : ($sewaTerbaru?->kios?->Lantai ?? 'Lantai 1'),
                 'ukuran'     => $sewaTerbaru?->kios?->Ukuran ?? '4x4 m²',

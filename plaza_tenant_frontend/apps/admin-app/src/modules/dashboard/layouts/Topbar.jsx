@@ -29,6 +29,55 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
     }
   }, [httpClient]);
 
+  const playNotificationSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.45);
+    } catch {
+      // Audio autoplay policy fallback
+    }
+  }, []);
+
+  const triggerBrowserNotification = useCallback((notif) => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          const n = new Notification(notif.title || 'Notifikasi Plaza Kebun Sayur', {
+            body: notif.message || 'Ada pembaruan transaksi atau pembayaran baru.',
+            icon: '/assets/bunsay_qr_logo_128.png',
+          });
+          n.onclick = () => {
+            window.focus();
+            if (notif.link) navigate(notif.link);
+          };
+        } catch {
+          // Mobile browser notification fallback
+        }
+      }
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    // Minta izin notifikasi browser jika belum pernah ditolak
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
+  }, []);
+
   useEffect(() => {
     fetchNotifikasi();
 
@@ -38,13 +87,15 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
       channel.listen('.notification.created', (e) => {
         setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
         setUnreadCount(prev => prev + 1);
+        playNotificationSound();
+        triggerBrowserNotification(e);
       });
 
       return () => {
         echo.leaveChannel('admin-notifications');
       };
     }
-  }, [fetchNotifikasi]);
+  }, [fetchNotifikasi, playNotificationSound, triggerBrowserNotification]);
 
   const handleMarkAllRead = async () => {
     try {

@@ -58,19 +58,9 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
 
       hydrationPromiseRef.current = (async () => {
         try {
-          const storedRt = typeof window !== 'undefined' ? localStorage.getItem('bunsay_tenant_rt') : null;
-          if (!storedRt) {
-            return;
-          }
-          const response = await httpClient.post(
-            '/api/v1/tenant/auth/refresh',
-            { refresh_token: storedRt },
-            { headers: { 'X-Refresh-Token': storedRt } }
-          );
-          const { accessToken: token, refreshToken: newRt, user: userData } = response.data || {};
-          if (newRt) {
-            try { localStorage.setItem('bunsay_tenant_rt', newRt); } catch (_) {}
-          }
+          // Silent refresh on hydration using the HttpOnly cookie (withCredentials: true)
+          const response = await httpClient.post('/api/v1/tenant/auth/refresh');
+          const { accessToken: token, user: userData } = response.data || {};
           if (token) {
             setTokenState(token, userData ?? null);
           }
@@ -85,10 +75,7 @@ export function TenantAuthProvider({ children, apiBaseUrl }) {
 
   const login = useCallback(async (username, password) => {
     const response = await httpClient.post('/api/v1/tenant/auth/login', { username, password });
-    const { accessToken: token, refreshToken: rt, user: userData } = response.data;
-    if (rt) {
-      try { localStorage.setItem('bunsay_tenant_rt', rt); } catch (_) {}
-    }
+    const { accessToken: token, user: userData } = response.data;
     setTokenState(token, userData ?? null);
     return response.data;
   }, [httpClient, setTokenState]);

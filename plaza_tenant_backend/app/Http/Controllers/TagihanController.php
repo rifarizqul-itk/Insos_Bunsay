@@ -50,11 +50,26 @@ class TagihanController extends Controller
             return response()->json([]);
         }
 
+        $penaltyConfig = \App\Models\AppSetting::getPenaltyConfig();
+        $todayStr = now()->toDateString();
+
         $tagihan = Tagihan::whereHas('sewa', function($q) use ($pemilik) {
             $q->where('Id_Pemilik', $pemilik->Id_Pemilik);
         })->with(['sewa.kios', 'sewa.pemilik'])->orderBy('Periode', 'asc')->get();
 
-        return response()->json($tagihan);
+        $transformed = $tagihan->map(function ($t) use ($penaltyConfig, $todayStr) {
+            $sisa = (float) ($t->Sisa_Tagihan ?? $t->Total_Tagihan);
+            $isOverdue = $t->Status_Tagihan !== 'Lunas' && $t->Jatuh_Tempo && $t->Jatuh_Tempo < $todayStr;
+            $denda = ($isOverdue && $penaltyConfig['is_active']) ? \App\Models\AppSetting::calculatePenalty($sisa) : 0.0;
+
+            $arr = $t->toArray();
+            $arr['is_overdue'] = $isOverdue;
+            $arr['denda'] = $denda;
+            $arr['total_dengan_denda'] = $sisa + $denda;
+            return $arr;
+        });
+
+        return response()->json($transformed);
     }
 
     public function store(StoreTagihanRequest $request)

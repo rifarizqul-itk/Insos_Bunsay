@@ -97,14 +97,21 @@ Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
     Route::get('/pembayaran', [PembayaranController::class, 'index']);
     Route::post('/pembayaran', [PembayaranController::class, 'store']);
     Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
-    Route::post('/midtrans/token', [\App\Http\Controllers\MidtransController::class, 'createSnapToken']);
+    
+    // Midtrans Gateway telah dinonaktifkan (Revisi Mitra 5 September 2026)
+    Route::post('/midtrans/token', fn () => response()->json([
+        'message' => 'Layanan Midtrans telah dinonaktifkan sesuai kebijakan UPTD Plaza Kebun Sayur.',
+    ], 410));
+
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'tenantNotifications']);
     Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 });
 
-// Midtrans Public Webhook Notification Callback
-Route::post('/v1/midtrans/notification', [\App\Http\Controllers\MidtransController::class, 'handleNotification']);
+// Midtrans Public Webhook (Decommissioned)
+Route::post('/v1/midtrans/notification', fn () => response()->json([
+    'message' => 'Layanan Midtrans telah dinonaktifkan.',
+], 410));
 
 
 
@@ -128,6 +135,10 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function
     Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
     Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
     Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
+
+    // Pengaturan Aplikasi & Denda Keterlambatan Dinamis (Admin)
+    Route::get('/settings/penalty', [\App\Http\Controllers\AppSettingController::class, 'getPenaltySetting']);
+    Route::put('/settings/penalty', [\App\Http\Controllers\AppSettingController::class, 'updatePenaltySetting']);
 
     // Audit Logs & Staff Management (RBAC & Audit Trail)
     Route::get('/logs', [\App\Http\Controllers\ActivityLogController::class, 'index']);

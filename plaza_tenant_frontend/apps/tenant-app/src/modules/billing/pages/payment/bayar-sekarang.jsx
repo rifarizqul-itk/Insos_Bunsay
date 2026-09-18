@@ -28,36 +28,6 @@ const formatPeriodeIndo = (periodeStr) => {
   return periodeStr;
 };
 
-const loadSnapScript = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.snap) {
-      resolve(window.snap);
-      return;
-    }
-    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || '';
-    const isProd = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true';
-    const scriptUrl = isProd
-      ? 'https://app.midtrans.com/snap/snap.js'
-      : 'https://app.sandbox.midtrans.com/snap/snap.js';
-
-    const existingScript = document.querySelector(`script[src*="snap/snap.js"]`);
-    if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(window.snap));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = scriptUrl;
-    if (clientKey) {
-      script.setAttribute('data-client-key', clientKey);
-    }
-    script.async = true;
-    script.onload = () => resolve(window.snap);
-    script.onerror = () => resolve(null);
-    document.body.appendChild(script);
-  });
-};
-
 function BayarSekarang() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,10 +45,40 @@ function BayarSekarang() {
   const [unpaidBills, setUnpaidBills] = useState([]);
   const [isUnpaidLoaded, setIsUnpaidLoaded] = useState(false);
   const [izinkanCicilan, setIzinkanCicilan] = useState(false);
+  const [hasTunggakan, setHasTunggakan] = useState(false);
+  const [totalDenda, setTotalDenda] = useState(0);
   const [processError, setProcessError] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCopiedRekening, setIsCopiedRekening] = useState(false);
   const [isLockedClickAnim, setIsLockedClickAnim] = useState(false);
+  const [isQrisZoomed, setIsQrisZoomed] = useState(false);
+
+  const handleDownloadQris = async () => {
+    const qrisUrl = '/assets/QRIS_PLACEHOLDER.jpg';
+    const fileName = 'QRIS_UPTD_Plaza_Kebun_Sayur.jpg';
+    try {
+      const res = await fetch(qrisUrl);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      addToast('Gambar QRIS berhasil diunduh.', 'success');
+    } catch {
+      const link = document.createElement('a');
+      link.href = qrisUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addToast('Gambar QRIS berhasil diunduh.', 'success');
+    }
+  };
 
   useEffect(() => {
     const fetchUnpaidBills = async () => {
@@ -86,7 +86,12 @@ function BayarSekarang() {
         const dashRes = await httpClient.get('/api/v1/tenant/dashboard');
         const idPemilik = dashRes.data?.idPemilik;
         const isAllowedCicil = Boolean(dashRes.data?.izinkanCicilan);
+        const isOverdue = Boolean(dashRes.data?.hasTunggakan);
+        const denda = Number(dashRes.data?.totalDenda || 0);
+
         setIzinkanCicilan(isAllowedCicil);
+        setHasTunggakan(isOverdue);
+        setTotalDenda(denda);
 
         if (idPemilik) {
           const tagihanRes = await httpClient.get('/api/v1/tenant/tagihan');
@@ -106,8 +111,10 @@ function BayarSekarang() {
                 tarifSewa: parseFloat(t.Tarif_Sewa || 0),
                 totalTagihan,
                 sisaTagihan,
+                denda: parseFloat(t.denda || 0),
                 totalTerbayar: Math.max(0, totalTagihan - sisaTagihan),
-                statusTagihan: t.Status_Tagihan
+                statusTagihan: t.Status_Tagihan,
+                isOverdue: Boolean(t.is_overdue),
               };
             });
           setUnpaidBills(activeUnpaid);
@@ -135,7 +142,7 @@ function BayarSekarang() {
     };
 
     fetchUnpaidBills();
-  }, [httpClient, initialKiosFilter]);
+  }, [httpClient, initialKiosFilter, location.state]);
 
   const availableKiosks = useMemo(() => {
     const map = new Map();
@@ -244,8 +251,13 @@ function BayarSekarang() {
       return;
     }
 
-    if (metode === 'transfer_manual' && !buktiTransfer) {
-      addToast('Mohon unggah foto bukti transfer terlebih dahulu.', 'error');
+    if (!buktiTransfer) {
+      addToast(
+        metode === 'qris'
+          ? 'Mohon unggah tangkapan layar bukti pembayaran QRIS terlebih dahulu.'
+          : 'Mohon unggah foto bukti transfer terlebih dahulu.',
+        'error'
+      );
       return;
     }
 
@@ -256,85 +268,29 @@ function BayarSekarang() {
       const targetTagihanId = displayedUnpaidBills[0]?.idTagihan || unpaidBills[0]?.idTagihan || 1;
       const todayStr = new Date().toISOString().split('T')[0];
 
-      if (metode === 'transfer_manual') {
-        const base64Bukti = buktiTransfer ? await fileToBase64(buktiTransfer) : null;
-        const payload = {
-          Id_Tagihan: targetTagihanId,
-          Tanggal_Bayar: todayStr,
-          Total_Bayar: Number(nominal),
-          Metode_Bayar: 'Transfer',
-          Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
-          Verifikasi_Pembayaran: 'Menunggu'
-        };
-
-        await httpClient.post('/api/v1/tenant/pembayaran', payload);
-        setIsLoading(false);
-        addToast('Bukti transfer berhasil dikirim! Menunggu verifikasi admin.', 'success');
-        navigate('/tenant/histori');
-        return;
-      }
-
-      const tokenRes = await httpClient.post('/api/v1/tenant/midtrans/token', {
+      const base64Bukti = buktiTransfer ? await fileToBase64(buktiTransfer) : null;
+      const payload = {
         Id_Tagihan: targetTagihanId,
-        nominal: Number(nominal),
-      });
+        Tanggal_Bayar: todayStr,
+        Total_Bayar: Number(nominal),
+        Metode_Bayar: 'Transfer',
+        Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
+        Verifikasi_Pembayaran: 'Menunggu',
+        keterangan: metode === 'qris' ? 'Pembayaran via QRIS Bunsay Hub' : 'Transfer Bank BPD Kaltimtara'
+      };
 
-      const snapToken = tokenRes.data?.token;
-      if (!snapToken) {
-        throw new Error(tokenRes.data?.message || 'Gagal memperoleh Snap Token dari Midtrans Gateway.');
-      }
-
+      await httpClient.post('/api/v1/tenant/pembayaran', payload);
       setIsLoading(false);
-
-      const snapInstance = window.snap || (await loadSnapScript());
-
-      if (snapInstance && typeof snapInstance.pay === 'function') {
-        snapInstance.pay(snapToken, {
-          onSuccess: async (result) => {
-            try {
-              const confirmPayload = {
-                Id_Tagihan: targetTagihanId,
-                Tanggal_Bayar: todayStr,
-                Total_Bayar: Number(nominal),
-                Metode_Bayar: 'Midtrans',
-                Bukti_Pembayaran: result?.transaction_id || result?.order_id || `MIDTRANS-${Date.now()}`,
-                Verifikasi_Pembayaran: 'Diterima',
-                payment_type: result?.payment_type,
-                bank: result?.va_numbers?.[0]?.bank || (result?.permata_va_number ? 'permata' : (result?.payment_type === 'echannel' ? 'mandiri' : null)),
-                issuer: result?.issuer || result?.acquirer,
-                va_numbers: result?.va_numbers
-              };
-
-              await httpClient.post('/api/v1/tenant/pembayaran', confirmPayload);
-              addToast('Pembayaran Midtrans Berhasil! Status tagihan telah lunas.', 'success');
-              navigate('/tenant/histori');
-            } catch (postErr) {
-              console.error('Error confirming midtrans payment:', postErr);
-              addToast('Pembayaran selesai. Mengalihkan ke riwayat...', 'info');
-              navigate('/tenant/histori');
-            }
-          },
-          onPending: () => {
-            addToast('Transaksi dibuat. Silakan selesaikan pembayaran sesuai instruksi Midtrans.', 'info');
-          },
-          onError: () => {
-            addToast('Pembayaran Midtrans dibatalkan atau gagal.', 'error');
-          },
-          onClose: () => {
-            addToast('Popup pembayaran Midtrans ditutup.', 'info');
-          }
-        });
-      } else {
-        if (tokenRes.data?.redirect_url) {
-          window.location.href = tokenRes.data.redirect_url;
-        } else {
-          throw new Error('Midtrans Snap SDK tidak termuat di browser. Periksa koneksi internet Anda.');
-        }
-      }
-
+      addToast(
+        metode === 'qris'
+          ? 'Bukti transaksi QRIS berhasil dikirim! Menunggu verifikasi admin.'
+          : 'Bukti transfer berhasil dikirim! Menunggu verifikasi admin.',
+        'success'
+      );
+      navigate('/tenant/histori');
     } catch (err) {
       setIsLoading(false);
-      const errMsg = err?.response?.data?.message || err?.message || 'Gagal memproses pembayaran.';
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal mengirim bukti pembayaran.';
       setProcessError(errMsg);
       addToast(errMsg, 'error');
     }
@@ -425,14 +381,13 @@ function BayarSekarang() {
                         )}
                       >
                         <span>Kios {k.noKios}</span>
-                        <span className="text-[11px] opacity-80">({k.jenisUsaha})</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Pilihan Metode Bayar (Segmented Tabs) */}
+              {/* Pilihan Metode Bayar (Segmented Tabs Sesuai Layout Main) */}
               <div className="flex flex-col gap-1">
                 <span className="text-xs sm:text-sm font-bold text-text">
                   Metode Pembayaran
@@ -458,17 +413,17 @@ function BayarSekarang() {
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={metode === 'midtrans_gateway'}
-                    onClick={() => setMetode('midtrans_gateway')}
+                    aria-selected={metode === 'qris'}
+                    onClick={() => setMetode('qris')}
                     className={cn(
                       "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
-                      metode === 'midtrans_gateway'
-                        ? "bg-white text-red shadow-xs border border-border/80"
+                      metode === 'qris'
+                        ? "bg-white text-emerald-700 shadow-xs border border-border/80"
                         : "text-text-2 hover:text-text"
                     )}
                   >
                     <Icon icon="heroicons:qr-code-20-solid" className="size-4 shrink-0" />
-                    <span>Pembayaran Online</span>
+                    <span>QRIS</span>
                   </button>
                 </div>
               </div>
@@ -575,34 +530,132 @@ function BayarSekarang() {
                   </div>
                 </div>
               ) : (
-                <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex flex-col gap-2.5 page-fade-in">
-                  <div className="flex items-center gap-2.5">
-                    <div className="size-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                      <Icon icon="heroicons:bolt-20-solid" className="size-4" />
+                /* QRIS Mode */
+                <div className="flex flex-col gap-3 page-fade-in">
+                  <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex flex-col gap-3">
+                    {/* Header Bar dengan Info & Tombol Aksi Perbesar / Unduh */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <div className="size-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <Icon icon="heroicons:qr-code-20-solid" className="size-4" />
+                        </div>
+                        <div className="text-left">
+                          <strong className="text-emerald-950 font-bold text-xs sm:text-[13px] block">
+                            QRIS UPTD Plaza Kebun Sayur
+                          </strong>
+                          <span className="text-[11px] text-emerald-800 font-medium block">
+                            Scan via m-Banking atau E-Wallet apa saja
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tombol Perbesar & Unduh bergaya Rincian Transaksi */}
+                      <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-emerald-200/80 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => setIsQrisZoomed(!isQrisZoomed)}
+                          className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer transition-colors"
+                          aria-label={isQrisZoomed ? "Kecilkan tampilan QRIS" : "Perbesar tampilan QRIS"}
+                        >
+                          <Icon icon={isQrisZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} className="size-3.5" />
+                          <span>{isQrisZoomed ? 'Kecilkan' : 'Perbesar'}</span>
+                        </button>
+                        <span className="text-emerald-300 text-xs">|</span>
+                        <button
+                          type="button"
+                          onClick={handleDownloadQris}
+                          className="text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                          aria-label="Unduh QRIS"
+                        >
+                          <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
+                          <span>Unduh</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <strong className="text-emerald-950 font-bold text-xs sm:text-[13px] block">
-                        Pembayaran Instan
-                      </strong>
-                      <span className="text-[11.5px] text-emerald-800 font-medium block mt-0.5">
-                        Otomatis lunas 24 jam &bull; Tanpa perlu unggah struk
-                      </span>
+
+                    {/* Gambar QRIS Langsung Tanpa Kotak Pembatas Berlapis */}
+                    <div className="flex items-center justify-center w-full overflow-hidden transition-all duration-200 py-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsQrisZoomed(!isQrisZoomed)}
+                        className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 rounded-2xl transition-transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center max-w-full"
+                        title={isQrisZoomed ? "Klik untuk mengecilkan" : "Klik untuk memperbesar"}
+                      >
+                        <img
+                          src="/assets/QRIS_PLACEHOLDER.jpg"
+                          alt="QRIS UPTD Plaza Kebun Sayur"
+                          className={cn(
+                            "object-contain rounded-2xl shadow-xs transition-all duration-200",
+                            isQrisZoomed
+                              ? "w-full max-w-md max-h-[36rem]"
+                              : "w-64 sm:w-80 md:w-96 max-h-84 sm:max-h-96"
+                          )}
+                        />
+                      </button>
                     </div>
+
                   </div>
 
-                  <div className="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center gap-1.5 text-xs">
-                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
-                      <Icon icon="heroicons:qr-code-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
-                      <span>QRIS (GoPay, OVO, ShopeePay, DANA)</span>
+                  {/* Dropzone Bukti QRIS */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs sm:text-sm font-extrabold text-text">
+                      Unggah Bukti Pembayaran QRIS <span className="text-red">*</span>
                     </span>
-                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
-                      <Icon icon="heroicons:building-library-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
-                      <span>Virtual Account Bank</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/80 text-emerald-900 px-2.5 py-1 rounded-lg font-semibold shadow-2xs">
-                      <Icon icon="heroicons:building-storefront-20-solid" className="size-3.5 text-emerald-600 shrink-0" />
-                      <span>Alfamart / Indomaret</span>
-                    </span>
+
+                    {!previewBukti ? (
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={handleDrop}
+                        className={cn(
+                          "border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer group focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500",
+                          isDragOver ? "border-emerald-500 bg-emerald-50/50" : "border-border/80 hover:border-emerald-500/60 bg-mono-50/40"
+                        )}
+                        onClick={() => document.getElementById('file-upload-input-qris')?.click()}
+                      >
+                        <input
+                          id="file-upload-input-qris"
+                          type="file"
+                          accept="image/*"
+                          aria-label="Unggah tangkapan layar bukti pembayaran QRIS"
+                          onChange={handleFileChange}
+                          className="sr-only"
+                        />
+                        <div className="size-9 rounded-lg bg-white border border-border/80 flex items-center justify-center text-text-3 group-hover:text-emerald-600 shadow-2xs">
+                          <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-4" />
+                        </div>
+                        <p className="text-xs font-bold text-text">
+                          <span className="text-emerald-700 hover:underline">Pilih tangkapan layar bukti bayar</span> atau tarik ke sini
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-mono-50 border border-border/80 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <img
+                          src={previewBukti}
+                          alt="Preview Bukti"
+                          className="size-12 rounded-lg object-cover border border-border/80 shrink-0 bg-white"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-text truncate">
+                            {buktiTransfer?.name || 'Bukti_QRIS.jpg'}
+                          </p>
+                          <p className="text-2xs text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                            <Icon icon="heroicons:check-circle-20-solid" className="size-3.5" />
+                            <span>Foto siap dikirim</span>
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveFile}
+                          className="text-text-3 hover:text-red p-1.5 shrink-0 rounded-lg"
+                          aria-label="Hapus file"
+                        >
+                          <Icon icon="heroicons:trash-20-solid" className="size-4.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -611,9 +664,20 @@ function BayarSekarang() {
               <div className="flex flex-col gap-1">
                 <FormField 
                   label={
-                    <span className="font-extrabold text-xs sm:text-sm text-text">
-                      Nominal yang Dibayar (Rp)
-                    </span>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-extrabold text-xs sm:text-sm text-text">
+                        Nominal yang Dibayar (Rp)
+                      </span>
+                      {izinkanCicilan ? (
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Mode Cicilan Aktif
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-text-3 bg-mono-100 px-2 py-0.5 rounded border border-border">
+                          Wajib Lunas
+                        </span>
+                      )}
+                    </div>
                   } 
                   id="input-nominal-pembayaran" 
                   error={nominalError}
@@ -631,8 +695,8 @@ function BayarSekarang() {
                       onClick={() => {
                         if (!izinkanCicilan) {
                           setIsLockedClickAnim(true);
-                          addToast('Nominal terkunci sesuai tagihan penuh. Izin cicilan belum aktif.', 'info');
-                          setTimeout(() => setIsLockedClickAnim(false), 1200);
+                          addToast('Sesuai aturan mitra, cicilan hanya diperkenankan untuk tagihan yang menunggak (melewati jatuh tempo). Tagihan berjalan wajib dibayar penuh.', 'info');
+                          setTimeout(() => setIsLockedClickAnim(false), 1500);
                         }
                       }}
                       onChange={(e) => { 
@@ -658,7 +722,8 @@ function BayarSekarang() {
                   </div>
                   {!izinkanCicilan && (
                     <p className="text-[11.5px] text-text-3 font-medium flex items-center gap-1 mt-1">
-                      <span>Nominal terkunci otomatis sesuai total kewajiban</span>
+                      <Icon icon="heroicons:lock-closed-20-solid" className="size-3.5 text-mono-400 shrink-0" />
+                      <span>Tagihan berjalan wajib lunas penuh. Cicilan hanya berlaku jika ada tunggakan jatuh tempo.</span>
                     </p>
                   )}
                 </FormField>
@@ -684,7 +749,7 @@ function BayarSekarang() {
                   {isLoading ? (
                     <span className="flex items-center gap-2">
                       <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
-                      <span>Memproses...</span>
+                      <span>Mengirim Bukti...</span>
                     </span>
                   ) : (
                     <span>Bayar Sekarang</span>
@@ -715,6 +780,19 @@ function BayarSekarang() {
                 )}
               </div>
 
+              {/* Detail Denda jika aktif */}
+              {totalDenda > 0 && (
+                <div className="p-2.5 rounded-xl bg-red-50/60 border border-red/20 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-red font-bold">
+                    <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-4" />
+                    <span>Denda Keterlambatan:</span>
+                  </div>
+                  <span className="font-extrabold font-tabular-nums text-red">
+                    + Rp {totalDenda.toLocaleString('id-ID')}
+                  </span>
+                </div>
+              )}
+
               {/* Total yang Sedang Diinput (Nominal di Bawah Teks) */}
               <div className="flex flex-col gap-1 pb-3 border-b border-border/80">
                 <span className="text-xs sm:text-sm font-semibold text-text-2">
@@ -725,7 +803,7 @@ function BayarSekarang() {
                 </div>
               </div>
 
-              {/* Rincian Alokasi Live (List dengan Divider Rapi, Tanpa Kotak-Kotak Bertumpuk) */}
+              {/* Rincian Alokasi Live */}
               {fifoAllocations.length > 0 ? (
                 <div className="flex flex-col gap-2 pt-1">
                   <div className="flex items-center justify-between">
@@ -793,7 +871,7 @@ function BayarSekarang() {
                 </div>
               )}
 
-              {/* Bantuan / Izin Cicilan via WhatsApp (Responsive Micro Footer) */}
+              {/* Bantuan / Izin Cicilan via WhatsApp */}
               <div className="pt-2.5 border-t border-border/80 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
                 <span className="text-text-3 font-medium">
                   Izin cicilan sewa?

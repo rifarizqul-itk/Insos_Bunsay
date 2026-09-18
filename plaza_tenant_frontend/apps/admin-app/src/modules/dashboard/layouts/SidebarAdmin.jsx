@@ -32,7 +32,8 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
     {
       title: 'PENGATURAN',
       items: [
-        { id: 'akun', label: 'Akun Staf', path: '/admin/akun', icon: 'heroicons:user-group-20-solid' }
+        { id: 'pengaturan-denda', label: 'Aturan Denda', path: '/admin/pengaturan-denda', icon: 'heroicons:cog-6-tooth-20-solid' },
+        { id: 'akun', label: 'Akun Staf', path: '/admin/akun', icon: 'heroicons:user-group-20-solid' },
       ]
     }
   ];

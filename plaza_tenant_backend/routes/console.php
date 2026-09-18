@@ -17,3 +17,8 @@ Schedule::command('tagihan:generate-bulanan')
     ->timezone('Asia/Makassar')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/tagihan-bulanan.log'));
+
+// Prune expired Sanctum personal access tokens daily
+Schedule::command('sanctum:prune-expired --hours=24')
+    ->daily()
+    ->withoutOverlapping();

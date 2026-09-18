@@ -19,6 +19,7 @@ const DetailAdministrasiKios = lazy(() => import('./modules/kiosks/pages/detail-
 const EksporData = lazy(() => import('./modules/reports/pages/ekspor'));
 const AuditLogPage = lazy(() => import('./modules/reports/pages/audit'));
 const AkunAdmin = lazy(() => import('./modules/profile/pages/account'));
+const PengaturanDendaAdmin = lazy(() => import('./modules/settings'));
 
 function AdminPageLoader() {
   return (
@@ -52,6 +53,7 @@ function AdminAppRoutes() {
                     <Route path="/admin/riwayat" element={<RiwayatTransaksiAdmin />} />
                     <Route path="/admin/detail-keuangan" element={<DetailKeuanganTenant />} />
                     <Route path="/admin/keuangan/:id" element={<DetailKeuanganTenant />} />
+                    <Route path="/admin/pengaturan-denda" element={<PengaturanDendaAdmin />} />
                     <Route path="/admin/akun" element={<AkunAdmin />} />
 
                     {/* Verifikasi Bukti Transfer */}

@@ -391,8 +391,8 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
           </div>
 
           <div class="doc-title">
-            <h1>Surat Setoran Retribusi Daerah (SSRD Elektronik)</h1>
-            <p>No. Kuitansi: <strong>${trxLabel}</strong> &bull; Status: <strong style="color: #14592F;">LUNAS</strong></p>
+            <h1>Ringkasan Bukti Transaksi Pembayaran</h1>
+            <p>No. Transaksi: <strong>${trxLabel}</strong> &bull; Status: <strong style="color: #14592F;">LUNAS / TERVERIFIKASI</strong></p>
           </div>
 
           <table class="meta-grid">
@@ -456,9 +456,9 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
 
           <div class="footer-grid">
             <div class="footer-col-left">
-              <p><strong>Catatan Keabsahan Dokumen:</strong></p>
-              <p style="margin: 2px 0;">1. Dokumen ini merupakan Surat Setoran Retribusi Daerah (SSRD Elektronik) yang diterbitkan secara sah oleh Sistem e-Retribusi UPTD Pasar Plaza Kebun Sayur.</p>
-              <p style="margin: 2px 0;">2. Keabsahan bukti setoran ini dapat divalidasi dengan memindai QR Code resmi di samping.</p>
+              <p><strong>Catatan Penting:</strong></p>
+              <p style="margin: 2px 0;">1. Dokumen ini merupakan ringkasan bukti pencatatan transaksi digital pada Portal Bunsay Hub.</p>
+              <p style="margin: 2px 0;">2. Kuitansi resmi retribusi tetap diterbitkan secara sah oleh Bagian Keuangan UPTD melalui Sistem Batavia.</p>
               <p style="margin: 8px 0 0 0; font-size: 10px; color: #666;">Dicetak pada: ${new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })} WITA</p>
             </div>
 
@@ -470,8 +470,8 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                 ${qrSvgMarkup}
               </div>
 
-              <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: 700; color: #14592F;">TERVERIFIKASI SISTEM e-RETRIBUSI</p>
-              <p style="margin: 1px 0 0 0; font-size: 10px; color: #555;">( Bendahara Penerimaan / Kasir Loket )</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: 700; color: #14592F;">TERVERIFIKASI SISTEM BUNSAY HUB</p>
+              <p style="margin: 1px 0 0 0; font-size: 10px; color: #555;">( Bagian Keuangan / Kasir Loket )</p>
             </div>
           </div>
         </body>
@@ -513,7 +513,7 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
             className="gap-2 font-bold text-text-2 border-border/80 hover:bg-mono-100"
           >
             <Icon icon="heroicons:printer-20-solid" className="size-4" />
-            <span>Cetak Resi</span>
+            <span>Cetak Ringkasan Transaksi</span>
           </Button>
           <Button
             type="button"

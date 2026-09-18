@@ -59,6 +59,15 @@ class SimulationScenarioSeeder extends Seeder
             mkdir($buktiDir, 0777, true);
         }
 
+        // 0. Idempotency: Bersihkan data simulasi transaksi lama agar seeder aman dijalankan berulang kali
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Pembayaran::truncate();
+        Tagihan::truncate();
+        Dokumen::truncate();
+        Notification::truncate();
+        ActivityLog::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         // 1. Pastikan Role Master tersedia
         Role::updateOrInsert(['Id_roles' => 1], ['Nama_role' => 'Admin']);
         Role::updateOrInsert(['Id_roles' => 2], ['Nama_role' => 'Tenant']);
