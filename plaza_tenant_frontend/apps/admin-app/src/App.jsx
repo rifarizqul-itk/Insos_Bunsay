@@ -10,7 +10,7 @@ import AdminLayout from './modules/dashboard/layouts/AdminLayout';
 const AdminLoginPage = lazy(() => import('./modules/auth/pages/login'));
 const DashboardAdmin = lazy(() => import('./modules/dashboard/pages/dashboard'));
 const VerifikasiBuktiTransfer = lazy(() => import('./modules/verification/pages/proofs'));
-const SetoranTunai = lazy(() => import('./modules/cashier/pages/setoran'));
+const SetoranKasir = lazy(() => import('./modules/cashier/pages/setoran/setoran-kasir'));
 const RiwayatTransaksiAdmin = lazy(() => import('./modules/reports/pages/riwayat'));
 const DetailKeuanganTenant = lazy(() => import('./modules/tenants/pages/detail-keuangan'));
 const KetersediaanKios = lazy(() => import('./modules/kiosks/pages/ketersediaan'));
@@ -61,9 +61,11 @@ function AdminAppRoutes() {
                       <Route path="/admin/verifikasi-bukti" element={<VerifikasiBuktiTransfer />} />
                     </Route>
 
-                    {/* Setoran Tunai Kasir */}
+                    {/* Loket Pembayaran Kasir (Tunai, Transfer, QRIS) */}
                     <Route element={<AdminProtectedRoute requiredPermission="input_setoran" />}>
-                      <Route path="/admin/setoran-tunai" element={<SetoranTunai />} />
+                      <Route path="/admin/setoran" element={<SetoranKasir />} />
+                      <Route path="/admin/setoran-tunai" element={<Navigate to="/admin/setoran" replace />} />
+                      <Route path="/admin/setoran-transfer" element={<Navigate to="/admin/setoran" replace />} />
                     </Route>
 
                     {/* Manajemen Unit Kios & Legalitas */}

@@ -344,7 +344,7 @@
   }
 
   .topbar-dropdown {
-    @apply absolute top-[60px] right-0 w-[min(90vw,380px)] bg-white border border-border/90 rounded-2xl shadow-modal p-0 flex flex-col z-30 origin-top-right animate-[popoverIn_0.18s_cubic-bezier(0.16,1,0.3,1)];
+    @apply absolute top-full right-0 mt-2 bg-white border border-border/90 rounded-2xl shadow-modal p-0 flex flex-col z-50 origin-top-right animate-[popoverIn_0.18s_cubic-bezier(0.16,1,0.3,1)];
   }
 
   .sidebar-tenant-container,

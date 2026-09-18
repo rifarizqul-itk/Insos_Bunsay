@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Badge, Button, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, useToast, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
+import { Table, Badge, Button, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, UploadBuktiSusulanModal, Pagination, useToast, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 import SanggahanModal from './SanggahanModal';
 
@@ -32,6 +32,7 @@ function HistoriPembayaran() {
   const [loading, setLoading] = useState(true);
   const [selectedMetode, setSelectedMetode] = useState('Semua');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedUploadRow, setSelectedUploadRow] = useState(null);
   const [sanggahanModalItem, setSanggahanModalItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -241,30 +242,50 @@ function HistoriPembayaran() {
                         )}
                       </td>
                       <td className="p-3 text-center whitespace-nowrap">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setSelectedReceipt(row)}
-                          aria-label={`Lihat bukti atau resi transaksi ${row.id}`}
-                          className="font-bold text-xs gap-1.5 px-3 py-1.5"
-                        >
-                          {row.metode === 'Midtrans' ? (
-                            <>
-                              <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-orange" />
-                              <span>Resi Digital</span>
-                            </>
-                          ) : row.metode === 'Tunai' ? (
-                            <>
-                              <Icon icon="heroicons:document-text-20-solid" className="size-3.5 text-amber-700" />
-                              <span>Kuitansi</span>
-                            </>
-                          ) : (
-                            <>
-                              <Icon icon="heroicons:photo-20-solid" className="size-3.5 text-green" />
-                              <span>Foto Bukti</span>
-                            </>
-                          )}
-                        </Button>
+                        {(() => {
+                          const isTunaiWithoutPhoto = (row.metode === 'Tunai' || String(row.buktiUrl).startsWith('LOKET-CASH') || !row.buktiUrl) && (!row.buktiUrl || row.buktiUrl === 'LOKET-CASH-CLAIM' || String(row.buktiUrl).startsWith('LOKET-CASH'));
+                          const canUploadPhoto = isTunaiWithoutPhoto || row.status === 'Ditolak';
+                          return (
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setSelectedReceipt(row)}
+                                aria-label={`Lihat rincian transaksi ${row.id}`}
+                                className="font-bold text-xs gap-1.5 px-3 py-1.5 shadow-2xs"
+                              >
+                                {row.metode === 'Midtrans' ? (
+                                  <>
+                                    <Icon icon="heroicons:bolt-20-solid" className="size-3.5 text-orange" />
+                                    <span>Resi Digital</span>
+                                  </>
+                                ) : row.metode === 'Tunai' ? (
+                                  <>
+                                    <Icon icon="heroicons:document-text-20-solid" className="size-3.5 text-amber-700" />
+                                    <span>Rincian</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Icon icon="heroicons:photo-20-solid" className="size-3.5 text-green" />
+                                    <span>Foto Bukti</span>
+                                  </>
+                                )}
+                              </Button>
+                              {canUploadPhoto && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedUploadRow(row)}
+                                  aria-label={`Unggah foto bukti untuk ${row.id}`}
+                                  className="font-bold text-xs gap-1 px-2.5 py-1.5 border-red/40 text-red hover:bg-red-50"
+                                >
+                                  <Icon icon="heroicons:camera-20-solid" className="size-3.5" />
+                                  <span>+ Foto</span>
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );
@@ -291,7 +312,7 @@ function HistoriPembayaran() {
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedReceipt(row); } }}
                     className="p-4 bg-white border border-border/80 rounded-2xl shadow-2xs hover:border-red/40 hover:shadow-xs active:bg-mono-50/80 transition-all cursor-pointer select-none flex flex-col gap-3.5"
-                    aria-label={`Transaksi ${row.id} sebesar Rp ${row.nominalAngka.toLocaleString('id-ID')}, status ${row.status}. Ketuk untuk melihat resi.`}
+                    aria-label={`Transaksi ${row.id} sebesar Rp ${row.nominalAngka.toLocaleString('id-ID')}, status ${row.status}. Ketuk untuk melihat rincian.`}
                   >
                     {/* Top Row: Icon + Method & ID + Status Badge */}
                     <div className="flex items-start justify-between gap-2.5">
@@ -320,19 +341,37 @@ function HistoriPembayaran() {
                       </div>
                     </div>
 
-                    {/* Bottom Row: Date on Left + Amount & Resi Button on Right */}
+                    {/* Bottom Row: Date on Left + Amount & Actions on Right */}
                     <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-text-3 font-tabular-nums" title={formattedWaktu.fullTitle}>
                         <Icon icon="heroicons:calendar-20-solid" className="size-3.5 text-mono-400 shrink-0" />
                         <span>{formattedWaktu.formatted}</span>
                       </div>
 
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <span className="text-sm sm:text-base font-extrabold font-tabular-nums text-text whitespace-nowrap">
                           Rp {row.nominalAngka.toLocaleString('id-ID')}
                         </span>
+                        {(() => {
+                          const isTunaiWithoutPhoto = (row.metode === 'Tunai' || String(row.buktiUrl).startsWith('LOKET-CASH') || !row.buktiUrl) && (!row.buktiUrl || row.buktiUrl === 'LOKET-CASH-CLAIM' || String(row.buktiUrl).startsWith('LOKET-CASH'));
+                          const canUploadPhoto = isTunaiWithoutPhoto || row.status === 'Ditolak';
+                          return canUploadPhoto ? (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUploadRow(row);
+                              }}
+                              className="font-bold text-2xs px-2 py-1 border-red/40 text-red hover:bg-red-50 gap-1"
+                            >
+                              <Icon icon="heroicons:camera-20-solid" className="size-3" />
+                              <span>+ Foto</span>
+                            </Button>
+                          ) : null;
+                        })()}
                         <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-mono-100 hover:bg-red-50 text-red text-xs font-extrabold transition-colors">
-                          <span>Resi</span>
+                          <span>Detail</span>
                           <Icon icon="heroicons:chevron-right-20-solid" className="size-3.5" />
                         </div>
                       </div>
@@ -355,7 +394,7 @@ function HistoriPembayaran() {
                           className="min-h-10 text-xs sm:text-sm font-extrabold gap-1.5 shadow-2xs"
                         >
                           <Icon icon="heroicons:chat-bubble-left-right-20-solid" className="size-4" />
-                          <span>Ajukan Sanggahan</span>
+                          <span>Kirim Sanggahan Pembayaran</span>
                         </Button>
                       </div>
                     )}
@@ -371,8 +410,11 @@ function HistoriPembayaran() {
                   </div>
                 );
               })}
+            </div>
 
-              <div className="p-4 bg-white border border-border/80 rounded-2xl shadow-2xs mt-1">
+            {/* Mobile Pagination Control */}
+            <div className="block md:hidden">
+              <div className="bg-white p-3 border border-border/80 rounded-xl shadow-2xs">
                 <Pagination
                   currentPage={currentPage}
                   totalItems={totalItems}
@@ -387,11 +429,24 @@ function HistoriPembayaran() {
         )}
       </div>
 
-      {/* Modal Resi & Bukti Pembayaran */}
+      {/* Modal Detail & Bukti Pembayaran */}
       <BuktiPembayaranModal
         isOpen={Boolean(selectedReceipt)}
         onClose={() => setSelectedReceipt(null)}
         item={selectedReceipt}
+        onUploadBukti={(item) => setSelectedUploadRow(item)}
+      />
+
+      {/* Modal Upload Bukti Susulan */}
+      <UploadBuktiSusulanModal
+        isOpen={Boolean(selectedUploadRow)}
+        onClose={() => setSelectedUploadRow(null)}
+        pembayaran={selectedUploadRow}
+        uploadEndpoint={selectedUploadRow ? `/api/v1/tenant/pembayaran/${String(selectedUploadRow.id).replace(/[^0-9]/g, '')}/bukti` : ''}
+        httpClient={httpClient}
+        onSuccess={() => {
+          fetchHistory();
+        }}
       />
 
 

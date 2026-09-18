@@ -49,9 +49,6 @@ export default defineConfig(({ mode }) => {
               if (id.includes('axios')) {
                 return 'vendor-http';
               }
-              if (id.includes('qrcode.react')) {
-                return 'vendor-qrcode';
-              }
               if (id.includes('exceljs')) {
                 return 'vendor-excel';
               }

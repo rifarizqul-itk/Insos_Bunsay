@@ -9,7 +9,9 @@ import BottomNav from './BottomNav';
 const adminTitles = {
   '/admin/dashboard': 'Dashboard Pengelola | Plaza Kebun Sayur',
   '/admin/verifikasi-bukti': 'Verifikasi Bukti Transfer | Admin Plaza Kebun Sayur',
-  '/admin/setoran-tunai': 'Setoran Tunai Kasir | Admin Plaza Kebun Sayur',
+  '/admin/setoran': 'Loket Pembayaran Kasir | Admin Plaza Kebun Sayur',
+  '/admin/setoran-tunai': 'Loket Pembayaran Kasir | Admin Plaza Kebun Sayur',
+  '/admin/setoran-transfer': 'Loket Pembayaran Kasir | Admin Plaza Kebun Sayur',
   '/admin/riwayat': 'Riwayat Transaksi | Admin Plaza Kebun Sayur',
   '/admin/kios': 'Manajemen Unit Kios | Admin Plaza Kebun Sayur',
   '/admin/ekspor': 'Ekspor Rekap Data | Admin Plaza Kebun Sayur',

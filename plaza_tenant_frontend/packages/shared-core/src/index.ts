@@ -22,3 +22,6 @@ export { downloadExcelRekap } from './utils/exportExcel';
 // Export Echo WebSocket instance
 export { getEcho } from './utils/echo';
 
+// Export Audio Notification Utility with Gain Booster
+export { playNotificationSound, warmUpNotificationAudio, isNotificationSoundMuted, setNotificationSoundMuted } from './utils/audioNotification';
+export type { PlayNotificationOptions } from './utils/audioNotification';

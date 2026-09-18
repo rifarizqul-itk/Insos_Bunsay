@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Badge, Icon, SkeletonCard, SkeletonText, BuktiPembayaranModal, cn } from '@bunsay/shared-ui';
+import { Card, Button, Badge, Icon, SkeletonCard, SkeletonText, BuktiPembayaranModal, UploadBuktiSusulanModal, cn } from '@bunsay/shared-ui';
 import { useTenantAuth } from '../../../public/useTenantAuth';
 
 const formatDateIndo = (dateStr) => {
@@ -106,6 +106,7 @@ function DashboardTenant() {
   const [dashboardData, setDashboardData] = useState(null);
   const [recentPayments, setRecentPayments] = useState([]);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedUploadRow, setSelectedUploadRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -335,8 +336,8 @@ function DashboardTenant() {
             onClick={() => navigate('/tenant/histori')}
             className="w-full sm:w-auto h-9 px-3.5 font-bold gap-1.5 shrink-0 bg-white text-emerald-900 border-emerald-200 hover:bg-emerald-50 text-xs whitespace-nowrap"
           >
-            <span>Lihat Kuitansi</span>
-            <Icon icon="heroicons:document-text-20-solid" className="size-3.5" />
+            <span>Riwayat Pembayaran</span>
+            <Icon icon="heroicons:arrow-right-20-solid" className="size-3.5" />
           </Button>
         </div>
       )}
@@ -468,9 +469,9 @@ function DashboardTenant() {
                     <button
                       type="button"
                       onClick={() => setSelectedReceipt(item)}
-                      aria-label={`Lihat kuitansi transaksi ${item.id}`}
+                      aria-label={`Lihat rincian transaksi ${item.id}`}
                       className="p-2 rounded-xl border border-border/80 hover:bg-mono-50 text-text-2 hover:text-text transition-colors cursor-pointer"
-                      title="Lihat Kuitansi"
+                      title="Lihat Rincian Transaksi"
                     >
                       <Icon icon="heroicons:document-text-20-solid" className="size-4" />
                     </button>
@@ -579,11 +580,27 @@ function DashboardTenant() {
         </div>
       )}
 
-      {/* Modal Detail & Kuitansi Transaksi Terakhir */}
+      {/* Modal Detail Transaksi Terakhir */}
       <BuktiPembayaranModal
         isOpen={Boolean(selectedReceipt)}
         item={selectedReceipt}
         onClose={() => setSelectedReceipt(null)}
+        onUploadBukti={(item) => {
+          setSelectedReceipt(null);
+          setSelectedUploadRow(item);
+        }}
+      />
+
+      {/* Modal Unggah Foto Bukti Susulan */}
+      <UploadBuktiSusulanModal
+        isOpen={Boolean(selectedUploadRow)}
+        onClose={() => setSelectedUploadRow(null)}
+        pembayaran={selectedUploadRow}
+        uploadEndpoint={selectedUploadRow ? `/api/v1/tenant/pembayaran/${String(selectedUploadRow.idRaw || selectedUploadRow.id || selectedUploadRow.Id_Pembayaran).replace(/[^0-9]/g, '')}/bukti` : ''}
+        httpClient={httpClient}
+        onSuccess={() => {
+          fetchDashboardData();
+        }}
       />
     </div>
   );

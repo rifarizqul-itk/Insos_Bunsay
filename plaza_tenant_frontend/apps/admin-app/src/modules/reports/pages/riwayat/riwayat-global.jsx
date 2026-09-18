@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Badge, Button, Table, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, Pagination, formatDateTimeLocal } from '@bunsay/shared-ui';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Card, Badge, Button, Table, Icon, EmptyState, SkeletonTable, BuktiPembayaranModal, UploadBuktiSusulanModal, Pagination, formatDateTimeLocal } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function RiwayatTransaksiAdmin() {
   const { httpClient } = useAdminAuth();
   const [selectedBukti, setSelectedBukti] = useState(null);
+  const [uploadItem, setUploadItem] = useState(null);
   const [filterMetode, setFilterMetode] = useState('Semua');
   const [riwayat, setRiwayat] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,61 +17,62 @@ function RiwayatTransaksiAdmin() {
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'idRaw', direction: 'desc' });
 
-  useEffect(() => {
-    async function fetchRiwayatGlobal() {
-      setIsLoading(true);
-      try {
-        const res = await httpClient.get('/api/v1/admin/pembayaran');
-        if (res?.data && Array.isArray(res.data)) {
-          const mapped = res.data.map(item => ({
-            id: `TRX-${item.Id_Pembayaran}`,
-            idRaw: item.Id_Pembayaran,
-            nama: item.tagihan?.sewa?.pemilik?.Nama || 
-                  item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 
-                  item.Nama_Tenant || 
-                  item.tenant?.Nama_Tenant || 
-                  item.tenant?.Nama || 
-                  item.tenant?.Username || 
-                  item.nama || 
-                  'Penyewa Kios',
-            kios: item.tagihan?.sewa?.kios?.No_Kios || 
-                  item.tagihan?.sewa?.kios?.Kode_Kios || 
-                  item.Nomor_Kios || 
-                  item.tenant?.Nomor_Kios || 
-                  item.kios || 
-                  '-',
-            tagihan: item.tagihan?.Periode 
-              ? `Sewa Kios ${item.tagihan.Periode}` 
-              : (item.tagihan?.Bulan_Tahun ? `Sewa Kios Periode ${item.tagihan.Bulan_Tahun}` : (item.Keterangan || 'Sewa Kios')),
-            nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
-            nominalAngka: Number(item.Total_Bayar || 0),
-            nominalRaw: Number(item.Total_Bayar || 0),
-            metode: item.Metode_Bayar || 'Transfer',
-            labelMetode: item.Metode_Bayar === 'Midtrans' 
-              ? 'Midtrans Gateway' 
-              : item.Metode_Bayar === 'Transfer' 
-                ? 'Transfer Bank' 
-                : item.Metode_Bayar === 'Tunai' 
-                  ? 'Tunai Loket' 
-                  : item.Metode_Bayar || 'Transfer Bank',
-            waktu: item.created_at || item.Tanggal_Bayar || '-',
-            status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : (item.Verifikasi_Pembayaran || 'Lunas')),
-            buktiUrl: item.Bukti_Pembayaran || '',
-            alasan: item.Catatan_Admin || '',
-            alokasi: item.alokasi || []
-          }));
-          setRiwayat(mapped);
-        } else {
-          setRiwayat([]);
-        }
-      } catch (err) {
+  const fetchRiwayatGlobal = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await httpClient.get('/api/v1/admin/pembayaran');
+      if (res?.data && Array.isArray(res.data)) {
+        const mapped = res.data.map(item => ({
+          id: `TRX-${item.Id_Pembayaran}`,
+          idRaw: item.Id_Pembayaran,
+          nama: item.tagihan?.sewa?.pemilik?.Nama || 
+                item.tagihan?.sewa?.pemilik?.Nama_Pemilik || 
+                item.Nama_Tenant || 
+                item.tenant?.Nama_Tenant || 
+                item.tenant?.Nama || 
+                item.tenant?.Username || 
+                item.nama || 
+                'Penyewa Kios',
+          kios: item.tagihan?.sewa?.kios?.No_Kios || 
+                item.tagihan?.sewa?.kios?.Kode_Kios || 
+                item.Nomor_Kios || 
+                item.tenant?.Nomor_Kios || 
+                item.kios || 
+                '-',
+          tagihan: item.tagihan?.Periode 
+            ? `Sewa Kios ${item.tagihan.Periode}` 
+            : (item.tagihan?.Bulan_Tahun ? `Sewa Kios Periode ${item.tagihan.Bulan_Tahun}` : (item.Keterangan || 'Sewa Kios')),
+          nominal: `Rp ${Number(item.Total_Bayar || 0).toLocaleString('id-ID')}`,
+          nominalAngka: Number(item.Total_Bayar || 0),
+          nominalRaw: Number(item.Total_Bayar || 0),
+          metode: item.Metode_Bayar || 'Transfer',
+          labelMetode: item.Metode_Bayar === 'Midtrans' 
+            ? 'Midtrans Gateway' 
+            : item.Metode_Bayar === 'Transfer' 
+              ? 'Transfer Bank' 
+              : item.Metode_Bayar === 'Tunai' 
+                ? 'Tunai Loket' 
+                : item.Metode_Bayar || 'Transfer Bank',
+          waktu: item.created_at || item.Tanggal_Bayar || '-',
+          status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : (item.Verifikasi_Pembayaran || 'Lunas')),
+          buktiUrl: item.Bukti_Pembayaran || '',
+          alasan: item.Catatan_Admin || '',
+          alokasi: item.alokasi || []
+        }));
+        setRiwayat(mapped);
+      } else {
         setRiwayat([]);
-      } finally {
-        setIsLoading(false);
       }
+    } catch (err) {
+      setRiwayat([]);
+    } finally {
+      setIsLoading(false);
     }
-    fetchRiwayatGlobal();
   }, [httpClient]);
+
+  useEffect(() => {
+    fetchRiwayatGlobal();
+  }, [fetchRiwayatGlobal]);
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -226,15 +228,35 @@ function RiwayatTransaksiAdmin() {
                     )}
                   </td>
                   <td data-label="Aksi" className="py-3 px-4 text-center whitespace-nowrap">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedBukti(item)}
-                      aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
-                      className="h-8 px-3 text-xs font-bold shadow-2xs"
-                    >
-                      Detail
-                    </Button>
+                    {(() => {
+                      const isTunaiWithoutPhoto = (item.metode === 'Tunai' || String(item.buktiUrl).startsWith('LOKET-CASH') || !item.buktiUrl) && (!item.buktiUrl || item.buktiUrl === 'LOKET-CASH-CLAIM' || String(item.buktiUrl).startsWith('LOKET-CASH'));
+                      const canUploadPhoto = isTunaiWithoutPhoto || item.status === 'Ditolak';
+                      return (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setSelectedBukti(item)}
+                            aria-label={`Lihat detail transaksi ${item.id} oleh ${item.nama} (${item.kios})`}
+                            className="h-8 px-3 text-xs font-bold shadow-2xs"
+                          >
+                            Detail
+                          </Button>
+                          {canUploadPhoto && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setUploadItem(item)}
+                              aria-label={`Unggah foto bukti untuk ${item.id}`}
+                              className="h-8 px-2.5 text-xs font-bold text-red border-red/40 hover:bg-red-50 gap-1"
+                            >
+                              <Icon icon="heroicons:camera-20-solid" className="size-3.5" />
+                              <span>+ Foto</span>
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
@@ -242,11 +264,28 @@ function RiwayatTransaksiAdmin() {
         )}
       </div>
 
-      {/* Modal Detail & Kuitansi Transaksi */}
+      {/* Modal Detail Transaksi */}
       <BuktiPembayaranModal
         isOpen={Boolean(selectedBukti)}
         item={selectedBukti}
         onClose={() => setSelectedBukti(null)}
+        onUploadBukti={(item) => {
+          setSelectedBukti(null);
+          setUploadItem(item);
+        }}
+      />
+
+      {/* Modal Unggah Foto Bukti Susulan */}
+      <UploadBuktiSusulanModal
+        isOpen={Boolean(uploadItem)}
+        onClose={() => setUploadItem(null)}
+        pembayaran={uploadItem}
+        uploadEndpoint={uploadItem ? `/api/v1/admin/pembayaran/${String(uploadItem.idRaw || uploadItem.id).replace(/[^0-9]/g, '')}/bukti` : ''}
+        httpClient={httpClient}
+        onSuccess={() => {
+          setUploadItem(null);
+          fetchRiwayatGlobal();
+        }}
       />
     </div>
   );

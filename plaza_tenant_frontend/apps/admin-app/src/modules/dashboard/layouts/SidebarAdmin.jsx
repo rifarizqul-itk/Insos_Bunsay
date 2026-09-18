@@ -17,7 +17,7 @@ function SidebarAdmin({ isOpen, onClose, onLogout, isCollapsed = false, onToggle
       items: [
         { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid' },
         { id: 'verifikasi-bukti', label: 'Verifikasi Bukti', path: '/admin/verifikasi-bukti', perm: 'verifikasi_pembayaran', icon: 'heroicons:clipboard-document-check-20-solid' },
-        { id: 'setoran-tunai', label: 'Setoran Tunai', path: '/admin/setoran-tunai', perm: 'input_setoran', icon: 'heroicons:banknotes-20-solid' },
+        { id: 'setoran', label: 'Loket Pembayaran', path: '/admin/setoran', perm: 'input_setoran', icon: 'heroicons:banknotes-20-solid' },
       ]
     },
     {

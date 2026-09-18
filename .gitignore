@@ -58,6 +58,7 @@ plaza_tenant_backend/.phpunit.result.cache
 scratch/
 *.tmp
 *.bak
+Shopping-app-notification-sound-effect/
 
 *SKEMA DATABASE.md
 *README_SEEDER.md

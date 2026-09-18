@@ -14,14 +14,25 @@ export const ToastProvider = ({ children }) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const addToast = useCallback((message, type = 'info', duration = 4000) => {
+  const addToast = useCallback((msgOrObj, type = 'info', duration = 4000) => {
     const id = Date.now() + Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
 
-    if (duration > 0) {
+    let text = msgOrObj;
+    let toastType = type;
+    let toastDuration = duration;
+
+    if (msgOrObj && typeof msgOrObj === 'object') {
+      text = msgOrObj.message || msgOrObj.title || JSON.stringify(msgOrObj);
+      toastType = msgOrObj.type || type;
+      if (typeof msgOrObj.duration === 'number') toastDuration = msgOrObj.duration;
+    }
+
+    setToasts((prev) => [...prev, { id, message: String(text || ''), type: toastType }]);
+
+    if (toastDuration > 0) {
       setTimeout(() => {
         removeToast(id);
-      }, duration);
+      }, toastDuration);
     }
   }, [removeToast]);
 
@@ -49,21 +60,26 @@ const Toast = ({ toasts = [], removeToast }) => {
       data-slot="toast-container"
       className="fixed z-50 flex flex-col gap-2 w-[calc(100%-32px)] md:w-auto md:max-w-sm left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px)+12px)] md:bottom-6"
     >
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          role={toast.type === 'error' ? 'alert' : 'status'}
-          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-          className="bg-white border border-border rounded-xl p-3.5 px-4 shadow-card-elevated flex justify-between items-center animate-[popoverIn_0.2s_cubic-bezier(0.16,1,0.3,1)]"
-        >
-          <span 
-            className="text-sm font-semibold break-words flex-1 pe-2 text-pretty"
-            style={{
-              color: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--text)'
-            }}
+      {toasts.map((toast) => {
+        const renderText = typeof toast.message === 'object' 
+          ? (toast.message?.message || toast.message?.title || '') 
+          : String(toast.message ?? '');
+
+        return (
+          <div
+            key={toast.id}
+            role={toast.type === 'error' ? 'alert' : 'status'}
+            aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+            className="bg-white border border-border rounded-xl p-3.5 px-4 shadow-card-elevated flex justify-between items-center animate-[popoverIn_0.2s_cubic-bezier(0.16,1,0.3,1)]"
           >
-            {toast.message}
-          </span>
+            <span 
+              className="text-sm font-semibold break-words flex-1 pe-2 text-pretty"
+              style={{
+                color: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--text)'
+              }}
+            >
+              {renderText}
+            </span>
           {removeToast && (
             <button
               onClick={() => removeToast(toast.id)}
@@ -74,7 +90,8 @@ const Toast = ({ toasts = [], removeToast }) => {
             </button>
           )}
         </div>
-      ))}
+      );
+    })}
     </div>
   );
 };

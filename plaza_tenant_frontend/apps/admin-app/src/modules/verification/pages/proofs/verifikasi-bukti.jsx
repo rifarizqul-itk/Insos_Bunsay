@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
+import { Icon, Table, Card, Button, Badge, Modal, EmptyState, SkeletonTable, Pagination, useToast, ImageGallerySlider, UploadBuktiSusulanModal, formatDateTimeLocal, cn } from '@bunsay/shared-ui';
 import { resolveStorageUrl } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -10,6 +10,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
   const { httpClient } = useAdminAuth();
   const { addToast } = useToast();
   const [previewItem, setPreviewItem] = useState(null);
+  const [selectedUploadItem, setSelectedUploadItem] = useState(null);
   const [antrean, setAntrean] = useState([]);
   const [riwayatProses, setRiwayatProses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +77,7 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
       const common = {};
       if (o.search) common.q = o.search;
       if (selectedTenant) common.q = selectedTenant;
-r
+
       const [antreanRes, riwayatRes] = await Promise.all([
         httpClient.get('/api/v1/admin/pembayaran', {
           params: {
@@ -283,10 +284,10 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
 
         {/* Search + Tab Switcher + Refresh */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          <div className="relative">
+          <div className="relative shrink-0">
             <Icon
               icon="heroicons:magnifying-glass-20-solid"
-              className="size-4 text-text-3 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              className="size-4 text-text-3 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
             />
             <input
               type="search"
@@ -294,22 +295,26 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari TRX…"
               aria-label="Cari transaksi berdasarkan nomor"
-              className="h-8.5 w-40 sm:w-48 rounded-lg border border-border bg-white ps-9 pe-3 text-xs font-semibold text-text placeholder:text-text-3 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-red shadow-xs"
+              className="h-9 w-40 sm:w-48 rounded-full border border-border bg-white ps-9 pe-3.5 text-xs font-semibold text-text placeholder:text-text-3 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all shadow-xs"
             />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
+
+          <button
+            type="button"
             onClick={() => fetchVerifikasiQueue()}
             disabled={isLoading}
-            className="text-xs font-semibold gap-1 h-8.5 px-2.5 shadow-xs"
+            className="h-9 px-3.5 rounded-full border border-red/40 bg-white text-red hover:bg-red-50/70 hover:border-red focus:outline-none focus:ring-2 focus:ring-red text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50 shadow-xs shrink-0"
             title="Muat ulang data terbaru"
           >
             <Icon icon="heroicons:arrow-path-20-solid" className={cn("size-3.5", isLoading && "animate-spin text-red")} />
             <span className="hidden sm:inline">Segarkan</span>
-          </Button>
+          </button>
 
-          <div role="tablist" aria-label="Status Antrean Verifikasi" className="flex flex-1 sm:flex-initial bg-mono-100 p-0.5 rounded-lg border border-border/70">
+          <div
+            role="tablist"
+            aria-label="Status Antrean Verifikasi"
+            className="h-9 p-0.5 inline-flex items-center bg-mono-100 rounded-full border border-border/80 shadow-xs shrink-0"
+          >
             <button
               id="tab-antrean"
               role="tab"
@@ -317,11 +322,12 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               aria-controls="tabpanel-antrean"
               type="button"
               onClick={() => setActiveTab('antrean')}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
+              className={cn(
+                "h-full px-3.5 inline-flex items-center justify-center text-xs font-bold rounded-full transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red whitespace-nowrap",
                 activeTab === 'antrean'
                   ? 'bg-red text-white shadow-xs'
-                  : 'text-text-2 hover:text-text'
-              }`}
+                  : 'text-text-2 hover:text-text hover:bg-white/50'
+              )}
             >
               <span>Antrean ({totalAntrean})</span>
             </button>
@@ -332,11 +338,12 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
               aria-controls="tabpanel-riwayat"
               type="button"
               onClick={() => setActiveTab('riwayat')}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-md transition-colors cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red ${
+              className={cn(
+                "h-full px-3.5 inline-flex items-center justify-center text-xs font-bold rounded-full transition-all cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red whitespace-nowrap",
                 activeTab === 'riwayat'
                   ? 'bg-red text-white shadow-xs'
-                  : 'text-text-2 hover:text-text'
-              }`}
+                  : 'text-text-2 hover:text-text hover:bg-white/50'
+              )}
             >
               <span>Terproses ({totalRiwayat})</span>
             </button>
@@ -488,16 +495,36 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                       <span className="text-text-3">-</span>
                     )}
                   </td>
-                  <td data-label="Aksi" className="py-3 px-4 text-center">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setPreviewItem(item)}
-                      aria-label={`Lihat rincian riwayat ${item.nama} (${item.kios})`}
-                      className="min-h-11 sm:min-h-8 sm:h-8 px-3.5 text-xs font-bold shadow-2xs"
-                    >
-                      Lihat
-                    </Button>
+                  <td data-label="Aksi" className="py-3 px-4 text-center whitespace-nowrap">
+                    {(() => {
+                      const isTunaiWithoutPhoto = (item.labelMetode === 'Tunai' || String(item.buktiUrl).startsWith('LOKET-CASH') || !item.buktiUrl) && (!item.buktiUrl || item.buktiUrl === 'LOKET-CASH-CLAIM' || String(item.buktiUrl).startsWith('LOKET-CASH'));
+                      const canUploadPhoto = isTunaiWithoutPhoto || item.status === 'Ditolak';
+                      return (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setPreviewItem(item)}
+                            aria-label={`Lihat rincian riwayat ${item.nama} (${item.kios})`}
+                            className="min-h-11 sm:min-h-8 sm:h-8 px-3 text-xs font-bold shadow-2xs"
+                          >
+                            Lihat
+                          </Button>
+                          {canUploadPhoto && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedUploadItem(item)}
+                              aria-label={`Unggah foto bukti untuk ${item.trxCode || item.id}`}
+                              className="min-h-11 sm:min-h-8 sm:h-8 px-2.5 text-xs font-bold text-red border-red/40 hover:bg-red-50 gap-1"
+                            >
+                              <Icon icon="heroicons:camera-20-solid" className="size-3.5" />
+                              <span>+ Foto</span>
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
@@ -769,38 +796,67 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                   </div>
                 )}
               </div>
-              {previewItem.buktiUrl ? (
+              {previewItem.buktiUrl && previewItem.buktiUrl !== 'LOKET-CASH-CLAIM' ? (
                 <div className="w-full max-h-64 bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2">
                   <button
                     type="button"
                     onClick={() => window.open(resolveStorageUrl(previewItem.buktiUrl), '_blank')}
-                    aria-label={`Buka lampiran bukti transfer ${previewItem.trxCode || ''} dalam ukuran penuh di tab baru`}
+                    aria-label={`Buka lampiran bukti ${previewItem.trxCode || ''} dalam ukuran penuh di tab baru`}
                     className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
                     title="Klik untuk membuka ukuran penuh di tab baru"
                   >
                     <img
                       src={resolveStorageUrl(previewItem.buktiUrl)}
-                      alt={`Bukti Transfer ${previewItem.trxCode}`}
+                      alt={`Bukti ${previewItem.trxCode}`}
                       loading="lazy"
                       className="max-h-60 max-w-full object-contain rounded-md shadow-xs"
                     />
                   </button>
                 </div>
               ) : (
-                <div className="w-full bg-mono-100/50 border border-border/70 rounded-lg flex items-center gap-3 p-3.5">
-                  <div className="size-9 rounded-md bg-mono-200/80 flex items-center justify-center text-mono-500 shrink-0">
-                    <Icon icon="heroicons:document-text-20-solid" className="size-5" />
+                <div className="bg-mono-50 border border-dashed border-border/80 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-9 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                      <Icon icon="heroicons:camera-20-solid" className="size-5" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-text">Belum ada lampiran foto bukti fisik</span>
+                      <span className="text-text-3 text-2xs">
+                        Foto struk loket Batavia dapat dilampirkan langsung oleh admin sebagai arsip digital.
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs text-text font-bold block">Dokumen Bukti Transfer</span>
-                    <span className="text-xs text-text-3 font-mono font-medium">[Resi Transfer_{previewItem.trxCode || previewItem.id}.jpg]</span>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setSelectedUploadItem(previewItem)}
+                    className="gap-1.5 font-bold shrink-0 text-red border-red/40 hover:bg-red-50"
+                  >
+                    <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-3.5" />
+                    <span>Unggah Foto Bukti</span>
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         </Modal>
       )}
+
+      {/* MODAL: Upload Foto Bukti Susulan */}
+      <UploadBuktiSusulanModal
+        isOpen={Boolean(selectedUploadItem)}
+        onClose={() => setSelectedUploadItem(null)}
+        pembayaran={selectedUploadItem}
+        uploadEndpoint={selectedUploadItem ? `/api/v1/admin/pembayaran/${String(selectedUploadItem.id).replace(/[^0-9]/g, '')}/bukti` : ''}
+        httpClient={httpClient}
+        onSuccess={() => {
+          fetchVerifikasiQueue();
+          if (previewItem && selectedUploadItem && (previewItem.id === selectedUploadItem.id || previewItem.trxCode === selectedUploadItem.trxCode)) {
+            setPreviewItem(null);
+          }
+        }}
+      />
     </div>
   );
 }

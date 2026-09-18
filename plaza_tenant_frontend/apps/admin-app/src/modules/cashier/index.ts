@@ -1,1 +1,1 @@
-export { default as SetoranTunai } from './pages/setoran';
+export { default as SetoranTunai, SetoranTransfer } from './pages/setoran';

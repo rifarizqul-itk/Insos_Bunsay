@@ -119,11 +119,12 @@ class PembayaranController extends Controller
         // yang sedang login. Admin (Id_roles = 1) dikecualikan.
         $request->ensureTagihanOwnership();
 
-        // Kebijakan status verifikasi (dikonfirmasi 2026-08-13):
-        // - Midtrans/Tunai: auto Diterima (gateway / kasir di loket).
-        // - Transfer: selalu Menunggu verifikasi manual bukti foto oleh admin.
-        //   Status Diterima hanya boleh ditetapkan lewat konfirmasi admin.
-        $statusVerifikasi = $this->statusPolicy->initialStatus($request->Metode_Bayar);
+        // Kebijakan status verifikasi (dikonfirmasi 2026-08-13, diperluas 2026-09-19):
+        // - Admin menginput Transfer (validasi WA) atau Tunai di loket → auto Diterima.
+        // - Tenant menginput Transfer atau Tunai via web → Menunggu verifikasi.
+        // - Midtrans: auto Diterima (gateway otomatis).
+        $isAdmin = $request->user() && (int) $request->user()->Id_roles === 1;
+        $statusVerifikasi = $this->statusPolicy->initialStatus($request->Metode_Bayar, $isAdmin);
 
         // Bukti pembayaran: multipart, base64 data URI, atau string referensi.
         // Bukti tidak valid ditolak eksplisit (422) — tidak pernah dibuang diam-diam.
@@ -233,12 +234,21 @@ class PembayaranController extends Controller
         $nomFormatted = number_format((float) ($pembayaran->Total_Bayar ?? 0), 0, ',', '.');
         $namaTenant = $tagihanTarget?->sewa?->pemilik?->Nama ?? 'Tenant';
 
-        if ($pembayaran->Metode_Bayar === 'Transfer') {
+        if ($pembayaran->Metode_Bayar === 'Transfer' && $pembayaran->Verifikasi_Pembayaran === 'Menunggu') {
             \App\Models\Notification::send(
                 'admin',
                 null,
                 'Pembayaran Transfer Masuk',
                 "Tenant {$namaTenant} mengunggah bukti transfer sebesar Rp {$nomFormatted} (TRX-{$pembayaran->Id_Pembayaran}). Menunggu verifikasi admin.",
+                'info',
+                '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
+            );
+        } elseif ($pembayaran->Metode_Bayar === 'Tunai' && $pembayaran->Verifikasi_Pembayaran === 'Menunggu') {
+            \App\Models\Notification::send(
+                'admin',
+                null,
+                'Klaim Pembayaran Tunai Masuk',
+                "Tenant {$namaTenant} mengajukan pembayaran tunai sebesar Rp {$nomFormatted} (TRX-{$pembayaran->Id_Pembayaran}). Menunggu konfirmasi loket.",
                 'info',
                 '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
             );
@@ -478,7 +488,7 @@ class PembayaranController extends Controller
         if ($code === '' || strtoupper($code) === 'TRX-PAYMENT') {
             return response()->json([
                 'valid'   => false,
-                'message' => 'Silakan masukkan nomor kuitansi atau kode transaksi yang valid.',
+                'message' => 'Silakan masukkan kode transaksi yang valid.',
             ], 422);
         }
 
@@ -537,7 +547,7 @@ class PembayaranController extends Controller
             return response()->json([
                 'valid'   => false,
                 'status'  => 'Menunggu Verifikasi',
-                'message' => 'Transaksi ditemukan, namun statusnya masih dalam proses verifikasi oleh petugas/gateway dan belum sah sebagai kuitansi lunas.',
+                'message' => 'Transaksi ditemukan, namun statusnya masih dalam proses verifikasi oleh petugas loket dan belum disetujui.',
             ], 200);
         }
 
@@ -547,4 +557,149 @@ class PembayaranController extends Controller
             'message' => 'Transaksi ditemukan tetapi berstatus DITOLAK, sehingga tidak berlaku sebagai bukti pembayaran yang sah.',
         ], 200);
     }
+
+    /**
+     * Unggah foto bukti pembayaran susulan (terutama untuk transaksi tunai/loket
+     * atau transaksi yang bukti fotonya belum sempat dilampirkan).
+     */
+    public function uploadBuktiSusulan(Request $request, string $id)
+    {
+        $cleanId = (int) preg_replace('/[^0-9]/', '', $id);
+        $pembayaran = Pembayaran::with(['tagihan.sewa.pemilik'])->findOrFail($cleanId);
+
+        $user = $request->user();
+        $isAdmin = $user && (int) $user->Id_roles === 1;
+
+        if (!$isAdmin) {
+            $pemilikUser = $pembayaran->tagihan?->sewa?->pemilik?->Id_User;
+            $currentUserId = $user ? ($user->Id_user ?? $user->Id_User) : null;
+            if (!$pemilikUser || (int) $pemilikUser !== (int) $currentUserId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki hak akses untuk mengunggah bukti pembayaran ini.',
+                ], 403);
+            }
+        }
+
+        $currentBukti = $pembayaran->Bukti_Pembayaran;
+        $hasExistingPhoto = !empty($currentBukti) && !str_starts_with($currentBukti, 'LOKET-CASH') && $currentBukti !== '-';
+
+        if ($hasExistingPhoto && $pembayaran->Verifikasi_Pembayaran !== 'Ditolak') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Foto bukti pembayaran sudah tersimpan dan tidak dapat diubah kecuali status pembayaran ditolak oleh admin.',
+            ], 422);
+        }
+
+        $source = $request->file('bukti')
+            ?? $request->file('Bukti_Pembayaran')
+            ?? $request->input('bukti')
+            ?? $request->input('Bukti_Pembayaran');
+
+        if (!$source) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Berkas bukti pembayaran tidak ditemukan dalam permintaan.',
+            ], 422);
+        }
+
+        try {
+            $buktiPath = $this->buktiImageStore->store($source, 'bukti_susulan');
+        } catch (BuktiImageException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $isReplacedAfterRejection = ($pembayaran->Verifikasi_Pembayaran === 'Ditolak');
+
+        if ($isAdmin) {
+            $wasNotDiterima = ($pembayaran->Verifikasi_Pembayaran !== 'Diterima');
+
+            DB::transaction(function () use ($pembayaran, $buktiPath, $wasNotDiterima) {
+                $updates = ['Bukti_Pembayaran' => $buktiPath];
+                if ($wasNotDiterima) {
+                    $updates['Verifikasi_Pembayaran'] = 'Diterima';
+                }
+                $pembayaran->update($updates);
+
+                if ($wasNotDiterima) {
+                    $this->applyVerifiedAllocation($pembayaran);
+                }
+            });
+
+            if ($wasNotDiterima) {
+                \App\Models\ActivityLog::record(
+                    $request,
+                    'Pembayaran',
+                    'Verifikasi Terima',
+                    "Admin mengunggah foto bukti fisik loket dan langsung mengesahkan pembayaran TRX-{$pembayaran->Id_Pembayaran} menjadi Diterima (Lunas)."
+                );
+
+                $tenantUserId = $pembayaran->tagihan?->sewa?->pemilik?->Id_User;
+                if (!$tenantUserId && $pembayaran->Id_Tagihan) {
+                    $tagihanObj = Tagihan::with('sewa.pemilik')->find($pembayaran->Id_Tagihan);
+                    $tenantUserId = $tagihanObj?->sewa?->pemilik?->Id_User;
+                }
+
+                if ($tenantUserId) {
+                    $nomFormatted = number_format((float) ($pembayaran->Total_Bayar ?? 0), 0, ',', '.');
+                    \App\Models\Notification::send(
+                        'tenant',
+                        $tenantUserId,
+                        'Pembayaran Sewa Disahkan Lunas',
+                        "Pembayaran transaksi TRX-{$pembayaran->Id_Pembayaran} sebesar Rp {$nomFormatted} telah dilengkapi bukti fisik loket dan disahkan LUNAS oleh petugas admin.",
+                        'success',
+                        '/tenant/histori'
+                    );
+                }
+            }
+
+            return response()->json([
+                'success'   => true,
+                'message'   => $wasNotDiterima
+                    ? 'Foto bukti fisik loket berhasil disimpan dan transaksi langsung disahkan Lunas.'
+                    : 'Foto bukti pembayaran berhasil diunggah.',
+                'data'      => $pembayaran->fresh(),
+                'bukti_url' => asset($buktiPath),
+            ]);
+        }
+
+        $updates = [
+            'Bukti_Pembayaran' => $buktiPath,
+        ];
+
+        // Jika pembayaran sebelumnya berstatus Ditolak, unggah bukti baru oleh tenant mengembalikan
+        // status verifikasi menjadi 'Menunggu' agar masuk kembali ke antrean verifikasi admin.
+        if ($isReplacedAfterRejection) {
+            $updates['Verifikasi_Pembayaran'] = 'Menunggu';
+        }
+
+        $pembayaran->update($updates);
+
+        $namaTenant = $pembayaran->tagihan?->sewa?->pemilik?->Nama ?? 'Tenant';
+        $nomFormatted = number_format((float) ($pembayaran->Total_Bayar ?? 0), 0, ',', '.');
+        $notifTitle = $isReplacedAfterRejection ? 'Perbaikan Bukti Pembayaran Diunggah' : 'Foto Bukti Struk Diunggah';
+        $notifDesc = $isReplacedAfterRejection
+            ? "Tenant {$namaTenant} memperbarui foto bukti pembayaran yang ditolak senilai Rp {$nomFormatted} (TRX-{$pembayaran->Id_Pembayaran})."
+            : "Tenant {$namaTenant} mengunggah foto bukti fisik pembayaran Rp {$nomFormatted} (TRX-{$pembayaran->Id_Pembayaran}).";
+
+        \App\Models\Notification::send(
+            'admin',
+            null,
+            $notifTitle,
+            $notifDesc,
+            'info',
+            '/admin/verifikasi-bukti?trx=' . $pembayaran->Id_Pembayaran
+        );
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Foto bukti pembayaran berhasil diunggah.',
+            'data'      => $pembayaran->fresh(),
+            'bukti_url' => asset($buktiPath),
+        ]);
+    }
 }
+

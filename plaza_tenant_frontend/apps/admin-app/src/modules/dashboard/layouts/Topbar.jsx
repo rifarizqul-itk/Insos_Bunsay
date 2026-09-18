@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, NotificationPopover, cn } from '@bunsay/shared-ui';
-import { getEcho } from '@bunsay/shared-core';
+import { getEcho, playNotificationSound, warmUpNotificationAudio } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../auth/useAdminAuth';
 
 function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, variant = 'admin' }) {
@@ -29,25 +29,8 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
     }
   }, [httpClient]);
 
-  const playNotificationSound = useCallback(() => {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.45);
-    } catch {
-      // Audio autoplay policy fallback
-    }
+  const handlePlaySound = useCallback(() => {
+    playNotificationSound({ gain: 2.2 });
   }, []);
 
   const triggerBrowserNotification = useCallback((notif) => {
@@ -70,6 +53,9 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
   }, [navigate]);
 
   useEffect(() => {
+    // Warm up audio buffer on first user click/touch to bypass autoplay restrictions
+    warmUpNotificationAudio();
+
     // Minta izin notifikasi browser jika belum pernah ditolak
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
@@ -87,7 +73,7 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
       channel.listen('.notification.created', (e) => {
         setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
         setUnreadCount(prev => prev + 1);
-        playNotificationSound();
+        handlePlaySound();
         triggerBrowserNotification(e);
       });
 
@@ -95,7 +81,7 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
         echo.leaveChannel('admin-notifications');
       };
     }
-  }, [fetchNotifikasi, playNotificationSound, triggerBrowserNotification]);
+  }, [fetchNotifikasi, handlePlaySound, triggerBrowserNotification]);
 
   const handleMarkAllRead = async () => {
     try {

@@ -73,7 +73,7 @@ export function VerifikasiResi() {
     e.preventDefault();
     const clean = inputCode.trim();
     if (!clean) {
-      setSearchError('Masukkan nomor kuitansi atau kode transaksi.');
+      setSearchError('Masukkan kode transaksi pembayaran.');
       return;
     }
     if (clean.length < 3) {
@@ -147,7 +147,7 @@ export function VerifikasiResi() {
                     Dokumen Sah &amp; Terdaftar
                   </h2>
                   <p className="text-[11px] text-emerald-800">
-                    Kuitansi tercatat resmi di database UPTD Plaza Kebun Sayur
+                    Transaksi tercatat resmi di database UPTD Plaza Kebun Sayur
                   </p>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export function VerifikasiResi() {
               {/* Data Table */}
               <div className="rounded-xl border border-border/80 overflow-hidden divide-y divide-border/60 text-xs">
                 <div className="flex justify-between items-center px-3.5 py-2.5 bg-warm-gray/20">
-                  <span className="text-text-3 font-medium">No. Kuitansi</span>
+                  <span className="text-text-3 font-medium">ID Transaksi</span>
                   <span className="font-mono font-bold text-text text-xs sm:text-sm">{verifyResult.no_kuitansi}</span>
                 </div>
                 {verifyResult.referensi && verifyResult.referensi !== verifyResult.no_kuitansi && (
@@ -215,10 +215,10 @@ export function VerifikasiResi() {
             <div className="flex flex-col gap-4">
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-text">
-                  Verifikasi Bukti Pembayaran
+                  Verifikasi Status Pembayaran
                 </h2>
                 <p className="text-xs sm:text-sm text-text-2 mt-1">
-                  Periksa keaslian kuitansi atau surat setoran retribusi resmi.
+                  Periksa keabsahan dan status pencatatan transaksi sewa kios di sistem portal.
                 </p>
               </div>
 
@@ -236,8 +236,8 @@ export function VerifikasiResi() {
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    aria-label="Nomor kuitansi atau kode transaksi untuk verifikasi"
-                    placeholder="Nomor kuitansi / kode transaksi (mis: TRX-1)"
+                    aria-label="Kode transaksi untuk verifikasi"
+                    placeholder="Kode transaksi (mis: TRX-1)"
                     value={inputCode}
                     onChange={(e) => {
                       setInputCode(e.target.value);
@@ -258,10 +258,6 @@ export function VerifikasiResi() {
                   <p className="text-xs text-red font-medium">{searchError}</p>
                 )}
               </form>
-
-              <p className="text-[11px] text-text-3 border-t border-border/60 pt-3">
-                Atau pindai QR Code pada lembar kuitansi Anda untuk verifikasi otomatis.
-              </p>
             </div>
           )}
 

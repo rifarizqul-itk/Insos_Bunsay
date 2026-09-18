@@ -94,9 +94,31 @@ export function NotificationPopover({
   unreadCount = 0,
   onMarkAllRead,
   onNotificationClick,
+  isSoundMuted,
+  onToggleSoundMuted,
   variant = 'tenant',
 }) {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread'
+  const [muted, setMuted] = useState(() => {
+    if (typeof isSoundMuted === 'boolean') return isSoundMuted;
+    try {
+      return localStorage.getItem('bunsay_notif_sound_muted') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleMute = (e) => {
+    e.stopPropagation();
+    const next = !muted;
+    setMuted(next);
+    try {
+      localStorage.setItem('bunsay_notif_sound_muted', next ? 'true' : 'false');
+    } catch {}
+    if (onToggleSoundMuted) {
+      onToggleSoundMuted(next);
+    }
+  };
 
   const filteredList = useMemo(() => {
     if (activeFilter === 'unread') {
@@ -112,14 +134,14 @@ export function NotificationPopover({
   return (
     <div
       role="region"
-      aria-label="Panel Notifikasi Real-Time"
-      className="topbar-dropdown w-84 sm:w-96 max-w-[calc(100vw-2rem)] p-0 rounded-2xl shadow-2xl border border-border/80 bg-white overflow-hidden flex flex-col font-sans text-left"
+      aria-label="Panel Notifikasi"
+      className="absolute top-full right-0 mt-2.5 z-50 w-[calc(100vw-1.5rem)] sm:w-[420px] max-w-[95vw] bg-white border border-border/90 rounded-2xl shadow-modal flex flex-col font-sans text-left overflow-hidden origin-top-right animate-[popoverIn_0.18s_cubic-bezier(0.16,1,0.3,1)]"
     >
-      {/* Header Popover */}
-      <div className="p-4 sm:p-5 border-b border-border/70 flex flex-col gap-3 bg-mono-50/50">
+      {/* Header Popover - Sticky at top */}
+      <div className="shrink-0 p-4 sm:p-4.5 border-b border-border/70 flex flex-col gap-3 bg-mono-50/70">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-extrabold text-text tracking-tight">Notifikasi</h3>
+            <h3 className="text-sm font-extrabold text-text tracking-tight">Notifikasi</h3>
             <span className={cn(
               "text-xs font-bold px-2 py-0.5 rounded-full font-tabular-nums",
               unreadCount > 0 ? "bg-red text-white" : "bg-mono-200 text-text-2"
@@ -128,21 +150,42 @@ export function NotificationPopover({
             </span>
           </div>
 
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-1.5">
+            {/* Speaker Sound Mute / Unmute Toggle */}
             <button
               type="button"
-              onClick={onMarkAllRead}
-              aria-label="Tandai semua notifikasi sudah dibaca"
-              className="text-xs font-bold text-red hover:text-red-800 flex items-center gap-1 hover:underline cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
+              onClick={handleToggleMute}
+              title={muted ? "Suara notifikasi dibisukan (Klik untuk mengaktifkan)" : "Suara notifikasi aktif (Klik untuk membisukan)"}
+              aria-label={muted ? "Aktifkan suara notifikasi" : "Bisukan suara notifikasi"}
+              className={cn(
+                "size-8 rounded-lg flex items-center justify-center border transition-all cursor-pointer shadow-xs active:scale-95",
+                muted
+                  ? "bg-mono-100 text-mono-400 border-border hover:bg-mono-200 hover:text-text"
+                  : "bg-white text-red border-border/80 hover:bg-red-50 hover:border-red/30 shadow-2xs"
+              )}
             >
-              <Icon icon="heroicons:check-badge-20-solid" className="size-4" />
-              <span>Tandai Dibaca</span>
+              <Icon
+                icon={muted ? "heroicons:speaker-x-mark-20-solid" : "heroicons:speaker-wave-20-solid"}
+                className="size-4.5"
+              />
             </button>
-          )}
+
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={onMarkAllRead}
+                aria-label="Tandai semua notifikasi sudah dibaca"
+                className="text-xs font-bold text-red hover:text-red-800 flex items-center gap-1 hover:underline cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md px-1.5 py-1"
+              >
+                <Icon icon="heroicons:check-badge-20-solid" className="size-4" />
+                <span>Tandai Dibaca</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 bg-mono-100 rounded-lg border border-border/60 text-xs font-bold" role="group" aria-label="Filter notifikasi">
+        <div className="flex items-center gap-1.5 p-1 bg-mono-100/80 rounded-lg border border-border/60 text-xs font-bold" role="group" aria-label="Filter notifikasi">
           <button
             type="button"
             onClick={() => setActiveFilter('all')}
@@ -176,7 +219,11 @@ export function NotificationPopover({
       </div>
 
       {/* Scrollable Notification List */}
-      <div className="max-h-[22rem] overflow-y-auto divide-y divide-border/40 p-2" role="region" aria-live="polite">
+      <div
+        className="max-h-[min(480px,calc(100vh-10rem))] overflow-y-auto divide-y divide-border/40 p-2 overscroll-contain"
+        role="region"
+        aria-live="polite"
+      >
         {groupedNotifications.length === 0 ? (
           <div className="py-10 px-4 flex flex-col items-center justify-center text-center gap-2 text-text-3">
             <div className="size-12 rounded-full bg-mono-100 flex items-center justify-center text-mono-400">
@@ -230,21 +277,25 @@ export function NotificationPopover({
                           <Icon icon={iconCfg.icon} className="size-4" />
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline justify-between gap-1.5">
-                            <span className={cn(
-                              "text-xs leading-snug truncate",
-                              isUnread ? "font-extrabold text-text" : "font-bold text-text-2"
-                            )}>
+                        {/* Content: Full Title & Full Description */}
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4
+                              title={notif.title || 'Pemberitahuan'}
+                              className={cn(
+                                "text-xs sm:text-[13px] leading-snug break-words m-0 p-0 text-balance",
+                                isUnread ? "font-extrabold text-text" : "font-bold text-text-2"
+                              )}
+                            >
                               {notif.title || 'Pemberitahuan'}
-                            </span>
-                            <span className="text-2xs font-semibold text-text-3 shrink-0 font-tabular-nums">
+                            </h4>
+                            <span className="text-2xs font-semibold text-text-3 shrink-0 font-tabular-nums whitespace-nowrap pt-0.5">
                               {formatRelativeTime(notif.created_at)}
                             </span>
                           </div>
 
-                          <p className="text-xs text-text-2 font-medium line-clamp-2 mt-0.5 leading-relaxed">
+                          {/* Full Message without truncation */}
+                          <p className="text-xs text-text-2/85 font-normal m-0 leading-relaxed break-words whitespace-pre-line">
                             {notif.message || notif.teks || ''}
                           </p>
                         </div>
@@ -257,10 +308,8 @@ export function NotificationPopover({
           ))
         )}
       </div>
-
     </div>
   );
 }
 
 export default NotificationPopover;
-

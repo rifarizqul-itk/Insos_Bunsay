@@ -16,7 +16,7 @@ function BottomNav({ role = 'tenant' }) {
   const adminItems = [
     { label: 'Beranda', path: '/admin/dashboard', icon: 'heroicons:squares-2x2-20-solid', iconOutline: 'heroicons:squares-2x2' },
     { label: 'Verifikasi', path: '/admin/verifikasi-bukti', icon: 'heroicons:shield-check-20-solid', iconOutline: 'heroicons:shield-check' },
-    { label: 'Setoran', path: '/admin/setoran-tunai', icon: 'heroicons:banknotes-20-solid', iconOutline: 'heroicons:banknotes' },
+    { label: 'Loket', path: '/admin/setoran', icon: 'heroicons:banknotes-20-solid', iconOutline: 'heroicons:banknotes' },
     { label: 'Riwayat', path: '/admin/riwayat', icon: 'heroicons:clock-20-solid', iconOutline: 'heroicons:clock' },
     { label: 'Akun', path: '/admin/akun', icon: 'heroicons:user-circle-20-solid', iconOutline: 'heroicons:user-circle' }
   ];

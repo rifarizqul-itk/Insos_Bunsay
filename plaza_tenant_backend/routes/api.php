@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
     Route::get('/pembayaran', [PembayaranController::class, 'index']);
     Route::post('/pembayaran', [PembayaranController::class, 'store']);
     Route::post('/pembayaran/{id}/sanggah', [PembayaranController::class, 'sanggah']);
+    Route::post('/pembayaran/{id}/bukti', [PembayaranController::class, 'uploadBuktiSusulan']);
     
     // Midtrans Gateway telah dinonaktifkan (Revisi Mitra 5 September 2026)
     Route::post('/midtrans/token', fn () => response()->json([
@@ -135,6 +136,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function
     Route::apiResource('tagihan', TagihanController::class)->except(['destroy']);
     Route::apiResource('pembayaran', PembayaranController::class)->except(['destroy']);
     Route::put('/pembayaran/{id}/konfirmasi', [PembayaranController::class, 'konfirmasi']);
+    Route::post('/pembayaran/{id}/bukti', [PembayaranController::class, 'uploadBuktiSusulan']);
 
     // Pengaturan Aplikasi & Denda Keterlambatan Dinamis (Admin)
     Route::get('/settings/penalty', [\App\Http\Controllers\AppSettingController::class, 'getPenaltySetting']);

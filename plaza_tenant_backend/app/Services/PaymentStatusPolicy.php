@@ -16,18 +16,24 @@ class PaymentStatusPolicy
     public const DITOLAK  = 'Ditolak';
 
     /**
-     * Status awal pembayaran baru berdasarkan metode pembayaran:
-     *  - Transfer  → selalu Menunggu (bukti foto diverifikasi admin).
-     *    Client TIDAK boleh mengklaim Diterima, sekalipun mengirim field itu.
-     *  - Midtrans  → Diterima (gateway otomatis).
-     *  - Tunai     → Diterima (diinput langsung oleh admin/kasir di loket).
+     * Status awal pembayaran baru berdasarkan metode pembayaran dan peran pembuat:
+     *  - Admin menginput Transfer (validasi WA) atau Tunai (di loket) → Diterima.
+     *  - Tenant menginput Transfer atau Tunai (klaim web) → Menunggu (diverifikasi admin).
+     *  - Midtrans (gateway otomatis) → Diterima.
      *  - Metode lain (fallback defensif) → Menunggu.
      */
-    public function initialStatus(string $metode): string
+    public function initialStatus(string $metode, bool $isAdmin = false): string
     {
+        if ($isAdmin) {
+            return match ($metode) {
+                'Transfer', 'Tunai', 'Midtrans' => self::DITERIMA,
+                default                         => self::MENUNGGU,
+            };
+        }
+
         return match ($metode) {
-            'Midtrans', 'Tunai' => self::DITERIMA,
-            default             => self::MENUNGGU,
+            'Midtrans' => self::DITERIMA,
+            default    => self::MENUNGGU,
         };
     }
 
@@ -52,8 +58,8 @@ class PaymentStatusPolicy
      * Apakah status awal ini memicu pelunasan/pengalokasian dana segera
      * (Midtrans/Tunai) atau menunggu verifikasi admin (Transfer)?
      */
-    public function settlesImmediately(string $metode): bool
+    public function settlesImmediately(string $metode, bool $isAdmin = false): bool
     {
-        return $this->initialStatus($metode) === self::DITERIMA;
+        return $this->initialStatus($metode, $isAdmin) === self::DITERIMA;
     }
 }

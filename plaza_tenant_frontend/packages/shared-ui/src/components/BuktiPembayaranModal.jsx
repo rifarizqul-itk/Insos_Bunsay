@@ -5,29 +5,7 @@ import { Modal } from './Modal';
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Icon } from './Icon';
-import { BunsayQRCode } from './BunsayQRCode';
 import { ImageGallerySlider } from './ImageGallerySlider';
-
-function angkaKeTerbilang(nilai) {
-  const n = Math.floor(Math.abs(Number(nilai) || 0));
-  if (n === 0) return 'Nol';
-  
-  const bilangan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
-  
-  function convert(x) {
-    if (x < 12) return bilangan[x];
-    if (x < 20) return convert(x - 10) + ' Belas';
-    if (x < 100) return convert(Math.floor(x / 10)) + ' Puluh' + (x % 10 !== 0 ? ' ' + convert(x % 10) : '');
-    if (x < 200) return 'Seratus' + (x - 100 !== 0 ? ' ' + convert(x - 100) : '');
-    if (x < 1000) return convert(Math.floor(x / 100)) + ' Ratus' + (x % 100 !== 0 ? ' ' + convert(x % 100) : '');
-    if (x < 2000) return 'Seribu' + (x - 1000 !== 0 ? ' ' + convert(x - 1000) : '');
-    if (x < 1000000) return convert(Math.floor(x / 1000)) + ' Ribu' + (x % 1000 !== 0 ? ' ' + convert(x % 1000) : '');
-    if (x < 1000000000) return convert(Math.floor(x / 1000000)) + ' Juta' + (x % 1000000 !== 0 ? ' ' + convert(x % 1000000) : '');
-    return '';
-  }
-
-  return convert(n).trim();
-}
 
 export function resolveMidtransChannel(item) {
   if (!item) return 'Tidak Tersedia';
@@ -95,7 +73,7 @@ export function resolveMidtransChannel(item) {
   return 'Tidak Tersedia';
 }
 
-export function BuktiPembayaranModal({ isOpen, onClose, item }) {
+export function BuktiPembayaranModal({ isOpen, onClose, item, onUploadBukti }) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -124,8 +102,6 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
         ? item.nominal 
         : `Rp ${nominalNumeric.toLocaleString('id-ID')}`);
 
-  const terbilangTeks = angkaKeTerbilang(nominalNumeric);
-
   const buktiUrl = item.buktiUrl || item.Bukti_Pembayaran || '';
   const isFilePath = buktiUrl && (buktiUrl.includes('/') || buktiUrl.includes('\\') || /\.(png|jpg|jpeg|webp)$/i.test(buktiUrl));
   
@@ -142,11 +118,6 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
   const displayRefCode = isMidtrans 
     ? midtransOrderId 
     : (isFilePath ? trxLabel : (buktiUrl || trxLabel));
-
-  // Dynamic verification URL for QR Code
-  const verificationUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/verifikasi?trx=${encodeURIComponent(trxLabel)}&ref=${encodeURIComponent(displayRefCode)}`
-    : `https://bunsay.balikpapan.go.id/verifikasi?trx=${encodeURIComponent(trxLabel)}`;
 
   // Resolve image source URL for backend storage files
   const getResolvedImageUrl = (url) => {
@@ -211,290 +182,6 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
     }
   };
 
-  // Isolated Professional Iframe Print
-  const handlePrint = () => {
-    const qrElement = document.getElementById('bunsay-qr-svg-wrapper');
-    const qrSvgMarkup = qrElement ? qrElement.innerHTML : '';
-
-    const printIframe = document.createElement('iframe');
-    printIframe.style.position = 'fixed';
-    printIframe.style.right = '0';
-    printIframe.style.bottom = '0';
-    printIframe.style.width = '0';
-    printIframe.style.height = '0';
-    printIframe.style.border = '0';
-    document.body.appendChild(printIframe);
-
-    const doc = printIframe.contentWindow.document;
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html lang="id">
-        <head>
-          <meta charset="utf-8">
-          <title>Bukti Pembayaran Retribusi - ${trxLabel}</title>
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 15mm 20mm;
-            }
-            * {
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              color: #111;
-              background: #fff;
-              margin: 0;
-              padding: 0;
-              font-size: 13px;
-              line-height: 1.5;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .kop-container {
-              text-align: center;
-              border-bottom: 3px double #111;
-              padding-bottom: 12px;
-              margin-bottom: 20px;
-            }
-            .kop-container h2 {
-              margin: 0;
-              font-size: 16px;
-              font-weight: 800;
-              letter-spacing: 0.5px;
-              text-transform: uppercase;
-            }
-            .kop-container h3 {
-              margin: 3px 0;
-              font-size: 14px;
-              font-weight: 700;
-            }
-            .kop-container p {
-              margin: 2px 0;
-              font-size: 11px;
-              color: #444;
-            }
-            .doc-title {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-            .doc-title h1 {
-              margin: 0;
-              font-size: 14px;
-              font-weight: 800;
-              text-decoration: underline;
-              letter-spacing: 0.5px;
-              text-transform: uppercase;
-            }
-            .doc-title p {
-              margin: 4px 0 0 0;
-              font-size: 12px;
-              font-weight: 600;
-              color: #222;
-            }
-            .meta-grid {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 18px;
-              font-size: 12px;
-            }
-            .meta-grid td {
-              padding: 4px 6px;
-              vertical-align: top;
-            }
-            .meta-grid td.lbl {
-              width: 18%;
-              color: #444;
-              font-weight: 600;
-            }
-            .meta-grid td.col {
-              width: 2%;
-              text-align: center;
-            }
-            .meta-grid td.val {
-              width: 30%;
-              font-weight: 700;
-              color: #000;
-            }
-            .items-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 16px;
-              font-size: 12px;
-            }
-            .items-table th {
-              background-color: #f2f2f2;
-              border: 1px solid #333;
-              padding: 8px 10px;
-              font-weight: 700;
-              text-align: left;
-            }
-            .items-table td {
-              border: 1px solid #333;
-              padding: 8px 10px;
-            }
-            .total-row th {
-              background-color: #f9f9f9;
-              font-size: 13px;
-              font-weight: 800;
-            }
-            .terbilang-card {
-              border: 1px solid #333;
-              background-color: #fafafa;
-              padding: 8px 12px;
-              margin-bottom: 24px;
-              font-size: 12px;
-              font-style: italic;
-            }
-            .footer-grid {
-              display: table;
-              width: 100%;
-              margin-top: 20px;
-              page-break-inside: avoid;
-            }
-            .footer-col-left {
-              display: table-cell;
-              width: 55%;
-              vertical-align: top;
-              padding-right: 20px;
-              font-size: 11px;
-              color: #444;
-            }
-            .footer-col-right {
-              display: table-cell;
-              width: 45%;
-              vertical-align: top;
-              text-align: center;
-              font-size: 12px;
-            }
-            .qr-holder {
-              display: inline-block;
-              margin: 6px auto;
-              padding: 4px;
-              border: 1px solid #ddd;
-              background: #fff;
-              border-radius: 6px;
-            }
-            .qr-holder svg {
-              display: block;
-              width: 90px;
-              height: 90px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="kop-container">
-            <h2>Pemerintah Kota Balikpapan</h2>
-            <h3>Dinas Perdagangan &bull; UPTD Pasar Plaza Kebun Sayur</h3>
-            <p>Jl. Letjen Suprapto, Baru Ilir, Balikpapan Barat &bull; Telp: (0542) 731234 &bull; Pos: 76131</p>
-          </div>
-
-          <div class="doc-title">
-            <h1>Ringkasan Bukti Transaksi Pembayaran</h1>
-            <p>No. Transaksi: <strong>${trxLabel}</strong> &bull; Status: <strong style="color: #14592F;">LUNAS / TERVERIFIKASI</strong></p>
-          </div>
-
-          <table class="meta-grid">
-            <tr>
-              <td class="lbl">Nama Penyewa</td>
-              <td class="col">:</td>
-              <td class="val">${item.nama || 'Tenant'}</td>
-              <td class="lbl">Waktu Bayar</td>
-              <td class="col">:</td>
-              <td class="val">${formatDateTimeLocal(item.waktu || item.tanggal).formatted}</td>
-            </tr>
-            <tr>
-              <td class="lbl">Unit / Lokasi Kios</td>
-              <td class="col">:</td>
-              <td class="val">Kios ${item.kios || '-'}</td>
-              <td class="lbl">Metode Bayar</td>
-              <td class="col">:</td>
-              <td class="val">${isMidtrans ? `Pembayaran Otomatis (${resolveMidtransChannel(item)})` : isTunai ? 'Setoran Tunai (Loket)' : 'Transfer Bank'}</td>
-            </tr>
-            <tr>
-              <td class="lbl">Kode Referensi</td>
-              <td class="col">:</td>
-              <td class="val" style="font-family: monospace;">${displayRefCode}</td>
-              <td class="lbl">Status Verifikasi</td>
-              <td class="col">:</td>
-              <td class="val" style="color: #14592F;">${item.status || 'Diterima'}</td>
-            </tr>
-          </table>
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th style="width: 8%; text-align: center;">No</th>
-                <th style="width: 52%;">Uraian Retribusi Pemakaian Kekayaan Daerah</th>
-                <th style="width: 20%; text-align: center;">Periode</th>
-                <th style="width: 20%; text-align: right;">Jumlah (Rp)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="text-align: center;">1</td>
-                <td>
-                  <strong>Sewa Kios Plaza Kebun Sayur</strong><br>
-                  <span style="font-size: 11px; color: #555;">Unit Kios ${item.kios || '-'} &bull; Dikelola UPTD Pasar Balikpapan</span>
-                </td>
-                <td style="text-align: center;">${item.periode || 'Bulan Berjalan'}</td>
-                <td style="text-align: right; font-weight: 700;">${nominalFormatted}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <th colspan="3" style="text-align: right;">TOTAL DIBAYAR</th>
-                <th style="text-align: right; font-size: 14px;">${nominalFormatted}</th>
-              </tr>
-            </tfoot>
-          </table>
-
-          <div class="terbilang-card">
-            <strong>Terbilang:</strong> <em># ${terbilangTeks} Rupiah #</em>
-          </div>
-
-          <div class="footer-grid">
-            <div class="footer-col-left">
-              <p><strong>Catatan Penting:</strong></p>
-              <p style="margin: 2px 0;">1. Dokumen ini merupakan ringkasan bukti pencatatan transaksi digital pada Portal Bunsay Hub.</p>
-              <p style="margin: 2px 0;">2. Kuitansi resmi retribusi tetap diterbitkan secara sah oleh Bagian Keuangan UPTD melalui Sistem Batavia.</p>
-              <p style="margin: 8px 0 0 0; font-size: 10px; color: #666;">Dicetak pada: ${new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })} WITA</p>
-            </div>
-
-            <div class="footer-col-right">
-              <p style="margin: 0;">Balikpapan, ${item.tanggal || item.waktu || '2026'}</p>
-              <p style="margin: 2px 0 4px 0; font-weight: 700;">UPTD Pasar Plaza Kebun Sayur</p>
-              
-              <div class="qr-holder">
-                ${qrSvgMarkup}
-              </div>
-
-              <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: 700; color: #14592F;">TERVERIFIKASI SISTEM BUNSAY HUB</p>
-              <p style="margin: 1px 0 0 0; font-size: 10px; color: #555;">( Bagian Keuangan / Kasir Loket )</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    doc.close();
-
-    setTimeout(() => {
-      try {
-        printIframe.contentWindow.focus();
-        printIframe.contentWindow.print();
-      } catch (e) {
-        console.error('Print Error:', e);
-      } finally {
-        setTimeout(() => {
-          if (document.body.contains(printIframe)) {
-            document.body.removeChild(printIframe);
-          }
-        }, 1000);
-      }
-    }, 250);
-  };
-
   return (
     <Modal
       isOpen={isModalOpen}
@@ -504,23 +191,28 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
       badge={<Badge status={item.status || 'Diterima'} />}
       size="xl"
       footer={
-        <div className="flex items-center justify-between w-full gap-3 print:hidden">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="gap-2 font-bold text-text-2 border-border/80 hover:bg-mono-100"
-          >
-            <Icon icon="heroicons:printer-20-solid" className="size-4" />
-            <span>Cetak Ringkasan Transaksi</span>
-          </Button>
+        <div className="flex items-center justify-between w-full gap-3">
+          {(!activeImageSrc || buktiUrl === 'LOKET-CASH-CLAIM' || String(buktiUrl).startsWith('LOKET-CASH') || item.status === 'Ditolak') && onUploadBukti ? (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                onClose();
+                onUploadBukti(item);
+              }}
+              className="gap-1.5 font-bold text-xs"
+            >
+              <Icon icon="heroicons:camera-20-solid" className="size-4" />
+              <span>{item.status === 'Ditolak' && activeImageSrc ? 'Perbaiki Foto Bukti' : '+ Unggah Foto Bukti'}</span>
+            </Button>
+          ) : <div />}
           <Button
             type="button"
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="px-6 font-bold"
+            className="px-6 font-bold ms-auto"
           >
             Tutup
           </Button>
@@ -686,12 +378,12 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
           </div>
         )}
 
-        {/* B. DETAIL RESMI KUITANSI KASIR LOKET TUNAI */}
+        {/* B. DETAIL CATATAN PEMBAYARAN TUNAI LOKET */}
         {isTunai && (
           <div className="flex flex-col gap-3">
-            <h2 className="label-micro text-text-3">Bukti Kuitansi Kasir Loket</h2>
+            <h2 className="label-micro text-text-3">Catatan Pembayaran Tunai Loket</h2>
 
-            {/* Stamped Cash Counter Voucher Card */}
+            {/* Cash Counter Info Card */}
             <div className="bg-mono-50 border border-border/80 rounded-xl p-4 flex flex-col gap-3 text-xs">
               <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
                 <div className="flex items-center gap-2">
@@ -707,8 +399,8 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                 <div>
-                  <span className="text-text-3 text-[11px] block">No. Bukti Kuitansi</span>
-                  <span className="font-mono font-bold text-xs text-text">{`KWT-${trxLabel}`}</span>
+                  <span className="text-text-3 text-[11px] block">Kode Transaksi</span>
+                  <span className="font-mono font-bold text-xs text-text">{trxLabel}</span>
                 </div>
                 <div>
                   <span className="text-text-3 text-[11px] block">Petugas Penerima</span>
@@ -716,7 +408,12 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
                 </div>
                 <div>
                   <span className="text-text-3 text-[11px] block">Status Pembukuan</span>
-                  <span className="font-bold text-emerald-800">Tercatat di Kas</span>
+                  <span className={cn(
+                    "font-bold",
+                    item.status === 'Diterima' ? "text-emerald-800" : "text-amber-800"
+                  )}>
+                    {item.status === 'Diterima' ? 'Tercatat di Kas' : 'Menunggu Konfirmasi Loket'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-text-3 text-[11px] block">Waktu Penyetoran</span>
@@ -725,117 +422,119 @@ export function BuktiPembayaranModal({ isOpen, onClose, item }) {
               </div>
 
               <div className="pt-2 border-t border-border/60 flex items-center gap-2 text-[11px] text-amber-900 font-medium">
-                <Icon icon="heroicons:check-badge-20-solid" className="size-4 text-amber-700 shrink-0" />
-                <span>Kuitansi fisik resmi telah diserahkan &amp; distempel langsung di loket kasir pengelola.</span>
+                <Icon icon="heroicons:information-circle-20-solid" className="size-4 text-amber-700 shrink-0" />
+                <span>Struk cetak fisik resmi diserahkan langsung oleh kasir melalui sistem internal Batavia.</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* C. DETAIL TRANSFER BANK MANUAL DENGAN SLIP */}
-        {isTransfer && (
-          <div className="flex flex-col gap-3">
-            <h2 className="label-micro text-text-3">Lampiran Bukti Slip Transfer</h2>
+        {/* C. LAMPIRAN FOTO BUKTI / STRUK PEMBAYARAN */}
+        <div className="flex flex-col gap-3">
+          <h2 className="label-micro text-text-3">
+            {isTunai ? 'Lampiran Foto Struk / Bukti Fisik Loket' : 'Lampiran Bukti Slip Transfer'}
+          </h2>
 
-            {activeImageSrc && !imageError ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-text-3">
-                    Pratinjau Foto Slip:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsZoomed(!isZoomed)}
-                      className="text-xs font-bold text-text-2 hover:text-red flex items-center gap-1 cursor-pointer transition-colors"
-                      aria-label={isZoomed ? "Kecilkan tampilan foto bukti transfer" : "Perbesar tampilan foto bukti transfer"}
-                    >
-                      <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} className="size-3.5" />
-                      <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
-                    </button>
-                    <span className="text-border text-xs">|</span>
-                    <button
-                      type="button"
-                      onClick={handleDownloadBukti}
-                      className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer transition-colors"
-                      aria-label="Unduh foto bukti transfer"
-                    >
-                      <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
-                      <span>Unduh</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className={cn(
-                  "w-full bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2 transition-all",
-                  isZoomed ? "max-h-[30rem]" : "max-h-72"
-                )}>
+          {activeImageSrc && !imageError ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-3">
+                  Pratinjau Foto Bukti:
+                </span>
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsZoomed(!isZoomed)}
-                    aria-label={isZoomed ? "Kecilkan tampilan foto bukti transfer" : "Perbesar tampilan foto bukti transfer"}
-                    className="flex items-center justify-center max-h-full max-w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
+                    className="text-xs font-bold text-text-2 hover:text-red flex items-center gap-1 cursor-pointer transition-colors"
+                    aria-label={isZoomed ? "Kecilkan tampilan foto bukti" : "Perbesar tampilan foto bukti"}
                   >
-                    <img
-                      src={activeImageSrc}
-                      alt={`Bukti Transfer ${trxLabel}`}
-                      loading="lazy"
-                      onError={() => {
-                        setImageError(true);
-                      }}
-                      className="max-h-full max-w-full object-contain rounded-md"
-                    />
+                    <Icon icon={isZoomed ? "heroicons:magnifying-glass-minus-20-solid" : "heroicons:magnifying-glass-plus-20-solid"} className="size-3.5" />
+                    <span>{isZoomed ? 'Kecilkan' : 'Perbesar'}</span>
                   </button>
+                  <span className="text-border text-xs">|</span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadBukti}
+                    className="text-xs font-bold text-red hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                    aria-label="Unduh foto bukti"
+                  >
+                    <Icon icon="heroicons:arrow-down-tray-20-solid" className="size-3.5" />
+                    <span>Unduh</span>
+                  </button>
+                  {onUploadBukti && item.status === 'Ditolak' && (
+                    <>
+                      <span className="text-border text-xs">|</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onUploadBukti(item);
+                        }}
+                        className="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer transition-colors"
+                        aria-label="Perbaiki foto bukti pembayaran yang ditolak"
+                      >
+                        <Icon icon="heroicons:arrow-path-20-solid" className="size-3.5" />
+                        <span>Perbaiki Foto</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
-            ) : (
-              <div className="bg-mono-50 border border-border/80 rounded-lg p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-10 rounded-md bg-mono-200/80 flex items-center justify-center text-mono-600 shrink-0">
-                    <Icon icon="heroicons:photo-20-solid" className="size-5.5" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-text truncate">
-                      {isFilePath ? buktiUrl.split('/').pop() : `Bukti_Transfer_${trxLabel}.jpg`}
-                    </span>
-                    <span className="text-xs text-text-3 font-medium">
-                      Gambar tidak ditemukan di storage server
-                    </span>
-                  </div>
+
+              <div className={cn(
+                "w-full bg-mono-100/30 rounded-lg border border-border overflow-hidden flex items-center justify-center p-2 transition-all",
+                isZoomed ? "max-h-[30rem]" : "max-h-72"
+              )}>
+                <button
+                  type="button"
+                  onClick={() => setIsZoomed(!isZoomed)}
+                  aria-label={isZoomed ? "Kecilkan tampilan foto bukti" : "Perbesar tampilan foto bukti"}
+                  className="flex items-center justify-center max-h-full max-w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red rounded-md"
+                >
+                  <img
+                    src={activeImageSrc}
+                    alt={`Bukti ${trxLabel}`}
+                    loading="lazy"
+                    onError={() => {
+                      setImageError(true);
+                    }}
+                    className="max-h-full max-w-full object-contain rounded-md"
+                  />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-mono-50 border border-dashed border-border/80 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-9 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                  <Icon icon="heroicons:camera-20-solid" className="size-5" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-text">Belum ada foto bukti fisik / struk</span>
+                  <span className="text-text-3 text-2xs">
+                    {isTunai 
+                      ? 'Foto struk loket kasir dapat dilampirkan sebagai arsip digital.' 
+                      : 'Berkas bukti pembayaran tidak ditemukan atau belum dilampirkan.'}
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* 5. DIGITAL AUTHENTICITY QR CODE & SEAL SECTION */}
-        <div className="pt-3 border-t border-border/60 flex flex-col gap-3">
-          <h2 className="label-micro text-text-3">Verifikasi &amp; Keabsahan Digital</h2>
-          
-          <div className="flex items-center gap-4 p-3.5 rounded-xl bg-mono-50 border border-border/80">
-            <div id="bunsay-qr-svg-wrapper" className="shrink-0">
-              <BunsayQRCode value={verificationUrl} size={90} />
+              {onUploadBukti && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onUploadBukti(item);
+                  }}
+                  className="gap-1.5 font-bold shrink-0 text-xs shadow-2xs"
+                >
+                  <Icon icon="heroicons:arrow-up-tray-20-solid" className="size-4" />
+                  <span>Unggah Foto Bukti</span>
+                </Button>
+              )}
             </div>
-
-            <div className="flex flex-col gap-1 min-w-0 text-xs">
-              <div className="flex items-center gap-1.5 font-bold text-emerald-800">
-                <Icon icon="heroicons:shield-check-20-solid" className="size-4 text-emerald-600 shrink-0" />
-                <span>Dokumen Sah e-Retribusi</span>
-              </div>
-              <p className="text-[11px] text-text-3 leading-snug">
-                Pindai QR Code untuk memvalidasi keaslian resi.
-              </p>
-              <a
-                href={verificationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] font-bold text-red hover:underline inline-flex items-center gap-1 mt-0.5"
-              >
-                <span>Buka Tautan Validasi</span>
-                <Icon icon="heroicons:arrow-top-right-on-square-20-solid" className="size-3" />
-              </a>
-            </div>
-          </div>
+          )}
         </div>
 
       </div>

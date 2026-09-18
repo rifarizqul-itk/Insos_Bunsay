@@ -10,8 +10,10 @@ use App\Models\Sewa;
 use App\Models\Tagihan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -666,4 +668,258 @@ class PembayaranTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Admin storing transfer payment (validated via WA) is auto-accepted and settles tagihan immediately.
+     */
+    public function test_admin_store_transfer_is_auto_accepted(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+        $tagihan = $this->createOpenTagihan();
+
+        $response = $this->postJson('/api/v1/admin/pembayaran', [
+            'Id_Tagihan'    => $tagihan->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-09-19',
+            'Total_Bayar'   => 1500000,
+            'Metode_Bayar'  => 'Transfer',
+            'Bukti_Pembayaran' => 'BUKTI_WA_VALIDATED.jpg',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('Verifikasi_Pembayaran', 'Diterima');
+
+        $this->assertDatabaseHas('pembayaran', [
+            'Id_Tagihan' => $tagihan->Id_Tagihan,
+            'Verifikasi_Pembayaran' => 'Diterima',
+            'Metode_Bayar' => 'Transfer',
+        ]);
+        $this->assertDatabaseHas('tagihan', [
+            'Id_Tagihan' => $tagihan->Id_Tagihan,
+            'Status_Tagihan' => 'Lunas',
+        ]);
+    }
+
+    /**
+     * Tenant storing tunai payment from web is stored as Menunggu (needs admin verification at loket).
+     */
+    public function test_tenant_store_tunai_is_stored_as_menunggu(): void
+    {
+        Sanctum::actingAs($this->tenantUser1);
+        $tagihan = $this->createOpenTagihan();
+
+        $response = $this->postJson('/api/v1/tenant/pembayaran', [
+            'Id_Tagihan'    => $tagihan->Id_Tagihan,
+            'Tanggal_Bayar' => '2026-09-19',
+            'Total_Bayar'   => 1500000,
+            'Metode_Bayar'  => 'Tunai',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('Verifikasi_Pembayaran', 'Menunggu');
+
+        $this->assertDatabaseHas('pembayaran', [
+            'Id_Tagihan' => $tagihan->Id_Tagihan,
+            'Verifikasi_Pembayaran' => 'Menunggu',
+            'Metode_Bayar' => 'Tunai',
+        ]);
+        $this->assertDatabaseHas('tagihan', [
+            'Id_Tagihan' => $tagihan->Id_Tagihan,
+            'Status_Tagihan' => 'Belum Bayar',
+        ]);
+    }
+
+    /**
+     * Tenant dapat mengunggah foto bukti susulan untuk transaksi miliknya.
+     */
+    public function test_tenant_can_upload_bukti_susulan(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->tenantUser1);
+
+        $file = UploadedFile::fake()->image('struk_loket.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/tenant/pembayaran/{$this->pembayaran1->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $pembayaran = $this->pembayaran1->fresh();
+        $this->assertNotNull($pembayaran->Bukti_Pembayaran);
+        $this->assertStringContainsString('storage/bukti', $pembayaran->Bukti_Pembayaran);
+    }
+
+    /**
+     * Tenant lain tidak dapat mengunggah bukti susulan ke transaksi orang lain.
+     */
+    public function test_tenant_cannot_upload_bukti_susulan_for_other_tenant(): void
+    {
+        Sanctum::actingAs($this->tenantUser2);
+
+        $file = UploadedFile::fake()->image('struk_loket.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/tenant/pembayaran/{$this->pembayaran1->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Admin dapat mengunggah foto bukti susulan untuk transaksi manapun.
+     */
+    public function test_admin_can_upload_bukti_susulan(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->adminUser);
+
+        $file = UploadedFile::fake()->image('struk_admin.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/admin/pembayaran/{$this->pembayaran1->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        // Ketika admin mengunggah bukti untuk pembayaran yang belum diterima,
+        // status langsung berubah Lunas (Diterima) dan tagihan dilunasi.
+        $this->assertSame('Diterima', $this->pembayaran1->fresh()->Verifikasi_Pembayaran);
+        $this->assertSame('Lunas', $this->tagihan1->fresh()->Status_Tagihan);
+    }
+
+    /**
+     * Pengguna tidak dapat mengganti foto jika foto sudah ada dan status bukan Ditolak.
+     */
+    public function test_cannot_replace_existing_photo_if_status_is_menunggu_or_diterima(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->tenantUser1);
+
+        // Buat pembayaran dengan foto dan status Menunggu
+        $pembayaranMenunggu = \App\Models\Pembayaran::create([
+            'Id_Tagihan'            => $this->tagihan1->Id_Tagihan,
+            'Tanggal_Bayar'         => '2026-08-05',
+            'Total_Bayar'           => 1500000,
+            'Metode_Bayar'          => 'Transfer',
+            'Bukti_Pembayaran'      => 'storage/bukti/foto_pertama.png',
+            'Verifikasi_Pembayaran' => 'Menunggu',
+        ]);
+
+        $file = UploadedFile::fake()->image('foto_kedua.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/tenant/pembayaran/{$pembayaranMenunggu->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Foto bukti pembayaran sudah tersimpan dan tidak dapat diubah kecuali status pembayaran ditolak oleh admin.');
+
+        // Coba untuk status Diterima
+        $pembayaranMenunggu->update(['Verifikasi_Pembayaran' => 'Diterima']);
+
+        $response2 = $this->postJson("/api/v1/tenant/pembayaran/{$pembayaranMenunggu->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response2->assertStatus(422);
+    }
+
+    /**
+     * Pengguna dapat mengganti foto jika status Ditolak, dan status kembali ke Menunggu.
+     */
+    public function test_can_replace_photo_if_status_is_ditolak_and_resets_to_menunggu(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->tenantUser1);
+
+        $pembayaranDitolak = \App\Models\Pembayaran::create([
+            'Id_Tagihan'            => $this->tagihan1->Id_Tagihan,
+            'Tanggal_Bayar'         => '2026-08-05',
+            'Total_Bayar'           => 1500000,
+            'Metode_Bayar'          => 'Transfer',
+            'Bukti_Pembayaran'      => 'storage/bukti/foto_lama_buram.png',
+            'Verifikasi_Pembayaran' => 'Ditolak',
+        ]);
+
+        $file = UploadedFile::fake()->image('foto_baru_jelas.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/tenant/pembayaran/{$pembayaranDitolak->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $fresh = $pembayaranDitolak->fresh();
+        $this->assertSame('Menunggu', $fresh->Verifikasi_Pembayaran);
+        $this->assertNotSame('storage/bukti/foto_lama_buram.png', $fresh->Bukti_Pembayaran);
+    }
+
+    /**
+     * Admin mengunggah bukti fisik untuk transaksi loket tunai yang masih berstatus 'Menunggu',
+     * status pembayaran harus langsung berubah menjadi 'Diterima' (Lunas) tanpa perlu verifikasi ulang.
+     */
+    public function test_admin_upload_bukti_for_cash_menunggu_auto_accepts_and_settles(): void
+    {
+        Storage::fake('public');
+        Sanctum::actingAs($this->adminUser);
+
+        $kios = Kios::create([
+            'No_Kios' => 'B-99',
+            'Lantai'  => 2,
+            'Ukuran'  => '3x3 m',
+            'Status'  => 'Terisi',
+        ]);
+        $sewaBaru = Sewa::create([
+            'Id_Pemilik'      => $this->pemilik2->Id_Pemilik,
+            'Id_Kios'         => $kios->Id_Kios,
+            'Jenis_Usaha'     => 'Kuliner',
+            'Tanggal_Mulai'   => '2026-01-01',
+            'Tanggal_Selesai' => '2026-12-31',
+            'Status'          => 'Aktif',
+        ]);
+        $tagihan = Tagihan::create([
+            'Id_Sewa'          => $sewaBaru->Id_Sewa,
+            'Periode'          => '2026-09',
+            'Jatuh_Tempo'      => '2026-09-10',
+            'Tarif_Sewa'       => 1000000,
+            'Hutang_Tunggakan' => 0,
+            'Total_Tagihan'    => 1000000,
+            'Sisa_Tagihan'     => 1000000,
+            'Status_Tagihan'   => 'Belum Bayar',
+        ]);
+
+        // Pembayaran tunai loket dibuat tanpa foto fisik (referensi LOKET-CASH) status Menunggu
+        $pembayaranCash = \App\Models\Pembayaran::create([
+            'Id_Tagihan'            => $tagihan->Id_Tagihan,
+            'Tanggal_Bayar'         => '2026-09-10',
+            'Total_Bayar'           => 1000000,
+            'Metode_Bayar'          => 'Tunai',
+            'Bukti_Pembayaran'      => 'LOKET-CASH-TEST123',
+            'Verifikasi_Pembayaran' => 'Menunggu',
+        ]);
+
+        $file = UploadedFile::fake()->image('struk_loket_batavia.jpg', 600, 800);
+
+        $response = $this->postJson("/api/v1/admin/pembayaran/{$pembayaranCash->Id_Pembayaran}/bukti", [
+            'bukti' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $freshPembayaran = $pembayaranCash->fresh();
+        $this->assertSame('Diterima', $freshPembayaran->Verifikasi_Pembayaran);
+        $this->assertStringContainsString('storage/bukti', $freshPembayaran->Bukti_Pembayaran);
+
+        // Tagihan teralokasi dan lunas
+        $freshTagihan = $tagihan->fresh();
+        $this->assertSame('Lunas', $freshTagihan->Status_Tagihan);
+        $this->assertEquals(0, (float) $freshTagihan->Sisa_Tagihan);
+    }
 }
+
+

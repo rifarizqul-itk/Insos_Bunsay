@@ -52,6 +52,7 @@ function BayarSekarang() {
   const [isCopiedRekening, setIsCopiedRekening] = useState(false);
   const [isLockedClickAnim, setIsLockedClickAnim] = useState(false);
   const [isQrisZoomed, setIsQrisZoomed] = useState(false);
+  const [hasPendingPayment, setHasPendingPayment] = useState(false);
 
   const handleDownloadQris = async () => {
     const qrisUrl = '/assets/QRIS_PLACEHOLDER.jpg';
@@ -94,8 +95,13 @@ function BayarSekarang() {
         setTotalDenda(denda);
 
         if (idPemilik) {
-          const tagihanRes = await httpClient.get('/api/v1/tenant/tagihan');
+          const [tagihanRes, pendingRes] = await Promise.all([
+            httpClient.get('/api/v1/tenant/tagihan'),
+            httpClient.get('/api/v1/tenant/pembayaran?page=1&page_size=20&status=Menunggu').catch(() => null)
+          ]);
+
           const tagihan = Array.isArray(tagihanRes.data) ? tagihanRes.data : [];
+          const pendingItems = pendingRes?.data?.data || (Array.isArray(pendingRes?.data) ? pendingRes.data : []);
 
           const activeUnpaid = tagihan
             .filter(t => t.Status_Tagihan !== 'Lunas')
@@ -118,6 +124,11 @@ function BayarSekarang() {
               };
             });
           setUnpaidBills(activeUnpaid);
+
+          const isPending = pendingItems.length > 0 || activeUnpaid.some(
+            t => t.statusTagihan === 'Menunggu Verifikasi' || t.statusTagihan === 'Menunggu'
+          );
+          setHasPendingPayment(isPending);
 
           if (activeUnpaid.length > 0) {
             const targetBills = initialKiosFilter === 'semua'
@@ -251,7 +262,7 @@ function BayarSekarang() {
       return;
     }
 
-    if (!buktiTransfer) {
+    if (metode !== 'tunai' && !buktiTransfer) {
       addToast(
         metode === 'qris'
           ? 'Mohon unggah tangkapan layar bukti pembayaran QRIS terlebih dahulu.'
@@ -273,18 +284,24 @@ function BayarSekarang() {
         Id_Tagihan: targetTagihanId,
         Tanggal_Bayar: todayStr,
         Total_Bayar: Number(nominal),
-        Metode_Bayar: 'Transfer',
-        Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? '-'),
+        Metode_Bayar: metode === 'tunai' ? 'Tunai' : 'Transfer',
+        Bukti_Pembayaran: base64Bukti || (buktiTransfer?.name ?? (metode === 'tunai' ? 'LOKET-CASH-CLAIM' : '-')),
         Verifikasi_Pembayaran: 'Menunggu',
-        keterangan: metode === 'qris' ? 'Pembayaran via QRIS Bunsay Hub' : 'Transfer Bank BPD Kaltimtara'
+        keterangan: metode === 'qris'
+          ? 'Pembayaran via QRIS Bunsay Hub'
+          : metode === 'tunai'
+            ? 'Pembayaran Tunai di Loket Kasir'
+            : 'Transfer Bank BPD Kaltimtara'
       };
 
       await httpClient.post('/api/v1/tenant/pembayaran', payload);
       setIsLoading(false);
       addToast(
-        metode === 'qris'
-          ? 'Bukti transaksi QRIS berhasil dikirim! Menunggu verifikasi admin.'
-          : 'Bukti transfer berhasil dikirim! Menunggu verifikasi admin.',
+        metode === 'tunai'
+          ? 'Pengajuan pembayaran tunai berhasil dikirim! Menunggu konfirmasi admin loket.'
+          : metode === 'qris'
+            ? 'Bukti transaksi QRIS berhasil dikirim! Menunggu verifikasi admin.'
+            : 'Bukti transfer berhasil dikirim! Menunggu verifikasi admin.',
         'success'
       );
       navigate('/tenant/histori');
@@ -393,14 +410,14 @@ function BayarSekarang() {
                   Metode Pembayaran
                 </span>
 
-                <div className="grid grid-cols-2 p-0.5 bg-mono-100 rounded-xl border border-border/80 gap-1" role="tablist">
+                <div className="grid grid-cols-3 p-0.5 bg-mono-100 rounded-xl border border-border/80 gap-1" role="tablist">
                   <button
                     type="button"
                     role="tab"
                     aria-selected={metode === 'transfer_manual'}
                     onClick={() => setMetode('transfer_manual')}
                     className={cn(
-                      "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
+                      "py-1.5 px-2 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'transfer_manual'
                         ? "bg-white text-red shadow-xs border border-border/80"
                         : "text-text-2 hover:text-text"
@@ -416,7 +433,7 @@ function BayarSekarang() {
                     aria-selected={metode === 'qris'}
                     onClick={() => setMetode('qris')}
                     className={cn(
-                      "py-1.5 px-2.5 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
+                      "py-1.5 px-2 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       metode === 'qris'
                         ? "bg-white text-emerald-700 shadow-xs border border-border/80"
                         : "text-text-2 hover:text-text"
@@ -424,6 +441,22 @@ function BayarSekarang() {
                   >
                     <Icon icon="heroicons:qr-code-20-solid" className="size-4 shrink-0" />
                     <span>QRIS</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={metode === 'tunai'}
+                    onClick={() => setMetode('tunai')}
+                    className={cn(
+                      "py-1.5 px-2 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
+                      metode === 'tunai'
+                        ? "bg-white text-amber-700 shadow-xs border border-border/80"
+                        : "text-text-2 hover:text-text"
+                    )}
+                  >
+                    <Icon icon="heroicons:banknotes-20-solid" className="size-4 shrink-0" />
+                    <span>Tunai</span>
                   </button>
                 </div>
               </div>
@@ -529,7 +562,7 @@ function BayarSekarang() {
                     )}
                   </div>
                 </div>
-              ) : (
+              ) : metode === 'qris' ? (
                 /* QRIS Mode */
                 <div className="flex flex-col gap-3 page-fade-in">
                   <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex flex-col gap-3">
@@ -658,6 +691,95 @@ function BayarSekarang() {
                     )}
                   </div>
                 </div>
+              ) : (
+                /* Tunai Mode */
+                <div className="flex flex-col gap-3 page-fade-in">
+                  <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-col gap-2">
+                    <div className="flex items-start gap-2.5">
+                      <div className="size-7 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                        <Icon icon="heroicons:banknotes-20-solid" className="size-4" />
+                      </div>
+                      <div className="text-left">
+                        <strong className="text-amber-950 font-bold text-xs sm:text-[13px] block">
+                          Pembayaran Tunai di Loket Kasir
+                        </strong>
+                        <p className="text-xs text-amber-900 font-medium leading-relaxed mt-1 mb-0">
+                          Silakan datang langsung ke <strong>Loket Pembayaran Plaza Kebun Sayur</strong> membawa uang tunai. Petugas loket akan memproses setoran Anda.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dropzone Bukti Tunai (Opsional) */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm font-extrabold text-text">
+                        Unggah Bukti / Struk Kasir <span className="text-text-3 font-normal text-xs">(Opsional)</span>
+                      </span>
+                      {previewBukti && (
+                        <span className="text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Foto Terlampir
+                        </span>
+                      )}
+                    </div>
+
+                    {!previewBukti ? (
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={handleDrop}
+                        className={cn(
+                          "border-2 border-dashed rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer group focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500",
+                          isDragOver ? "border-amber-500 bg-amber-50/50" : "border-border/80 hover:border-amber-500/60 bg-mono-50/40"
+                        )}
+                        onClick={() => document.getElementById('file-upload-input-tunai-tenant')?.click()}
+                      >
+                        <input
+                          id="file-upload-input-tunai-tenant"
+                          type="file"
+                          accept="image/*"
+                          aria-label="Unggah foto struk pembayaran tunai"
+                          onChange={handleFileChange}
+                          className="sr-only"
+                        />
+                        <div className="size-9 rounded-lg bg-white border border-border/80 flex items-center justify-center text-text-3 group-hover:text-amber-600 shadow-2xs">
+                          <Icon icon="heroicons:camera-20-solid" className="size-4.5" />
+                        </div>
+                        <p className="text-xs font-bold text-text">
+                          <span className="text-amber-700 hover:underline">Pilih foto struk / bukti loket</span> atau tarik ke sini
+                        </p>
+                        <p className="text-2xs text-text-3">JPG, PNG, WebP (Maks. 5MB) - Opsional jika belum menerima struk</p>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-mono-50 border border-border/80 rounded-xl flex items-center gap-3 shadow-2xs">
+                        <img
+                          src={previewBukti}
+                          alt="Preview Bukti"
+                          className="size-12 rounded-lg object-cover border border-border/80 shrink-0 bg-white"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-text truncate">
+                            {buktiTransfer?.name || 'Bukti_Tunai.jpg'}
+                          </p>
+                          <p className="text-2xs text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                            <Icon icon="heroicons:check-circle-20-solid" className="size-3.5" />
+                            <span>Foto siap dikirim</span>
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveFile}
+                          className="text-text-3 hover:text-red p-1.5 shrink-0 rounded-lg"
+                          aria-label="Hapus file"
+                        >
+                          <Icon icon="heroicons:trash-20-solid" className="size-4.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Input Nominal */}
@@ -737,13 +859,26 @@ function BayarSekarang() {
                 </div>
               )}
 
+              {/* Case 3 Guard Banner */}
+              {hasPendingPayment && (
+                <div className="bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-amber-900 font-medium">
+                  <Icon icon="heroicons:exclamation-triangle-20-solid" className="size-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <strong className="block font-bold text-amber-950 mb-0.5">Pembayaran Sedang Menunggu Verifikasi</strong>
+                    <span>
+                      Ada transaksi pembayaran Anda sebelumnya yang sedang menunggu verifikasi oleh admin loket. Mohon tunggu hingga verifikasi selesai sebelum melakukan pembayaran kembali. Hubungi admin jika terjadi kesalahan.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Tombol Bayar Sekarang */}
               <div className="pt-0.5">
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
-                  disabled={isLoading || !isUnpaidLoaded}
+                  disabled={isLoading || !isUnpaidLoaded || hasPendingPayment}
                   className="w-full h-10.5 text-sm font-bold shadow-xs rounded-xl cursor-pointer"
                 >
                   {isLoading ? (
@@ -752,7 +887,7 @@ function BayarSekarang() {
                       <span>Mengirim Bukti...</span>
                     </span>
                   ) : (
-                    <span>Bayar Sekarang</span>
+                    <span>{hasPendingPayment ? 'Menunggu Verifikasi Pembayaran' : 'Bayar Sekarang'}</span>
                   )}
                 </Button>
               </div>

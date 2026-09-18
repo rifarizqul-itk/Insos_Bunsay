@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, NotificationPopover, cn } from '@bunsay/shared-ui';
-import { getEcho } from '@bunsay/shared-core';
+import { getEcho, playNotificationSound, warmUpNotificationAudio } from '@bunsay/shared-core';
 import { useTenantAuth } from '../useTenantAuth';
 
 function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, variant = 'tenant' }) {
@@ -30,6 +30,11 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
   }, [httpClient]);
 
   useEffect(() => {
+    // Warm up audio buffer on first user interaction
+    warmUpNotificationAudio();
+  }, []);
+
+  useEffect(() => {
     fetchNotifikasi();
 
     const echo = getEcho();
@@ -42,6 +47,7 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
         if (!e.id_user || (userId && String(e.id_user) === String(userId))) {
           setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
           setUnreadCount(prev => prev + 1);
+          playNotificationSound({ gain: 2.2 });
         }
       });
 
@@ -51,6 +57,7 @@ function Topbar({ userTitle, onToggleSidebar, isCollapsed, onToggleCollapse, var
         userChannel.listen('.notification.created', (e) => {
           setNotifikasiList(prev => [e, ...prev.filter(n => n.id !== e.id)]);
           setUnreadCount(prev => prev + 1);
+          playNotificationSound({ gain: 2.2 });
         });
       }
 
