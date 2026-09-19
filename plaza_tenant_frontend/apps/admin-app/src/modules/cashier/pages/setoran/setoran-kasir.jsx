@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, FormField, Button, Card, Badge, FIFOPreview, useToast, cn } from '@bunsay/shared-ui';
+import { Icon, FormField, Button, Card, Badge, FIFOPreview, BuktiPembayaranModal, useToast, cn } from '@bunsay/shared-ui';
 import { allocatePaymentFIFO } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
@@ -34,6 +34,9 @@ function SetoranKasir() {
   // Confirmation modal state
   const [showKonfirmasi, setShowKonfirmasi] = useState(false);
 
+  // Receipt modal state for post-payment SSRD view/print
+  const [savedReceiptData, setSavedReceiptData] = useState(null);
+
   // Search & Filter state for Tenant Selection
   const [tenantSearchQuery, setTenantSearchQuery] = useState('');
   const [floorFilter, setFloorFilter] = useState('Semua');
@@ -59,10 +62,10 @@ function SetoranKasir() {
         const rawKios = Array.isArray(response.data) ? response.data : (response.data?.data || []);
 
         const mapped = rawKios.map((k, idx) => {
-          const sewaAktif = k.sewa?.find?.(s => s.Status === 'Aktif') || k.sewa?.[0];
-          const pemilikObj = sewaAktif?.pemilik || k.pemilik;
-          const namaPemilik = pemilikObj?.Nama || (k.Status === 'Terisi' ? 'Penyewa Kios' : 'Kios Kosong');
-          const idPemilik = pemilikObj?.Id_Pemilik || null;
+          const sewaObj = Array.isArray(k.sewa) ? (k.sewa.find(s => s.Status === 'Aktif') || k.sewa[0]) : k.sewa;
+          const pemilikObj = sewaObj?.pemilik || k.pemilik;
+          const namaPemilik = pemilikObj?.Nama || (k.Status === 'Terisi' ? (sewaObj?.Nama_Penyewa || 'Penyewa Kios') : 'Kios Kosong');
+          const idPemilik = pemilikObj?.Id_Pemilik || sewaObj?.Id_Pemilik || null;
           const statusKios = (namaPemilik !== 'Kios Kosong' && k.Status === 'Terisi') ? 'Terisi' : 'Kosong';
 
           return {
@@ -70,7 +73,7 @@ function SetoranKasir() {
             idPemilik: idPemilik,
             kios: k.No_Kios || `Kios #${k.Id_Kios}`,
             nama: namaPemilik,
-            usaha: sewaAktif?.Jenis_Usaha || k.Jenis_Usaha || (statusKios === 'Kosong' ? 'Tersedia' : 'Perdagangan Umum'),
+            usaha: sewaObj?.Jenis_Usaha || k.Jenis_Usaha || (statusKios === 'Kosong' ? 'Tersedia' : 'Perdagangan Umum'),
             status: statusKios,
             lantai: k.Lantai || 1,
           };
@@ -132,6 +135,8 @@ function SetoranKasir() {
             return {
               idTagihan: t.Id_Tagihan,
               periode: t.Periode,
+              noKios: t.sewa?.kios?.No_Kios || selectedTenantObj?.kios || '',
+              jenisUsaha: t.sewa?.Jenis_Usaha || selectedTenantObj?.usaha || '',
               jatuhTempo: t.Jatuh_Tempo,
               tarifSewa: parseFloat(t.Tarif_Sewa || 0),
               totalTagihan,
@@ -184,7 +189,8 @@ function SetoranKasir() {
 
   const fifoAllocations = useMemo(() => {
     if (!unpaidBills.length || numericNominal <= 0) return [];
-    return allocatePaymentFIFO(numericNominal, unpaidBills);
+    const result = allocatePaymentFIFO(unpaidBills, numericNominal);
+    return result?.allocations || [];
   }, [numericNominal, unpaidBills]);
 
   // File upload handlers
@@ -243,6 +249,9 @@ function SetoranKasir() {
     if (!selectedTenantId) {
       setTenantError('Silakan pilih tenant & unit kios terlebih dahulu.');
       hasErr = true;
+    } else if (unpaidBills.length === 0) {
+      setTenantError('Tenant ini tidak memiliki tagihan sewa tertunggak / aktif.');
+      hasErr = true;
     }
 
     const nominalNum = parseInt(nominal, 10);
@@ -278,10 +287,26 @@ function SetoranKasir() {
     };
 
     try {
-      await httpClient.post('/api/v1/admin/pembayaran', payload);
+      const response = await httpClient.post('/api/v1/admin/pembayaran', payload);
 
       const methodLabel = metode === 'tunai' ? 'Setoran tunai' : metode === 'qris' ? 'Pembayaran QRIS' : 'Pembayaran transfer bank';
       addToast(`${methodLabel} berhasil dicatat dan disahkan lunas.`, 'success');
+
+      const resData = response?.data?.data || response?.data || {};
+      setSavedReceiptData({
+        id: resData.Id_Pembayaran || Date.now(),
+        trxCode: `TRX-${resData.Id_Pembayaran || 'LOKET'}`,
+        nama: selectedTenantObj?.nama || 'Tenant',
+        kios: selectedTenantObj?.kios || '-',
+        nominal: nominalNum,
+        nominalRaw: nominalNum,
+        metode: metode === 'tunai' ? 'Tunai' : (metode === 'qris' ? 'QRIS' : 'Transfer'),
+        periode: unpaidBills[0]?.periode || '-',
+        status: 'Diterima',
+        tanggal: dateNow,
+        bukti: previewBukti || refCode,
+        keterangan: 'Pembayaran disahkan lunas oleh kasir loket pasar.'
+      });
 
       // Reset form
       setNominal('');
@@ -736,8 +761,7 @@ function SetoranKasir() {
           {/* FIFO Allocation Preview */}
           {unpaidBills.length > 0 && numericNominal > 0 && (
             <FIFOPreview
-              nominalBayar={numericNominal}
-              tagihanList={unpaidBills}
+              nominal={numericNominal}
               allocations={fifoAllocations}
             />
           )}
@@ -823,6 +847,12 @@ function SetoranKasir() {
           </Card>
         </div>
       )}
+      {/* Modal Resi & Kuitansi SSRD Otomatis Pasca-Setoran */}
+      <BuktiPembayaranModal
+        isOpen={Boolean(savedReceiptData)}
+        onClose={() => setSavedReceiptData(null)}
+        item={savedReceiptData}
+      />
     </div>
   );
 }
