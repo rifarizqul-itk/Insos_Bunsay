@@ -228,3 +228,8 @@ export function warmUpNotificationAudio(url: string = DEFAULT_SOUND_PATH): void 
   window.addEventListener('keydown', unlock, { once: true, passive: true });
   window.addEventListener('touchstart', unlock, { once: true, passive: true });
 }
+
+// Expose to window for easy debugging & DevTools console testing
+if (typeof window !== 'undefined') {
+  (window as unknown as { playNotificationSound: typeof playNotificationSound }).playNotificationSound = playNotificationSound;
+}
