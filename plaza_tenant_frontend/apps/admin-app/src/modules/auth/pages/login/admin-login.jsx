@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, FormField, Button, Icon } from '@bunsay/shared-ui';
 import { useAdminAuth } from '../../useAdminAuth';
+import AdminQuickDemoLogin from './AdminQuickDemoLogin';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quickLoadingId, setQuickLoadingId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +34,42 @@ function AdminLoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleQuickLogin = async (account) => {
+    setError('');
+    setIsSubmitting(true);
+    setQuickLoadingId(account.id);
+
+    // Auto-fill form inputs for visual transparency
+    setFormData({ username: account.username, password: account.password });
+
+    const usernamesToTry = [account.username, ...(account.fallbackUsernames || [])];
+    let loggedIn = false;
+    let lastError = null;
+
+    for (const u of usernamesToTry) {
+      try {
+        const res = await loginAdmin(u, account.password);
+        if (res?.accessToken) {
+          loggedIn = true;
+          navigate('/admin/dashboard', { replace: true });
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        if (err?.response?.status === 401 && usernamesToTry.indexOf(u) < usernamesToTry.length - 1) {
+          continue;
+        }
+      }
+    }
+
+    if (!loggedIn) {
+      const errMsg = lastError?.response?.data?.message || lastError?.message || 'Login demo gagal. Pastikan database seeder telah dijalankan.';
+      setError(errMsg);
+    }
+    setIsSubmitting(false);
+    setQuickLoadingId(null);
   };
 
   return (
@@ -116,7 +154,7 @@ function AdminLoginPage() {
             disabled={isSubmitting}
             className="mt-1 h-10.5 text-sm font-bold shadow-xs"
           >
-            {isSubmitting ? (
+            {isSubmitting && !quickLoadingId ? (
               <span className="flex items-center gap-2">
                 <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                 <span>Memproses...</span>
@@ -124,6 +162,13 @@ function AdminLoginPage() {
             ) : 'Masuk'}
           </Button>
         </form>
+
+        {/* Akses Cepat Demo Pameran */}
+        <AdminQuickDemoLogin
+          onQuickLogin={handleQuickLogin}
+          isSubmitting={isSubmitting}
+          activeLoadingId={quickLoadingId}
+        />
       </Card>
     </div>
   );

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTenantAuth } from '../../TenantAuthProvider';
 import { FormField, Button, Card, Icon } from '@bunsay/shared-ui';
 import { httpClient } from '@bunsay/shared-core';
+import TenantQuickDemoLogin from './TenantQuickDemoLogin';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -29,6 +30,7 @@ function AuthPage() {
   // Rate Limiting 3x Attempts
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [quickLoadingId, setQuickLoadingId] = useState(null);
 
   // Forgot password & OTP states
   const [identifier, setIdentifier] = useState('');
@@ -149,6 +151,33 @@ function AuthPage() {
       }
     } finally {
       setIsLoginLoading(false);
+    }
+  };
+
+  const handleTenantQuickLogin = async (account) => {
+    setUsernameError(null);
+    setPasswordError(null);
+    setLockoutSeconds(0);
+    setLoginAttempts(0);
+    setIsLoginLoading(true);
+    setQuickLoadingId(account.id);
+
+    // Auto-fill form inputs for visual feedback
+    setFormData({ username: account.username, kataSandi: account.password });
+
+    try {
+      const res = await login(account.username, account.password);
+      if (res?.accessToken) {
+        navigate('/tenant/dashboard', { replace: true });
+      } else {
+        setUsernameError('Gagal masuk dengan akun demo.');
+      }
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Gagal terhubung ke akun demo. Silakan periksa koneksi backend.';
+      setUsernameError(errMsg);
+    } finally {
+      setIsLoginLoading(false);
+      setQuickLoadingId(null);
     }
   };
 
@@ -368,7 +397,7 @@ function AuthPage() {
               disabled={isLoginLoading || lockoutSeconds > 0}
               className="mt-1 h-10.5 text-sm font-bold shadow-xs"
             >
-              {isLoginLoading ? (
+              {isLoginLoading && !quickLoadingId ? (
                 <span className="flex items-center gap-2">
                   <Icon icon="heroicons:arrow-path-20-solid" className="animate-spin size-4" />
                   <span>Memproses...</span>
@@ -377,6 +406,13 @@ function AuthPage() {
                 <span>Tunggu ({lockoutSeconds}d)</span>
               ) : 'Masuk'}
             </Button>
+
+            {/* Akses Cepat Demo Pameran */}
+            <TenantQuickDemoLogin
+              onQuickLogin={handleTenantQuickLogin}
+              isLoading={isLoginLoading}
+              activeLoadingId={quickLoadingId}
+            />
 
             <Link
               to="/"
