@@ -115,3 +115,89 @@ export function allocatePaymentFIFO(unpaidBills = [], paymentAmount = 0) {
     updatedBills
   };
 }
+
+/**
+ * Kalkulasi alokasi kustom (Opsi 2: Header-Detail / Itemized Split).
+ * Menghitung status akhir setiap tagihan berdasarkan nominal kustom yang dialokasikan.
+ */
+export function calculateCustomAllocations(unpaidBills = [], customInputs = {}) {
+  const allocations = [];
+  const updatedBills = [];
+  let totalAllocated = 0;
+
+  for (const bill of unpaidBills) {
+    const bId = bill.idTagihan || bill.id;
+    const totalTagihan = Number(bill.totalTagihan || bill.tarifSewa || 0);
+    const totalTerbayarSebelumnya = Number(bill.totalTerbayar || bill.terbayar || 0);
+    const sisaHutang = Math.max(0, totalTagihan - totalTerbayarSebelumnya);
+
+    const inputNominal = Math.max(0, Number(customInputs[bId] || 0));
+    const nominalTeralokasi = Math.min(inputNominal, sisaHutang);
+    totalAllocated += nominalTeralokasi;
+
+    const newTotalTerbayar = totalTerbayarSebelumnya + nominalTeralokasi;
+    const statusAkhir = calculateBillStatus(totalTagihan, newTotalTerbayar);
+    const newSisaTagihan = Math.max(0, totalTagihan - newTotalTerbayar);
+
+    if (nominalTeralokasi > 0) {
+      allocations.push({
+        idTagihan: bId,
+        periode: bill.periode,
+        noKios: bill.noKios || bill.kios || null,
+        jenisUsaha: bill.jenisUsaha || null,
+        tarifSewa: bill.tarifSewa || totalTagihan,
+        totalTagihan: totalTagihan,
+        terbayarSebelumnya: totalTerbayarSebelumnya,
+        nominalTeralokasi: nominalTeralokasi,
+        sisaTagihan: newSisaTagihan,
+        statusAkhir: statusAkhir
+      });
+    }
+
+    updatedBills.push({
+      ...bill,
+      totalTerbayar: newTotalTerbayar,
+      sisaTagihan: newSisaTagihan,
+      statusTagihan: statusAkhir
+    });
+  }
+
+  return {
+    allocations,
+    totalAllocated,
+    updatedBills
+  };
+}
+
+/**
+ * Validasi apakah jumlah alokasi kustom sama dengan total uang pembayaran.
+ */
+export function validateCustomAllocationSum(customInputs = {}, totalPayment = 0) {
+  let sum = 0;
+  for (const val of Object.values(customInputs)) {
+    sum += Math.max(0, Number(val) || 0);
+  }
+
+  const target = Math.max(0, Number(totalPayment) || 0);
+  const difference = Math.round(target - sum);
+  const isValid = target > 0 && Math.abs(difference) === 0;
+
+  let error = null;
+  if (target <= 0) {
+    error = 'Nominal pembayaran harus lebih dari 0.';
+  } else if (sum <= 0) {
+    error = 'Silakan masukkan nominal alokasi untuk minimal satu tagihan.';
+  } else if (difference > 0) {
+    error = `Total alokasi masih kurang Rp ${difference.toLocaleString('id-ID')} dari total pembayaran.`;
+  } else if (difference < 0) {
+    error = `Total alokasi berlebih Rp ${Math.abs(difference).toLocaleString('id-ID')} dari total pembayaran.`;
+  }
+
+  return {
+    isValid,
+    totalAllocated: sum,
+    difference,
+    error
+  };
+}
+

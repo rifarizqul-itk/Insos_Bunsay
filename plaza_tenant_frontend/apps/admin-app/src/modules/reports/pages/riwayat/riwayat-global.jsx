@@ -57,7 +57,9 @@ function RiwayatTransaksiAdmin() {
           status: item.Verifikasi_Pembayaran === 'Diterima' ? 'Lunas' : (item.Verifikasi_Pembayaran === 'Ditolak' ? 'Ditolak' : (item.Verifikasi_Pembayaran || 'Lunas')),
           buktiUrl: item.Bukti_Pembayaran || '',
           alasan: item.Catatan_Admin || '',
-          alokasi: item.alokasi || []
+          alokasi: item.alokasi || [],
+          details: item.details || [],
+          tagihan: item.tagihan || null
         }));
         setRiwayat(mapped);
       } else {

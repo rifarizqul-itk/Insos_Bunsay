@@ -137,6 +137,9 @@ function DashboardTenant() {
           nama: item.tagihan?.sewa?.pemilik?.Nama || 'Tenant',
           kios: item.tagihan?.sewa?.kios?.No_Kios || '',
           catatanAdmin: item.catatan_admin || '',
+          details: item.details || [],
+          tagihan: item.tagihan || null,
+          alokasi: item.alokasi || [],
         }));
         setRecentPayments(mapped);
       }

@@ -11,7 +11,7 @@ export { useAuthHydration } from './hooks/useAuthHydration';
 export type { IUseAuthHydrationOptions } from './hooks/useAuthHydration';
 
 // Export Shared Core Business Allocator
-export { allocatePaymentFIFO, calculateBillStatus } from './utils/fifoAllocator';
+export { allocatePaymentFIFO, calculateBillStatus, calculateCustomAllocations, validateCustomAllocationSum } from './utils/fifoAllocator';
 
 // Export HTTP Client & Storage URL Resolver
 export { httpClient, apiClient, resolveStorageUrl } from './api/client';

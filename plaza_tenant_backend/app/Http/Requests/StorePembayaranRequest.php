@@ -33,19 +33,46 @@ class StorePembayaranRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Id_Tagihan'    => 'required|exists:tagihan,Id_Tagihan',
-            'Tanggal_Bayar' => 'required|date',
-            'Total_Bayar'   => 'required|numeric|min:1',
-            'Metode_Bayar'  => 'required|in:Transfer,Tunai,Midtrans',
+            'Id_Tagihan'       => 'nullable|exists:tagihan,Id_Tagihan',
+            'Tanggal_Bayar'    => 'required|date',
+            'Total_Bayar'      => 'required|numeric|min:1',
+            'Metode_Bayar'     => 'required|in:Transfer,Tunai,Midtrans',
             'Bukti_Pembayaran' => 'nullable',
-            // Client tidak lagi diizinkan mengklaim status verifikasi;
-            // kebijakan status ditentukan server (PaymentStatusPolicy).
+            'alokasi'          => 'nullable|array|min:1',
+            'alokasi.*.id_tagihan' => 'required_with:alokasi|integer|exists:tagihan,Id_Tagihan',
+            'alokasi.*.nominal'    => 'required_with:alokasi|numeric|min:1',
         ];
     }
 
     /**
+     * Validasi keseimbangan total alokasi dengan total bayar.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $alokasi = $this->input('alokasi');
+            if (is_array($alokasi) && count($alokasi) > 0) {
+                $sumAlokasi = 0.0;
+                foreach ($alokasi as $item) {
+                    $sumAlokasi += (float) ($item['nominal'] ?? 0);
+                }
+
+                $totalBayar = (float) $this->input('Total_Bayar', 0);
+                if (abs($sumAlokasi - $totalBayar) > 0.01) {
+                    $validator->errors()->add(
+                        'alokasi',
+                        "Jumlah total alokasi per tagihan (Rp " . number_format($sumAlokasi, 0, ',', '.') . ") harus sama dengan Total Bayar (Rp " . number_format($totalBayar, 0, ',', '.') . ")."
+                    );
+                }
+            } elseif (!$this->filled('Id_Tagihan')) {
+                $validator->errors()->add('Id_Tagihan', 'Id_Tagihan atau daftar alokasi wajib diisi.');
+            }
+        });
+    }
+
+    /**
      * Tagihan yang dibayar harus milik pemilik yang sedang login
-     * (admin dikecualikan). Menangani IDOR pada Id_Tagihan.
+     * (admin dikecualikan). Menangani IDOR pada Id_Tagihan dan rincian alokasi.
      */
     public function ensureTagihanOwnership(): void
     {
@@ -55,16 +82,41 @@ class StorePembayaranRequest extends FormRequest
         }
 
         $pemilik = Pemilik::where('Id_User', $user->Id_user)->first();
-
-        $isOwner = $pemilik && Tagihan::where('Id_Tagihan', $this->input('Id_Tagihan'))
-            ->whereHas('sewa', fn ($q) => $q->where('Id_Pemilik', $pemilik->Id_Pemilik))
-            ->exists();
-
-        if (!$isOwner) {
+        if (!$pemilik) {
             abort(response()->json([
                 'success' => false,
-                'message' => 'Anda tidak memiliki akses ke tagihan ini.',
+                'message' => 'Profil pemilik tidak ditemukan.',
             ], 403));
+        }
+
+        $tagihanIds = [];
+        if ($this->filled('Id_Tagihan')) {
+            $tagihanIds[] = (int) $this->input('Id_Tagihan');
+        }
+
+        $alokasi = $this->input('alokasi');
+        if (is_array($alokasi)) {
+            foreach ($alokasi as $item) {
+                if (!empty($item['id_tagihan'])) {
+                    $tagihanIds[] = (int) $item['id_tagihan'];
+                }
+            }
+        }
+
+        $tagihanIds = array_unique($tagihanIds);
+
+        foreach ($tagihanIds as $tId) {
+            $isOwner = Tagihan::where('Id_Tagihan', $tId)
+                ->whereHas('sewa', fn ($q) => $q->where('Id_Pemilik', $pemilik->Id_Pemilik))
+                ->exists();
+
+            if (!$isOwner) {
+                abort(response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke tagihan ini (ID: ' . $tId . ').',
+                ], 403));
+            }
         }
     }
 }
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, FormField, Button, Card, Badge, FIFOPreview, BuktiPembayaranModal, useToast, cn } from '@bunsay/shared-ui';
-import { allocatePaymentFIFO } from '@bunsay/shared-core';
+import { allocatePaymentFIFO, calculateCustomAllocations } from '@bunsay/shared-core';
 import { useAdminAuth } from '../../../auth/useAdminAuth';
 
 function SetoranKasir() {
@@ -179,19 +179,94 @@ function SetoranKasir() {
     setUnpaidBills([]);
     setTargetTagihanId(null);
     setTenantSearchQuery('');
+    setCustomNominals({});
+    setModeAlokasi('otomatis');
   };
 
-  // FIFO Allocation preview
+  // Mode Alokasi: 'otomatis' (FIFO) | 'kustom'
+  const [modeAlokasi, setModeAlokasi] = useState('otomatis');
+  const [customNominals, setCustomNominals] = useState({});
+
   const numericNominal = useMemo(() => {
     const parsed = parseInt(nominal, 10);
     return isNaN(parsed) || parsed < 0 ? 0 : parsed;
   }, [nominal]);
 
-  const fifoAllocations = useMemo(() => {
-    if (!unpaidBills.length || numericNominal <= 0) return [];
+  // Dynamic allocations (supports FIFO & Custom)
+  const activeAllocations = useMemo(() => {
+    if (!unpaidBills.length) return [];
+    if (modeAlokasi === 'kustom') {
+      return calculateCustomAllocations(unpaidBills, customNominals).allocations;
+    }
+    if (numericNominal <= 0) return [];
     const result = allocatePaymentFIFO(unpaidBills, numericNominal);
     return result?.allocations || [];
-  }, [numericNominal, unpaidBills]);
+  }, [numericNominal, unpaidBills, modeAlokasi, customNominals]);
+
+  const handleCustomNominalChange = (tagihanId, val, maxNominal) => {
+    const cleanDigits = String(val).replace(/\D/g, '');
+    let numVal = Number(cleanDigits) || 0;
+    if (maxNominal !== undefined && numVal > maxNominal) {
+      numVal = maxNominal;
+    }
+    const updated = {
+      ...customNominals,
+      [tagihanId]: String(numVal)
+    };
+    setCustomNominals(updated);
+
+    let totalSum = 0;
+    for (const v of Object.values(updated)) {
+      totalSum += Number(v) || 0;
+    }
+    setNominal(String(totalSum));
+    if (nominalError) setNominalError(null);
+  };
+
+  const handleSetFullForTagihan = (tagihanId, maxNominal) => {
+    handleCustomNominalChange(tagihanId, String(maxNominal), maxNominal);
+  };
+
+  const handleClearForTagihan = (tagihanId) => {
+    handleCustomNominalChange(tagihanId, '0');
+  };
+
+  const handleSwitchToCustom = () => {
+    setModeAlokasi('kustom');
+    const currentSum = Object.values(customNominals).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    if (currentSum === 0 && activeAllocations.length > 0) {
+      const initial = {};
+      activeAllocations.forEach(alloc => {
+        initial[alloc.idTagihan] = String(alloc.nominalTeralokasi ?? alloc.allocated ?? 0);
+      });
+      setCustomNominals(initial);
+    }
+  };
+
+  const handleSwitchToOtomatis = () => {
+    setModeAlokasi('otomatis');
+  };
+
+  const handleLunasiSemua = () => {
+    const full = {};
+    let total = 0;
+    unpaidBills.forEach(b => {
+      const sisa = b.sisaTagihan ?? b.totalTagihan;
+      full[b.idTagihan] = String(sisa);
+      total += sisa;
+    });
+    setCustomNominals(full);
+    setNominal(String(total));
+  };
+
+  const handleKosongkanSemua = () => {
+    const empty = {};
+    unpaidBills.forEach(b => {
+      empty[b.idTagihan] = '0';
+    });
+    setCustomNominals(empty);
+    setNominal('0');
+  };
 
   // File upload handlers
   const handleFileChange = (e) => {
@@ -260,6 +335,26 @@ function SetoranKasir() {
       hasErr = true;
     }
 
+    if (modeAlokasi === 'kustom') {
+      const alokasiList = Object.entries(customNominals)
+        .filter(([_, val]) => Number(val) > 0)
+        .map(([tId, val]) => ({
+          id_tagihan: Number(tId),
+          nominal: Number(val)
+        }));
+
+      if (alokasiList.length === 0) {
+        setNominalError('Silakan tentukan alokasi pembayaran untuk minimal satu tagihan.');
+        hasErr = true;
+      } else {
+        const sumAlokasi = alokasiList.reduce((sum, item) => sum + item.nominal, 0);
+        if (sumAlokasi !== nominalNum) {
+          setNominalError(`Total alokasi (Rp ${sumAlokasi.toLocaleString('id-ID')}) tidak sama dengan Total Pembayaran.`);
+          hasErr = true;
+        }
+      }
+    }
+
     // Bukti wajib untuk Transfer dan QRIS
     if (metode !== 'tunai' && !previewBukti) {
       setBuktiError(`Wajib mengunggah foto bukti pembayaran untuk metode ${metode === 'qris' ? 'QRIS' : 'Transfer Bank'}.`);
@@ -286,6 +381,20 @@ function SetoranKasir() {
       Verifikasi_Pembayaran: 'Diterima'
     };
 
+    if (modeAlokasi === 'kustom') {
+      const alokasiList = Object.entries(customNominals)
+        .filter(([_, val]) => Number(val) > 0)
+        .map(([tId, val]) => ({
+          id_tagihan: Number(tId),
+          nominal: Number(val)
+        }));
+
+      if (alokasiList.length > 0) {
+        payload.alokasi = alokasiList;
+        payload.Id_Tagihan = alokasiList[0].id_tagihan;
+      }
+    }
+
     try {
       const response = await httpClient.post('/api/v1/admin/pembayaran', payload);
 
@@ -305,7 +414,8 @@ function SetoranKasir() {
         status: 'Diterima',
         tanggal: dateNow,
         bukti: previewBukti || refCode,
-        keterangan: 'Pembayaran disahkan lunas oleh kasir loket pasar.'
+        keterangan: 'Pembayaran disahkan lunas oleh kasir loket pasar.',
+        details: resData.details || activeAllocations
       });
 
       // Reset form
@@ -538,64 +648,240 @@ function SetoranKasir() {
               </div>
             </div>
 
-            {/* Step 3: Nominal Pembayaran */}
-            <div className="flex flex-col gap-2">
-              <FormField
-                label="3. Nominal Pembayaran (Rp)"
-                id="setoran-nominal"
-                required
-                error={nominalError}
-              >
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-text-3 text-xs">
-                    Rp
-                  </span>
-                  <input
-                    id="setoran-nominal"
-                    type="number"
-                    min="1000"
-                    step="1000"
-                    placeholder="Contoh: 1200000"
-                    value={nominal}
-                    onChange={(e) => {
-                      setNominal(e.target.value);
-                      setNominalError(null);
-                    }}
-                    className={cn(
-                      "w-full pl-10 pr-3.5 py-2.5 bg-mono-50 border rounded-lg text-sm font-extrabold font-tabular-nums text-text focus:outline-none focus:bg-white transition-colors shadow-2xs",
-                      nominalError ? "border-red ring-1 ring-red" : "border-border focus:border-red"
-                    )}
-                  />
-                </div>
-              </FormField>
+            {/* Step 3: Skema Alokasi & Nominal Pembayaran */}
+            <div className="flex flex-col gap-2.5">
+              <span className="text-xs font-bold text-text uppercase tracking-wider">
+                3. Alokasi & Nominal Pembayaran
+              </span>
 
-              {/* Quick Fill Buttons from unpaid bills */}
-              {unpaidBills.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              {/* Mode Switcher jika tagihan > 1 */}
+              {unpaidBills.length > 1 && (
+                <div className="grid grid-cols-2 gap-2 p-1 bg-mono-100/70 rounded-xl border border-border/60">
                   <button
                     type="button"
-                    onClick={() => {
-                      setNominal(String(unpaidBills[0].sisaTagihan || unpaidBills[0].totalTagihan));
-                      setNominalError(null);
-                    }}
-                    className="text-2xs font-bold px-2 py-1 bg-mono-100 hover:bg-red-50 text-text hover:text-red rounded-md border border-border/60 transition-colors cursor-pointer"
+                    onClick={handleSwitchToOtomatis}
+                    className={cn(
+                      "py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      modeAlokasi === 'otomatis'
+                        ? "bg-white text-red shadow-xs border border-red/30 font-black"
+                        : "text-text-2 hover:text-text hover:bg-white/50"
+                    )}
                   >
-                    Bayar Periode {unpaidBills[0].periode} (Rp {(unpaidBills[0].sisaTagihan || unpaidBills[0].totalTagihan).toLocaleString('id-ID')})
+                    <Icon icon="heroicons:bolt-20-solid" className="size-4" />
+                    <span>Otomatis (FIFO)</span>
                   </button>
-                  {unpaidBills.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const sumTotal = unpaidBills.reduce((acc, b) => acc + (b.sisaTagihan || b.totalTagihan), 0);
-                        setNominal(String(sumTotal));
-                        setNominalError(null);
-                      }}
-                      className="text-2xs font-extrabold px-2 py-1 bg-red-50 text-red hover:bg-red hover:text-white rounded-md border border-red/20 transition-colors cursor-pointer"
-                    >
-                      Lunasi Semua ({unpaidBills.length} Periode)
-                    </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSwitchToCustom}
+                    className={cn(
+                      "py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer",
+                      modeAlokasi === 'kustom'
+                        ? "bg-white text-red shadow-xs border border-red/30 font-black"
+                        : "text-text-2 hover:text-text hover:bg-white/50"
+                    )}
+                  >
+                    <Icon icon="heroicons:adjustments-horizontal-20-solid" className="size-4" />
+                    <span>Pilih & Bagi Nominal</span>
+                  </button>
+                </div>
+              )}
+
+              {modeAlokasi === 'kustom' ? (
+                /* Mode Kustom: Input Nominal per Tagihan */
+                <div className="flex flex-col gap-2.5 bg-mono-50/50 p-3.5 rounded-xl border border-border/80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text">
+                      Tentukan Alokasi Per Periode:
+                    </span>
+                    <div className="flex items-center gap-2 text-2xs">
+                      <button
+                        type="button"
+                        onClick={handleLunasiSemua}
+                        className="font-bold text-red hover:underline cursor-pointer"
+                      >
+                        Lunasi Semua
+                      </button>
+                      <span className="text-mono-300">•</span>
+                      <button
+                        type="button"
+                        onClick={handleKosongkanSemua}
+                        className="font-bold text-text-3 hover:text-text cursor-pointer"
+                      >
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {unpaidBills.map((b) => {
+                      const sisa = b.sisaTagihan ?? b.totalTagihan;
+                      const currentVal = customNominals[b.idTagihan] ?? '';
+                      const currentNum = Number(currentVal) || 0;
+                      const willBeLunas = currentNum >= sisa && sisa > 0;
+                      const willBeDicicil = currentNum > 0 && currentNum < sisa;
+
+                      return (
+                        <div
+                          key={b.idTagihan}
+                          className={cn(
+                            "p-3 rounded-lg border transition-all flex flex-col gap-2 bg-white",
+                            currentNum > 0 ? "border-red/40 bg-red-50/10" : "border-border/80"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-extrabold text-text">
+                                  Periode {b.periode}
+                                </span>
+                                {b.isOverdue ? (
+                                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded">
+                                    Tunggakan
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded">
+                                    Berjalan
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-2xs text-text-3 font-medium block mt-0.5">
+                                Sisa Kewajiban: <strong className="text-text font-tabular-nums">Rp {sisa.toLocaleString('id-ID')}</strong>
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleSetFullForTagihan(b.idTagihan, sisa)}
+                                className="px-2 py-0.5 text-2xs font-bold rounded border border-border bg-mono-50 hover:bg-mono-100 text-text-2 transition-colors cursor-pointer"
+                              >
+                                Penuh
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleClearForTagihan(b.idTagihan)}
+                                className="px-2 py-0.5 text-2xs font-bold rounded border border-border bg-mono-50 hover:bg-mono-100 text-text-3 transition-colors cursor-pointer"
+                              >
+                                0
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-text-3 text-2xs">
+                              Rp
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1000"
+                              placeholder="0"
+                              value={currentVal}
+                              onChange={(e) => handleCustomNominalChange(b.idTagihan, e.target.value, sisa)}
+                              className="w-full pl-9 pr-3 py-1.5 bg-white border border-border rounded-md text-xs font-bold font-tabular-nums text-text focus:outline-none focus:border-red transition-colors"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between text-2xs">
+                            {willBeLunas ? (
+                              <span className="text-green font-bold flex items-center gap-1">
+                                <Icon icon="heroicons:check-circle-20-solid" className="size-3.5" />
+                                <span>Akan langsung lunas</span>
+                              </span>
+                            ) : willBeDicicil ? (
+                              <span className="text-orange font-bold flex items-center gap-1">
+                                <Icon icon="heroicons:clock-20-solid" className="size-3.5" />
+                                <span>Sisa: Rp {Math.max(0, sisa - currentNum).toLocaleString('id-ID')}</span>
+                              </span>
+                            ) : (
+                              <span className="text-mono-400">Belum dialokasikan (Rp 0)</span>
+                            )}
+
+                            <span className="text-text-3 font-semibold font-tabular-nums">
+                              Bayar: Rp {currentNum.toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Summary Total Kustom */}
+                  <div className="p-2.5 rounded-lg bg-mono-100 border border-border/80 flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-2">Total Setoran Terakumulasi:</span>
+                    <span className="text-base font-black font-tabular-nums text-red">
+                      Rp {numericNominal.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                  {nominalError && (
+                    <span className="text-2xs font-bold text-red flex items-center gap-1">
+                      <Icon icon="heroicons:exclamation-circle-20-solid" className="size-3.5" />
+                      <span>{nominalError}</span>
+                    </span>
                   )}
                 </div>
+              ) : (
+                /* Mode Otomatis: Input Nominal Tunggal */
+                <>
+                  <FormField
+                    label="Nominal Pembayaran (Rp)"
+                    id="setoran-nominal"
+                    required
+                    error={nominalError}
+                  >
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-text-3 text-xs">
+                        Rp
+                      </span>
+                      <input
+                        id="setoran-nominal"
+                        type="number"
+                        min="1000"
+                        step="1000"
+                        placeholder="Contoh: 1200000"
+                        value={nominal}
+                        onChange={(e) => {
+                          setNominal(e.target.value);
+                          setNominalError(null);
+                        }}
+                        className={cn(
+                          "w-full pl-10 pr-3.5 py-2.5 bg-mono-50 border rounded-lg text-sm font-extrabold font-tabular-nums text-text focus:outline-none focus:bg-white transition-colors shadow-2xs",
+                          nominalError ? "border-red ring-1 ring-red" : "border-border focus:border-red"
+                        )}
+                      />
+                    </div>
+                  </FormField>
+
+                  {/* Quick Fill Buttons from unpaid bills */}
+                  {unpaidBills.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNominal(String(unpaidBills[0].sisaTagihan || unpaidBills[0].totalTagihan));
+                          setNominalError(null);
+                        }}
+                        className="text-2xs font-bold px-2 py-1 bg-mono-100 hover:bg-red-50 text-text hover:text-red rounded-md border border-border/60 transition-colors cursor-pointer"
+                      >
+                        Bayar Periode {unpaidBills[0].periode} (Rp {(unpaidBills[0].sisaTagihan || unpaidBills[0].totalTagihan).toLocaleString('id-ID')})
+                      </button>
+                      {unpaidBills.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sumTotal = unpaidBills.reduce((acc, b) => acc + (b.sisaTagihan || b.totalTagihan), 0);
+                            setNominal(String(sumTotal));
+                            setNominalError(null);
+                          }}
+                          className="text-2xs font-extrabold px-2 py-1 bg-red-50 text-red hover:bg-red hover:text-white rounded-md border border-red/20 transition-colors cursor-pointer"
+                        >
+                          Lunasi Semua ({unpaidBills.length} Periode)
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -758,11 +1044,11 @@ function SetoranKasir() {
             )}
           </Card>
 
-          {/* FIFO Allocation Preview */}
+          {/* FIFO / Custom Allocation Preview */}
           {unpaidBills.length > 0 && numericNominal > 0 && (
             <FIFOPreview
               nominal={numericNominal}
-              allocations={fifoAllocations}
+              allocations={activeAllocations}
             />
           )}
         </div>
@@ -794,12 +1080,39 @@ function SetoranKasir() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-text-3">Skema Alokasi:</span>
+                <span className="font-bold text-text">
+                  {modeAlokasi === 'kustom' ? 'Kustom (Bagi Nominal)' : 'Otomatis (FIFO)'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-text-3">Nominal Terbayar:</span>
                 <span className="font-black font-tabular-nums text-red text-sm">
                   Rp {parseInt(nominal, 10).toLocaleString('id-ID')}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+
+              {/* Rincian Alokasi jika mode kustom */}
+              {modeAlokasi === 'kustom' && activeAllocations.length > 0 && (
+                <div className="pt-2 border-t border-border/60 flex flex-col gap-1.5">
+                  <span className="text-2xs font-bold text-text-3 uppercase tracking-wider">
+                    Rincian Alokasi Per Periode:
+                  </span>
+                  <div className="flex flex-col gap-1 divide-y divide-border/40">
+                    {activeAllocations.map(a => (
+                      <div key={a.idTagihan} className="flex items-center justify-between pt-1 text-2xs">
+                        <span className="font-semibold text-text">Periode {a.periode}</span>
+                        <div className="flex items-center gap-1.5 font-tabular-nums">
+                          <span className="font-bold text-emerald-700">Rp {(a.nominalTeralokasi || 0).toLocaleString('id-ID')}</span>
+                          <span className="text-mono-400">({a.statusAkhir})</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-1 border-t border-border/60">
                 <span className="text-text-3">Status Langsung:</span>
                 <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-2xs">
                   Lunas / Disahkan Kasir

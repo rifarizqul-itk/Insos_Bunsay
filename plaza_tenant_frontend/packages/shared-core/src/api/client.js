@@ -107,7 +107,10 @@ export function resolveStorageUrl(path) {
     ''
   ).replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedPath = path.replace(/\\/g, '/');
+  const storageIndex = normalizedPath.indexOf('storage/');
+  const targetPath = storageIndex !== -1 ? normalizedPath.slice(storageIndex) : normalizedPath;
+  const cleanPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
 
   if (apiBase) {
     const fullUrl = `${apiBase}${cleanPath}`;

@@ -47,7 +47,7 @@ class PembayaranController extends Controller
         $user = $request->user();
         $paginated = $request->filled('page');
 
-        $query = Pembayaran::query()->with(['tagihan.sewa.pemilik', 'tagihan.sewa.kios']);
+        $query = Pembayaran::query()->with(['tagihan.sewa.pemilik', 'tagihan.sewa.kios', 'details.tagihan']);
 
         // Tenant hanya melihat pembayaran miliknya (admin melihat semuanya).
         if ($user && $user->Id_roles != 1) {
@@ -137,32 +137,25 @@ class PembayaranController extends Controller
             ], 422);
         }
 
-        $tagihanTarget = Tagihan::find($request->Id_Tagihan);
+        $alokasiList = $request->input('alokasi');
+        $hasCustomAllocations = is_array($alokasiList) && count($alokasiList) > 0;
+
+        $targetId = $request->input('Id_Tagihan');
+        if (!$targetId && $hasCustomAllocations) {
+            $targetId = $alokasiList[0]['id_tagihan'] ?? null;
+        }
+
+        $tagihanTarget = Tagihan::find($targetId);
 
         $pembayaran = DB::transaction(function () use (
             $request,
             $tagihanTarget,
             $statusVerifikasi,
-            $buktiPath
+            $buktiPath,
+            $hasCustomAllocations,
+            $alokasiList
         ) {
-            $idTagihanTarget = $tagihanTarget->Id_Tagihan;
-            $isPartialPayment = false;
-
-            if ($tagihanTarget && $statusVerifikasi === 'Diterima') {
-                $openTagihan = $this->allocationService->openTagihan($tagihanTarget->Id_Sewa);
-
-                $sisaTagihanTarget = max(0.0, (float) ($tagihanTarget->Sisa_Tagihan ?? $tagihanTarget->Total_Tagihan ?? 0));
-
-                if ($openTagihan->isNotEmpty() && (float) $request->Total_Bayar < $sisaTagihanTarget) {
-                    // Partial payment: FIFO ke tagihan tertua pada sewa yang sama.
-                    $isPartialPayment = true;
-                    $this->allocationService->allocate($openTagihan, (float) $request->Total_Bayar);
-                    $idTagihanTarget = $tagihanTarget->Id_Tagihan;
-                } elseif ($tagihanTarget->Status_Tagihan === 'Lunas') {
-                    // Advance payment: buat tagihan periode berikutnya untuk menampung dana.
-                    $idTagihanTarget = $this->createAdvanceTagihan($tagihanTarget, $request, $statusVerifikasi);
-                }
-            }
+            $idTagihanTarget = $tagihanTarget?->Id_Tagihan;
 
             // Buat record Pembayaran baru (selalu bertambah di riwayat transaksi)
             $pembayaranRecord = Pembayaran::create([
@@ -174,15 +167,47 @@ class PembayaranController extends Controller
                 'Verifikasi_Pembayaran' => $statusVerifikasi,
             ]);
 
-            // Untuk full payment yang diterima (non-FIFO): update tagihan target ke Lunas
-            if ($statusVerifikasi === 'Diterima' && !$isPartialPayment) {
-                Tagihan::where('Id_Tagihan', $idTagihanTarget)->update([
-                    'Status_Tagihan' => 'Lunas',
-                    'Sisa_Tagihan'   => 0,
-                ]);
+            if ($hasCustomAllocations) {
+                // Alokasi kustom per tagihan (Opsi 2 Header-Detail)
+                $this->allocationService->allocateCustom(
+                    $pembayaranRecord->Id_Pembayaran,
+                    $alokasiList,
+                    $statusVerifikasi === 'Diterima'
+                );
+            } else {
+                // Mode otomatis FIFO standar (legacy / default)
+                $isPartialPayment = false;
+
+                if ($tagihanTarget && $statusVerifikasi === 'Diterima') {
+                    $openTagihan = $this->allocationService->openTagihan($tagihanTarget->Id_Sewa);
+                    $sisaTagihanTarget = max(0.0, (float) ($tagihanTarget->Sisa_Tagihan ?? $tagihanTarget->Total_Tagihan ?? 0));
+
+                    if ($openTagihan->isNotEmpty() && (float) $request->Total_Bayar < $sisaTagihanTarget) {
+                        $isPartialPayment = true;
+                        $this->allocationService->allocate($openTagihan, (float) $request->Total_Bayar, $pembayaranRecord->Id_Pembayaran);
+                    } elseif ($tagihanTarget->Status_Tagihan === 'Lunas') {
+                        $idTagihanTarget = $this->createAdvanceTagihan($tagihanTarget, $request, $statusVerifikasi);
+                        $pembayaranRecord->update(['Id_Tagihan' => $idTagihanTarget]);
+                        \App\Models\PembayaranDetail::create([
+                            'Id_Pembayaran'   => $pembayaranRecord->Id_Pembayaran,
+                            'Id_Tagihan'      => $idTagihanTarget,
+                            'Nominal_Alokasi' => (float) $request->Total_Bayar,
+                        ]);
+                    } else {
+                        Tagihan::where('Id_Tagihan', $idTagihanTarget)->update([
+                            'Status_Tagihan' => 'Lunas',
+                            'Sisa_Tagihan'   => 0,
+                        ]);
+                        \App\Models\PembayaranDetail::create([
+                            'Id_Pembayaran'   => $pembayaranRecord->Id_Pembayaran,
+                            'Id_Tagihan'      => $idTagihanTarget,
+                            'Nominal_Alokasi' => (float) $request->Total_Bayar,
+                        ]);
+                    }
+                }
             }
 
-            return $pembayaranRecord;
+            return $pembayaranRecord->load('details.tagihan');
         });
 
         // 6. Kirim dynamic event notification ke panel Admin
@@ -335,10 +360,17 @@ class PembayaranController extends Controller
     }
 
     /**
-     * FIFO allocation saat admin menerima pembayaran.
+     * Alokasi saat admin menerima/mengonfirmasi pembayaran (Custom atau FIFO).
      */
     private function applyVerifiedAllocation(Pembayaran $pembayaran): void
     {
+        $hasCustomDetails = \App\Models\PembayaranDetail::where('Id_Pembayaran', $pembayaran->Id_Pembayaran)->exists();
+
+        if ($hasCustomDetails) {
+            $this->allocationService->applyPendingCustomAllocation($pembayaran);
+            return;
+        }
+
         $tagihanAnchor = Tagihan::find($pembayaran->Id_Tagihan);
         if (!$tagihanAnchor) {
             return;
@@ -347,12 +379,17 @@ class PembayaranController extends Controller
         $openTagihan = $this->allocationService->openTagihan($tagihanAnchor->Id_Sewa);
 
         if ($openTagihan->isNotEmpty()) {
-            $this->allocationService->allocate($openTagihan, (float) $pembayaran->Total_Bayar);
+            $this->allocationService->allocate($openTagihan, (float) $pembayaran->Total_Bayar, $pembayaran->Id_Pembayaran);
         } else {
             // Tidak ada tagihan terbuka: lunasi tagihan anchor secara langsung.
             $tagihanAnchor->update([
                 'Status_Tagihan' => 'Lunas',
                 'Sisa_Tagihan'   => 0,
+            ]);
+            \App\Models\PembayaranDetail::create([
+                'Id_Pembayaran'   => $pembayaran->Id_Pembayaran,
+                'Id_Tagihan'      => $tagihanAnchor->Id_Tagihan,
+                'Nominal_Alokasi' => (float) $pembayaran->Total_Bayar,
             ]);
         }
     }

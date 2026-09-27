@@ -15,6 +15,16 @@ class Tagihan extends Model
 
     public function sewa()
     {
-            return $this->belongsTo(Sewa::class, 'Id_Sewa', 'Id_Sewa');
+        return $this->belongsTo(Sewa::class, 'Id_Sewa', 'Id_Sewa');
+    }
+
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'Id_Tagihan', 'Id_Tagihan');
+    }
+
+    public function pembayaranDetails()
+    {
+        return $this->hasMany(PembayaranDetail::class, 'Id_Tagihan', 'Id_Tagihan');
     }
 }

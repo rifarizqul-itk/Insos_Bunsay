@@ -22,6 +22,9 @@ function mapPaymentRow(item) {
     catatanAdmin: item.catatan_admin || '',
     teksSanggahan: item.teks_sanggahan || '',
     buktiSanggahan: item.bukti_sanggahan || '',
+    details: item.details || [],
+    tagihan: item.tagihan || null,
+    alokasi: item.alokasi || [],
   };
 }
 

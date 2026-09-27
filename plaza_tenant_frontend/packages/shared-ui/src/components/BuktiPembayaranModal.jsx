@@ -7,6 +7,21 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { ImageGallerySlider } from './ImageGallerySlider';
 
+export function formatPeriodeIndo(periodeStr) {
+  if (!periodeStr) return 'Periode Berjalan';
+  const str = String(periodeStr).trim();
+  if (/^\d{4}-\d{2}$/.test(str)) {
+    const [year, monthNum] = str.split('-');
+    const monthIdx = parseInt(monthNum, 10) - 1;
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return `${months[monthIdx] || monthNum} ${year}`;
+  }
+  return str.replace(/^sewa\s+/i, '');
+}
+
 export function resolveMidtransChannel(item) {
   if (!item) return 'Tidak Tersedia';
 
@@ -135,7 +150,10 @@ export function BuktiPembayaranModal({ isOpen, onClose, item, onUploadBukti }) {
       ''
     ).replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
-    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    const normalizedUrl = url.replace(/\\/g, '/');
+    const storageIndex = normalizedUrl.indexOf('storage/');
+    const targetPath = storageIndex !== -1 ? normalizedUrl.slice(storageIndex) : normalizedUrl;
+    const cleanPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
     if (apiBase) {
       const fullUrl = `${apiBase}${cleanPath}`;
       if (/ngrok/i.test(fullUrl) && !fullUrl.includes('ngrok-skip-browser-warning')) {
@@ -182,6 +200,42 @@ export function BuktiPembayaranModal({ isOpen, onClose, item, onUploadBukti }) {
     }
   };
 
+  const rawDetails = (Array.isArray(item.details) && item.details.length > 0)
+    ? item.details
+    : (Array.isArray(item.alokasi) && item.alokasi.length > 0 ? item.alokasi : []);
+
+  const allocationsList = rawDetails.map((det, idx) => {
+    const rawPeriode = det.tagihan?.Periode || det.periode || det.Periode || '';
+    const displayPeriode = rawPeriode ? `Sewa ${formatPeriodeIndo(rawPeriode)}` : `Tagihan #${det.Id_Tagihan || det.idTagihan || det.id_tagihan || idx + 1}`;
+    const nominalDet = Number(det.Nominal_Alokasi || det.nominal_alokasi || det.Nominal || det.nominal || det.nominalTeralokasi || det.allocated || 0);
+    const sisaSaatIni = det.tagihan?.Sisa_Tagihan !== undefined 
+      ? Number(det.tagihan.Sisa_Tagihan) 
+      : (det.sisaTagihan !== undefined ? Number(det.sisaTagihan) : null);
+    const tarif = det.tagihan ? Number(det.tagihan.Tarif_Sewa ?? det.tagihan.Total_Tagihan ?? 0) : 0;
+
+    const isPending = item.status === 'Menunggu' || item.status === 'Menunggu Verifikasi';
+    const sisaSetelahBayar = sisaSaatIni !== null
+      ? (isPending ? Math.max(0, sisaSaatIni - nominalDet) : sisaSaatIni)
+      : null;
+    const isLunas = sisaSetelahBayar !== null 
+      ? sisaSetelahBayar <= 0 
+      : (tarif > 0 ? nominalDet >= tarif : (item.status === 'Diterima' || item.status === 'Lunas'));
+
+    return {
+      id: det.Id_Detail || det.Id_Pembayaran_Detail || det.id || idx,
+      displayPeriode,
+      nominalDet,
+      sisaSetelahBayar,
+      isLunas,
+      statusLabel: isLunas ? 'Lunas' : 'Dicicil'
+    };
+  });
+
+  const hasCalculatedSisa = allocationsList.some(a => a.sisaSetelahBayar !== null);
+  const totalSisaAfter = hasCalculatedSisa
+    ? allocationsList.reduce((acc, a) => acc + (a.sisaSetelahBayar || 0), 0)
+    : null;
+
   return (
     <Modal
       isOpen={isModalOpen}
@@ -221,16 +275,110 @@ export function BuktiPembayaranModal({ isOpen, onClose, item, onUploadBukti }) {
     >
       <div data-slot="bukti-pembayaran-sheet" className="flex flex-col gap-5 font-sans print:p-0">
 
-        {/* 1. HERO AMOUNT SECTION */}
-        <div className="bg-mono-100/60 border border-border/80 rounded-xl p-5 flex flex-col gap-2">
-          <span className="label-micro text-text-3">Total Pembayaran</span>
-          <div className="flex items-baseline justify-between gap-2 flex-wrap">
-            <span className="text-3xl font-extrabold text-red font-tabular-nums tracking-tight">
+        {/* 1. KARTU ALOKASI PELUNASAN (Card Design Adapted from Bayar Sewa Rencana Pelunasan) */}
+        <div className="bg-white rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col gap-2.5">
+          {/* Header Kartu */}
+          <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-text text-balance">
+                Rincian Alokasi Pembayaran
+              </h2>
+              <span className="text-xs text-text-3">
+                {item.kios ? `Unit Kios: ${item.kios}` : `ID Transaksi: ${trxLabel}`}
+              </span>
+            </div>
+            {allocationsList.length > 0 ? (
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                {allocationsList.length} Periode
+              </span>
+            ) : (
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-mono-100 text-text-2 font-tabular-nums shrink-0">
+                1 Periode
+              </span>
+            )}
+          </div>
+
+          {/* Nominal Disetor */}
+          <div className="flex flex-col gap-1 pb-3 border-b border-border/80">
+            <div className="flex items-center justify-between">
+              <span className="text-xs sm:text-sm font-semibold text-text-2">
+                Nominal Disetor:
+              </span>
+              <span className="text-xs font-bold text-text-3 font-tabular-nums" title={formatDateTimeLocal(item.waktu || item.tanggal).fullTitle}>
+                {formatDateTimeLocal(item.waktu || item.tanggal).formatted}
+              </span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold font-tabular-nums text-red">
               {nominalFormatted}
-            </span>
-            <span className="text-xs font-bold text-text-3 font-tabular-nums" title={formatDateTimeLocal(item.waktu || item.tanggal).fullTitle}>
-              {formatDateTimeLocal(item.waktu || item.tanggal).formatted}
-            </span>
+            </div>
+          </div>
+
+          {/* Rincian Alokasi Live */}
+          <div className="flex flex-col gap-2 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-3">
+                Alokasi Pembayaran:
+              </span>
+            </div>
+
+            <div className="divide-y divide-border/80">
+              {allocationsList.length > 0 ? (
+                allocationsList.map((alloc) => (
+                  <div 
+                    key={alloc.id} 
+                    className="py-2.5 first:pt-1 last:pb-1 flex items-center justify-between text-xs gap-2"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-bold text-text block truncate">
+                        {alloc.displayPeriode}
+                      </span>
+                      <div className="text-[11.5px] text-text-3 flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span>Alokasi: <strong className="text-text font-tabular-nums">Rp {alloc.nominalDet.toLocaleString('id-ID')}</strong></span>
+                        {alloc.sisaSetelahBayar !== null && alloc.sisaSetelahBayar > 0 && (
+                          <>
+                            <span className="text-mono-300">•</span>
+                            <span>Sisa: <strong className="text-red font-tabular-nums">Rp {alloc.sisaSetelahBayar.toLocaleString('id-ID')}</strong></span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "font-bold text-xs px-2.5 py-0.5 rounded-full border whitespace-nowrap shrink-0",
+                      alloc.isLunas 
+                        ? 'bg-green-bg/85 border-green/25 text-green' 
+                        : 'bg-orange-bg/85 border-orange/25 text-orange'
+                    )}>
+                      {alloc.statusLabel}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                /* Fallback single transaction */
+                <div className="py-2.5 first:pt-1 last:pb-1 flex items-center justify-between text-xs gap-2">
+                  <div className="min-w-0">
+                    <span className="font-bold text-text block truncate">
+                      {item.periode ? (item.periode.startsWith('Sewa') ? item.periode : `Sewa ${formatPeriodeIndo(item.periode)}`) : 'Sewa Kios'}
+                    </span>
+                    <div className="text-[11.5px] text-text-3 flex items-center gap-1.5 mt-0.5">
+                      <span>Alokasi: <strong className="text-text font-tabular-nums">{nominalFormatted}</strong></span>
+                    </div>
+                  </div>
+                  <span className="font-bold text-xs px-2.5 py-0.5 rounded-full border whitespace-nowrap shrink-0 bg-green-bg/85 border-green/25 text-green">
+                    {item.status === 'Diterima' || item.status === 'Lunas' ? 'Lunas' : 'Dialokasikan'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Sisa utang setelah pembayaran */}
+            {totalSisaAfter !== null && (
+              <div className="pt-2.5 border-t border-dashed border-border/80 flex justify-between items-center text-xs">
+                <span className="text-text-3 font-medium">Sisa utang setelah pembayaran:</span>
+                <span className="font-extrabold font-tabular-nums text-text text-sm">
+                  Rp {totalSisaAfter.toLocaleString('id-ID')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -50,7 +50,7 @@ class BuktiImageStore
 
             $moved = $source->move($this->ensureDir(), $this->filename($prefix, $ext));
 
-            return str_replace(['\\', public_path() . DIRECTORY_SEPARATOR], ['/', ''], $moved->getPathname());
+            return $this->formatRelativePublicPath($moved->getPathname());
         }
 
         if (is_string($source) && str_starts_with($source, 'data:image/')) {
@@ -79,7 +79,7 @@ class BuktiImageStore
                 throw BuktiImageException::invalid('Gagal menyimpan berkas bukti.');
             }
 
-            return str_replace(['\\', public_path() . DIRECTORY_SEPARATOR], ['/', ''], $path);
+            return $this->formatRelativePublicPath($path);
         }
 
         if (is_string($source)) {
@@ -102,5 +102,20 @@ class BuktiImageStore
         }
 
         return $dir;
+    }
+
+    private function formatRelativePublicPath(string $fullPath): string
+    {
+        $normalizedPub = str_replace('\\', '/', public_path());
+        $normalizedPath = str_replace('\\', '/', $fullPath);
+
+        $rel = ltrim(str_replace($normalizedPub, '', $normalizedPath), '/');
+
+        // Fallback if public_path replacement didn't match (e.g. symlinks or drives)
+        if (str_contains($rel, 'storage/')) {
+            $rel = substr($rel, strpos($rel, 'storage/'));
+        }
+
+        return $rel;
     }
 }

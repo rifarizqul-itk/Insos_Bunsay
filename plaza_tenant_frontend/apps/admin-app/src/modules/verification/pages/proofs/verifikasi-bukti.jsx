@@ -53,7 +53,8 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
     catatan: item.catatan_admin || '',
     teksSanggahan: item.teks_sanggahan || '',
     buktiSanggahan: item.bukti_sanggahan || '',
-    buktiUrl: item.Bukti_Pembayaran || ''
+    buktiUrl: item.Bukti_Pembayaran || '',
+    details: item.details || []
   });
 
   /**
@@ -723,6 +724,46 @@ function VerifikasiBuktiTransfer({ selectedTenant = null }) {
                 </div>
               </div>
             </div>
+
+            {/* Rincian Alokasi Per Tagihan jika multi-bill / custom detail */}
+            {Array.isArray(previewItem.details) && previewItem.details.length > 0 && (
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="label-micro text-text-3">Rincian Pembagian Alokasi Tagihan</h2>
+                  <span className="text-2xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    {previewItem.details.length} Periode Dialokasikan
+                  </span>
+                </div>
+                <div className="bg-white rounded-lg border border-border/80 divide-y divide-border/60 overflow-hidden text-xs">
+                  {previewItem.details.map((det, idx) => {
+                    const periode = det.tagihan?.Periode || `Tagihan #${det.Id_Tagihan || idx + 1}`;
+                    const nominalDet = Number(det.Nominal_Alokasi || det.nominal_alokasi || det.Nominal || det.nominal || 0);
+                    const sisa = det.tagihan ? Number(det.tagihan.Sisa_Tagihan ?? 0) : null;
+
+                    return (
+                      <div key={det.Id_Detail || idx} className="p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <span className="font-bold text-text block">Sewa {periode}</span>
+                          {sisa !== null && (
+                            <span className="text-[11px] text-text-3">
+                              Sisa tagihan saat ini: <strong className="font-tabular-nums text-text">{sisa > 0 ? `Rp ${sisa.toLocaleString('id-ID')}` : 'Lunas'}</strong>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-extrabold font-tabular-nums text-emerald-700 block">
+                            Rp {nominalDet.toLocaleString('id-ID')}
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 inline-block mt-0.5">
+                            Dialokasikan
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {previewItem.teksSanggahan && (
               <div className="p-3.5 bg-amber-50/80 border border-amber-300/80 rounded-lg flex flex-col gap-2.5 text-xs">
