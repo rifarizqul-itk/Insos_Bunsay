@@ -165,17 +165,29 @@ function AuthPage() {
     // Auto-fill form inputs for visual feedback
     setFormData({ username: account.username, kataSandi: account.password });
 
-    try {
-      const res = await login(account.username, account.password);
-      if (res?.accessToken) {
-        navigate('/tenant/dashboard', { replace: true });
-      } else {
-        setUsernameError('Gagal masuk dengan akun demo.');
+    const usernamesToTry = [account.username, ...(account.fallbackUsernames || [])];
+    let loggedIn = false;
+    let lastError = null;
+
+    for (const u of usernamesToTry) {
+      try {
+        const res = await login(u, account.password);
+        if (res?.accessToken) {
+          loggedIn = true;
+          navigate('/tenant/dashboard', { replace: true });
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        if (err?.response?.status === 401 && usernamesToTry.indexOf(u) < usernamesToTry.length - 1) {
+          continue;
+        }
       }
-    } catch (err) {
-      const errMsg = err?.response?.data?.message || err?.message || 'Gagal terhubung ke akun demo. Silakan periksa koneksi backend.';
+    }
+
+    if (!loggedIn) {
+      const errMsg = lastError?.response?.data?.message || lastError?.message || 'Gagal terhubung ke akun demo. Silakan periksa koneksi backend.';
       setUsernameError(errMsg);
-    } finally {
       setIsLoginLoading(false);
       setQuickLoadingId(null);
     }
